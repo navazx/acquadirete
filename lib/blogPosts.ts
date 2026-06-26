@@ -345,7 +345,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-25',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'carboni', 'depuratore'],
-    relatedPosts: ['carboni-attivi-vs-osmosi-inversa'],
+    relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'osmosi-inversa-neonati'],
     sections: [
       {
         paragraphs: [
@@ -390,6 +390,69 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Perché allora alcuni dicono che "fa male"?',
         a: 'Quasi sempre per la riduzione dei minerali, scambiata per un rischio. Regolando il residuo fisso, come facciamo noi, questo timore non ha più ragione d\'essere.',
+      },
+    ],
+  },
+  {
+    slug: 'osmosi-inversa-neonati',
+    title: 'Osmosi inversa e neonati: l\'acqua è sicura per il latte in formula?',
+    metaTitle: 'Osmosi Inversa per Neonati: è Sicura? | Acquadirete',
+    metaDescription:
+      'Osmosi inversa e neonati: l\'acqua è adatta per il latte in formula? Cosa sapere davvero, senza allarmismi, e perché su salute e dieta decide il pediatra.',
+    excerpt:
+      'L\'acqua a osmosi inversa va bene per il latte del neonato? Rispondiamo con onestà, separando i fatti generali dalle valutazioni che spettano al pediatra.',
+    publishedAt: '2026-06-26',
+    readingMinutes: 5,
+    relatedServices: ['osmosi', 'carboni', 'depuratore'],
+    relatedPosts: ['osmosi-inversa-fa-male', 'carboni-attivi-vs-osmosi-inversa'],
+    sections: [
+      {
+        paragraphs: [
+          'Quando in casa arriva un neonato, anche una domanda semplice come "che acqua uso per il latte in formula?" diventa improvvisamente importante. Ce lo chiedono spesso, e la nostra risposta è sempre la stessa: ti diciamo con precisione come funziona la nostra acqua, ma sulle scelte legate alla salute del tuo bambino l\'ultima parola è del pediatra, non nostra né di un articolo online.',
+          'Detto questo, possiamo aiutarti a capire i fatti generali, così arrivi preparato quando ne parli con chi di dovere.',
+        ],
+      },
+      {
+        heading: 'Perché per un neonato l\'acqua "leggera" è spesso preferita',
+        paragraphs: [
+          'Per la preparazione del latte in formula, pediatri e indicazioni sanitarie tendono a consigliare un\'acqua a basso contenuto di minerali, in particolare con poco sodio e pochi nitrati. È il motivo per cui molte famiglie scelgono in commercio le acque oligominerali "leggere" proprio per i più piccoli.',
+          'Il latte in formula è già bilanciato dal produttore con i nutrienti necessari: l\'acqua serve solo a ricostituirlo, e un\'acqua leggera evita di alterare quell\'equilibrio. Questo è un principio generale, non una prescrizione per il tuo caso specifico: quella resta una valutazione del pediatra.',
+        ],
+      },
+      {
+        heading: 'Dove si colloca l\'acqua a osmosi inversa',
+        paragraphs: [
+          'L\'osmosi inversa produce proprio un\'acqua a basso contenuto di sali minerali, paragonabile a una buona oligominerale leggera, lo stesso tipo di acqua spesso indicata per i più piccoli. Nei nostri impianti il residuo fisso è regolabile: non lasciamo l\'acqua completamente demineralizzata, ma equilibrata.',
+          'Abbiamo affrontato più in generale il tema della sicurezza di quest\'acqua nell\'articolo "L\'osmosi inversa fa male?": se il dubbio di fondo è quello, ti consigliamo di leggerlo, perché molti timori nascono semplicemente dalla riduzione dei minerali, che è un fatto noto e gestito, non un rischio.',
+        ],
+      },
+      {
+        heading: 'Un punto che vale sempre: l\'igiene',
+        paragraphs: [
+          'Indipendentemente dal tipo di acqua, per i neonati l\'aspetto più delicato è quello igienico. Le indicazioni più diffuse per la preparazione del latte riguardano la pulizia, la corretta conservazione e, in molti casi, il trattamento termico dell\'acqua prima dell\'uso. Sono accorgimenti generali che valgono per qualsiasi acqua: di rubinetto, in bottiglia o filtrata.',
+          'Anche qui le modalità precise per il tuo bambino te le indica il pediatra. Noi ci limitiamo a ricordarti che nessun depuratore sostituisce queste attenzioni di base.',
+        ],
+      },
+      {
+        heading: 'Cosa possiamo dirti noi (e cosa no)',
+        paragraphs: [
+          'Possiamo dirti con certezza come funziona il nostro impianto, che tipo di acqua produce e come regoliamo i minerali. Quello che non facciamo è darti consigli medici: se hai dubbi sull\'alimentazione del tuo bambino, su quantità, temperature o esigenze particolari, la persona giusta a cui chiedere è il pediatra che lo segue.',
+          'Se vuoi, durante il sopralluogo gratuito analizziamo la tua acqua e ti spieghiamo esattamente cosa cambierebbe con un nostro impianto: avrai informazioni chiare e concrete da portare anche al pediatra, per decidere con tutti gli elementi in mano.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'L\'acqua a osmosi inversa va bene per il latte in formula?',
+        a: 'È un\'acqua leggera, a basso contenuto di minerali, simile alle oligominerali spesso indicate per i più piccoli. Resta però una valutazione da confermare con il tuo pediatra, che conosce la situazione del tuo bambino.',
+      },
+      {
+        q: 'Devo comunque bollire o trattare l\'acqua prima di usarla?',
+        a: 'Per i neonati l\'igiene nella preparazione del latte è fondamentale, qualunque sia l\'acqua. Le modalità precise, incluso l\'eventuale trattamento termico, te le indica il pediatra: nessun depuratore le sostituisce.',
+      },
+      {
+        q: 'Togliendo i minerali, all\'acqua manca qualcosa di importante per il neonato?',
+        a: 'Il latte in formula è già bilanciato con i nutrienti necessari, e regoliamo comunque il residuo fisso per non lasciare l\'acqua del tutto demineralizzata. Per ogni dubbio nutrizionale, però, fai sempre riferimento al pediatra.',
       },
     ],
   },
