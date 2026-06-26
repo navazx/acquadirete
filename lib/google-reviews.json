@@ -1,0 +1,63 @@
+{
+  "rating": 5,
+  "total": 128,
+  "reviews": [
+    {
+      "id": "g1",
+      "author": "Marco Zebi",
+      "rating": 5,
+      "date": "Dicembre 2025",
+      "text": "Esperienza ECCELLENTE l'acquisto dell'impianto di purificazione dell'acqua di Stefano! Finalmente possiamo bere acqua sia naturale che frizzante di altissima qualità direttamente dal rubinetto della cucina, senza più sentire quel cattivo sapore che ci aveva costretto a smettere di berla. Inoltre non dobbiamo più pensare a comprare e fare scorte di bottiglie di plastica né a metterle in frigorifero: una figata che non ha prezzo! Siamo veramente soddisfatti della comunicazione prima e durante il lavoro, ma soprattutto del risultato ottenuto. Stefano persona veramente in gamba, affidabile, professionale e disponibile. Consigliamo vivamente Stefano, il suo impianto e il suo metodo di lavoro!",
+      "source": "google"
+    },
+    {
+      "id": "g2",
+      "author": "Simone Biagiotti",
+      "rating": 5,
+      "date": "Aprile 2026",
+      "text": "Dopo oltre due anni dall'installazione devo dire che l'unica cosa di cui mi pento è di non averlo acquistato prima. Stefano e Matteo hanno una grande professionalità e una grande simpatia. Mi avvertono delle manutenzioni periodiche e sono velocissimi quando è necessario sostituire la bombola dell'acqua frizzante. Un'esperienza davvero ottima e un impianto che consiglio a tutti.",
+      "source": "google"
+    },
+    {
+      "id": "g3",
+      "author": "Federica Coli",
+      "rating": 5,
+      "date": "Febbraio 2026",
+      "text": "Metterei al primo posto la sua simpatia, ma devo dire che viene addirittura superata dalla sua professionalità nel consigliarti e installarti prodotti ottimi. Essendo io \"tutto e subito\", sono rimasta sorpresa quando mi ha accontentata installandomi il prodotto il giorno successivo alla nostra prima conversazione. Quando ho avuto bisogno di un piccolo aggiustamento è stato tempestivo. Grande Stefano!",
+      "source": "google"
+    },
+    {
+      "id": "g4",
+      "author": "Almudena",
+      "rating": 5,
+      "date": "Aprile 2026",
+      "text": "Matteo si è dimostrato sicuro di sé nella manutenzione del mio depuratore d'acqua. Educato e rispettoso dell'ambiente, ha lasciato tutto pulito. Grazie del servizio ricevuto.",
+      "source": "google"
+    },
+    {
+      "id": "g5",
+      "author": "Mino Maina",
+      "rating": 5,
+      "date": "Novembre 2025",
+      "text": "Ho installato l'apparecchio e mi sto trovando veramente bene. Stefano si è dimostrato preparato e disponibile. La comparazione con altri rivenditori è risultata la più favorevole, considerando la garanzia e gli altri vantaggi che ho trovato. Consigliato!",
+      "source": "google"
+    },
+    {
+      "id": "g6",
+      "author": "Elisa Bertolà",
+      "rating": 5,
+      "date": "Ottobre 2025",
+      "text": "Stefano molto disponibile e professionale. Ha saputo consigliarmi il prodotto giusto capendo fin da subito le esigenze! Consigliatissimo!",
+      "source": "google"
+    },
+    {
+      "id": "g7",
+      "author": "Mauro Mammaro",
+      "rating": 5,
+      "date": "2022",
+      "text": "Ho installato l'impianto qualche mese fa e la domanda che mi faccio ancora oggi è: perché non averlo fatto prima? Acqua veramente buona e soprattutto zero plastica. Stefano persona squisita, non il classico venditore porta a porta: gentile e trasparente. Consiglio!",
+      "source": "google"
+    }
+  ],
+  "fetchedAt": null
+}
