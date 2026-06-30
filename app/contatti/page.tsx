@@ -75,7 +75,7 @@ export default function ContattiPage() {
             <div className="bg-emerald-50/55 border border-emerald-200 rounded-lg p-4 flex items-center justify-between">
               <div className="space-y-1">
                 <h3 className="font-bold text-emerald-900 text-xs uppercase tracking-wider">Preferisci WhatsApp?</h3>
-                <p className="text-[11px] text-emerald-600 leading-tight">Chatta subito con un nostro operatore locale a Firenze.</p>
+                <p className="text-[11px] text-emerald-600 leading-tight">Scrivici su WhatsApp: ti rispondiamo subito.</p>
               </div>
               <a
                 href={whatsappHref('Buongiorno Acquadirete, desidero informazioni.')}

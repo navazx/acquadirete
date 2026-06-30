@@ -69,7 +69,9 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
     try {
       if (FORM.web3formsAccessKey) {
-        // Invio reale: la richiesta arriva via email a info@acquadirete.it
+        // Invio reale via Web3Forms. Il destinatario (info@acquadirete.it) è
+        // legato alla Access Key e si configura nella dashboard Web3Forms,
+        // NON qui: il codice passa solo la chiave, non l'indirizzo di arrivo.
         const response = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
