@@ -313,9 +313,16 @@ export const BLOG_POSTS: BlogPost[] = [
         ],
       },
       {
+        heading: 'Non vuoi pagare tutto in una volta? Si può rateizzare a tasso zero',
+        paragraphs: [
+          'Il vantaggio principale del noleggio è non dover affrontare subito l\'intera spesa. Ma questo non è un buon motivo per rinunciare all\'acquisto: possiamo rateizzare l\'impianto a tasso zero, così spalmi il costo nel tempo senza interessi e senza sorprese.',
+          'La differenza rispetto al canone di noleggio è sostanziale. Con la rateizzazione paghi il prezzo dell\'impianto — quello che hai visto e approvato — diviso in comode rate, e a fine pagamento l\'impianto è tuo: nessun interesse, nessun costo nascosto, nessun obbligo di restituirlo o riscattarlo. In pratica ottieni la comodità della rata mensile, ma con i vantaggi della proprietà.',
+        ],
+      },
+      {
         heading: 'Quando il noleggio può comunque avere senso',
         paragraphs: [
-          'Se preferisci non immobilizzare una somma subito, o se ti serve l\'impianto solo per un periodo limitato (es. un\'attività stagionale), il noleggio può essere una scelta legittima. L\'importante è confrontare sempre il costo totale nel tempo, non solo la rata mensile, e leggere bene cosa succede a fine contratto.',
+          'Se ti serve l\'impianto solo per un periodo limitato (es. un\'attività stagionale), il noleggio può essere una scelta legittima. Se invece il tuo unico dubbio è non immobilizzare una somma tutta insieme, spesso la nostra rateizzazione a tasso zero risolve la questione meglio del noleggio. In ogni caso, confronta sempre il costo totale nel tempo, non solo la rata mensile, e leggi bene cosa succede a fine contratto.',
         ],
       },
     ],
@@ -323,6 +330,10 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Quindi non offrite il noleggio?',
         a: 'Il nostro modello è la vendita diretta, con preventivo chiaro e garanzia scritta. Parliamone pure al sopralluogo se hai esigenze particolari: ti diciamo onestamente cosa ha senso per la tua situazione.',
+      },
+      {
+        q: 'Posso comprare l\'impianto a rate?',
+        a: 'Sì: possiamo rateizzare l\'acquisto a tasso zero, così spalmi la spesa senza interessi. Paghi il prezzo dell\'impianto in comode rate e alla fine l\'impianto è tuo, senza i vincoli di un noleggio.',
       },
       {
         q: 'Con l\'acquisto la manutenzione costa di più?',
