@@ -165,7 +165,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Le fasce di prezzo, in generale',
         paragraphs: [
-          'Sul mercato, un impianto a osmosi inversa domestico va indicativamente da poche centinaia di euro per i sistemi più semplici, fino a oltre 2.000 € per impianti di fascia alta con più stadi di filtrazione, capacità maggiore e funzioni aggiuntive come l\'acqua refrigerata o gassata.',
+          'Sul mercato, un impianto a osmosi inversa domestico va indicativamente da poche centinaia di euro per i sistemi più semplici, fino a oltre 3.000 € per impianti di fascia alta con più stadi di filtrazione, capacità maggiore e funzioni aggiuntive come l\'acqua refrigerata o gassata.',
           'Questi sono valori di mercato generali, non un nostro listino: il prezzo giusto per la tua situazione dipende dalla tua acqua, dai tuoi consumi e da cosa cerchi davvero. Per questo il sopralluogo e il preventivo sono sempre gratuiti — è l\'unico modo per darti un numero vero, non una stima al buio.',
         ],
       },
