@@ -146,3 +146,10 @@
   to = "/"
   status = 301
   force = true
+
+# Vecchie gallerie foto del sito ASP.NET (es. /Foto/Pagine/26/Marmaris/).
+[[redirects]]
+  from = "/Foto/*"
+  to = "/"
+  status = 301
+  force = true
