@@ -8,20 +8,141 @@
 # Redirect 301 dalle vecchie URL del sito ASP.NET (ancora indicizzate su Google)
 # verso le pagine nuove. Evita i 404 su chi arriva dai risultati di ricerca e
 # consolida l'autorità SEO sulle pagine attuali.
-# NB: le regole specifiche DEVONO stare prima del wildcard (Netlify usa la prima
-# che combacia). Gli URL di destinazione hanno lo slash finale (trailingSlash).
+# NB:
+#  - Le regole specifiche DEVONO stare prima dei catch-all (Netlify usa la prima
+#    che combacia).
+#  - Il "*" finale cattura sia la versione con ".aspx" sia quella senza (Google
+#    ha indicizzato entrambe), sia eventuali code varie.
+#  - Gli URL di destinazione hanno lo slash finale (trailingSlash: true).
+
+# --- Vecchia home ---
+[[redirects]]
+  from = "/default.aspx"
+  to = "/"
+  status = 301
+  force = true
+
+# --- /paginaseo/* → pagina servizio/città più pertinente ---
+[[redirects]]
+  from = "/paginaseo/3.vendita-depuratori-acqua-prato*"
+  to = "/depuratore-acqua-prato/"
+  status = 301
+  force = true
 
 [[redirects]]
-  from = "/paginaseo/15.depuratori-a-osmosi-inversa-a-scandicci.aspx"
+  from = "/paginaseo/2.vendita-depuratori-acqua-sesto-fiorentino*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/4.vendita-depuratori-acqua-a-scandicci*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/8.sistemi-di-depurazione-acqua-domestici-a-sesto-fiorentino*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/9.sistemi-di-depurazione-acqua-domestici-a-scandicci*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/10.sistemi-di-depurazione-acqua-domestici-a-empoli*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/16.sistema-filtrazione-acqua-rubinetto-firenze*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/13.depuratori-a-osmosi-inversa-a-prato*"
   to = "/osmosi-inversa-firenze/"
   status = 301
   force = true
 
-# Catch-all: qualsiasi altra vecchia pagina /paginaseo/*.aspx finisce in home
-# invece di dare 404. Aggiungere sopra una regola specifica quando si conosce
-# la pagina nuova corrispondente.
+[[redirects]]
+  from = "/paginaseo/14.depuratori-a-osmosi-inversa-a-sesto-fiorentino*"
+  to = "/osmosi-inversa-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/paginaseo/15.depuratori-a-osmosi-inversa-a-scandicci*"
+  to = "/osmosi-inversa-firenze/"
+  status = 301
+  force = true
+
+# --- /scheda/* (schede prodotto) → pagina tematica ---
+[[redirects]]
+  from = "/scheda/18.impianti-ad-osmosi-inversa-sottozoccolo-per-la-cucina*"
+  to = "/osmosi-inversa-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/scheda/23.modelli-a-colonna-da-terra-per-ufficio*"
+  to = "/depuratore-acqua-uffici-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/scheda/19.vari-modelli-da-incasso-e-sotto-lavello*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/scheda/22.vari-modelli-e-colori-sopra-banco*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+# --- /servizi_scheda/*.aspx (maiuscole come da vecchio sito) → pagina tematica ---
+[[redirects]]
+  from = "/servizi_scheda/18.Impianti-ad-osmosi-inversa-sottozoccolo-per-la-cucina*"
+  to = "/osmosi-inversa-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/servizi_scheda/23.Modelli-a-colonna-da-terra-per-ufficio*"
+  to = "/depuratore-acqua-uffici-firenze/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/servizi_scheda/19.Vari-modelli-da-incasso-e-sotto-lavello*"
+  to = "/depuratore-acqua-firenze/"
+  status = 301
+  force = true
+
+# --- Catch-all di sicurezza: qualsiasi altra vecchia pagina di questi percorsi
+#     finisce in home invece di dare 404. Restano DOPO le regole specifiche. ---
 [[redirects]]
   from = "/paginaseo/*"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/scheda/*"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/servizi_scheda/*"
   to = "/"
   status = 301
   force = true
