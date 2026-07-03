@@ -75,7 +75,7 @@ export default function HomeView() {
               className="flex items-center gap-1.5 bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 hover:border-blue-500/50 transition-colors cursor-pointer"
             >
               <span className="text-amber-400 text-xs font-bold">★★★★★</span>
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">120+ Recensioni Google 5.0</span>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">130+ Recensioni Google 5.0</span>
             </a>
             <div className="text-xs text-slate-400 text-center leading-relaxed">
               <strong className="text-white block font-bold uppercase tracking-wider text-[10px]">Assistenza locale, persone vere</strong>
@@ -111,7 +111,7 @@ export default function HomeView() {
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Sul Territorio Dal</p>
           </div>
           <a href={GOOGLE_PROFILE_URL} target="_blank" rel="noreferrer" title="Leggi le recensioni su Google" className="block pt-4 md:pt-0 border-b border-slate-150 md:border-b-0 hover:opacity-80 transition-opacity cursor-pointer">
-            <p className="text-3xl font-black text-blue-900 font-mono">120+</p>
+            <p className="text-3xl font-black text-blue-900 font-mono">130+</p>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Recensioni 5 Stelle</p>
           </a>
         </div>
@@ -279,7 +279,7 @@ export default function HomeView() {
               <MapPin className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-white">Una persona, non un call center</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Dal 2005 sul territorio: una persona che risponde e che conosci. Centinaia di impianti installati, con oltre 120 recensioni a 5 stelle su Google.
+                Dal 2005 sul territorio: una persona che risponde e che conosci. Centinaia di impianti installati, con oltre 130 recensioni a 5 stelle su Google.
               </p>
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function HomeView() {
           className="block lg:col-span-4 bg-white p-5 rounded-lg border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center cursor-pointer"
         >
           <div className="text-amber-500 text-xl font-bold mb-1">★★★★★</div>
-          <p className="text-xs text-slate-800 font-bold uppercase tracking-wider">120+ Recensioni Eccellenti</p>
+          <p className="text-xs text-slate-800 font-bold uppercase tracking-wider">130+ Recensioni Eccellenti</p>
           <p className="text-xs text-slate-500 mt-1">Nessun punteggio inferiore a 5 stelle a testimonianza dell'amore per l'acqua pura e l'assistenza locale.</p>
         </a>
       </section>

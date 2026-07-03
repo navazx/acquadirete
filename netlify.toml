@@ -4,3 +4,24 @@
 
 [build.environment]
   NODE_VERSION = "24"
+
+# Redirect 301 dalle vecchie URL del sito ASP.NET (ancora indicizzate su Google)
+# verso le pagine nuove. Evita i 404 su chi arriva dai risultati di ricerca e
+# consolida l'autorità SEO sulle pagine attuali.
+# NB: le regole specifiche DEVONO stare prima del wildcard (Netlify usa la prima
+# che combacia). Gli URL di destinazione hanno lo slash finale (trailingSlash).
+
+[[redirects]]
+  from = "/paginaseo/15.depuratori-a-osmosi-inversa-a-scandicci.aspx"
+  to = "/osmosi-inversa-firenze/"
+  status = 301
+  force = true
+
+# Catch-all: qualsiasi altra vecchia pagina /paginaseo/*.aspx finisce in home
+# invece di dare 404. Aggiungere sopra una regola specifica quando si conosce
+# la pagina nuova corrispondente.
+[[redirects]]
+  from = "/paginaseo/*"
+  to = "/"
+  status = 301
+  force = true

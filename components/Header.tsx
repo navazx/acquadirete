@@ -65,7 +65,7 @@ export default function Header() {
               className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
             >
               <span className="flex text-amber-400">★★★★★</span>
-              <span className="text-white font-semibold">120+ Recensioni a 5 Stelle Google</span>
+              <span className="text-white font-semibold">130+ Recensioni a 5 Stelle Google</span>
             </a>
             <span className="hidden md:inline text-blue-300">| Depurazione Acqua a Firenze, Prato e Pistoia</span>
           </div>

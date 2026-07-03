@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
 import { CONTACT, telHref, mailtoHref, whatsappHref, GOOGLE_PROFILE_URL, SOCIAL } from '../lib/siteConfig';
 import { ROUTES } from '../lib/routes';
 import { useModal } from './ModalProvider';
@@ -45,7 +45,7 @@ export default function Footer() {
             className="pt-2 flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer w-fit"
           >
             <span className="flex text-amber-400 text-sm">★★★★★</span>
-            <span className="text-xs text-slate-400 font-medium font-mono">120+ Recensioni Google (5.0 Stelle)</span>
+            <span className="text-xs text-slate-400 font-medium font-mono">130+ Recensioni Google (5.0 Stelle)</span>
           </a>
           <div className="flex items-center gap-3 pt-1">
             <a
@@ -81,47 +81,28 @@ export default function Footer() {
         {/* Dynamic Navigation Column */}
         <div className="space-y-4" id="footer-links">
           <p className="text-sm font-bold uppercase tracking-wider text-white">I Nostri Servizi</p>
-          <ul className="space-y-2.5 text-sm">
-            <li>
-              <Link href={ROUTES.depuratore} title="Depuratore Acqua a Firenze" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Depuratore Acqua a Firenze
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.prato} title="Depuratore Acqua a Prato" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Depuratore Acqua a Prato
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.pistoia} title="Depuratore Acqua a Pistoia" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Depuratore Acqua a Pistoia
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.osmosi} title="Osmosi Inversa" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Osmosi Inversa
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.carboni} title="Carboni Attivi" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Carboni Attivi
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.frizzante} title="Acqua Frizzante e Refrigerata" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Acqua Frizzante e Refrigerata
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.business} title="Depuratori Uffici e Ristoranti" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Depuratori Uffici e Ristoranti
-              </Link>
-            </li>
-            <li>
-              <Link href={ROUTES.assistenza} title="Manutenzione e Assistenza" className="hover:text-blue-400 transition-colors cursor-pointer text-left">
-                Manutenzione e Assistenza
-              </Link>
-            </li>
+          <ul className="space-y-2 text-sm">
+            {[
+              { href: ROUTES.depuratore, label: 'Depuratore Acqua a Firenze' },
+              { href: ROUTES.prato, label: 'Depuratore Acqua a Prato' },
+              { href: ROUTES.pistoia, label: 'Depuratore Acqua a Pistoia' },
+              { href: ROUTES.osmosi, label: 'Osmosi Inversa' },
+              { href: ROUTES.carboni, label: 'Carboni Attivi' },
+              { href: ROUTES.frizzante, label: 'Acqua Frizzante e Refrigerata' },
+              { href: ROUTES.business, label: 'Depuratori Uffici e Ristoranti' },
+              { href: ROUTES.assistenza, label: 'Manutenzione e Assistenza' },
+            ].map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  title={item.label}
+                  className="group flex items-center gap-2 text-slate-200 font-semibold hover:text-blue-400 transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={15} className="text-blue-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 

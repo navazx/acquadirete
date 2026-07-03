@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Depuratore Acqua Firenze | Acquadirete',
   description:
-    'Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 120 recensioni a 5 stelle su Google. Sopralluogo gratuito.',
+    'Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 130 recensioni a 5 stelle su Google. Sopralluogo gratuito.',
   alternates: { canonical: '/' },
   // Niente title/description qui: così ogni pagina usa i propri (Next fa il
   // fallback da title/description → og e twitter), evitando anteprime social
