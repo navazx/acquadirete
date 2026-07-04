@@ -6,3 +6,8 @@
 next-env.d.ts
 .DS_Store
 .env*.local
+
+# Chiavi service account / segreti: non committare mai
+gsc-key*.json
+*-key*.json
+/.secrets

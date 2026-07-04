@@ -1,0 +1,27 @@
+name: Report SEO mensile
+
+# Gira il 1° di ogni mese alle 09:12 UTC (~11:12 ora italiana d'estate).
+# workflow_dispatch permette di lanciarlo a mano dalla tab "Actions" per test.
+on:
+  schedule:
+    - cron: '12 9 1 * *'
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Genera e invia il report SEO su Telegram
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node scripts/seo-report.mjs
