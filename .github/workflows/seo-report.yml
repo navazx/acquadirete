@@ -23,5 +23,6 @@ jobs:
         env:
           GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # chat_id non è segreto (inutile senza il token): valore diretto.
+          TELEGRAM_CHAT_ID: '6369351410'
         run: node scripts/seo-report.mjs
