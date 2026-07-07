@@ -44,7 +44,7 @@ export default function CookieConsent() {
     <div ref={bannerRef} className="fixed bottom-0 inset-x-0 z-[60] bg-slate-950 border-t border-slate-800 px-4 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
         <p className="text-xs text-slate-300 leading-relaxed flex-1">
-          Usiamo cookie tecnici necessari al funzionamento del sito e, solo con il tuo consenso, cookie di marketing (Meta Pixel) per misurare l'efficacia delle nostre inserzioni su Facebook e Instagram. Leggi la{' '}
+          Usiamo cookie tecnici necessari al funzionamento del sito e, solo con il tuo consenso, cookie di marketing (Meta Pixel e Google Ads) per misurare l'efficacia delle nostre inserzioni su Facebook, Instagram e Google. Leggi la{' '}
           <Link href="/cookie-policy" title="Leggi la Cookie Policy" className="text-blue-400 hover:underline">Cookie Policy</Link>.
         </p>
         <div className="flex gap-2.5 shrink-0">

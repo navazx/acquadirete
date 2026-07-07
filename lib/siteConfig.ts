@@ -70,6 +70,21 @@ export const SOCIAL = {
 // cookie di marketing dal banner (vedi components/CookieConsent.tsx).
 export const META_PIXEL_ID = '996066733219370';
 
+// Google Ads (tag di conversione): come il Meta Pixel, si attiva solo dopo il
+// consenso ai cookie di marketing (vedi components/GoogleAdsTag.tsx).
+// Le "labels" identificano le singole azioni di conversione create in Google
+// Ads (Obiettivi → Conversioni → azione → "Configura il tag" → snippet evento:
+// la label è la parte DOPO la barra in send_to: 'AW-XXXX/QUESTA_PARTE').
+// Finché una label è vuota, quella conversione non viene inviata.
+export const GOOGLE_ADS = {
+  id: 'AW-18232888892',
+  labels: {
+    form: '', // invio del modulo di contatto
+    phone: '', // clic su un link "chiama" (tel:)
+    whatsapp: '', // clic su un link WhatsApp (wa.me)
+  },
+};
+
 // ============================================================================
 //  INVIO DEL MODULO DI CONTATTO
 //  Il modulo invia le richieste via Web3Forms (gratuito, nessun server da gestire).

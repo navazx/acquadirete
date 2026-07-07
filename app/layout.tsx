@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 // import FloatingWhatsApp from '../components/FloatingWhatsApp'; // disattivato su richiesta, componente non rimosso
 import CookieConsent from '../components/CookieConsent';
 import MetaPixel from '../components/MetaPixel';
+import GoogleAdsTag from '../components/GoogleAdsTag';
 import { CONTACT, SITE_URL, OG_DEFAULTS } from '../lib/siteConfig';
 import { REVIEW_RATING, REVIEW_TOTAL } from '../lib/reviews';
 
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <MetaPixel />
+        <GoogleAdsTag />
         <ModalProvider>
           <Header />
           <main className="flex-grow">{children}</main>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, User, MapPin, Clock, Sparkles, CheckCircle2, Send, MessageSquare, ChevronDown } from 'lucide-react';
 import { CONTACT, FORM } from '../lib/siteConfig';
+import { setGoogleAdsUserData, trackGoogleAdsConversion } from '../lib/googleAds';
 
 const SERVICE_LABELS: Record<string, string> = {
   depuratore: 'Depuratore per la casa',
@@ -100,6 +101,10 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       // Evento di conversione per Meta Ads: parte solo se l'utente ha
       // accettato i cookie di marketing (fbq esiste solo in quel caso).
       window.fbq?.('track', 'Lead', { content_name: servizioLabel });
+      // Conversione Google Ads (stessa logica: gtag esiste solo col consenso).
+      // I dati per le conversioni avanzate vanno impostati prima dell'evento.
+      setGoogleAdsUserData({ email: formData.email, phone: formData.telefono });
+      trackGoogleAdsConversion('form');
       setIsSubmitted(true);
     } catch (err) {
       console.error('Errore invio modulo:', err);

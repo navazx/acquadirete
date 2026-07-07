@@ -34,7 +34,7 @@ export default function CookiePolicyPage() {
           <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-3">2. Tipologie di cookie utilizzati</h2>
           <p><strong>a) Cookie tecnici (necessari).</strong> Garantiscono il corretto funzionamento del sito (es. navigazione, memorizzazione delle preferenze). Non richiedono il consenso dell'utente.</p>
           <p className="mt-3"><strong>b) Cookie analitici.</strong> Raccolgono informazioni in forma aggregata sul numero di visitatori e su come utilizzano il sito. Se di terze parti e non opportunamente anonimizzati, richiedono il consenso. <em>Al momento questo sito non utilizza strumenti analitici attivi.</em></p>
-          <p className="mt-3"><strong>c) Cookie di profilazione e marketing.</strong> Utilizzati per tracciare la navigazione e mostrare annunci personalizzati, anche per misurare l'efficacia delle nostre campagne pubblicitarie. Richiedono il consenso preventivo, raccolto tramite il banner mostrato alla prima visita. Questo sito utilizza il <strong>Meta Pixel</strong> (Facebook/Instagram): viene attivato solo se l'utente clicca "Accetta" sul banner, e resta disattivato in caso di rifiuto.</p>
+          <p className="mt-3"><strong>c) Cookie di profilazione e marketing.</strong> Utilizzati per tracciare la navigazione e mostrare annunci personalizzati, anche per misurare l'efficacia delle nostre campagne pubblicitarie. Richiedono il consenso preventivo, raccolto tramite il banner mostrato alla prima visita. Questo sito utilizza il <strong>Meta Pixel</strong> (Facebook/Instagram) e il <strong>tag Google Ads</strong> (misurazione delle conversioni delle campagne Google, incluse le "conversioni avanzate" che trasmettono a Google, in forma criptata e non leggibile, l'email o il telefono inseriti nel modulo di contatto): entrambi vengono attivati solo se l'utente clicca "Accetta" sul banner, e restano disattivati in caso di rifiuto.</p>
         </section>
 
         <section>
@@ -45,6 +45,7 @@ export default function CookiePolicyPage() {
             <li><strong>Web3Forms</strong> (invio modulo di contatto) — <a href="https://web3forms.com/privacy" target="_blank" rel="noreferrer" title="Privacy policy di Web3Forms" className="text-blue-600 hover:underline">web3forms.com/privacy</a></li>
             <li><strong>WhatsApp / Meta</strong> (link di contatto esterno, nessun widget incorporato) — <a href="https://www.whatsapp.com/legal/privacy-policy-eea" target="_blank" rel="noreferrer" title="Privacy policy di WhatsApp" className="text-blue-600 hover:underline">whatsapp.com</a></li>
             <li><strong>Meta Pixel</strong> (Facebook/Instagram, misurazione campagne pubblicitarie — solo previo consenso) — <a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noreferrer" title="Privacy policy di Meta/Facebook" className="text-blue-600 hover:underline">facebook.com/privacy</a></li>
+            <li><strong>Google Ads</strong> (Google Ireland Ltd., misurazione delle conversioni pubblicitarie — solo previo consenso) — <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" title="Privacy policy di Google" className="text-blue-600 hover:underline">policies.google.com/privacy</a></li>
           </ul>
         </section>
 
@@ -70,6 +71,13 @@ export default function CookiePolicyPage() {
                   <td className="p-3 border border-slate-200">90 giorni</td>
                 </tr>
                 <tr className="bg-slate-50">
+                  <td className="p-3 border border-slate-200">_gcl_au, _gcl_aw</td>
+                  <td className="p-3 border border-slate-200">Google Ads</td>
+                  <td className="p-3 border border-slate-200">Marketing</td>
+                  <td className="p-3 border border-slate-200">Attribuzione e misurazione delle conversioni delle campagne Google Ads</td>
+                  <td className="p-3 border border-slate-200">90 giorni</td>
+                </tr>
+                <tr className="bg-white">
                   <td className="p-3 border border-slate-200">acquadirete_cookie_consent</td>
                   <td className="p-3 border border-slate-200">Prima parte</td>
                   <td className="p-3 border border-slate-200">Tecnico</td>
@@ -105,7 +113,7 @@ export default function CookiePolicyPage() {
         </section>
 
         <p className="text-xs text-slate-400 pt-4 border-t border-slate-200">
-          Ultimo aggiornamento: 18 giugno 2026
+          Ultimo aggiornamento: 7 luglio 2026
         </p>
       </div>
     </div>
