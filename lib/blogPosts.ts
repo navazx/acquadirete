@@ -467,4 +467,77 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    "slug": "ogni-quanto-cambiare-filtri-depuratore",
+    "title": "Ogni quanto cambiare i filtri del depuratore: guida onesta alla manutenzione",
+    "metaTitle": "Ogni quanto cambiare i filtri depuratore | Acquadirete",
+    "metaDescription": "Quando cambiare i filtri del tuo depuratore? Indicazioni generali, i segnali da non ignorare e come funziona una manutenzione fatta bene. Guida onesta.",
+    "excerpt": "Filtri a carboni, membrane osmotiche e prefiltri: ti spieghiamo ogni quanto vanno cambiati, i segnali da non sottovalutare e cosa comprende una manutenzione seria.",
+    "publishedAt": "2026-07-06",
+    "readingMinutes": 5,
+    "relatedServices": [
+      "depuratore",
+      "osmosi",
+      "assistenza"
+    ],
+    "relatedPosts": [
+      "carboni-attivi-vs-osmosi-inversa",
+      "installatore-depuratore-scomparso-cosa-fare"
+    ],
+    "sections": [
+      {
+        "paragraphs": [
+          "È la domanda che ci fanno più spesso: \"ogni quanto devo cambiare i filtri del depuratore?\". La risposta onesta è che dipende, ma non vogliamo lasciarti con una frase vaga. In questo articolo ti diamo indicazioni generali realistiche, ti spieghiamo quali segnali non vanno mai ignorati e cosa significa, concretamente, una manutenzione fatta bene. Senza allarmismi e senza spingerti a sostituire tutto ogni due mesi \"per sicurezza\"."
+        ]
+      },
+      {
+        "heading": "Perché i filtri vanno cambiati (e cosa succede se non lo fai)",
+        "paragraphs": [
+          "I filtri di un depuratore hanno il compito di trattenere ciò che non vuoi nel bicchiere: sedimenti, cloro, cattivi odori e, nel caso dell'osmosi inversa, gran parte delle sostanze disciolte. Con l'uso, però, si saturano. Un filtro esausto smette di lavorare come dovrebbe, e nei casi peggiori può diventare esso stesso un punto in cui i batteri proliferano.",
+          "In altre parole, un depuratore non manutenuto rischia di peggiorare la qualità dell'acqua invece di migliorarla. Per questo la manutenzione non è un optional o un modo per farti spendere: è la parte che fa funzionare davvero l'impianto nel tempo."
+        ]
+      },
+      {
+        "heading": "Indicazioni generali sui tempi di sostituzione",
+        "paragraphs": [
+          "Ti diamo dei riferimenti di massima, validi in generale sul mercato e non numeri \"nostri\" spacciati per legge. I prefiltri a sedimenti e i filtri a carboni attivi vengono in genere sostituiti circa una volta l'anno, a volte ogni sei mesi se l'acqua in ingresso è particolarmente carica o il consumo è alto. La membrana a osmosi inversa dura molto più a lungo: spesso diversi anni, perché è protetta a monte dai filtri precedenti.",
+          "Questi intervalli però cambiano in base a tre fattori: la qualità dell'acqua della tua zona (a Firenze, Prato e Pistoia la durezza e i valori non sono uguali ovunque), quante persone usano l'impianto e quanti litri consumate. Ecco perché in fase di sopralluogo ti diamo un piano di manutenzione tarato sul tuo caso, non una tabella copia-incolla."
+        ]
+      },
+      {
+        "heading": "I segnali da non ignorare",
+        "paragraphs": [
+          "Oltre alle scadenze, ci sono segnali pratici che il tuo depuratore ti manda. Un calo evidente del flusso d'acqua, un ritorno di sapore o odore di cloro, un gusto \"strano\" o un'acqua meno limpida sono campanelli d'allarme che vale la pena non rimandare."
+        ]
+      },
+      {
+        "heading": "Come funziona una manutenzione fatta bene",
+        "paragraphs": [
+          "Una manutenzione seria non è solo \"svito il vecchio filtro e avvito quello nuovo\". Un intervento fatto bene comprende la sostituzione dei filtri previsti, la sanificazione dell'impianto quando serve, il controllo delle guarnizioni e dei raccordi per escludere perdite e, dove possibile, una verifica dei valori dell'acqua in uscita per confermare che tutto stia lavorando come deve.",
+          "Diffida di chi cambia solo la cartuccia più facile da raggiungere e ti saluta in cinque minuti. E diffida anche del contrario: chi ti dice che va sostituito tutto ogni pochi mesi senza motivo. La trasparenza è mostrarti cosa è stato fatto e perché, lasciandoti traccia degli interventi."
+        ]
+      },
+      {
+        "heading": "Il nostro approccio (e cosa possiamo fare per te)",
+        "paragraphs": [
+          "Con Acquadirete puoi avere un piano di manutenzione programmata, così non devi ricordarti tu le scadenze: ti contattiamo noi al momento giusto. Se invece hai comprato un impianto da qualcun altro che è \"sparito\", possiamo comunque valutare se prenderlo in carico, ovviamente dopo un controllo.",
+          "Se non sei sicuro di ogni quanto cambiare i filtri del tuo depuratore, o sospetti che siano da un pezzo che nessuno li tocca, fissa un sopralluogo gratuito e senza impegno a Firenze, Prato o Pistoia. Diamo un'occhiata all'impianto, ti diciamo onestamente cosa serve e decidi con calma tu. Nessuna pressione."
+        ]
+      }
+    ],
+    "faqs": [
+      {
+        "q": "Ogni quanto vanno cambiati i filtri a carboni attivi?",
+        "a": "In generale circa una volta l'anno, a volte ogni sei mesi con acqua molto carica o consumi elevati. L'intervallo esatto dipende dalla tua zona e dall'uso: te lo indichiamo col sopralluogo."
+      },
+      {
+        "q": "La membrana dell'osmosi inversa quanto dura?",
+        "a": "Molto più dei prefiltri: spesso diversi anni, perché è protetta dai filtri a monte. Proprio per questo è fondamentale non trascurare i filtri che la precedono, altrimenti si rovina prima."
+      },
+      {
+        "q": "Cosa succede se non cambio mai i filtri?",
+        "a": "Il depuratore perde efficacia e, nei casi peggiori, i filtri saturi possono diventare un punto in cui proliferano batteri. Un impianto non manutenuto rischia di peggiorare l'acqua invece di migliorarla."
+      }
+    ]
+  },
 ];
