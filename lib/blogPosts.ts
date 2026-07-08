@@ -507,8 +507,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         "heading": "I segnali da non ignorare",
         "paragraphs": [
-          "Oltre alle scadenze, ci sono segnali pratici che il tuo depuratore ti manda. Un calo evidente del flusso d'acqua, un ritorno di sapore o odore di cloro, un gusto \"strano\" o un'acqua meno limpida sono campanelli d'allarme che vale la pena non rimandare.",
-          "Se hai un impianto con acqua frizzante e noti meno effervescenza, o se il tempo di riempimento del serbatoio si allunga molto, sono altri indizi utili. Nel dubbio, meglio una chiamata in più: valutare la situazione non costa nulla ed evita di usare un filtro ormai fuori uso."
+          "Oltre alle scadenze, ci sono segnali pratici che il tuo depuratore ti manda. Un calo evidente del flusso d'acqua, un ritorno di sapore o odore di cloro, un gusto \"strano\" o un'acqua meno limpida sono campanelli d'allarme che vale la pena non rimandare."
         ]
       },
       {
