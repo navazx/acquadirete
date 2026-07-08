@@ -79,9 +79,9 @@ export const META_PIXEL_ID = '996066733219370';
 export const GOOGLE_ADS = {
   id: 'AW-18232888892',
   labels: {
-    form: '', // invio del modulo di contatto
-    phone: '', // clic su un link "chiama" (tel:)
-    whatsapp: '', // clic su un link WhatsApp (wa.me)
+    form: 'at1aCLjjsMwcELycj_ZD', // invio del modulo di contatto
+    phone: 'jj7QCPzI7cwcELycj_ZD', // clic su un link "chiama" (tel:)
+    whatsapp: '-ZMjCL-5hM0cELycj_ZD', // clic su un link WhatsApp (wa.me)
   },
 };
 
