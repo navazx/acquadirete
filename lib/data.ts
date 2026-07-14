@@ -204,7 +204,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     localSeo: {
       heading: 'Microfiltrazione a carboni attivi a Firenze, Prato e Pistoia',
       body: [
-        'A Firenze e a Prato la microfiltrazione a carboni attivi è spesso la scelta giusta quando l\'acqua è già buona ma sa di cloro: migliora gusto e qualità mantenendo intatti i sali minerali, senza scarto d\'acqua e con un impianto compatto sotto il lavello.',
+        'A Firenze, Prato e Pistoia la microfiltrazione a carboni attivi è spesso la scelta giusta quando l\'acqua è già buona ma sa di cloro: migliora gusto e qualità mantenendo intatti i sali minerali, senza scarto d\'acqua e con un impianto compatto sotto il lavello.',
         'Valutiamo la tua acqua con un sopralluogo gratuito a casa o nella tua attività, in città o in provincia, e ti consigliamo se bastano i carboni attivi o se conviene passare all\'osmosi inversa.'
       ]
     }

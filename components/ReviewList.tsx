@@ -41,7 +41,7 @@ export default function ReviewList() {
             <span className="text-3xl font-black text-blue-600 block font-mono">{REVIEW_TOTAL}+</span>
             <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">Valutazioni Certificate</span>
             <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-              Il 100% degli utenti a Firenze ha votato Acquadirete con il massimo punteggio per serietà ed efficienza dei nostri depuratori d'acqua.
+              Il 100% degli utenti tra Firenze, Prato e Pistoia ha votato Acquadirete con il massimo punteggio per serietà ed efficienza dei nostri depuratori d'acqua.
             </p>
           </div>
 

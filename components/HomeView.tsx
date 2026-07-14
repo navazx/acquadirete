@@ -317,7 +317,7 @@ export default function HomeView() {
       {/* Inline contact review hook page */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-50 rounded-xl p-8 border border-slate-200">
         <div className="lg:col-span-8 space-y-4">
-          <h3 className="text-2xl font-bold text-slate-950">Vuoi leggere cosa dicono i nostri clienti a Firenze?</h3>
+          <h3 className="text-2xl font-bold text-slate-950">Vuoi leggere cosa dicono i nostri clienti?</h3>
           <p className="text-xs text-slate-500 leading-relaxed">
             Abbiamo installato i nostri impianti in centinaia di abitazioni, studi professionali e appartamenti nel centro storico e in periferia. Sfoglia tutte le recensioni certificate su Google Maps.
           </p>

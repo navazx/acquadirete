@@ -247,8 +247,8 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       <section className="border-t border-slate-200 pt-16">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Cosa ne pensa chi lo ha installato a Firenze?</h3>
-            <p className="text-xs text-slate-500">Recensioni verificate degli utenti del territorio fiorentino.</p>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Cosa ne pensa chi lo ha installato?</h3>
+            <p className="text-xs text-slate-500">Recensioni verificate degli utenti di Firenze, Prato e Pistoia.</p>
           </div>
           <Link
             href={ROUTES.recensioni}

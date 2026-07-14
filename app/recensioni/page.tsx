@@ -57,7 +57,7 @@ export default function RecensioniPage() {
           Oltre 130 Recensioni Google a 5 Stelle
         </h1>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Siamo orgogliosi della fiducia che le famiglie e le attività commerciali di Firenze ci riservano da anni. Leggi le testimonianze certificate o invia la tua recensione sul servizio ricevuto.
+          Siamo orgogliosi della fiducia che le famiglie e le attività commerciali di Firenze, Prato e Pistoia ci riservano da anni. Leggi le testimonianze certificate o invia la tua recensione sul servizio ricevuto.
         </p>
       </div>
 
@@ -66,7 +66,7 @@ export default function RecensioniPage() {
       {/* Micro CTA to contact */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 md:p-8 text-center max-w-2xl mx-auto space-y-4">
         <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase tracking-wider text-xs">Anche tu desideri un'acqua così pura dal tuo rubinetto?</h2>
-        <p className="text-xs text-slate-500">I nostri consulenti e tecnici eseguono sopralluoghi continui in tutta Firenze.</p>
+        <p className="text-xs text-slate-500">I nostri consulenti e tecnici eseguono sopralluoghi continui tra Firenze, Prato e Pistoia.</p>
         <OpenModalButton className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer">
           Contattaci per una Chiamata Informativa
         </OpenModalButton>

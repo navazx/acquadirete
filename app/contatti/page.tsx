@@ -7,7 +7,7 @@ import FacebookIcon from '../../components/FacebookIcon';
 import { CONTACT, telHref, whatsappHref, SOCIAL, OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Contatti | Depuratori Acqua a Firenze e Prato | Acquadirete',
+  title: 'Contatti | Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete',
   description:
     'Contatta Acquadirete per depuratori, osmosi inversa, cambio filtri e assistenza a Firenze, Prato e Pistoia. Telefono, WhatsApp e modulo sopralluogo gratuito.',
   alternates: { canonical: '/contatti' },
@@ -25,7 +25,7 @@ export default function ContattiPage() {
           Contatta Acquadirete
         </h1>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Hai delle domande sui nostri depuratori, l'osmosi o hai bisogno di un cambio filtri o assistenza multimarca a Firenze? Siamo qui per aiutarti.
+          Hai delle domande sui nostri depuratori, l'osmosi o hai bisogno di un cambio filtri o assistenza multimarca a Firenze, Prato e Pistoia? Siamo qui per aiutarti.
         </p>
       </div>
 
