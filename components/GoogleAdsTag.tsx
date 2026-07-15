@@ -14,9 +14,27 @@ function injectGtag() {
   if (typeof window === 'undefined' || window.gtag) return;
 
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
+  // ATTENZIONE: gtag.js processa SOLO oggetti `arguments` nel dataLayer e
+  // ignora silenziosamente gli array normali (push(args) con rest parameter
+  // NON funziona: script caricato ma nessun invio a Google). Va usato
+  // `arguments` come nello snippet ufficiale.
+  window.gtag = function gtag(..._args: unknown[]) {
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer!.push(arguments);
   };
+
+  // Consent Mode v2: per gli utenti UE Google esige un segnale di consenso
+  // esplicito, altrimenti gtag mette in coda gli eventi senza mai inviarli
+  // (verificato: conversioni nel dataLayer ma zero richieste di rete).
+  // Qui "granted" è corretto perché questa funzione viene eseguita SOLO dopo
+  // che l'utente ha cliccato "Accetta" sul banner. Va dichiarato prima di
+  // gtag('js')/config.
+  window.gtag('consent', 'default', {
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
+    analytics_storage: 'granted',
+  });
 
   const s = document.createElement('script');
   s.async = true;
