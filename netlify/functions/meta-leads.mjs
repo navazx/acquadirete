@@ -1,6 +1,7 @@
 // Webhook Lead Ads di Meta: Facebook/Instagram chiamano questo endpoint quando
 // qualcuno compila un modulo delle inserzioni. Recuperiamo i dati completi del
-// lead via Graph API e li accodiamo alla scheda "Meta" del foglio Google.
+// lead via Graph API e li accodiamo alla scheda "Lead-Contatti" del gestionale
+// clienti su Google Sheets (con Provenienza "Meta / Facebook").
 //
 // Configurazione lato Meta (developers.facebook.com → app → Webhooks → Page,
 // campo "leadgen"):
@@ -17,7 +18,8 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { appendRow } from './_shared/google-sheets.mjs';
 
-const HEADERS = ['Data', 'Nome', 'Telefono', 'Email', 'Altri campi', 'Form ID', 'Ad ID'];
+const TAB = 'Lead-Contatti';
+const HEADERS = ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse', 'Stato', 'Note'];
 const GRAPH = 'https://graph.facebook.com/v23.0';
 
 export default async (req) => {
@@ -109,14 +111,22 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
   const data = new Date(lead.created_time || Date.now())
     .toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
 
-  await appendRow('Meta', HEADERS, [
+  // Eventuali domande personalizzate del modulo finiscono nelle Note,
+  // insieme agli id di modulo/inserzione per risalire alla campagna.
+  const extra = Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join(' — ');
+  const note = [extra, form_id ? `(form ${form_id}${ad_id ? `, ad ${ad_id}` : ''})` : '']
+    .filter(Boolean).join(' ');
+
+  // Colonne e valori dei menu a tendina della scheda "Lead-Contatti":
+  // tenerli allineati col foglio (vedi lead.mjs).
+  await appendRow(TAB, HEADERS, [
     data,
     nome,
-    telefono,
-    email,
-    Object.keys(fields).length ? JSON.stringify(fields) : '',
-    form_id || '',
-    ad_id || '',
+    [telefono, email].filter(Boolean).join(' · '),
+    'Meta / Facebook',
+    '',
+    'Da richiamare',
+    note,
   ]);
 }
 

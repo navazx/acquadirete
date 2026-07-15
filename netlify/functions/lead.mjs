@@ -1,10 +1,15 @@
 // Endpoint /api/lead: riceve i dati del modulo contatti del sito e li accoda
-// alla scheda "Sito" del foglio Google dei lead (LEADS_SHEET_ID).
-// Il client lo chiama fire-and-forget: un errore qui non blocca l'invio del
-// form, che viaggia comunque via Web3Forms (email a info@).
+// alla scheda "Lead-Contatti" del gestionale clienti su Google Sheets
+// (LEADS_SHEET_ID). Il client lo chiama fire-and-forget: un errore qui non
+// blocca l'invio del form, che viaggia comunque via Web3Forms (email a info@).
+//
+// Le colonne e i valori di Provenienza/Stato rispecchiano i menu a tendina
+// già presenti nella scheda del foglio: non cambiarli qui senza aggiornare
+// anche il foglio (e viceversa).
 import { appendRow, nowInItaly } from './_shared/google-sheets.mjs';
 
-const HEADERS = ['Data', 'Nome', 'Telefono', 'Email', 'Zona', 'Impianto di interesse', 'Note', 'Pagina'];
+const TAB = 'Lead-Contatti';
+const HEADERS = ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse', 'Stato', 'Note'];
 
 const clip = (v, max) => (v == null ? '' : String(v).slice(0, max));
 
@@ -23,16 +28,22 @@ export default async (req) => {
     return Response.json({ ok: false, error: 'nome e telefono obbligatori' }, { status: 400 });
   }
 
+  const contatto = [clip(telefono, 50), clip(email, 200)].filter(Boolean).join(' · ');
+  const note = [
+    zona ? `Zona: ${clip(zona, 100)}` : '',
+    clip(messaggio, 1000),
+    pagina ? `(dalla pagina ${clip(pagina, 200)})` : '',
+  ].filter(Boolean).join(' — ');
+
   try {
-    await appendRow('Sito', HEADERS, [
+    await appendRow(TAB, HEADERS, [
       nowInItaly(),
       clip(nome, 200),
-      clip(telefono, 50),
-      clip(email, 200),
-      clip(zona, 100),
+      contatto,
+      'Sito web',
       clip(servizio, 100),
-      clip(messaggio, 1000),
-      clip(pagina, 200),
+      'Da richiamare',
+      note,
     ]);
     return Response.json({ ok: true });
   } catch (err) {

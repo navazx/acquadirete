@@ -48,33 +48,52 @@ export async function getAccessToken() {
   return access_token;
 }
 
-// Accoda `row` alla scheda `tab` del foglio. Se la scheda non esiste ancora,
-// la crea con la riga di intestazione `headers` e riprova.
+// Accoda `row` alla scheda `tab` del foglio, sotto la tabella che inizia alla
+// riga di intestazione. Se la scheda non esiste ancora, la crea con la riga di
+// intestazione `headers`.
 export async function appendRow(tab, headers, row) {
   const sheetId = process.env.LEADS_SHEET_ID;
   if (!sheetId) throw new Error('LEADS_SHEET_ID mancante');
   const token = await getAccessToken();
 
-  let res = await appendValues(token, sheetId, tab, [row]);
-  if (!res.ok) {
-    const text = await res.text();
-    // "Unable to parse range" = la scheda non esiste: creala e riprova.
-    if (res.status === 400 && /unable to parse range/i.test(text)) {
-      await createTab(token, sheetId, tab, headers);
-      res = await appendValues(token, sheetId, tab, [row]);
-      if (!res.ok) throw new Error(`Append fallito dopo creazione scheda (${res.status}): ${await res.text()}`);
-    } else {
-      throw new Error(`Append fallito (${res.status}): ${text}`);
-    }
+  // La scheda può avere righe di titolo/descrizione sopra la tabella (è il
+  // caso di "Lead-Contatti" nel gestionale): l'append va ancorato alla riga
+  // di intestazione, altrimenti l'API considera "tabella" le righe di titolo
+  // e inserisce il lead SOPRA le intestazioni, al primo buco vuoto.
+  let anchor = await findHeaderRow(token, sheetId, tab, headers[0]);
+  if (anchor === null) {
+    await createTab(token, sheetId, tab, headers);
+    anchor = 1;
   }
+  const res = await appendValues(token, sheetId, `'${tab}'!A${anchor}`, [row]);
+  if (!res.ok) throw new Error(`Append fallito (${res.status}): ${await res.text()}`);
 }
 
-function appendValues(token, sheetId, tab, values) {
+// Numero (1-based) della riga di intestazione, cercando la prima cella della
+// colonna A uguale a `headerCell`. Restituisce null se la scheda non esiste;
+// 1 se l'intestazione non si trova (scheda già usata in modo diverso).
+async function findHeaderRow(token, sheetId, tab, headerCell) {
+  const range = encodeURIComponent(`'${tab}'!A1:A100`);
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    if (res.status === 400 && /unable to parse range/i.test(text)) return null; // scheda inesistente
+    throw new Error(`Lettura scheda "${tab}" fallita (${res.status}): ${text}`);
+  }
+  const col = (await res.json()).values ?? [];
+  const idx = col.findIndex((r) => (r[0] || '').trim().toLowerCase() === headerCell.toLowerCase());
+  return idx >= 0 ? idx + 1 : 1;
+}
+
+function appendValues(token, sheetId, range, values) {
   // valueInputOption=RAW: tutto salvato letteralmente (niente "333..." che
   // diventa numero perdendo spazi o zeri iniziali).
-  const range = encodeURIComponent(`${tab}!A1`);
+  // Il nome scheda nel range va tra apici: contiene trattini ("Lead-Contatti").
   return fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
     {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -97,7 +116,7 @@ async function createTab(token, sheetId, tab, headers) {
     }
     return;
   }
-  const header = await appendValues(token, sheetId, tab, [headers]);
+  const header = await appendValues(token, sheetId, `'${tab}'!A1`, [headers]);
   if (!header.ok) throw new Error(`Scrittura intestazione fallita (${header.status}): ${await header.text()}`);
 }
 

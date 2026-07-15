@@ -540,4 +540,83 @@ export const BLOG_POSTS: BlogPost[] = [
       }
     ]
   },
+  {
+    slug: 'acqua-rubinetto-firenze-si-puo-bere',
+    title: 'Si può bere l\'acqua del rubinetto a Firenze? Facciamo chiarezza',
+    metaTitle: 'Acqua del Rubinetto a Firenze: si può Bere? | Acquadirete',
+    metaDescription:
+      'L\'acqua del rubinetto a Firenze è potabile e controllata. Allora perché sa di cloro e lascia calcare? Cosa sapere davvero e quando ha senso un depuratore.',
+    excerpt:
+      'L\'acqua di Firenze è potabile, ma tra cloro e calcare in tanti la comprano in bottiglia. Ti spieghiamo com\'è davvero e quando un depuratore ha senso.',
+    publishedAt: '2026-07-15',
+    readingMinutes: 6,
+    relatedServices: ['depuratore', 'carboni', 'osmosi'],
+    relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'quanto-costa-depuratore-osmosi-inversa'],
+    sections: [
+      {
+        paragraphs: [
+          'È una domanda che sentiamo spesso durante i sopralluoghi, a volte quasi sottovoce: "Ma l\'acqua del rubinetto qui a Firenze... si può bere davvero?". La risposta breve è sì. Quella completa, però, merita qualche riga in più, perché spiega anche come mai così tante famiglie fiorentine continuano a caricare casse d\'acqua in macchina pur avendo acqua potabile in casa.',
+          'In questo articolo ti raccontiamo com\'è davvero l\'acqua che esce dai rubinetti di Firenze e dintorni: cosa funziona, cosa dà fastidio e quando ha senso pensare a un depuratore. Con la stessa onestà che usiamo di persona: se la tua acqua va già bene così, te lo diciamo.',
+        ],
+      },
+      {
+        heading: 'La risposta breve: sì, è potabile e controllata',
+        paragraphs: [
+          'L\'acqua che arriva nelle case di Firenze e provincia è acqua potabile a tutti gli effetti: il gestore dell\'acquedotto la controlla costantemente con analisi frequenti, ed è tenuto per legge a rispettare i limiti fissati per le acque destinate al consumo umano. Da questo punto di vista, bere dal rubinetto è una scelta sicura.',
+          'Questo è un punto su cui vogliamo essere chiari, proprio perché lavoriamo nel settore: chi ti dice che l\'acqua del rubinetto "fa male" o "non si può bere" per venderti un impianto non sta facendo il tuo interesse. Il nostro lavoro parte da un\'acqua già potabile e la rende migliore, non "da pericolosa a sicura".',
+        ],
+      },
+      {
+        heading: 'Allora perché così tanti la comprano in bottiglia?',
+        paragraphs: [
+          'Se l\'acqua è potabile, perché a Firenze si vendono ancora tonnellate di acqua in bottiglia? Perché "potabile" e "piacevole da bere" non sono la stessa cosa. I limiti di legge garantiscono la sicurezza, non il gusto.',
+          'Il primo imputato è il cloro: serve a mantenere l\'acqua igienicamente sicura lungo tutto il percorso dall\'acquedotto al tuo rubinetto, ed è un bene che ci sia. Ma il suo sapore e il suo odore si sentono, soprattutto in certi periodi dell\'anno, e per molti sono il motivo principale per cui l\'acqua del rubinetto "non piace".',
+          'Il secondo è il calcare. In gran parte di Firenze e provincia l\'acqua è dura, cioè ricca di calcio e magnesio: non è un problema per la salute, ma si fa notare ogni giorno — nel gusto più "pesante" dell\'acqua, nelle incrostazioni bianche su pentole e bollitori, negli elettrodomestici che si rovinano prima del tempo.',
+        ],
+      },
+      {
+        heading: 'Il calcare: il vero "difetto" dell\'acqua fiorentina',
+        paragraphs: [
+          'Se chiedi a un fiorentino cosa non gli piace della sua acqua, nove volte su dieci la risposta riguarda il calcare. La durezza varia da zona a zona — tra centro, periferia e comuni della provincia i valori non sono uguali — ma in generale siamo in un territorio con acqua da mediamente dura a dura.',
+          'Cosa significa in pratica: macchie bianche su bicchieri e rubinetteria, resistenze di lavatrice e lavastoviglie incrostate, la moka e il bollitore da pulire in continuazione, e un\'acqua che al gusto risulta meno gradevole di una buona oligominerale.',
+          'È importante dirlo: un\'acqua dura non è un\'acqua che fa male. Calcio e magnesio sono minerali, non contaminanti. Ma è comprensibile che, tra il sapore e i fastidi quotidiani, molte famiglie finiscano per bere altro.',
+        ],
+      },
+      {
+        heading: 'Rubinetto, bottiglia o depuratore: i tre scenari',
+        paragraphs: [
+          '• Rubinetto così com\'è: sicuro e praticamente gratis, ma con il gusto del cloro e la durezza della tua zona. Se a te va bene così, è una scelta legittima che non ti sconsiglieremo mai.',
+          '• Acqua in bottiglia: buona da bere, ma costa centinaia di euro l\'anno per una famiglia, pesa (letteralmente, quando la porti su per le scale) e produce montagne di plastica.',
+          '• Depuratore: parte dalla tua acqua potabile e le toglie ciò che dà fastidio — cloro, odori, ed eventualmente l\'eccesso di calcare — così bevi dal rubinetto un\'acqua buona quanto quella in bottiglia, senza comprarla.',
+        ],
+      },
+      {
+        heading: 'Quando ha senso un depuratore (e quale)',
+        paragraphs: [
+          'Se il tuo unico fastidio è il sapore di cloro, spesso basta un impianto a carboni attivi: semplice, senza scarto d\'acqua, mantiene i minerali naturali e toglie ciò che rovina il gusto. Se invece la tua zona ha un\'acqua molto dura, o vuoi un\'acqua leggera anche per cucinare, l\'osmosi inversa è la soluzione più completa.',
+          'La scelta giusta dipende dall\'acqua che hai davvero in casa: per questo prima di proporre qualsiasi impianto la analizziamo sul posto, davanti a te. Ne abbiamo parlato in dettaglio nella guida "Carboni attivi o osmosi inversa?", se vuoi approfondire le differenze.',
+        ],
+      },
+      {
+        heading: 'Vuoi sapere com\'è davvero la tua acqua? Te lo diciamo gratis',
+        paragraphs: [
+          'La durezza e la qualità dell\'acqua cambiano da zona a zona, a volte da strada a strada. L\'unico modo per sapere com\'è davvero la tua è analizzarla: durante il sopralluogo gratuito a Firenze, Prato e Pistoia lo facciamo direttamente a casa tua, e ti diciamo onestamente se e quale impianto avrebbe senso — anche quando la risposta è "la tua acqua va già bene così".',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'L\'acqua del rubinetto a Firenze è sicura da bere?',
+        a: 'Sì: è controllata costantemente dal gestore dell\'acquedotto e rispetta i limiti di legge per le acque potabili. I difetti che si notano — sapore di cloro, calcare — riguardano il gusto e la praticità, non la sicurezza.',
+      },
+      {
+        q: 'Perché l\'acqua di Firenze sa di cloro?',
+        a: 'Il cloro viene aggiunto per mantenere l\'acqua igienicamente sicura lungo la rete, ed è un bene che ci sia. Il suo sapore però si sente: un filtro a carboni attivi lo elimina senza toccare i minerali naturali dell\'acqua.',
+      },
+      {
+        q: 'Se l\'acqua è già potabile, a cosa serve un depuratore?',
+        a: 'A renderla anche piacevole da bere: toglie cloro, odori e, con l\'osmosi inversa, l\'eccesso di calcare. In pratica ti permette di smettere di comprare acqua in bottiglia, con un risparmio concreto ogni anno.',
+      },
+    ],
+  },
 ];
