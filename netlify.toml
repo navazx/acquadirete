@@ -5,6 +5,12 @@
 [build.environment]
   NODE_VERSION = "24"
 
+# Funzioni serverless (endpoint /api/lead e /api/meta-leads): copiano i lead
+# del form del sito e dei moduli Meta sul foglio Google (env LEADS_SHEET_ID,
+# GSC_KEY_JSON, META_*).
+[functions]
+  directory = "netlify/functions"
+
 # Redirect 301 dalle vecchie URL del sito ASP.NET (ancora indicizzate su Google)
 # verso le pagine nuove. Evita i 404 su chi arriva dai risultati di ricerca e
 # consolida l'autorità SEO sulle pagine attuali.

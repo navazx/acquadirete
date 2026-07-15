@@ -68,6 +68,24 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
     setIsSubmitting(true);
     const servizioLabel = SERVICE_LABELS[formData.servizio] || formData.servizio;
 
+    // Copia del lead sul foglio Google (funzione Netlify /api/lead).
+    // Fire-and-forget: non blocca né fa fallire l'invio principale, e parte
+    // in parallelo a Web3Forms così il lead resta tracciato anche se l'email
+    // dovesse fallire. In locale (next dev) l'endpoint non esiste: innocuo.
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome: formData.nome,
+        telefono: formData.telefono,
+        email: formData.email,
+        zona: formData.zona,
+        servizio: servizioLabel,
+        messaggio: formData.messaggio,
+        pagina: window.location.pathname,
+      }),
+    }).catch(() => {});
+
     try {
       if (FORM.web3formsAccessKey) {
         // Invio reale via Web3Forms. Il destinatario (info@acquadirete.it) è
