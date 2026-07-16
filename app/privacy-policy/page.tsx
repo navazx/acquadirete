@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
           <p>I dati possono essere trattati, per le finalità sopra indicate, da soggetti che agiscono in qualità di Responsabili del trattamento, tra cui:</p>
           <ul className="mt-3 space-y-1.5 list-disc list-inside text-xs text-slate-600">
             <li>il fornitore di servizi di hosting del sito (<strong>Netlify, Inc.</strong>);</li>
-            <li>il fornitore di servizi di invio moduli di contatto (<strong>Web3Forms</strong>);</li>
+            <li>i fornitori dei servizi con cui gestiamo le richieste del modulo di contatto (<strong>Google</strong> per l'archiviazione su Google Sheets, <strong>Telegram</strong> per la notifica interna al Titolare);</li>
             <li>il fornitore di servizi di posta elettronica;</li>
             <li>eventuali consulenti (commercialista) e fornitori di servizi tecnici;</li>
             <li>eventuali fornitori di servizi statistici e di marketing (es. Google) — <em>solo se attivati e previo consenso, vedi Cookie Policy</em>.</li>
@@ -102,7 +102,7 @@ export default function PrivacyPolicyPage() {
 
         <section>
           <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-3">6. Trasferimento dei dati verso Paesi terzi</h2>
-          <p>Alcuni fornitori (es. Netlify, Web3Forms) hanno sede o infrastrutture negli Stati Uniti. Tali trasferimenti avvengono esclusivamente sulla base di garanzie adeguate ai sensi degli artt. 44 e seguenti del GDPR (es. Clausole Contrattuali Standard o decisioni di adeguatezza della Commissione europea ove applicabili). L'utente può richiedere copia di tali garanzie ai recapiti del Titolare.</p>
+          <p>Alcuni fornitori (es. Netlify, Google) hanno sede o infrastrutture negli Stati Uniti. Tali trasferimenti avvengono esclusivamente sulla base di garanzie adeguate ai sensi degli artt. 44 e seguenti del GDPR (es. Clausole Contrattuali Standard o decisioni di adeguatezza della Commissione europea ove applicabili). L'utente può richiedere copia di tali garanzie ai recapiti del Titolare.</p>
         </section>
 
         <section>

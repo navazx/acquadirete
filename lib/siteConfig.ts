@@ -85,18 +85,9 @@ export const GOOGLE_ADS = {
   },
 };
 
-// ============================================================================
-//  INVIO DEL MODULO DI CONTATTO
-//  Il modulo invia le richieste via Web3Forms (gratuito, nessun server da gestire).
-//  COME ATTIVARLO:
-//   1. Vai su https://web3forms.com
-//   2. Inserisci l'email info@acquadirete.it e ricevi una "Access Key" gratuita
-//   3. Incolla la chiave qui sotto tra le virgolette
-//  Finché la chiave è vuota, il modulo funziona in modalità demo (non invia email).
-// ============================================================================
-export const FORM = {
-  web3formsAccessKey: '7de0398b-f97c-4631-bfbe-3dfbbd17a455',
-};
+// NB: il modulo di contatto NON usa più Web3Forms/email (rimosso il 2026-07-16):
+// invia a /api/lead (funzione Netlify) che scrive sul gestionale Google Sheets
+// e manda l'avviso Telegram. Vedi netlify/functions/lead.mjs.
 
 // Restituisce l'href per il pulsante "chiama". Se il numero non è impostato,
 // punta a "#" per evitare link rotti.

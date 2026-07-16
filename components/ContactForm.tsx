@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail, Phone, User, MapPin, Clock, Sparkles, CheckCircle2, Send, MessageSquare, ChevronDown } from 'lucide-react';
-import { CONTACT, FORM } from '../lib/siteConfig';
+import { CONTACT } from '../lib/siteConfig';
 import { setGoogleAdsUserData, trackGoogleAdsConversion } from '../lib/googleAds';
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -68,51 +68,26 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
     setIsSubmitting(true);
     const servizioLabel = SERVICE_LABELS[formData.servizio] || formData.servizio;
 
-    // Copia del lead sul foglio Google (funzione Netlify /api/lead).
-    // Fire-and-forget: non blocca né fa fallire l'invio principale, e parte
-    // in parallelo a Web3Forms così il lead resta tracciato anche se l'email
-    // dovesse fallire. In locale (next dev) l'endpoint non esiste: innocuo.
-    fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nome: formData.nome,
-        telefono: formData.telefono,
-        email: formData.email,
-        zona: formData.zona,
-        servizio: servizioLabel,
-        messaggio: formData.messaggio,
-        pagina: window.location.pathname,
-      }),
-    }).catch(() => {});
-
     try {
-      if (FORM.web3formsAccessKey) {
-        // Invio reale via Web3Forms. Il destinatario (info@acquadirete.it) è
-        // legato alla Access Key e si configura nella dashboard Web3Forms,
-        // NON qui: il codice passa solo la chiave, non l'indirizzo di arrivo.
-        const response = await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({
-            access_key: FORM.web3formsAccessKey,
-            subject: `Nuova richiesta dal sito — ${servizioLabel}`,
-            from_name: 'Sito Acquadirete',
-            'Nome e cognome': formData.nome,
-            Telefono: formData.telefono,
-            Email: formData.email || '—',
-            Zona: formData.zona,
-            'Impianto di interesse': servizioLabel,
-            Note: formData.messaggio || '—',
-          }),
-        });
-        const data = await response.json();
-        if (!data.success) {
-          throw new Error(data.message || 'Invio non riuscito');
-        }
-      } else {
-        // Modalità demo: nessuna chiave configurata, simula l'invio
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Invio alla funzione Netlify /api/lead: scrive il contatto sul foglio
+      // Google (gestionale) e manda l'avviso Telegram. L'email via Web3Forms
+      // è stata rimossa (2026-07-16) su richiesta: le notifiche sono Telegram.
+      const response = await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.nome,
+          telefono: formData.telefono,
+          email: formData.email,
+          zona: formData.zona,
+          servizio: servizioLabel,
+          messaggio: formData.messaggio,
+          pagina: window.location.pathname,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Invio non riuscito');
       }
 
       saveLocalLead();
@@ -125,6 +100,13 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       trackGoogleAdsConversion('form');
       setIsSubmitted(true);
     } catch (err) {
+      // In sviluppo (next dev) /api/lead non esiste, è una funzione Netlify:
+      // simuliamo l'invio riuscito per poter provare il form in locale.
+      if (process.env.NODE_ENV === 'development') {
+        saveLocalLead();
+        setIsSubmitted(true);
+        return;
+      }
       console.error('Errore invio modulo:', err);
       alert(
         `Si è verificato un problema nell'invio della richiesta. Riprova tra poco oppure chiamaci/scrivici su WhatsApp al ${CONTACT.phoneDisplay}.`
