@@ -105,8 +105,10 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
     }
     return '';
   };
+  // I moduli reali della pagina usano nomi diversi per lo stesso campo
+  // ("phone" nel modulo di luglio, "phone_number" in quello di giugno).
   const nome = take('full_name', 'nome_e_cognome', 'nome');
-  const telefono = take('phone_number', 'telefono', 'numero_di_telefono');
+  const telefono = take('phone_number', 'phone', 'telefono', 'numero_di_telefono');
   const email = take('email', 'indirizzo_email');
   const data = new Date(lead.created_time || Date.now())
     .toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
