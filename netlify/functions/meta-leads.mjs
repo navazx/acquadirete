@@ -17,6 +17,7 @@
 //                      X-Hub-Signature-256 di ogni chiamata.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { appendRow } from './_shared/google-sheets.mjs';
+import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
 const HEADERS = ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse', 'Stato', 'Note'];
@@ -130,6 +131,14 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
     'Da richiamare',
     note,
   ]);
+
+  const righe = [
+    '🔔 Nuovo contatto da FACEBOOK/INSTAGRAM',
+    nome ? `👤 ${nome}` : '',
+    (telefono || email) ? `📞 ${[telefono, email].filter(Boolean).join(' · ')}` : '',
+    extra ? `📝 ${extra.slice(0, 500)}` : '',
+  ].filter(Boolean);
+  await notifyTelegram(righe.join('\n') + '\n\nGià segnato sul foglio Lead-Contatti ✅');
 }
 
 export const config = { path: '/api/meta-leads' };

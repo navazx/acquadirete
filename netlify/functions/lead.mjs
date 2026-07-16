@@ -7,6 +7,7 @@
 // già presenti nella scheda del foglio: non cambiarli qui senza aggiornare
 // anche il foglio (e viceversa).
 import { appendRow, nowInItaly } from './_shared/google-sheets.mjs';
+import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
 const HEADERS = ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse', 'Stato', 'Note'];
@@ -45,6 +46,15 @@ export default async (req) => {
       'Da richiamare',
       note,
     ]);
+    const righe = [
+      '🔔 Nuovo contatto dal SITO',
+      `👤 ${clip(nome, 200)}`,
+      `📞 ${contatto}`,
+      zona ? `📍 ${clip(zona, 100)}` : '',
+      servizio ? `🚰 ${clip(servizio, 100)}` : '',
+      messaggio ? `📝 ${clip(messaggio, 500)}` : '',
+    ].filter(Boolean);
+    await notifyTelegram(righe.join('\n') + '\n\nGià segnato sul foglio Lead-Contatti ✅');
     return Response.json({ ok: true });
   } catch (err) {
     console.error('Scrittura lead su Google Sheet fallita:', err);
