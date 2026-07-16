@@ -40,6 +40,8 @@ Web3Forms (`lib/siteConfig.ts` → `FORM.web3formsAccessKey`). Se la chiave è v
 
 In parallelo all'email, ogni invio del form viene copiato sul foglio Google "Gestionale_Clienti" (scheda **"Lead-Contatti"**, con Provenienza "Sito web" e Stato "Da richiamare" — valori dei menu a tendina del foglio, da tenere allineati) tramite la funzione Netlify `/api/lead` (`netlify/functions/lead.mjs`), chiamata fire-and-forget da `ContactForm.tsx`. C'è anche `/api/meta-leads` (`netlify/functions/meta-leads.mjs`): webhook per i moduli Lead Ads di Meta, che scrive sulla stessa scheda con Provenienza "Meta / Facebook". Helper condiviso in `netlify/functions/_shared/google-sheets.mjs` (service account del report SEO, zero dipendenze). Env necessarie su Netlify: `GSC_KEY_JSON`, `LEADS_SHEET_ID`, `META_VERIFY_TOKEN` + `META_PAGE_TOKEN` (+ `META_APP_SECRET` opzionale) per la parte Meta. In `next dev` gli endpoint `/api/*` non esistono (sono funzioni Netlify): il form funziona lo stesso.
 
+Dopo la scrittura sul foglio, entrambe le funzioni mandano un avviso Telegram col riepilogo del contatto (`netlify/functions/_shared/telegram.mjs`, env `TELEGRAM_BOT_TOKEN`; best-effort: se l'invio fallisce il lead resta salvato). Le env delle funzioni su Netlify vanno impostate **non-secret e con scope "all"** (con flag secret o scope ristretto il runtime non le riceve) e ogni modifica env richiede un redeploy.
+
 ## Convenzioni
 - Aggiungere una pagina servizio: creare `app/<slug>/page.tsx`, registrare lo slug in `lib/routes.ts` (e `types.ts` se serve un nuovo `PageId`), riusare `ServicePageView`.
 - Non duplicare dati di contatto o URL Google altrove: sempre da `siteConfig.ts`.
