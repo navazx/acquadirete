@@ -159,3 +159,11 @@
   to = "/"
   status = 301
   force = true
+
+# Vecchi file caricati dal CMS ASP.NET (PDF schede prodotto, es. SATURN.pdf):
+# unico percorso rimasto in 404 nella convalida Search Console del 17/7/2026.
+[[redirects]]
+  from = "/userfiles/*"
+  to = "/"
+  status = 301
+  force = true
