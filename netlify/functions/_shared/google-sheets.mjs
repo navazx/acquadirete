@@ -122,3 +122,12 @@ async function createTab(token, sheetId, tab, headers) {
 
 export const nowInItaly = () =>
   new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+
+// "costanza danielli" / "MARIO ROSSI" -> "Costanza Danielli" / "Mario Rossi".
+// I nomi arrivano dai moduli come li digita la gente: uniformiamo le iniziali.
+export const nomeProprio = (s) =>
+  String(s ?? '')
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');

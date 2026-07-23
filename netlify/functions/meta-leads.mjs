@@ -16,7 +16,7 @@
 //   META_APP_SECRET    facoltativa — se presente, verifichiamo la firma
 //                      X-Hub-Signature-256 di ogni chiamata.
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { appendRow } from './_shared/google-sheets.mjs';
+import { appendRow, nomeProprio } from './_shared/google-sheets.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
@@ -108,7 +108,7 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
   };
   // I moduli reali della pagina usano nomi diversi per lo stesso campo
   // ("phone" nel modulo di luglio, "phone_number" in quello di giugno).
-  const nome = take('full_name', 'nome_e_cognome', 'nome');
+  const nome = nomeProprio(take('full_name', 'nome_e_cognome', 'nome'));
   const telefono = take('phone_number', 'phone', 'telefono', 'numero_di_telefono');
   const email = take('email', 'indirizzo_email');
   const data = new Date(lead.created_time || Date.now())

@@ -6,7 +6,7 @@
 // Le colonne e i valori di Provenienza/Stato rispecchiano i menu a tendina
 // già presenti nella scheda del foglio: non cambiarli qui senza aggiornare
 // anche il foglio (e viceversa).
-import { appendRow, nowInItaly } from './_shared/google-sheets.mjs';
+import { appendRow, nowInItaly, nomeProprio } from './_shared/google-sheets.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
@@ -39,7 +39,7 @@ export default async (req) => {
   try {
     await appendRow(TAB, HEADERS, [
       nowInItaly(),
-      clip(nome, 200),
+      nomeProprio(clip(nome, 200)),
       contatto,
       'Sito web',
       clip(servizio, 100),
@@ -48,7 +48,7 @@ export default async (req) => {
     ]);
     const righe = [
       '🔔 Nuovo contatto dal SITO',
-      `👤 ${clip(nome, 200)}`,
+      `👤 ${nomeProprio(clip(nome, 200))}`,
       `📞 ${contatto}`,
       zona ? `📍 ${clip(zona, 100)}` : '',
       servizio ? `🚰 ${clip(servizio, 100)}` : '',
