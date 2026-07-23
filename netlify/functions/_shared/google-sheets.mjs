@@ -123,11 +123,7 @@ async function createTab(token, sheetId, tab, headers) {
 export const nowInItaly = () =>
   new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
 
-// "costanza danielli" / "MARIO ROSSI" -> "Costanza Danielli" / "Mario Rossi".
-// I nomi arrivano dai moduli come li digita la gente: uniformiamo le iniziali.
+// I nomi arrivano dai moduli come li digita la gente ("costanza danielli"):
+// sul gestionale vanno TUTTI MAIUSCOLI (scelta dell'utente, come in Clienti).
 export const nomeProprio = (s) =>
-  String(s ?? '')
-    .trim()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
+  String(s ?? '').trim().replace(/\s+/g, ' ').toUpperCase();
