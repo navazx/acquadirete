@@ -16,7 +16,7 @@
 //   META_APP_SECRET    facoltativa — se presente, verifichiamo la firma
 //                      X-Hub-Signature-256 di ogni chiamata.
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { appendRow, nomeProprio } from './_shared/google-sheets.mjs';
+import { appendOrMergeRow, nomeProprio } from './_shared/google-sheets.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
@@ -121,24 +121,35 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
     .filter(Boolean).join(' ');
 
   // Colonne e valori dei menu a tendina della scheda "Lead-Contatti":
-  // tenerli allineati col foglio (vedi lead.mjs).
-  await appendRow(TAB, HEADERS, [
-    data,
-    nome,
-    [telefono, email].filter(Boolean).join(' · '),
-    'Meta / Facebook',
-    '',
-    'Da richiamare',
-    note,
-  ]);
+  // tenerli allineati col foglio (vedi lead.mjs). Se la persona ha già
+  // scritto di recente, la riga esistente viene completata (niente doppioni).
+  const esito = await appendOrMergeRow(
+    TAB,
+    HEADERS,
+    [
+      data,
+      nome,
+      [telefono, email].filter(Boolean).join(' · '),
+      'Meta / Facebook',
+      '',
+      'Da richiamare',
+      note,
+    ],
+    { telefono, email }
+  );
 
   const righe = [
-    '🔔 Nuovo contatto da FACEBOOK/INSTAGRAM',
+    esito.doppione
+      ? '🔁 Ha ricompilato un modulo FACEBOOK/INSTAGRAM (già in lista)'
+      : '🔔 Nuovo contatto da FACEBOOK/INSTAGRAM',
     nome ? `👤 ${nome}` : '',
     (telefono || email) ? `📞 ${[telefono, email].filter(Boolean).join(' · ')}` : '',
     extra ? `📝 ${extra.slice(0, 500)}` : '',
   ].filter(Boolean);
-  await notifyTelegram(righe.join('\n') + '\n\nGià segnato sul foglio Lead-Contatti ✅');
+  const chiusura = esito.doppione
+    ? `Aggiornata la sua riga sul foglio (riga ${esito.riga}), niente doppioni ✅`
+    : 'Già segnato sul foglio Lead-Contatti ✅';
+  await notifyTelegram(`${righe.join('\n')}\n\n${chiusura}`);
 }
 
 export const config = { path: '/api/meta-leads' };

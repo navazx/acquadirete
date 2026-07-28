@@ -1,12 +1,12 @@
-// Endpoint /api/lead: riceve i dati del modulo contatti del sito e li accoda
-// alla scheda "Lead-Contatti" del gestionale clienti su Google Sheets
-// (LEADS_SHEET_ID). Il client lo chiama fire-and-forget: un errore qui non
-// blocca l'invio del form, che viaggia comunque via Web3Forms (email a info@).
+// Endpoint /api/lead: riceve i dati del modulo contatti del sito, li scrive
+// sulla scheda "Lead-Contatti" del gestionale clienti su Google Sheets
+// (LEADS_SHEET_ID) e manda l'avviso Telegram. È l'unica destinazione del
+// modulo: l'invio email via Web3Forms è stato rimosso il 2026-07-16.
 //
 // Le colonne e i valori di Provenienza/Stato rispecchiano i menu a tendina
 // già presenti nella scheda del foglio: non cambiarli qui senza aggiornare
 // anche il foglio (e viceversa).
-import { appendRow, nowInItaly, nomeProprio } from './_shared/google-sheets.mjs';
+import { appendOrMergeRow, nowInItaly, nomeProprio } from './_shared/google-sheets.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
@@ -37,24 +37,34 @@ export default async (req) => {
   ].filter(Boolean).join(' — ');
 
   try {
-    await appendRow(TAB, HEADERS, [
-      nowInItaly(),
-      nomeProprio(clip(nome, 200)),
-      contatto,
-      'Sito web',
-      clip(servizio, 100),
-      'Da richiamare',
-      note,
-    ]);
+    // Se la stessa persona ha già scritto di recente, la sua riga viene
+    // completata invece di crearne una seconda.
+    const esito = await appendOrMergeRow(
+      TAB,
+      HEADERS,
+      [
+        nowInItaly(),
+        nomeProprio(clip(nome, 200)),
+        contatto,
+        'Sito web',
+        clip(servizio, 100),
+        'Da richiamare',
+        note,
+      ],
+      { telefono, email }
+    );
     const righe = [
-      '🔔 Nuovo contatto dal SITO',
+      esito.doppione ? '🔁 Ha riscritto dal SITO (già in lista)' : '🔔 Nuovo contatto dal SITO',
       `👤 ${nomeProprio(clip(nome, 200))}`,
       `📞 ${contatto}`,
       zona ? `📍 ${clip(zona, 100)}` : '',
       servizio ? `🚰 ${clip(servizio, 100)}` : '',
       messaggio ? `📝 ${clip(messaggio, 500)}` : '',
     ].filter(Boolean);
-    await notifyTelegram(righe.join('\n') + '\n\nGià segnato sul foglio Lead-Contatti ✅');
+    const chiusura = esito.doppione
+      ? `Aggiornata la sua riga sul foglio (riga ${esito.riga}), niente doppioni ✅`
+      : 'Già segnato sul foglio Lead-Contatti ✅';
+    await notifyTelegram(`${righe.join('\n')}\n\n${chiusura}`);
     return Response.json({ ok: true });
   } catch (err) {
     console.error('Scrittura lead su Google Sheet fallita:', err);
