@@ -15,6 +15,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-21',
     readingMinutes: 6,
     relatedServices: ['carboni', 'osmosi', 'depuratore'],
+    relatedPosts: ['acqua-rubinetto-firenze-si-puo-bere', 'quanto-costa-depuratore-osmosi-inversa'],
     sections: [
       {
         paragraphs: [
@@ -217,7 +218,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-24',
     readingMinutes: 5,
     relatedServices: ['assistenza', 'depuratore'],
-    relatedPosts: ['depuratore-acqua-gratis-contratti'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'acqua-frizzante-bar-ristoranti'],
     sections: [
       {
         paragraphs: [
@@ -549,7 +550,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'acqua di Firenze è potabile, ma tra cloro e calcare in tanti la comprano in bottiglia. Ti spieghiamo com\'è davvero e quando un depuratore ha senso.',
     publishedAt: '2026-07-15',
-    readingMinutes: 6,
+    readingMinutes: 7,
     relatedServices: ['depuratore', 'carboni', 'osmosi'],
     relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'quanto-costa-depuratore-osmosi-inversa'],
     sections: [
@@ -564,6 +565,15 @@ export const BLOG_POSTS: BlogPost[] = [
         paragraphs: [
           'L\'acqua che arriva nelle case di Firenze e provincia è acqua potabile a tutti gli effetti: il gestore dell\'acquedotto la controlla costantemente con analisi frequenti, ed è tenuto per legge a rispettare i limiti fissati per le acque destinate al consumo umano. Da questo punto di vista, bere dal rubinetto è una scelta sicura.',
           'Questo è un punto su cui vogliamo essere chiari, proprio perché lavoriamo nel settore: chi ti dice che l\'acqua del rubinetto "fa male" o "non si può bere" per venderti un impianto non sta facendo il tuo interesse. Il nostro lavoro parte da un\'acqua già potabile e la rende migliore, non "da pericolosa a sicura".',
+        ],
+      },
+      {
+        heading: 'Il dettaglio che quasi nessuno ti dice: l\'acquedotto risponde fino al contatore',
+        paragraphs: [
+          'C\'è però una precisazione che raramente senti fare, e che secondo noi cambia il modo di guardare la questione. I controlli e le garanzie del gestore riguardano l\'acqua fino al punto di consegna, cioè fino al tuo contatore. Da lì in poi — la colonna montante del condominio, le tubature dentro casa tua — la rete è privata, e la responsabilità è di chi possiede l\'immobile.',
+          'In pratica: l\'acqua può partire dall\'acquedotto in condizioni perfette e arrivare al tuo bicchiere un po\' diversa. In un palazzo degli anni Sessanta le tubature possono avere sessant\'anni; in un condominio l\'acqua percorre montanti lunghi prima di arrivare all\'ultimo piano; se un rubinetto resta fermo tutta la notte o per tutte le ferie, l\'acqua ristagna nel tratto finale. Sono le stesse ragioni per cui due appartamenti nella stessa via possono avere un\'acqua che sa diversa.',
+          'Non è un allarme e non serve spaventarsi: nella grande maggioranza dei casi si parla di un po\' di sapore metallico, di qualche sedimento o di acqua torbida dopo un lavoro sulla rete, non di un pericolo. Un accorgimento semplice e gratuito è lasciar scorrere qualche secondo l\'acqua di un rubinetto rimasto fermo a lungo, prima di berla o di riempire una pentola.',
+          'Il punto che ci interessa è un altro: l\'unica acqua che conta davvero è quella che esce dal tuo rubinetto, non quella dei valori medi della tua città. Ed è esattamente quella che analizziamo quando veniamo a casa tua.',
         ],
       },
       {
@@ -610,12 +620,86 @@ export const BLOG_POSTS: BlogPost[] = [
         a: 'Sì: è controllata costantemente dal gestore dell\'acquedotto e rispetta i limiti di legge per le acque potabili. I difetti che si notano — sapore di cloro, calcare — riguardano il gusto e la praticità, non la sicurezza.',
       },
       {
+        q: 'Le tubature di casa mia possono peggiorare l\'acqua?',
+        a: 'Possono influenzarla, sì: le garanzie del gestore arrivano fino al contatore, mentre la colonna montante del condominio e gli impianti interni sono rete privata. In edifici datati o dopo lunghi periodi di stagnazione può capitare di notare sapore metallico o sedimenti. Per questo l\'acqua va valutata al tuo rubinetto, non sui valori medi della città.',
+      },
+      {
         q: 'Perché l\'acqua di Firenze sa di cloro?',
         a: 'Il cloro viene aggiunto per mantenere l\'acqua igienicamente sicura lungo la rete, ed è un bene che ci sia. Il suo sapore però si sente: un filtro a carboni attivi lo elimina senza toccare i minerali naturali dell\'acqua.',
       },
       {
         q: 'Se l\'acqua è già potabile, a cosa serve un depuratore?',
         a: 'A renderla anche piacevole da bere: toglie cloro, odori e, con l\'osmosi inversa, l\'eccesso di calcare. In pratica ti permette di smettere di comprare acqua in bottiglia, con un risparmio concreto ogni anno.',
+      },
+    ],
+  },
+  {
+    slug: 'acqua-frizzante-bar-ristoranti',
+    title: 'Acqua microfiltrata per bar e ristoranti: conviene davvero?',
+    metaTitle: 'Acqua Frizzante per Bar e Ristoranti | Acquadirete',
+    metaDescription:
+      'Erogatori d\'acqua microfiltrata per bar e ristoranti: come funzionano, cosa cambia in sala e in magazzino e cosa chiedere prima di firmare.',
+    excerpt:
+      'Servire acqua microfiltrata al tavolo invece delle bottiglie: cosa cambia davvero in sala, in magazzino e nei conti di un locale.',
+    publishedAt: '2026-07-28',
+    readingMinutes: 5,
+    relatedServices: ['frizzante', 'business', 'assistenza'],
+    relatedPosts: ['acqua-rubinetto-firenze-si-puo-bere', 'noleggio-vs-acquisto-depuratore'],
+    sections: [
+      {
+        paragraphs: [
+          'Se hai un bar o un ristorante, l\'acqua è probabilmente l\'ultima voce a cui pensi — eppure è quella che ti ruba più spazio in magazzino e più passaggi al personale di sala. Sempre più locali tra Firenze, Prato e Pistoia stanno passando all\'acqua microfiltrata servita al tavolo, e ce lo chiedono in molti: conviene davvero, o è solo una moda?',
+          'Ti rispondiamo da installatori, non da consulenti: ti spieghiamo cosa cambia concretamente nel tuo locale, cosa devi sapere prima di decidere e quali sono i punti su cui vale la pena essere prudenti.',
+        ],
+      },
+      {
+        heading: 'Il costo delle bottiglie non è solo il prezzo delle casse',
+        paragraphs: [
+          'Quando si fanno due conti sull\'acqua in bottiglia si guarda quasi sempre al costo d\'acquisto. Ma in un\'attività quello è solo un pezzo. C\'è l\'ordine da gestire e da ricordarsi, il magazzino occupato da casse che potrebbero contenere altro, il personale che le sposta e le carica nel frigo durante il servizio, i vuoti da stoccare e smaltire.',
+          'Sono tutti costi reali, solo che non compaiono su nessuna fattura: si pagano in metri quadri e in minuti di lavoro. È il motivo per cui il confronto tra bottiglia ed erogatore, sul costo al litro, non ha davvero paragone — ma i numeri esatti dipendono dal tuo volume di servizio, e preferiamo fartelo vedere sui tuoi dati invece di buttare lì una percentuale.',
+        ],
+      },
+      {
+        heading: 'Come funziona un impianto per un\'attività',
+        paragraphs: [
+          'Non è l\'impianto domestico ingrandito: per bar e ristoranti servono macchine ad alta capacità, pensate per reggere i picchi del servizio senza restare indietro. A seconda dello spazio si usano erogatori a colonna, se l\'acqua viene presa dal personale in un punto dedicato, oppure sottobanco, se preferisci che la macchina resti invisibile ai clienti.',
+          'L\'impianto è collegato alla rete idrica, microfiltra l\'acqua e la eroga liscia, refrigerata o frizzante. Per le bollicine si usa anidride carbonica alimentare da una bombola, che sostituiamo noi quando serve: le bollicine si regolano secondo il gusto, e sono sempre fresche perché fatte al momento dell\'erogazione, non settimane prima in stabilimento.',
+        ],
+      },
+      {
+        heading: 'Cosa cambia in sala',
+        paragraphs: [
+          'Il cambiamento più visibile per il cliente è il contenitore: l\'acqua arriva al tavolo in caraffa o in bottiglia personalizzata con il nome del locale, invece che nella solita bottiglia del supermercato. Per molti ristoratori è diventato un elemento di immagine — un servizio più curato, e un messaggio ambientale concreto sulla plastica che non passa inosservato.',
+          'Per il personale cambia il ritmo: niente più corse al magazzino per rifornire il frigo nel mezzo del servizio, niente casse da aprire, niente vuoti da accatastare dietro il bancone. L\'acqua c\'è e basta.',
+        ],
+      },
+      {
+        heading: 'La domanda giusta da fare al fornitore: e se si rompe?',
+        paragraphs: [
+          'In una casa, un depuratore fermo per qualche giorno è una scocciatura. In un ristorante nel pieno del sabato sera è un problema serio, perché il servizio non può fermarsi ad aspettare un tecnico.',
+          'È il motivo per cui, quando parliamo con un\'attività, mettiamo subito sul tavolo la parte meno affascinante del discorso: chi interviene, in quanto tempo e cosa succede nel frattempo. Noi lavoriamo con assistenza rapida e macchina sostitutiva in caso di guasto, proprio perché il tuo servizio non può dipendere dai nostri tempi. Qualunque fornitore tu scelga, è la domanda che ti consigliamo di fare prima di firmare.',
+        ],
+      },
+      {
+        heading: 'Vuoi capire se ha senso per il tuo locale? Passiamo a dare un\'occhiata',
+        paragraphs: [
+          'Un bar con cinquanta caffè al giorno e un ristorante con due turni di sala hanno esigenze diverse: cambia la capacità che serve, cambia lo spazio disponibile, cambia il conto. Per questo veniamo sul posto, guardiamo dove si può installare, ragioniamo sui tuoi volumi reali e ti diciamo se conviene — anche quando la risposta è che, per come lavori adesso, puoi tranquillamente restare come sei.',
+          'Il sopralluogo è gratuito e senza impegno, in tutta la provincia di Firenze, Prato e Pistoia. Siamo sul territorio dal 2005: un fornitore che trovi ancora qui tra cinque anni, con fattura e referente vero, non un numero verde.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Quanto spazio serve per installare un erogatore?',
+        a: 'Dipende dalla soluzione: gli erogatori a colonna occupano un angolo, quelli sottobanco stanno nascosti sotto il piano e non si vedono in sala. Veniamo a misurare sul posto prima di proporti qualcosa, così sappiamo entrambi dove andrebbe.',
+      },
+      {
+        q: 'L\'impianto regge i momenti di punta del servizio?',
+        a: 'Per le attività usiamo macchine ad alta capacità, diverse da quelle domestiche proprio per questo. La taglia giusta però dipende dai tuoi volumi reali: la valutiamo insieme durante il sopralluogo, così non ti ritrovi né sotto né sovradimensionato.',
+      },
+      {
+        q: 'Chi si occupa della manutenzione e del cambio bombola CO₂?',
+        a: 'Ce ne occupiamo noi, con manutenzione programmata: ti avvisiamo quando è il momento, senza che tu debba ricordartelo. In caso di guasto interveniamo rapidamente e, se serve, lasciamo una macchina sostitutiva perché il servizio non si fermi.',
       },
     ],
   },
