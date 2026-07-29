@@ -1,0 +1,28 @@
+name: Alert keyword
+
+# Ogni lunedì alle 07:38 UTC (~09:38 ora italiana d'estate).
+# workflow_dispatch permette di lanciarlo a mano dalla tab "Actions" per test.
+on:
+  schedule:
+    - cron: '38 7 * * 1'
+  workflow_dispatch:
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Controlla i movimenti delle keyword e avvisa su Telegram
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # chat_id non è segreto (inutile senza il token): valore diretto.
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/keyword-alert.mjs

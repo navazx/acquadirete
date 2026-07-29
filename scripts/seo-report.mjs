@@ -1,104 +1,19 @@
 // ============================================================================
-//  Report SEO da Google Search Console -> Telegram.
-//  Pensato per girare su GitHub Actions (mensile), ma eseguibile anche in locale.
+//  Report SEO mensile da Google Search Console -> Telegram.
+//  Gira su GitHub Actions (.github/workflows/seo-report.yml), il 1° del mese.
 //
-//  Legge clic, impressioni, CTR, posizione media, query e pagine top degli
-//  ultimi 28 giorni e li confronta con i 28 precedenti.
+//  Ultimi 28 giorni confrontati con i 28 precedenti: clic, impressioni, CTR,
+//  posizione media, query top (per clic e per impressioni), pagine top.
 //
-//  Zero dipendenze npm: solo moduli nativi di Node (crypto, fetch).
-//  Autenticazione headless via service account.
-//
-//  Segreti letti dalle variabili d'ambiente (GitHub Secrets):
-//    GSC_KEY_JSON       -> contenuto del file JSON del service account
-//    TELEGRAM_BOT_TOKEN -> token del bot Telegram
-//    TELEGRAM_CHAT_ID   -> chat id di destinazione
-//  Facoltative:
-//    GSC_SITE_URL       -> default https://www.acquadirete.it/
-//    GSC_KEY_FILE       -> percorso a un file chiave locale (solo per test in locale)
+//  Test in locale (stampa a schermo, non invia):
+//    GSC_KEY_FILE="C:/.../seo-report/gsc-key.json" node scripts/seo-report.mjs
 // ============================================================================
 
-import { readFileSync } from 'node:fs';
-import { createSign } from 'node:crypto';
+import {
+  getAccessToken, query, sendTelegram, ymd, pct, windows, TELEGRAM_READY,
+} from './lib/gsc.mjs';
 
-const SITE_URL = process.env.GSC_SITE_URL || 'https://www.acquadirete.it/';
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
-const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-const TG_READY = Boolean(TG_TOKEN && CHAT_ID);
-
-function loadKey() {
-  if (process.env.GSC_KEY_JSON) return JSON.parse(process.env.GSC_KEY_JSON);
-  if (process.env.GSC_KEY_FILE) return JSON.parse(readFileSync(process.env.GSC_KEY_FILE, 'utf8'));
-  throw new Error('Chiave mancante: imposta il secret GSC_KEY_JSON (o GSC_KEY_FILE per il test locale).');
-}
-const key = loadKey();
-
-const b64url = (input) =>
-  Buffer.from(input).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-async function getAccessToken() {
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claim = {
-    iss: key.client_email,
-    scope: 'https://www.googleapis.com/auth/webmasters.readonly',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now,
-  };
-  const unsigned = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(claim))}`;
-  const signer = createSign('RSA-SHA256');
-  signer.update(unsigned);
-  signer.end();
-  const sig = signer.sign(key.private_key).toString('base64')
-    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const jwt = `${unsigned}.${sig}`;
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt,
-    }),
-  });
-  if (!res.ok) throw new Error(`Autenticazione fallita (${res.status}): ${await res.text()}`);
-  return (await res.json()).access_token;
-}
-
-const ymd = (d) => d.toISOString().slice(0, 10);
-
-async function query(token, body) {
-  const url = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(SITE_URL)}/searchAnalytics/query`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Query Search Console fallita (${res.status}): ${await res.text()}`);
-  return res.json();
-}
-
-async function sendTelegram(text) {
-  const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: CHAT_ID, text, disable_web_page_preview: true }),
-  });
-  if (!res.ok) throw new Error(`Invio Telegram fallito (${res.status}): ${await res.text()}`);
-}
-
-function pct(cur, prev) {
-  if (!prev) return cur ? '+++%' : '0%';
-  const d = ((cur - prev) / prev) * 100;
-  return `${d >= 0 ? '+' : ''}${d.toFixed(0)}%`;
-}
-
-// Ultimi 28 giorni terminanti 3 giorni fa (dati GSC ormai definitivi),
-// confrontati con i 28 giorni precedenti.
-const end = new Date(); end.setDate(end.getDate() - 3);
-const start = new Date(end); start.setDate(start.getDate() - 27);
-const prevEnd = new Date(start); prevEnd.setDate(prevEnd.getDate() - 1);
-const prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - 27);
+const { start, end, prevStart, prevEnd } = windows();
 
 async function main() {
   const token = await getAccessToken();
@@ -115,6 +30,7 @@ async function main() {
 
   const qRows = topQ.rows || [];
   const byClicks = qRows.filter((r) => r.clicks > 0).slice(0, 6);
+  // L'API ordina per clic: riordino lato client per vedere dove c'e' visibilita'.
   const byImpr = [...qRows].sort((a, b) => b.impressions - a.impressions).slice(0, 6);
 
   let msg = '';
@@ -146,7 +62,7 @@ async function main() {
   });
   if (!(topP.rows || []).length) msg += '• (nessun dato)\n';
 
-  if (TG_READY) {
+  if (TELEGRAM_READY) {
     await sendTelegram(msg);
     console.log('✅ Report inviato su Telegram.\n');
   } else {
