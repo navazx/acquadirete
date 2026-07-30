@@ -8,10 +8,12 @@
 export const ZONE = [
   { code: 'Z1', label: 'Firenze città', comuni: ['firenze'] },
   { code: 'Z2', label: 'Scandicci, Sesto, Campi, Calenzano', comuni: ['scandicci', 'sesto', 'campi', 'calenzano', 'signa', 'lastra', 'vaglia'] },
-  { code: 'Z3', label: 'Bagno a Ripoli, Impruneta, Chianti', comuni: ['bagno a ripoli', 'impruneta', 'chianti', 'greve', 'san casciano', 'tavarnelle', 'barberino'] },
+  { code: 'Z3', label: 'Bagno a Ripoli, Impruneta, Chianti', comuni: ['bagno a ripoli', 'impruneta', 'chianti', 'greve', 'san casciano', 'tavarnelle', 'barberino val', 'barberino tavarnelle'] },
   { code: 'Z4', label: 'Empoli, Montespertoli, Castelfiorentino', comuni: ['empoli', 'valdelsa', 'montespertoli', 'castelfiorentino', 'certaldo', 'montelupo', 'montaione', 'gambassi'] },
   { code: 'Z5', label: 'Prato e provincia', comuni: ['prato', 'montemurlo', 'carmignano', 'vaiano'] },
   { code: 'Z6', label: 'Pistoia e provincia', comuni: ['pistoia', 'agliana', 'quarrata', 'montecatini'] },
+  { code: 'Z7', label: 'Fiesole, Pontassieve, Figline, Reggello', comuni: ['fiesole', 'pontassieve', 'figline', 'incisa', 'reggello', 'rignano', 'pelago', 'rufina', 'compiobbi', 'sieci'] },
+  { code: 'Z8', label: 'Borgo San Lorenzo, Scarperia, Barberino di Mugello', comuni: ['borgo san lorenzo', 'scarperia', 'barberino di mugello', 'mugello', 'dicomano', 'vicchio', 'san piero a sieve'] },
   { code: 'ZX', label: 'Altro / fuori zona', comuni: ['altro', 'fuori zona'] },
 ];
 

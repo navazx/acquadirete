@@ -27,6 +27,8 @@ const ZONE = [
   { code: 'Z4', label: 'Empoli, Montespertoli, Castelfiorentino', comuni: 'Empoli, Montespertoli, Castelfiorentino, Certaldo, Montelupo, Montaione, Gambassi' },
   { code: 'Z5', label: 'Prato e provincia', comuni: 'Prato, Montemurlo, Carmignano, Vaiano' },
   { code: 'Z6', label: 'Pistoia e provincia', comuni: 'Pistoia, Agliana, Quarrata, Montecatini' },
+  { code: 'Z7', label: 'Fiesole, Pontassieve, Figline, Reggello', comuni: 'Fiesole, Pontassieve, Figline e Incisa, Reggello, Rignano sull’Arno, Pelago, Rufina, Compiobbi, Le Sieci' },
+  { code: 'Z8', label: 'Borgo San Lorenzo, Scarperia, Barberino di Mugello', comuni: 'Borgo San Lorenzo, Scarperia e San Piero, Barberino di Mugello, Dicomano, Vicchio, San Piero a Sieve' },
   { code: 'ZX', label: 'Altro / fuori zona', comuni: '' },
 ];
 
