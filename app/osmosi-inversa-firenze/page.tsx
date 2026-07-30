@@ -3,9 +3,9 @@ import ServicePageView from '../../components/ServicePageView';
 import { OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Osmosi Inversa a Firenze: Come Funziona | Acquadirete',
+  title: 'Osmosi Inversa Firenze | Installazione e 10 Anni di Garanzia',
   description:
-    'Depuratori a osmosi inversa a Firenze: come funziona e perché conviene, spiegato da chi li installa dal 2005. Acqua leggera e sicura. Sopralluogo gratuito.',
+    'Impianti a osmosi inversa a Firenze installati da noi dal 2005: acqua leggera dal rubinetto, 10 anni di garanzia, 130+ recensioni. Sopralluogo gratuito.',
   alternates: { canonical: '/osmosi-inversa-firenze' },
   openGraph: { ...OG_DEFAULTS, url: '/osmosi-inversa-firenze' },
 };

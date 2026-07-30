@@ -3,9 +3,9 @@ import ServicePageView from '../../components/ServicePageView';
 import { OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Depuratori a Carboni Attivi a Firenze | Acquadirete',
+  title: 'Depuratore a Carboni Attivi Firenze | Senza Scarto d\'Acqua',
   description:
-    'Microfiltrazione a carboni attivi a Firenze, Prato e Pistoia: elimina cloro e cattivi sapori mantenendo i minerali, senza scarto d\'acqua. Sopralluogo gratuito.',
+    'Microfiltrazione a carboni attivi a Firenze, Prato e Pistoia: elimina cloro e cattivi sapori mantenendo i minerali. 130+ recensioni, sopralluogo gratuito.',
   alternates: { canonical: '/depuratore-carboni-attivi-firenze' },
   openGraph: { ...OG_DEFAULTS, url: '/depuratore-carboni-attivi-firenze' },
 };

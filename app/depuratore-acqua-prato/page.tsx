@@ -3,9 +3,9 @@ import ServicePageView from '../../components/ServicePageView';
 import { OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Depuratore Acqua a Prato | Sopralluogo Gratuito | Acquadirete',
+  title: 'Depuratore Acqua Prato | 130+ Recensioni a 5 Stelle',
   description:
-    'Depuratore acqua a osmosi inversa a Prato e provincia. Installazione, manutenzione e assistenza locale dal 2005. Sopralluogo gratuito e senza impegno.',
+    'Depuratori a osmosi inversa a Prato e provincia, installati e assistiti dal 2005. 10 anni di garanzia, oltre 130 recensioni. Sopralluogo gratuito.',
   alternates: { canonical: '/depuratore-acqua-prato' },
   openGraph: { ...OG_DEFAULTS, url: '/depuratore-acqua-prato' },
 };

@@ -3,9 +3,9 @@ import ServicePageView from '../../components/ServicePageView';
 import { OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Installazione Depuratore Acqua a Firenze | Acquadirete',
+  title: 'Depuratore Acqua Casa Firenze | 130+ Recensioni a 5 Stelle',
   description:
-    'Depuratore acqua a osmosi inversa a casa tua a Firenze. Acqua buona dal rubinetto, installazione e assistenza dal 2005. Sopralluogo gratuito e senza impegno.',
+    'Installiamo depuratori a osmosi inversa nelle case di Firenze dal 2005. 10 anni di garanzia, oltre 130 recensioni a 5 stelle. Sopralluogo gratuito.',
   alternates: { canonical: '/depuratore-acqua-firenze' },
   openGraph: { ...OG_DEFAULTS, url: '/depuratore-acqua-firenze' },
 };

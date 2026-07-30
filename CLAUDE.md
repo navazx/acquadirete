@@ -27,7 +27,15 @@ Più `/blog` (indice) e i singoli articoli in `app/blog/[slug]/page.tsx` (conten
 Tutto in `lib/siteConfig.ts` — **modificare solo lì** per aggiornare telefono/WhatsApp/email/indirizzo/P.IVA in tutto il sito.
 
 ## Recensioni Google
-Inserimento **manuale** in `lib/google-reviews.json` (7 recensioni reali, media 5,0/128, `source:"google"`), esposte da `lib/reviews.ts`. Quando le recensioni sono "live" i filtri per categoria spariscono (Google non fornisce la categoria). Le diciture marketing "120+"/"5.0" in Header/Footer/HomeView sono statiche ma veritiere.
+Inserimento **manuale** in `lib/google-reviews.json` (7 recensioni per esteso, `total: 135`, `rating: 5`, `source:"google"`), esposte da `lib/reviews.ts` come `REVIEW_TOTAL`/`REVIEW_RATING`. Quando le recensioni sono "live" i filtri per categoria spariscono (Google non fornisce la categoria).
+
+**Attenzione al doppio binario del conteggio.** `REVIEW_TOTAL` (135) è dinamico e alimenta `ReviewList` e il JSON-LD `aggregateRating` (`app/layout.tsx`, `app/recensioni/page.tsx`). Le diciture marketing dicono invece **"130+"/"oltre 130"** e sono testo *hardcoded*: **18 occorrenze in 10 file** fra `components/` e `app/` (Header, Footer, HomeView, più i `title`/`description` di homepage, recensioni e pagine servizio). Per trovarle tutte prima di cambiare il numero:
+
+```bash
+grep -rn "130" sito/components/ sito/app/ --include=*.tsx
+```
+
+L'arrotondamento per difetto è voluto: "130+" resta veritiero finché `total` ≥ 130, quindi non va rincorso a ogni recensione nuova — si aggiorna a scaglioni di dieci.
 
 C'è anche un metodo automatico predisposto ma non attivo: `scripts/fetch-google-reviews.mjs` (girato in `prebuild`) sovrascriverebbe il JSON se in `.env.local` fosse impostata `GOOGLE_PLACES_API_KEY` (+ opz. `GOOGLE_PLACE_ID`). Senza chiave non fa nulla.
 
