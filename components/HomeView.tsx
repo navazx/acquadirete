@@ -117,6 +117,55 @@ export default function HomeView() {
         </div>
       </section>
 
+      {/* Local Social Proof & Highlights */}
+      <section className="bg-slate-950 text-white py-16 px-4 sm:px-6 lg:px-8 rounded-xl max-w-7xl mx-auto border border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+        <div className="max-w-4xl mx-auto space-y-10 relative z-10">
+          <div className="text-center space-y-5">
+            <span className="inline-block bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-500/20">
+              Perché Fidarsi di Noi
+            </span>
+            <h2 className="text-3xl md:text-3xl font-bold tracking-tight">
+              Comprare un depuratore oggi è un campo minato. Noi lavoriamo all'opposto.
+            </h2>
+            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl mx-auto">
+              Telefonate insistenti, "depuratori gratis" che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi veniamo a casa tua, valutiamo cosa ti serve davvero, e ti lasciamo il tempo di pensare: il nostro preventivo di spesa vale per 3 mesi.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+            <div className="bg-blue-600 p-6 rounded-lg border border-blue-500 space-y-2">
+              <Award className="text-white mb-1" size={22} />
+              <h3 className="text-base font-bold text-white">10 Anni di Garanzia</h3>
+              <p className="text-xs text-blue-50 leading-relaxed">
+                Diamo <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili): acquisti con la certezza di un prodotto che dura.
+              </p>
+            </div>
+            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
+              <ThumbsUp className="text-blue-500 mb-1" size={22} />
+              <h3 className="text-base font-bold text-white">Consulenza Onesta</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Niente agenti aggressivi o contratti capestro con canoni insostenibili. Proponiamo solo ciò che ti serve, con prezzo chiaro di acquisto e manutenzione, dopo aver analizzato l'acqua a casa tua.
+              </p>
+            </div>
+            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
+              <ShieldCheck className="text-blue-500 mb-1" size={22} />
+              <h3 className="text-base font-bold text-white">Non resti mai senz'acqua</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Assistenza in pochi giorni, non in settimane. E se l'impianto si guasta, ti lasciamo una macchina sostitutiva: zero pensieri.
+              </p>
+            </div>
+            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
+              <MapPin className="text-blue-500 mb-1" size={22} />
+              <h3 className="text-base font-bold text-white">Una persona, non un call center</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Dal 2005 sul territorio: una persona che risponde e che conosci. Centinaia di impianti installati, con oltre 130 recensioni a 5 stelle su Google.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Core Services Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -235,55 +284,6 @@ export default function HomeView() {
       {/* Calculator Call-out Section */}
       <section id="calc-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <WaterCalc />
-      </section>
-
-      {/* Local Social Proof & Highlights */}
-      <section className="bg-slate-950 text-white py-16 px-4 sm:px-6 lg:px-8 rounded-xl max-w-7xl mx-auto border border-slate-800 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto space-y-10 relative z-10">
-          <div className="text-center space-y-5">
-            <span className="inline-block bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-500/20">
-              Perché Fidarsi di Noi
-            </span>
-            <h2 className="text-3xl md:text-3xl font-bold tracking-tight">
-              Comprare un depuratore oggi è un campo minato. Noi lavoriamo all'opposto.
-            </h2>
-            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl mx-auto">
-              Telefonate insistenti, "depuratori gratis" che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi veniamo a casa tua, valutiamo cosa ti serve davvero, e ti lasciamo il tempo di pensare: il nostro preventivo di spesa vale per 3 mesi.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-            <div className="bg-blue-600 p-6 rounded-lg border border-blue-500 space-y-2">
-              <Award className="text-white mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">10 Anni di Garanzia</h3>
-              <p className="text-xs text-blue-50 leading-relaxed">
-                Diamo <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili): acquisti con la certezza di un prodotto che dura.
-              </p>
-            </div>
-            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
-              <ThumbsUp className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">Consulenza Onesta</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Niente agenti aggressivi o contratti capestro con canoni insostenibili. Proponiamo solo ciò che ti serve, con prezzo chiaro di acquisto e manutenzione, dopo aver analizzato l'acqua a casa tua.
-              </p>
-            </div>
-            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
-              <ShieldCheck className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">Non resti mai senz'acqua</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Assistenza in pochi giorni, non in settimane. E se l'impianto si guasta, ti lasciamo una macchina sostitutiva: zero pensieri.
-              </p>
-            </div>
-            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
-              <MapPin className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">Una persona, non un call center</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Dal 2005 sul territorio: una persona che risponde e che conosci. Centinaia di impianti installati, con oltre 130 recensioni a 5 stelle su Google.
-              </p>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* FAQ Interactive Accordion */}
