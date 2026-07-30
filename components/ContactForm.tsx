@@ -15,6 +15,21 @@ const SERVICE_LABELS: Record<string, string> = {
   test_acqua: 'Sopralluogo gratuito',
 };
 
+// Zone di sopralluogo: raggruppate per tempo di percorrenza dalla base
+// (Montespertoli/Scandicci), non per provincia, così ogni zona corrisponde a un
+// giro sensato. Gli stessi codici Z1–ZX vanno usati sul modulo Meta Lead Ads e
+// nella colonna "Zona" dell'Excel clienti: se le tassonomie divergono, i dati
+// vanno tradotti a mano.
+const ZONE = [
+  { code: 'Z1', label: 'Firenze città', comuni: 'Firenze, tutti i quartieri' },
+  { code: 'Z2', label: 'Scandicci, Sesto, Campi, Calenzano', comuni: 'Scandicci, Sesto Fiorentino, Campi Bisenzio, Calenzano, Signa, Lastra a Signa, Vaglia' },
+  { code: 'Z3', label: 'Bagno a Ripoli, Impruneta, Chianti', comuni: 'Bagno a Ripoli, Impruneta, Greve, San Casciano, Tavarnelle, Barberino' },
+  { code: 'Z4', label: 'Empoli, Montespertoli, Castelfiorentino', comuni: 'Empoli, Montespertoli, Castelfiorentino, Certaldo, Montelupo, Montaione, Gambassi' },
+  { code: 'Z5', label: 'Prato e provincia', comuni: 'Prato, Montemurlo, Carmignano, Vaiano' },
+  { code: 'Z6', label: 'Pistoia e provincia', comuni: 'Pistoia, Agliana, Quarrata, Montecatini' },
+  { code: 'ZX', label: 'Altro / fuori zona', comuni: '' },
+];
+
 interface ContactFormProps {
   initialService?: string;
   isCompact?: boolean;
@@ -25,7 +40,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
     nome: '',
     telefono: '',
     email: '',
-    zona: 'Firenze e Comune',
+    zona: '',
     servizio: initialService,
     messaggio: '',
     accettaPrivacy: false
@@ -34,18 +49,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const zoneFirenze = [
-    'Firenze e Comune',
-    'Prato e provincia',
-    'Montespertoli',
-    'Empolese / Valdelsa',
-    'Scandicci',
-    'Sesto Fiorentino',
-    'Bagno a Ripoli / Grassina',
-    'Campi Bisenzio / Signa',
-    'Lastra a Signa',
-    'Altra zona (Firenze, Prato e Pistoia)'
-  ];
+  const zonaScelta = ZONE.find((z) => z.code === formData.zona);
 
   const saveLocalLead = () => {
     // Conserva sempre una copia locale della richiesta (utile come backup).
@@ -60,13 +64,16 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nome || !formData.telefono || !formData.accettaPrivacy) {
+    if (!formData.nome || !formData.telefono || !formData.zona || !formData.accettaPrivacy) {
       alert('Per favore, compila i campi obbligatori contrassegnati con l\'asterisco ed accetta la privacy.');
       return;
     }
 
     setIsSubmitting(true);
     const servizioLabel = SERVICE_LABELS[formData.servizio] || formData.servizio;
+    // Sul foglio e su Telegram serve il codice (per raggruppare) insieme al
+    // nome della zona (per leggerlo al volo): "Z2 — Scandicci, Sesto, …".
+    const zonaLabel = `${zonaScelta?.code} — ${zonaScelta?.label}`;
 
     try {
       // Invio alla funzione Netlify /api/lead: scrive il contatto sul foglio
@@ -79,7 +86,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           nome: formData.nome,
           telefono: formData.telefono,
           email: formData.email,
-          zona: formData.zona,
+          zona: zonaLabel,
           servizio: servizioLabel,
           messaggio: formData.messaggio,
           pagina: window.location.pathname,
@@ -121,7 +128,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       nome: '',
       telefono: '',
       email: '',
-      zona: 'Firenze e Comune',
+      zona: '',
       servizio: initialService,
       messaggio: '',
       accettaPrivacy: false
@@ -253,25 +260,37 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
         {/* Neighborhood Select */}
         <div>
           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-            La tua Zona / Città <span className="text-blue-500 font-extrabold">*</span>
+            In quale zona si trova la casa? <span className="text-blue-500 font-extrabold">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <MapPin size={15} />
             </div>
             <select
+              required
               className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 appearance-none cursor-pointer"
               value={formData.zona}
               onChange={(e) => setFormData({ ...formData, zona: e.target.value })}
             >
-              {zoneFirenze.map((z, idx) => (
-                <option key={idx} value={z}>{z}</option>
+              {/* Nessuna zona preselezionata: un default sceglierebbe al posto
+                  di chi non tocca il menù e falserebbe i giri di sopralluogo. */}
+              <option value="" disabled>Scegli la zona…</option>
+              {ZONE.map((z) => (
+                <option key={z.code} value={z.code} title={z.comuni}>{z.label}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
               <ChevronDown size={15} />
             </div>
           </div>
+          {/* I comuni coperti restano fuori dall'etichetta (corta e leggibile)
+              ma sotto al menù, così chi ha un comune piccolo si riconosce
+              invece di ripiegare su "Altro". */}
+          {zonaScelta?.comuni && (
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-tight">
+              Comprende: {zonaScelta.comuni}
+            </p>
+          )}
         </div>
 
         {/* Service Selector */}

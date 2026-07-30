@@ -18,6 +18,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { appendOrMergeRow, nomeProprio } from './_shared/google-sheets.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
+import { etichettaZona } from './_shared/zone.mjs';
 
 const TAB = 'Lead-Contatti';
 const HEADERS = ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse', 'Stato', 'Note'];
@@ -69,6 +70,16 @@ export default async (req) => {
   return Response.json({ ok: true });
 };
 
+// Come take(), ma per i campi personalizzati, di cui non conosciamo il nome
+// esatto: prende (e consuma) il primo che combacia con l'espressione.
+function takeMatch(fields, regexp) {
+  const chiave = Object.keys(fields).find((k) => regexp.test(k) && fields[k]);
+  if (!chiave) return '';
+  const valore = fields[chiave];
+  delete fields[chiave];
+  return valore;
+}
+
 function verifySignature(raw, header) {
   const secret = process.env.META_APP_SECRET;
   if (!secret) return true; // verifica attiva solo se il secret è configurato
@@ -111,14 +122,21 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
   const nome = nomeProprio(take('full_name', 'nome_e_cognome', 'nome'));
   const telefono = take('phone_number', 'phone', 'telefono', 'numero_di_telefono');
   const email = take('email', 'indirizzo_email');
+  // La domanda sulla zona è personalizzata: Meta ne ricava il nome del campo
+  // dal testo della domanda ("in_quale_zona_si_trova_la_casa"), quindi la
+  // cerchiamo per parola chiave e la riportiamo al codice Z1–ZX del sito.
+  const zona = etichettaZona(takeMatch(fields, /zona|zone|comune|citta|città/i));
   const data = new Date(lead.created_time || Date.now())
     .toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
 
   // Eventuali domande personalizzate del modulo finiscono nelle Note,
   // insieme agli id di modulo/inserzione per risalire alla campagna.
   const extra = Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join(' — ');
-  const note = [extra, form_id ? `(form ${form_id}${ad_id ? `, ad ${ad_id}` : ''})` : '']
-    .filter(Boolean).join(' ');
+  const note = [
+    zona ? `Zona: ${zona}` : '',
+    extra,
+    form_id ? `(form ${form_id}${ad_id ? `, ad ${ad_id}` : ''})` : '',
+  ].filter(Boolean).join(' — ');
 
   // Colonne e valori dei menu a tendina della scheda "Lead-Contatti":
   // tenerli allineati col foglio (vedi lead.mjs). Se la persona ha già
@@ -144,6 +162,7 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
       : '🔔 Nuovo contatto da FACEBOOK/INSTAGRAM',
     nome ? `👤 ${nome}` : '',
     (telefono || email) ? `📞 ${[telefono, email].filter(Boolean).join(' · ')}` : '',
+    zona ? `📍 ${zona}` : '',
     extra ? `📝 ${extra.slice(0, 500)}` : '',
   ].filter(Boolean);
   const chiusura = esito.doppione
