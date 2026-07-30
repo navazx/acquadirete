@@ -107,7 +107,9 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
               loading="eager"
               fetchPriority="high"
               decoding="async"
-              className="object-cover w-full h-full hover:scale-105 duration-500 transition-all cursor-crosshair"
+              className={`object-cover w-full h-full hover:scale-105 duration-500 transition-all cursor-crosshair ${
+                serviceInfo.heroPosition === 'top' ? 'object-top' : ''
+              }`}
               referrerPolicy="no-referrer"
             />
           </div>

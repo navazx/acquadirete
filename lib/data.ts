@@ -8,7 +8,7 @@ const heroOsmosi = '/assets/hero-osmosi.webp';
 const heroCarboni = '/assets/hero-carboni.webp';
 const heroFrizzante = '/assets/hero-frizzante.webp';
 const heroBusiness = '/assets/hero-business.webp';
-const heroAssistenza = '/assets/hero-assistenza.webp';
+const heroAssistenza = '/assets/hero-assistenza-team.webp';
 
 export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
   prato: {
@@ -282,6 +282,9 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     title: 'Manutenzione e assistenza depuratori a Firenze, Prato e Pistoia',
     subtitle: 'Hai un depuratore e non sai più a chi affidarti? Lo seguiamo noi. Sostituzione filtri, sanificazione, riparazioni e controlli — con la garanzia di una persona che c\'è, oggi e tra cinque anni.',
     heroImage: heroAssistenza,
+    // Foto di squadra in officina: le teste sono vicine al bordo alto, quindi
+    // il ritaglio va ancorato in alto o da mobile (16:9) le taglierebbe.
+    heroPosition: 'top',
     problem: [
       'Capita spesso: hai comprato un depuratore anni fa, magari da un venditore che ti aveva promesso mari e monti, e adesso quell\'azienda non risponde più, ha chiuso, o ti chiede cifre assurde per cambiare un filtro.',
       'L\'impianto è buono, ma senza manutenzione regolare smette di funzionare bene — e l\'acqua non è più sicura come dovrebbe. Noi ci siamo per questo. E non spariamo.'

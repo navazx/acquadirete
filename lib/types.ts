@@ -26,6 +26,12 @@ export interface ServiceInfo {
   title: string;
   subtitle: string;
   heroImage: string;
+  /**
+   * Ancoraggio del ritaglio dell'immagine hero. Il riquadro è quadrato da
+   * desktop ma 16:9 da mobile: con `top` il taglio mangia solo dal basso,
+   * necessario quando i soggetti hanno la testa vicino al bordo superiore.
+   */
+  heroPosition?: 'top' | 'center';
   /** Paragrafi della sezione "Il problema" / introduzione. */
   problem: string[];
   /** Titolo della lista vantaggi (varia per pagina). */
