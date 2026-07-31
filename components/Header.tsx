@@ -53,7 +53,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full" id="site-header">
       {/* Top Banner (Info, Reviews & Direct Call) */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-950 text-white py-2 px-4 shadow-sm border-b border-blue-800">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 shadow-sm border-b border-blue-700">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
           {/* Social Proof badge */}
           <div className="flex items-center gap-1.5 font-medium text-blue-100 sm:justify-start justify-center">
@@ -67,7 +67,7 @@ export default function Header() {
               <span className="flex text-amber-400">★★★★★</span>
               <span className="text-white font-semibold">130+ Recensioni a 5 Stelle Google</span>
             </a>
-            <span className="hidden md:inline text-blue-300">| Depurazione Acqua a Firenze, Prato e Pistoia</span>
+            <span className="hidden md:inline text-blue-100">| Depurazione Acqua a Firenze, Prato e Pistoia</span>
           </div>
 
           {/* Contact Details */}

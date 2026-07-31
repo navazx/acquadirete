@@ -3,4 +3,50 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* ---------------------------------------------------------------
+     Palette Acquadirete — tema chiaro.
+
+     Le scale blue-* e slate-* di Tailwind sono ridefinite qui con i
+     colori del brand: le classi già usate nei componenti (bg-blue-600,
+     text-slate-900, border-slate-200, ...) prendono automaticamente
+     questi valori, quindi il colore si cambia SOLO da questo file.
+
+     ATTENZIONE alla scala slate: NON è un grigio uniforme.
+       slate-50 → slate-300  = superfici e bordi, azzurrati
+       slate-400 → slate-950 = testi, grigio neutro
+     È voluto: nel sito le tinte chiare fanno da sfondo/bordo e quelle
+     scure da testo, quindi le due metà non devono per forza stare
+     sulla stessa tinta. Non usare slate-200/300 per il testo.
+     --------------------------------------------------------------- */
+
+  /* Blu e celesti */
+  --color-blue-50: #f1f9ff; /* sfondo sezioni alternate */
+  --color-blue-100: #d9f1ff; /* celeste molto chiaro */
+  --color-blue-200: #a9ddff; /* celeste chiaro */
+  --color-blue-300: #7cc9ff;
+  --color-blue-400: #4db8ff; /* celeste principale */
+  --color-blue-500: #2a8cf5; /* blu medio */
+  --color-blue-600: #0f6cbd; /* blu primario */
+  --color-blue-700: #0b5aa0; /* blu hover */
+  --color-blue-800: #094a85;
+  --color-blue-900: #073a69;
+  --color-blue-950: #052a4d;
+
+  /* Superfici e bordi (azzurrati) */
+  --color-slate-50: #f8fcff; /* sfondo sito */
+  --color-slate-100: #f1f9ff; /* sfondo sezioni alternate */
+  --color-slate-150: #eaf4fe; /* hairline: divider e bordi sottili */
+  --color-slate-200: #dceeff; /* bordi */
+  --color-slate-250: #cfe6fb; /* bordo card più marcato */
+  --color-slate-300: #b9dbf7;
+
+  /* Testi (grigio neutro) */
+  --color-slate-400: #9ca3af; /* testo chiaro */
+  --color-slate-500: #6b7280; /* testo secondario */
+  --color-slate-600: #4b5563;
+  --color-slate-700: #374151;
+  --color-slate-800: #2a3441;
+  --color-slate-900: #1f2937; /* testo principale */
+  --color-slate-950: #111827;
 }

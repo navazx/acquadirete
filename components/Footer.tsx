@@ -15,9 +15,9 @@ export default function Footer() {
   const { openModal } = useModal();
 
   return (
-    <footer className="bg-slate-950 text-slate-300 font-sans" id="site-footer">
+    <footer className="bg-blue-50 text-slate-600 font-sans border-t border-slate-200" id="site-footer">
       {/* Upper Footer Segment */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 border-b border-slate-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 border-b border-slate-200">
 
         {/* Brand Information */}
         <div className="space-y-4" id="footer-brand">
@@ -30,11 +30,11 @@ export default function Footer() {
               height={319}
               className="h-10 w-auto object-contain shrink-0"
             />
-            <span className="text-xl font-bold text-white tracking-tight leading-none">
-              Acqua<span className="text-blue-500">direte</span>
+            <span className="text-xl font-bold text-slate-900 tracking-tight leading-none">
+              Acqua<span className="text-blue-600">direte</span>
             </span>
           </Link>
-          <p className="text-sm text-slate-400 leading-relaxed font-normal">
+          <p className="text-sm text-slate-600 leading-relaxed font-normal">
             Impianti per la depurazione dell'acqua a Firenze, Prato e Pistoia. Installiamo e seguiamo sistemi per case, uffici, bar e ristoranti dal 2005.
           </p>
           <a
@@ -45,7 +45,7 @@ export default function Footer() {
             className="pt-2 flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer w-fit"
           >
             <span className="flex text-amber-400 text-sm">★★★★★</span>
-            <span className="text-xs text-slate-400 font-medium font-mono">130+ Recensioni Google (5.0 Stelle)</span>
+            <span className="text-xs text-slate-600 font-medium font-mono">130+ Recensioni Google (5.0 Stelle)</span>
           </a>
           <div className="flex items-center gap-3 pt-1">
             <a
@@ -80,7 +80,7 @@ export default function Footer() {
 
         {/* Dynamic Navigation Column */}
         <div className="space-y-4" id="footer-links">
-          <p className="text-sm font-bold uppercase tracking-wider text-white">I Nostri Servizi</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-slate-900">I Nostri Servizi</p>
           <ul className="space-y-2 text-sm">
             {[
               { href: ROUTES.depuratore, label: 'Depuratore Acqua a Firenze' },
@@ -96,9 +96,9 @@ export default function Footer() {
                 <Link
                   href={item.href}
                   title={item.label}
-                  className="group flex items-center gap-2 text-slate-200 font-semibold hover:text-blue-400 transition-colors cursor-pointer"
+                  className="group flex items-center gap-2 text-slate-700 font-semibold hover:text-blue-600 transition-colors cursor-pointer"
                 >
-                  <ChevronRight size={15} className="text-blue-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight size={15} className="text-blue-600 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                   {item.label}
                 </Link>
               </li>
@@ -108,24 +108,24 @@ export default function Footer() {
 
         {/* Contact and Reachability Column */}
         <div className="space-y-4" id="footer-contact">
-          <p className="text-sm font-bold uppercase tracking-wider text-white">Contatti Diretti</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-slate-900">Contatti Diretti</p>
           <ul className="space-y-3.5 text-sm font-medium">
             <li className="flex items-start gap-2.5">
-              <MapPin size={16} className="text-blue-500 shrink-0 mt-0.5" />
+              <MapPin size={16} className="text-blue-600 shrink-0 mt-0.5" />
               <div className="leading-tight">
-                <span className="text-slate-100 block font-semibold">{CONTACT.companyName}</span>
-                <span className="text-xs text-slate-400 font-normal">{CONTACT.addressLine}<br />{CONTACT.addressCity}</span>
+                <span className="text-slate-900 block font-semibold">{CONTACT.companyName}</span>
+                <span className="text-xs text-slate-500 font-normal">{CONTACT.addressLine}<br />{CONTACT.addressCity}</span>
               </div>
             </li>
             <li className="flex items-center gap-2.5">
-              <Phone size={16} className="text-blue-500 shrink-0" />
-              <a href={telHref()} title="Chiamaci al telefono" className="hover:text-blue-400 text-slate-100 font-bold transition-colors">
+              <Phone size={16} className="text-blue-600 shrink-0" />
+              <a href={telHref()} title="Chiamaci al telefono" className="hover:text-blue-600 text-slate-900 font-bold transition-colors">
                 {CONTACT.phoneDisplay}
               </a>
             </li>
             <li className="flex items-center gap-2.5">
-              <Mail size={16} className="text-blue-500 shrink-0" />
-              <a href={mailtoHref()} title="Scrivici una email" className="hover:text-blue-400 transition-colors">
+              <Mail size={16} className="text-blue-600 shrink-0" />
+              <a href={mailtoHref()} title="Scrivici una email" className="hover:text-blue-600 transition-colors">
                 {CONTACT.email}
               </a>
             </li>
@@ -134,13 +134,13 @@ export default function Footer() {
 
         {/* Service Hours Column */}
         <div className="space-y-4" id="footer-hours">
-          <p className="text-sm font-bold uppercase tracking-wider text-white">Siamo Attivi</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-slate-900">Siamo Attivi</p>
           <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-2 text-slate-400">
-              <Clock size={16} className="text-blue-500 mt-0.5 shrink-0" />
+            <li className="flex items-start gap-2 text-slate-500">
+              <Clock size={16} className="text-blue-600 mt-0.5 shrink-0" />
               <div>
                 {CONTACT.hours.map((h, i) => (
-                  <p key={i} className="font-semibold text-slate-200">{h}</p>
+                  <p key={i} className="font-semibold text-slate-900">{h}</p>
                 ))}
                 <p className="text-xs mt-1 text-slate-500">Assistenza in pochi giorni e macchina sostitutiva in caso di guasto</p>
               </div>
@@ -149,7 +149,7 @@ export default function Footer() {
           <div className="pt-2">
             <button
               onClick={openModal}
-              className="text-white hover:bg-blue-600 bg-blue-700/80 px-4 py-2 border border-blue-600 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-md inline-flex items-center gap-1.5"
+              className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 border border-blue-600 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-md inline-flex items-center gap-1.5"
             >
               Richiedi Informazioni
             </button>
@@ -159,20 +159,20 @@ export default function Footer() {
       </div>
 
       {/* Sub Footer Legal Area */}
-      <div className="bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 border-t border-slate-900/40">
+      <div className="bg-blue-100 py-8 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-600 border-t border-slate-200">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-left md:text-left space-y-1">
             <p>&copy; {currentYear} {CONTACT.companyName}. Tutti i diritti riservati.</p>
             <p className="text-[10px]">P.IVA {CONTACT.vat} — {CONTACT.addressLine}, {CONTACT.addressCity}.</p>
           </div>
-          <div className="flex gap-4 font-semibold text-slate-400">
-            <Link href="/privacy-policy" title="Leggi la Privacy Policy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link>
+          <div className="flex gap-4 font-semibold text-slate-600">
+            <Link href="/privacy-policy" title="Leggi la Privacy Policy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
             <span>&bull;</span>
-            <Link href="/cookie-policy" title="Leggi la Cookie Policy" className="hover:text-blue-400 transition-colors">Cookie Policy</Link>
+            <Link href="/cookie-policy" title="Leggi la Cookie Policy" className="hover:text-blue-600 transition-colors">Cookie Policy</Link>
             <span>&bull;</span>
-            <Link href="/note-legali" title="Leggi le Note Legali" className="hover:text-blue-400 transition-colors">Note Legali</Link>
+            <Link href="/note-legali" title="Leggi le Note Legali" className="hover:text-blue-600 transition-colors">Note Legali</Link>
             <span>&bull;</span>
-            <button onClick={resetConsent} className="hover:text-blue-400 transition-colors cursor-pointer">Gestione Cookie</button>
+            <button onClick={resetConsent} className="hover:text-blue-600 transition-colors cursor-pointer">Gestione Cookie</button>
           </div>
         </div>
       </div>

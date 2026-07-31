@@ -265,19 +265,19 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       </section>
 
       {/* Brief custom form at the bottom of the page */}
-      <section className="bg-slate-950 text-white rounded-xl p-6 md:p-10 border border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <section className="bg-blue-50 text-slate-900 rounded-xl p-6 md:p-10 border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-7 space-y-6">
-          <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest block px-3 py-1.5 rounded-lg border border-blue-500/20 w-fit">
+          <span className="bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest block px-3 py-1.5 rounded-lg border border-blue-200 w-fit">
             Contatto Rapido
           </span>
           <h3 className="text-2xl md:text-3xl font-bold tracking-tight">Un'acqua pulita comincia da qui</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed">
             Siamo attivi in provincia di Firenze, Prato e Pistoia: Montespertoli, Empolese, Scandicci, Sesto Fiorentino, Bagno a Ripoli, Lastra a Signa e dintorni. Compila il modulo a fianco, veniamo da te a valutare la tua acqua.
           </p>
-          <div className="space-y-2 text-xs font-semibold text-slate-200">
-            <p className="flex items-center gap-2.5"><Check size={14} className="text-blue-400 shrink-0" /> Sopralluogo gratuito e senza impegno</p>
-            <p className="flex items-center gap-2.5"><Check size={14} className="text-blue-400 shrink-0" /> 10 anni di garanzia sugli impianti (esclusi i consumabili)</p>
-            <p className="flex items-center gap-2.5"><Check size={14} className="text-blue-400 shrink-0" /> Ti lasciamo il tempo di pensare: preventivo valido 3 mesi</p>
+          <div className="space-y-2 text-xs font-semibold text-slate-700">
+            <p className="flex items-center gap-2.5"><Check size={14} className="text-blue-600 shrink-0" /> Sopralluogo gratuito e senza impegno</p>
+            <p className="flex items-center gap-2.5"><Check size={14} className="text-blue-600 shrink-0" /> 10 anni di garanzia sugli impianti (esclusi i consumabili)</p>
+            <p className="flex items-center gap-2.5"><Check size={14} className="text-blue-600 shrink-0" /> Ti lasciamo il tempo di pensare: preventivo valido 3 mesi</p>
           </div>
         </div>
         <div className="lg:col-span-5 text-slate-800">

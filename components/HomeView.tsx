@@ -51,18 +51,18 @@ export default function HomeView() {
     <div id="home-view" className="space-y-20 pb-20">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       {/* Hero Section */}
-      <section className="relative bg-slate-950 text-white overflow-hidden py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-transparent to-transparent pointer-events-none"></div>
+      <section className="relative bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 text-slate-900 overflow-hidden py-16 md:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.8),transparent_65%)] pointer-events-none"></div>
         <div className="max-w-4xl mx-auto space-y-6 text-center relative z-10">
-          <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
             Depuratore acqua a Firenze:<br />
-            <span className="text-blue-500">
+            <span className="text-blue-600">
               acqua buona dal rubinetto, per sempre.
             </span>
           </h1>
 
-          <p className="text-base text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto">
-            Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che serve: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-white font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia.
+          <p className="text-base text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
+            Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che serve: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-slate-900 font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia.
           </p>
 
           {/* Google certified stars badge */}
@@ -72,13 +72,13 @@ export default function HomeView() {
               target="_blank"
               rel="noreferrer"
               title="Leggi le recensioni su Google"
-              className="flex items-center gap-1.5 bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 hover:border-blue-500/50 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:border-blue-400 transition-colors cursor-pointer"
             >
               <span className="text-amber-400 text-xs font-bold">★★★★★</span>
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">130+ Recensioni Google 5.0</span>
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">130+ Recensioni Google 5.0</span>
             </a>
-            <div className="text-xs text-slate-400 text-center leading-relaxed">
-              <strong className="text-white block font-bold uppercase tracking-wider text-[10px]">Assistenza locale, persone vere</strong>
+            <div className="text-xs text-slate-600 text-center leading-relaxed">
+              <strong className="text-slate-900 block font-bold uppercase tracking-wider text-[10px]">Assistenza locale, persone vere</strong>
               Interventi in pochi giorni e macchina sostitutiva in caso di guasto.
             </div>
           </div>
@@ -118,17 +118,17 @@ export default function HomeView() {
       </section>
 
       {/* Local Social Proof & Highlights */}
-      <section className="bg-slate-950 text-white py-16 px-4 sm:px-6 lg:px-8 rounded-xl max-w-7xl mx-auto border border-slate-800 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+      <section className="bg-blue-50 text-slate-900 py-16 px-4 sm:px-6 lg:px-8 rounded-xl max-w-7xl mx-auto border border-slate-200 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(#0f6cbd_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
         <div className="max-w-4xl mx-auto space-y-10 relative z-10">
           <div className="text-center space-y-5">
-            <span className="inline-block bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-500/20">
+            <span className="inline-block bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-200">
               Perché Fidarsi di Noi
             </span>
             <h2 className="text-3xl md:text-3xl font-bold tracking-tight">
               Comprare un depuratore oggi è un campo minato. Noi lavoriamo all'opposto.
             </h2>
-            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-xs text-slate-600 leading-relaxed max-w-2xl mx-auto">
               Telefonate insistenti, "depuratori gratis" che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi veniamo a casa tua, valutiamo cosa ti serve davvero, e ti lasciamo il tempo di pensare: il nostro preventivo di spesa vale per 3 mesi.
             </p>
           </div>
@@ -141,24 +141,24 @@ export default function HomeView() {
                 Diamo <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili): acquisti con la certezza di un prodotto che dura.
               </p>
             </div>
-            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
+            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ThumbsUp className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">Consulenza Onesta</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900">Consulenza Onesta</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Niente agenti aggressivi o contratti capestro con canoni insostenibili. Proponiamo solo ciò che ti serve, con prezzo chiaro di acquisto e manutenzione, dopo aver analizzato l'acqua a casa tua.
               </p>
             </div>
-            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
+            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ShieldCheck className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">Non resti mai senz'acqua</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900">Non resti mai senz'acqua</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Assistenza in pochi giorni, non in settimane. E se l'impianto si guasta, ti lasciamo una macchina sostitutiva: zero pensieri.
               </p>
             </div>
-            <div className="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-2">
+            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <MapPin className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">Una persona, non un call center</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900">Una persona, non un call center</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Dal 2005 sul territorio: una persona che risponde e che conosci. Centinaia di impianti installati, con oltre 130 recensioni a 5 stelle su Google.
               </p>
             </div>
