@@ -4,9 +4,15 @@ import { ServiceInfo, ServicePageId } from './types';
 const heroPrato = '/assets/hero-prato.webp';
 const heroPistoia = '/assets/hero-pistoia.webp';
 const heroDepuratore = '/assets/hero-depuratore.webp';
-const heroOsmosi = '/assets/hero-osmosi.webp';
+// Dittico di due installazioni vere: a sinistra la cucina col rubinetto a 3 vie
+// e il SOLEIL sottozoccolo, a destra lo stesso impianto nel vano sotto il
+// lavello. Montato dagli originali in foto/pubblicate.
+const heroOsmosi = '/assets/hero-osmosi-reale.webp';
 const heroCarboni = '/assets/hero-carboni.webp';
-const heroFrizzante = '/assets/hero-frizzante.webp';
+// Foto reale di un impianto installato (rubinetto a 3 vie + macchina e bombola
+// CO2 nel vano sotto il lavello), al posto dell'immagine di repertorio.
+// L'originale è foto/pubblicate/IMG_5096.jpeg.
+const heroFrizzante = '/assets/hero-frizzante-reale.webp';
 const heroBusiness = '/assets/hero-business.webp';
 const heroAssistenza = '/assets/hero-assistenza-team.webp';
 
@@ -132,6 +138,9 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     title: 'Osmosi inversa a Firenze: come funziona e perché conviene',
     subtitle: 'Tutto quello che serve sapere prima di scegliere un depuratore a osmosi inversa — spiegato chiaro, da chi lo installa da oltre 20 anni.',
     heroImage: heroOsmosi,
+    // L'hero è un dittico: nel riquadro quadrato perderebbe i bordi esterni
+    // delle due foto (compresa la macchina, che sta a destra).
+    heroAspect: 'wide',
     problem: [
       'L\'osmosi inversa è un sistema che spinge l\'acqua del rubinetto attraverso una membrana con fori piccolissimi. Questa membrana lascia passare l\'acqua, ma trattiene quello che non vuoi bere: cloro, metalli pesanti, pesticidi, batteri, microplastiche.',
       'Il risultato è acqua leggera, pulita e sicura, direttamente dal tuo rubinetto. Niente bottiglie da comprare, trasportare e smaltire.'

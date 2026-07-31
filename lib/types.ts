@@ -32,6 +32,13 @@ export interface ServiceInfo {
    * necessario quando i soggetti hanno la testa vicino al bordo superiore.
    */
   heroPosition?: 'top' | 'center';
+  /**
+   * Proporzione del riquadro hero da desktop. Normalmente è quadrato, ma un
+   * dittico (due foto affiancate) in un quadrato perderebbe un sesto per lato,
+   * cioè proprio i bordi esterni delle due foto: con `wide` il riquadro
+   * diventa 3:2 e l'immagine si vede intera. Da mobile resta 16:9 in ogni caso.
+   */
+  heroAspect?: 'square' | 'wide';
   /** Paragrafi della sezione "Il problema" / introduzione. */
   problem: string[];
   /** Titolo della lista vantaggi (varia per pagina). */
