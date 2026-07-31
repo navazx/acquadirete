@@ -16,11 +16,23 @@ import {
 import WaterCalc from './WaterCalc';
 import { useModal } from './ModalProvider';
 import { ROUTES } from '../lib/routes';
-import { GOOGLE_PROFILE_URL } from '../lib/siteConfig';
+import { GOOGLE_PROFILE_URL, CONTACT } from '../lib/siteConfig';
+import { REVIEWS } from '../lib/reviews';
+import { Review } from '../lib/types';
+
+// Le tre recensioni mostrate in home, scelte perché raccontano tre cose
+// diverse: il venditore che non insiste, l'assistenza negli anni, la
+// rapidità. Il testo NON si copia qui: si prende per id da
+// lib/google-reviews.json, così resta una fonte sola.
+const HOME_REVIEW_IDS = ['g7', 'g3', 'g2'];
 
 export default function HomeView() {
   const { openModal } = useModal();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  const homeReviews = HOME_REVIEW_IDS
+    .map((id) => REVIEWS.find((r) => r.id === id))
+    .filter((r): r is Review => Boolean(r));
 
   const faqs = [
     {
@@ -95,25 +107,52 @@ export default function HomeView() {
         </div>
       </section>
 
-      {/* Local credentials and trust badge */}
+      {/* Chi siamo: la foto vera al posto della fascia di numeri.
+          I quattro dati che c'erano (sopralluogo gratis, 10 anni di garanzia,
+          dal 2005, 130+ recensioni) non sono persi: sono dentro al testo. */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white py-8 px-6 rounded-xl border border-slate-200 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-slate-150">
-          <div className="pt-4 md:pt-0">
-            <p className="text-3xl font-black text-blue-900 font-mono">0€</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Sopralluogo &amp; Test</p>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch">
+          <div className="lg:col-span-5 bg-slate-100">
+            {/* Su mobile la foto è ritagliata in alto (aspect-[4/3] + object-top):
+                si tiene la parte con le facce e si taglia il pavimento in basso,
+                che occupava schermo senza dire niente. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/hero-assistenza-team.webp"
+              alt="Stefano e Matteo di Acquadirete nella loro officina"
+              width={900}
+              height={900}
+              loading="eager"
+              decoding="async"
+              className="object-cover object-top w-full h-full aspect-[4/3] sm:aspect-square lg:aspect-auto lg:min-h-[380px]"
+            />
           </div>
-          <div className="pt-4 md:pt-0">
-            <p className="text-3xl font-black text-blue-900 font-mono">10</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Anni di Garanzia</p>
+          <div className="lg:col-span-7 p-6 md:p-10 space-y-5">
+            <span className="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-100">
+              Chi viene a casa tua
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+              Siamo Stefano e Matteo.
+            </h2>
+            <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+              <p>
+                Acquadirete è un&apos;officina e due persone: <strong className="text-slate-900 font-semibold">Stefano</strong>, che ha iniziato nel 2005, e <strong className="text-slate-900 font-semibold">Matteo</strong>, suo figlio. Non abbiamo agenti, non abbiamo un call center: a casa tua veniamo noi due, e quando chiami rispondiamo noi due.
+              </p>
+              <p>
+                Veniamo a vedere la tua acqua e a farti il preventivo <strong className="text-slate-900 font-semibold">gratis</strong>, sugli impianti diamo <strong className="text-slate-900 font-semibold">10 anni di garanzia</strong>, e su Google trovi{' '}
+                <a href={GOOGLE_PROFILE_URL} target="_blank" rel="noreferrer" title="Leggi le recensioni su Google" className="text-blue-600 font-semibold hover:underline cursor-pointer">
+                  oltre 130 recensioni a 5 stelle
+                </a>{' '}
+                lasciate dalle famiglie e dalle attività che seguiamo tra Firenze, Prato e Pistoia.
+              </p>
+            </div>
+            <button
+              onClick={openModal}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-widest uppercase px-6 py-3.5 rounded-lg shadow-sm transition-colors cursor-pointer text-xs"
+            >
+              Fissa il sopralluogo gratuito
+            </button>
           </div>
-          <div className="pt-4 md:pt-0">
-            <p className="text-3xl font-black text-blue-900 font-mono">2005</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Sul Territorio Dal</p>
-          </div>
-          <a href={GOOGLE_PROFILE_URL} target="_blank" rel="noreferrer" title="Leggi le recensioni su Google" className="block pt-4 md:pt-0 border-b border-slate-150 md:border-b-0 hover:opacity-80 transition-opacity cursor-pointer">
-            <p className="text-3xl font-black text-blue-900 font-mono">130+</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Recensioni 5 Stelle</p>
-          </a>
         </div>
       </section>
 
@@ -126,10 +165,10 @@ export default function HomeView() {
               Perché Fidarsi di Noi
             </span>
             <h2 className="text-3xl md:text-3xl font-bold tracking-tight">
-              Comprare un depuratore oggi è un campo minato. Noi lavoriamo all'opposto.
+              Comprare un depuratore oggi è un campo minato.
             </h2>
-            <p className="text-xs text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              Telefonate insistenti, "depuratori gratis" che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi veniamo a casa tua, valutiamo cosa ti serve davvero, e ti lasciamo il tempo di pensare: il nostro preventivo di spesa vale per 3 mesi.
+            <p className="text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              Telefonate insistenti, &laquo;depuratori gratis&raquo; che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi siamo in due, <strong className="text-slate-900 font-semibold">Stefano e Matteo</strong>, e lavoriamo all&apos;opposto: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Poi ti lasciamo il tempo di pensare: il preventivo vale 3 mesi.
             </p>
           </div>
 
@@ -138,31 +177,75 @@ export default function HomeView() {
               <Award className="text-white mb-1" size={22} />
               <h3 className="text-base font-bold text-white">10 Anni di Garanzia</h3>
               <p className="text-xs text-blue-50 leading-relaxed">
-                Diamo <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili): acquisti con la certezza di un prodotto che dura.
+                <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili). Se in questi dieci anni qualcosa non va, veniamo a sistemarlo noi: non ti giriamo a un numero verde.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ThumbsUp className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Consulenza Onesta</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Niente agenti aggressivi o contratti capestro con canoni insostenibili. Proponiamo solo ciò che ti serve, con prezzo chiaro di acquisto e manutenzione, dopo aver analizzato l'acqua a casa tua.
+                Niente agenti, niente canoni che non finiscono mai. Ti proponiamo solo quello che ti serve, con due prezzi scritti: quanto costa l&apos;impianto e quanto costa mantenerlo negli anni. Dopo aver provato l&apos;acqua a casa tua, non prima.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ShieldCheck className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Non resti mai senz'acqua</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Assistenza in pochi giorni, non in settimane. E se l'impianto si guasta, ti lasciamo una macchina sostitutiva: zero pensieri.
+                Se si guasta veniamo in pochi giorni, non in settimane. E se serve tempo per ripararlo ti lasciamo una macchina sostitutiva: non ti facciamo tornare alle bottiglie.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <MapPin className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Una persona, non un call center</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Dal 2005 sul territorio: una persona che risponde e che conosci. Centinaia di impianti installati, con oltre 130 recensioni a 5 stelle su Google.
+                Al <strong className="text-slate-900 font-semibold">{CONTACT.phoneDisplay}</strong> risponde Stefano, sempre lo stesso numero dal 2005. Centinaia di impianti tra Firenze, Prato e Pistoia e oltre 130 recensioni a 5 stelle su Google.
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Recensioni vere: le parole dei clienti subito dopo le nostre promesse */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            Non crederci sulla parola: leggi la loro.
+          </h2>
+          <p className="text-sm text-slate-600">
+            Tre recensioni fra le oltre 130 che i nostri clienti hanno lasciato su Google, tutte a 5 stelle.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {homeReviews.map((review) => (
+            <figure
+              key={review.id}
+              className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
+            >
+              <div className="text-amber-400 text-sm font-bold tracking-widest" aria-label={`${review.rating} stelle su 5`}>
+                ★★★★★
+              </div>
+              <blockquote className="text-sm text-slate-700 leading-relaxed flex-1">
+                &laquo;{review.text}&raquo;
+              </blockquote>
+              <figcaption className="text-xs text-slate-500 border-t border-slate-150 pt-3">
+                <span className="block font-bold text-slate-900">{review.author}</span>
+                {review.date} · recensione Google verificata
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href={GOOGLE_PROFILE_URL}
+            target="_blank"
+            rel="noreferrer"
+            title="Leggi le recensioni su Google"
+            className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+          >
+            Leggile tutte sul profilo Google →
+          </a>
         </div>
       </section>
 

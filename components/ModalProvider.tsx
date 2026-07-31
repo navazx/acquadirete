@@ -38,8 +38,15 @@ export default function ModalProvider({ children }: { children: ReactNode }) {
               onClick={closeModal}
             ></div>
 
-            {/* Content centered container */}
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
+            {/* Content centered container.
+                Il banner cookie è fixed in basso e sta SOPRA la modale (z-60):
+                senza questo spazio riservato copre la spunta privacy e il
+                pulsante di invio, e su mobile il modulo diventa impossibile da
+                mandare. --cookie-banner-h la imposta CookieConsent. */}
+            <div
+              className="flex min-h-full items-center justify-center p-4 text-center"
+              style={{ paddingBottom: 'calc(1rem + var(--cookie-banner-h, 0px))' }}
+            >
               <motion.div
                 className="relative bg-white rounded-xl overflow-hidden shadow-xl max-w-lg w-full text-left border border-slate-200"
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}

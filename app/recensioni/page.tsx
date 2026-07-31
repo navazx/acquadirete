@@ -65,10 +65,12 @@ export default function RecensioniPage() {
 
       {/* Micro CTA to contact */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 md:p-8 text-center max-w-2xl mx-auto space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase tracking-wider text-xs">Anche tu desideri un'acqua così pura dal tuo rubinetto?</h2>
-        <p className="text-xs text-slate-500">I nostri consulenti e tecnici eseguono sopralluoghi continui tra Firenze, Prato e Pistoia.</p>
-        <OpenModalButton className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer">
-          Contattaci per una Chiamata Informativa
+        <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Ti va di provarla a casa tua?</h2>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          Siamo Stefano e Matteo: veniamo noi, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Il sopralluogo è gratuito, tra Firenze, Prato e Pistoia.
+        </p>
+        <OpenModalButton className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer transition-colors">
+          Prenota il sopralluogo gratuito
         </OpenModalButton>
       </div>
     </div>
