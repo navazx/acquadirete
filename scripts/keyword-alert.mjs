@@ -93,11 +93,8 @@ async function main() {
     }
   }
 
-  if (!wins.length && !losses.length) {
-    console.log('Nessun movimento rilevante: nessun avviso inviato.');
-    return;
-  }
-
+  // Il messaggio parte sempre, anche senza movimenti: vedere ogni settimana le
+  // posizioni delle keyword monitorate serve a seguire la crescita nel tempo.
   let msg = '';
   msg += '🔔 ALERT KEYWORD — acquadirete.it\n';
   msg += `📅 ultimi 28gg (${ymd(start)} → ${ymd(end)}) vs 28 precedenti\n`;
@@ -109,13 +106,23 @@ async function main() {
     msg += '━━━━━━━━━━━━━━\n⚠️ DA TENERE D\'OCCHIO\n';
     losses.forEach((l) => { msg += `${l}\n`; });
   }
+  if (!wins.length && !losses.length) {
+    msg += '━━━━━━━━━━━━━━\n😐 Nessun movimento rilevante questa settimana.\n';
+  }
 
-  // Stato delle keyword strategiche: utile come contesto quando si invia.
+  // Stato delle keyword strategiche, con la variazione rispetto al periodo prima.
   msg += '━━━━━━━━━━━━━━\n📍 Keyword monitorate:\n';
   let shown = 0;
   for (const [q, c] of [...cur].sort((a, b) => a[1].pos - b[1].pos)) {
     if (!isWatched(q)) continue;
-    msg += `• ${q} — pos ${c.pos.toFixed(0)} (${c.impr} viste)\n`;
+    const p = prev.get(q);
+    let trend = ' (nuova)';
+    if (p) {
+      const delta = p.pos - c.pos; // positivo = migliorata
+      if (Math.abs(delta) < 1) trend = ' (stabile)';
+      else trend = ` (era ${p.pos.toFixed(0)}, ${delta > 0 ? '↑' : '↓'}${Math.abs(delta).toFixed(0)})`;
+    }
+    msg += `• ${q} — pos ${c.pos.toFixed(0)}${trend}, ${c.impr} viste\n`;
     shown += 1;
   }
   if (!shown) msg += '• (nessuna keyword monitorata con dati nel periodo)\n';
