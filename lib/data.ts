@@ -150,7 +150,8 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Acqua buona sempre disponibile, senza più casse d\'acqua da portare a casa.',
       'Risparmio nel tempo: l\'impianto si ripaga rispetto a una vita di bottiglie.',
       'Meno plastica, per te e per l\'ambiente.',
-      'Ottima per cucinare: pasta, tè e caffè hanno un sapore più pulito.'
+      'Ottima per cucinare: pasta, tè e caffè hanno un sapore più pulito.',
+      'Nessun foro nuovo nel piano: col miscelatore multivia sfruttiamo il rubinetto che hai già, e in cucina ne resta uno solo.'
     ],
     faqs: [
       {
@@ -189,6 +190,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Elimina cloro, odori e cattivi sapori: l\'acqua del rubinetto torna buona da bere.',
       'Nessuno scarto d\'acqua e impianto più semplice rispetto all\'osmosi.',
       'Costi contenuti e ingombro ridotto sotto il lavello.',
+      'Un solo rubinetto in cucina: col miscelatore multivia l\'acqua filtrata esce dallo stesso miscelatore, senza aggiungere fori al piano.',
       'Installazione e manutenzione seguite da noi: ti avvisiamo quando cambiare i filtri.'
     ],
     faqs: [
@@ -232,6 +234,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Stop alle casse d\'acqua: niente più bottiglie da comprare, portare a casa e smaltire.',
       'Soluzioni per la casa (sottolavello) e per le attività (erogatori a colonna o sottobanco).',
       'Acqua gassata al momento: bollicine sempre fresche, regolabili secondo il tuo gusto.',
+      'Un solo rubinetto per tutto: col miscelatore multivia a 5 vie hai acqua di rete calda e fredda, depurata a temperatura ambiente, depurata fredda e frizzante.',
       'Installazione e manutenzione seguite da noi, con sanificazione periodica e cambio bombola CO₂.'
     ],
     faqs: [
@@ -242,6 +245,10 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       {
         q: 'Come si fa l\'acqua gassata?',
         a: 'Il sistema aggiunge anidride carbonica alimentare all\'acqua al momento dell\'erogazione, tramite una bombola che sostituiamo noi quando serve. Le bollicine sono sempre fresche e regolabili secondo il tuo gusto.'
+      },
+      {
+        q: 'Serve un secondo rubinetto sul lavello?',
+        a: 'Non per forza. Con un miscelatore multivia, che installiamo noi al posto di quello esistente, esce tutto dallo stesso rubinetto: nella versione a 5 vie hai acqua di rete calda e fredda, depurata a temperatura ambiente, depurata fredda e frizzante. Si usa il foro che c\'è già, quindi sul piano non si aggiunge nulla.'
       },
       {
         q: 'Va bene anche per bar e ristoranti?',

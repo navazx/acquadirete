@@ -156,7 +156,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-23',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'depuratore', 'assistenza'],
-    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'depuratore-casa-in-affitto'],
     sections: [
       {
         paragraphs: [
@@ -288,7 +288,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-25',
     readingMinutes: 5,
     relatedServices: ['depuratore', 'osmosi', 'assistenza'],
-    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'depuratore-acqua-gratis-contratti'],
+    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'depuratore-acqua-gratis-contratti', 'depuratore-casa-in-affitto'],
     sections: [
       {
         paragraphs: [
@@ -700,6 +700,87 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Chi si occupa della manutenzione e del cambio bombola CO₂?',
         a: 'Ce ne occupiamo noi, con manutenzione programmata: ti avvisiamo quando è il momento, senza che tu debba ricordartelo. In caso di guasto interveniamo rapidamente e, se serve, lasciamo una macchina sostitutiva perché il servizio non si fermi.',
+      },
+    ],
+  },
+  {
+    slug: 'depuratore-casa-in-affitto',
+    title: 'Depuratore in casa in affitto: si può installare?',
+    metaTitle: 'Depuratore in Casa in Affitto: si può? | Acquadirete',
+    metaDescription:
+      'Sei in affitto e vorresti un depuratore? Quasi sempre si installa e, se traslochi, viene con te. Cosa valutare prima e cosa chiedere all\'installatore.',
+    excerpt:
+      'Vivi in affitto e hai messo da parte l\'idea del depuratore pensando sia impossibile? Quasi sempre si installa, e quando cambi casa lo porti con te.',
+    publishedAt: '2026-08-05',
+    readingMinutes: 5,
+    relatedServices: ['depuratore', 'carboni', 'assistenza'],
+    relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'depuratore-acqua-gratis-contratti'],
+    sections: [
+      {
+        paragraphs: [
+          '"Bello, ma io sono in affitto." È una delle frasi che sentiamo più spesso, di solito detta con l\'aria di chi ha già chiuso il discorso da solo. In realtà è quasi sempre una rinuncia inutile: un depuratore domestico non è un\'opera muraria, è un apparecchio che si collega e, all\'occorrenza, si stacca.',
+          'Visto che a Firenze e Prato una fetta enorme di case è in affitto, vale la pena spiegare come stanno davvero le cose: cosa comporta l\'installazione, quando ha senso parlarne col proprietario e cosa succede il giorno in cui cambi casa.',
+        ],
+      },
+      {
+        heading: 'La risposta breve: sì, e si smonta',
+        paragraphs: [
+          'Un impianto domestico vive sotto il lavello e si collega all\'acqua che già arriva lì, quella del rubinetto della cucina. Non servono opere murarie, non si rompono piastrelle, non si tocca l\'impianto idraulico del palazzo. Nella grande maggioranza dei casi si tratta di un collegamento all\'attacco esistente, quello che alimenta già il tuo miscelatore.',
+          'La conseguenza più importante per chi è in affitto è proprio questa: ciò che è stato collegato può essere scollegato. Un impianto sottolavello si smonta e l\'appartamento torna esattamente come prima.',
+        ],
+      },
+      {
+        heading: 'L\'unico punto che va guardato bene: il rubinetto dedicato',
+        paragraphs: [
+          'C\'è però un dettaglio che cambia la risposta, ed è giusto dirtelo prima e non dopo. Molti impianti prevedono un rubinettino separato per l\'acqua depurata, accanto a quello normale. Se il tuo lavello ha già un foro libero — capita spesso, è il foro predisposto per il dosatore del sapone o per il vecchio miscelatore — non si tocca niente. Se invece un foro va praticato sul piano o sul lavello, quella è una modifica permanente, e su una casa non tua è una cosa che va concordata prima.',
+          'Non è l\'unica strada possibile, e anzi nella pratica il foro nuovo si evita quasi sempre. La soluzione più comoda è il miscelatore multivia — a 3, 4 o 5 vie a seconda di quante acque vuoi avere a disposizione — che installiamo noi al posto del rubinetto esistente: usa il foro che c\'è già, quindi sul piano non si aggiunge nulla e in cucina resta un rubinetto solo, più ordinato di due separati.',
+          'Per darti un\'idea concreta, nella versione a 5 vie dallo stesso rubinetto escono cinque acque: calda e fredda dell\'acquedotto come adesso, più depurata a temperatura ambiente, depurata fredda e frizzante. In alternativa, dove il multivia non serve, si sfrutta semplicemente un altro foro già presente sul piano.',
+          'Quale strada sia praticabile a casa tua si capisce guardando il tuo lavello, non a parole al telefono — ed è la prima cosa che verifichiamo durante il sopralluogo.',
+        ],
+      },
+      {
+        heading: 'Come parlarne col proprietario',
+        paragraphs: [
+          'Se serve solo il collegamento sotto il lavello, molti inquilini considerano l\'installazione alla stregua di una lavastoviglie o di una lavatrice collegata all\'attacco esistente. Se invece va fatto un foro nuovo, o comunque una modifica che resta lì, avvisare prima è semplicemente la cosa sensata: evita discussioni alla riconsegna e, nella nostra esperienza, quasi nessun proprietario dice di no.',
+          'Un argomento che funziona meglio di quanto immagini: un depuratore riduce il calcare che finisce negli elettrodomestici e nella rubinetteria, e su un appartamento in zona di acqua dura è un vantaggio anche per chi la casa la possiede. Se ti serve, possiamo spiegare noi direttamente cosa verrebbe installato: molti dubbi nascono dal fatto che si immagina un cantiere, non un apparecchio grande come una cassetta della frutta.',
+        ],
+      },
+      {
+        heading: 'Se cambi casa, l\'impianto viene con te',
+        paragraphs: [
+          'È il vero motivo per cui l\'affitto non è un ostacolo: l\'impianto è tuo, non della casa. Quando traslochi lo si smonta e lo si rimonta nella casa nuova, e continui a usare quello che hai già pagato. Non è un caso raro: è una delle richieste di assistenza più normali che riceviamo.',
+          'È anche il motivo per cui, se sei in affitto, ti conviene guardare con ancora più attenzione ai contratti pluriennali e alle formule "gratis" con canone mensile: un vincolo lungo su una casa in cui non sai quanto resterai è una complicazione in più. Ne abbiamo parlato nella guida sui contratti "depuratore gratis", e vale la pena leggerla prima di firmare qualcosa.',
+        ],
+      },
+      {
+        heading: 'Le domande da fare prima di dire sì',
+        paragraphs: [
+          '• L\'installazione richiede fori nuovi o si usa quello che c\'è già? Fatti dire esattamente cosa verrà toccato.',
+          '• Se traslocassi tra un anno, cosa comporta spostarlo? Chiedi che sia chiaro prima, non dopo.',
+          '• L\'appartamento torna com\'era se lo smonto? Deve essere una risposta semplice, non un giro di parole.',
+          '• Il contratto mi vincola per anni o l\'impianto è mio da subito? È la domanda che vale di più, in affitto ancora di più che altrove.',
+        ],
+      },
+      {
+        heading: 'Non sai se a casa tua si può fare? Veniamo a guardare',
+        paragraphs: [
+          'Ogni cucina è diversa: cambia lo spazio sotto il lavello, cambia il numero di fori sul piano, cambia il tipo di attacco. In dieci minuti sul posto si capisce se e come si può installare, senza che tu debba indovinare guardando una foto su internet.',
+          'Il sopralluogo è gratuito e senza impegno in tutta la provincia di Firenze, Prato e Pistoia — e se dovessimo scoperchiare un caso in cui davvero non conviene, te lo diciamo e amici come prima.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Posso installare un depuratore se la casa non è mia?',
+        a: 'Quasi sempre sì: l\'impianto vive sotto il lavello, si collega all\'attacco già esistente e si può smontare, riportando la cucina com\'era. L\'unico punto da concordare col proprietario sarebbe il foro per un rubinetto in più, ma quasi sempre si evita: con un miscelatore multivia si usa il foro che c\'è già.',
+      },
+      {
+        q: 'Se trasloco posso portare il depuratore nella casa nuova?',
+        a: 'Sì, l\'impianto è tuo e non resta legato all\'appartamento: si smonta e si reinstalla altrove. È una delle richieste che ci arrivano più spesso, quindi è una strada assolutamente normale.',
+      },
+      {
+        q: 'Serve fare opere murarie o toccare l\'impianto del palazzo?',
+        a: 'No. Si lavora sotto il lavello, sull\'attacco dell\'acqua che alimenta già il rubinetto della cucina: niente muri, niente interventi sulle colonne condominiali. Per questo l\'installazione dura poco e non lascia cantieri.',
       },
     ],
   },
