@@ -45,7 +45,9 @@ const URL_MODELLO = 'https://www.acquadirete.it/moduli/rapportino-modello.html';
 const ID_FOGLIO = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 
 function foglio() {
-  return SpreadsheetApp.openById(ID_FOGLIO);
+  // Legato al foglio: getActive() basta. openById resta come rete di sicurezza
+  // se un domani lo script girasse da un progetto autonomo.
+  return SpreadsheetApp.getActive() || SpreadsheetApp.openById(ID_FOGLIO);
 }
 
 const SCHEDA_CLIENTI = 'Clienti';
@@ -64,14 +66,64 @@ const CLI = { CODICE: 1, NOME: 2, INDIRIZZO: 3, CITTA: 4, CONTATTO: 6 };
 const IMP = { CODICE: 1, TIPO: 3, INSTALLAZIONE: 5 };
 
 
-/** Punto d'ingresso: apre il rapportino del cliente indicato da ?c=C012 */
+/** Voce di menu nel foglio. Trigger semplice: compare da sola alla riapertura. */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Acquadirete')
+    .addItem('Stampa foglio di lavoro', 'stampaRapportino')
+    .addToUi();
+}
+
+/** Genera il rapportino del cliente sulla riga in cui hai il cursore. */
+function stampaRapportino() {
+  const ui = SpreadsheetApp.getUi();
+  const sh = SpreadsheetApp.getActive().getActiveSheet();
+
+  if (sh.getName() !== SCHEDA_CLIENTI) {
+    ui.alert('Mettiti sulla scheda "' + SCHEDA_CLIENTI + '", sulla riga del cliente.');
+    return;
+  }
+  const riga = sh.getActiveRange().getRow();
+  const codice = String(sh.getRange(riga, CLI.CODICE).getValue() || '').trim().toUpperCase();
+  if (!/^C\d+$/.test(codice)) {
+    ui.alert('Riga ' + riga + ': in colonna A non c\'è un codice cliente (tipo C012).');
+    return;
+  }
+
+  let out;
+  try {
+    out = costruisci(codice);
+  } catch (err) {
+    ui.alert(String(err.message || err));
+    return;
+  }
+  ui.showModalDialog(
+    HtmlService.createHtmlOutput(lanciatore(out.chi, out.modulo)).setWidth(420).setHeight(230),
+    'Foglio di lavoro'
+  );
+}
+
+
+/** Resta per compatibilità con i link già scritti in colonna I. */
 function doGet(e) {
   const codice = String((e && e.parameter && e.parameter.c) || '').trim().toUpperCase();
   if (!codice) return errore('Manca il codice cliente nel link (serve ?c=C0xx).');
+  let out;
+  try {
+    out = costruisci(codice);
+  } catch (err) {
+    return errore(String(err.message || err));
+  }
+  return HtmlService.createHtmlOutput(lanciatore(out.chi, out.modulo));
+}
 
+
+/** Il cuore: dal codice cliente al modulo compilato, pronto da mostrare.
+ *  Usato sia dal menu che dal doGet. */
+function costruisci(codice) {
   const ss = foglio();
   const cliente = trovaPerCodice(ss.getSheetByName(SCHEDA_CLIENTI), codice);
-  if (!cliente) return errore('Nessun cliente col codice ' + codice + ' nella scheda ' + SCHEDA_CLIENTI + '.');
+  if (!cliente) throw new Error('Nessun cliente col codice ' + codice + ' nella scheda ' + SCHEDA_CLIENTI + '.');
 
   // L'impianto può non esserci ancora: in quel caso i suoi campi restano vuoti.
   const impianto = trovaPerCodice(ss.getSheetByName(SCHEDA_IMPIANTI), codice) || [];
@@ -110,7 +162,7 @@ function doGet(e) {
   modulo = modulo.replace('</body>',
     '<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script></body>');
 
-  return lanciatore(nome || codice, modulo);
+  return { chi: nome || codice, modulo: modulo };
 }
 
 
@@ -283,7 +335,5 @@ function lanciatore(chi, modulo) {
     ' if(!w){document.getElementById("avviso").textContent=' +
     '   "Il browser ha bloccato la finestra: consenti i popup per questo sito e riprova.";}' +
     '}<\/script></body></html>';
-  return HtmlService.createHtmlOutput(html)
-    .setTitle('Foglio di lavoro')
-    .setWidth(360).setHeight(200);
+  return html; // stringa: chi chiama decide se farne una finestra o una pagina
 }
