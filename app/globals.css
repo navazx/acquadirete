@@ -33,6 +33,13 @@
   --color-blue-900: #073a69;
   --color-blue-950: #052a4d;
 
+  /* Verde d'azione — solo per le CTA principali (sopralluogo / richiesta
+     informazioni), così spiccano sul blu. Va SEMPRE con testo scuro:
+     #6BFFC6 con testo bianco dà 1.25:1 (illeggibile), con #1F2937 dà 11.7:1. */
+  --color-mint-300: #a6ffdc;
+  --color-mint-400: #6bffc6; /* verde CTA */
+  --color-mint-500: #3ef2b0; /* hover */
+
   /* Superfici e bordi (azzurrati) */
   --color-slate-50: #f8fcff; /* sfondo sito */
   --color-slate-100: #f1f9ff; /* sfondo sezioni alternate */

@@ -53,7 +53,10 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full" id="site-header">
       {/* Top Banner (Info, Reviews & Direct Call) */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 shadow-sm border-b border-blue-700">
+      {/* Nascosta sotto xl: su mobile occupava due righe sopra la piega. Lì i suoi
+          contenuti ci sono comunque — WhatsApp è il tasto celeste qui sotto nella
+          barra, le recensioni sono nel badge dell'hero. */}
+      <div className="hidden xl:block bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 shadow-sm border-b border-blue-700">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
           {/* Social Proof badge */}
           <div className="flex items-center gap-1.5 font-medium text-blue-100 sm:justify-start justify-center">
@@ -166,7 +169,7 @@ export default function Header() {
               <button
                 id="header-cta"
                 onClick={openModal}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-widest px-4 py-3 rounded-lg shadow-md transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
+                className="bg-mint-400 hover:bg-mint-500 text-slate-900 text-xs font-bold uppercase tracking-widest px-4 py-3 rounded-lg shadow-md transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
               >
                 Sopralluogo Gratis
               </button>
@@ -174,6 +177,16 @@ export default function Header() {
 
             {/* Mobile Menu Icon Toggle */}
             <div className="flex xl:hidden items-center gap-2 ml-auto">
+              {/* Icona scura sul celeste: bianca darebbe 2.18:1, sotto la soglia 3:1 delle icone. */}
+              <a
+                href={whatsappHref('Buongiorno Acquadirete, vorrei informazioni sui depuratori acqua.')}
+                target="_blank"
+                referrerPolicy="no-referrer"
+                className="flex items-center justify-center bg-blue-400 text-slate-900 p-2.5 rounded-xl border border-blue-400 hover:bg-blue-300 transition-colors"
+                title="Scrivici su WhatsApp"
+              >
+                <WhatsAppIcon size={18} />
+              </a>
               <a
                 href={telHref()}
                 className="flex items-center justify-center bg-blue-50 text-blue-600 p-2.5 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors"
@@ -244,7 +257,7 @@ export default function Header() {
                     setIsMenuOpen(false);
                     openModal();
                   }}
-                  className="w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/20 cursor-pointer"
+                  className="w-full text-center bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold py-3 rounded-xl shadow-lg shadow-mint-500/25 cursor-pointer"
                 >
                   Richiedi Informazioni
                 </button>

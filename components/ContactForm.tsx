@@ -356,7 +356,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-widest py-3.5 px-4 rounded-lg shadow-md hover:shadow-lg cursor-pointer transition-all duration-300 flex justify-center items-center gap-2"
+          className="w-full bg-mint-400 hover:bg-mint-500 text-slate-900 text-xs font-bold uppercase tracking-widest py-3.5 px-4 rounded-lg shadow-md hover:shadow-lg cursor-pointer transition-all duration-300 flex justify-center items-center gap-2"
           disabled={isSubmitting}
         >
           {isSubmitting ? (

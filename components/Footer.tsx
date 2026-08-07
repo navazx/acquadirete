@@ -149,7 +149,7 @@ export default function Footer() {
           <div className="pt-2">
             <button
               onClick={openModal}
-              className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 border border-blue-600 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-md inline-flex items-center gap-1.5"
+              className="text-slate-900 bg-mint-400 hover:bg-mint-500 px-4 py-2 border border-mint-500 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-md inline-flex items-center gap-1.5"
             >
               Richiedi Informazioni
             </button>

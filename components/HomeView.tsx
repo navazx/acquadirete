@@ -84,10 +84,10 @@ export default function HomeView() {
               target="_blank"
               rel="noreferrer"
               title="Leggi le recensioni su Google"
-              className="flex items-center gap-1.5 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:border-blue-400 transition-colors cursor-pointer"
+              className="flex items-center gap-2.5 bg-white px-5 py-3.5 rounded-xl border border-slate-200 shadow-md hover:border-blue-400 transition-colors cursor-pointer"
             >
-              <span className="text-amber-400 text-xs font-bold">★★★★★</span>
-              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">130+ Recensioni Google 5.0</span>
+              <span className="text-amber-400 text-lg font-bold leading-none">★★★★★</span>
+              <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">130+ Recensioni Google 5.0</span>
             </a>
             <div className="text-xs text-slate-600 text-center leading-relaxed">
               <strong className="text-slate-900 block font-bold uppercase tracking-wider text-[10px]">Assistenza locale, persone vere</strong>
@@ -99,7 +99,7 @@ export default function HomeView() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
             <button
               onClick={openModal}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
+              className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
             >
               Richiedi un Sopralluogo Gratuito
             </button>
@@ -148,7 +148,7 @@ export default function HomeView() {
             </div>
             <button
               onClick={openModal}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-widest uppercase px-6 py-3.5 rounded-lg shadow-sm transition-colors cursor-pointer text-xs"
+              className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-6 py-3.5 rounded-lg shadow-sm transition-colors cursor-pointer text-xs"
             >
               Fissa il sopralluogo gratuito
             </button>

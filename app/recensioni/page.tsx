@@ -69,7 +69,7 @@ export default function RecensioniPage() {
         <p className="text-sm text-slate-600 leading-relaxed">
           Siamo Stefano e Matteo: veniamo noi, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Il sopralluogo è gratuito, tra Firenze, Prato e Pistoia.
         </p>
-        <OpenModalButton className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer transition-colors">
+        <OpenModalButton className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer transition-colors">
           Prenota il sopralluogo gratuito
         </OpenModalButton>
       </div>

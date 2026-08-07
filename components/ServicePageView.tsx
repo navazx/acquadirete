@@ -168,7 +168,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           </div>
           <button
             onClick={openModal}
-            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-[10px] uppercase tracking-widest rounded-lg cursor-pointer"
+            className="mt-6 w-full bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold py-3 text-[10px] uppercase tracking-widest rounded-lg cursor-pointer"
           >
             {serviceInfo.ctaLabel}
           </button>
