@@ -69,8 +69,8 @@ const IMP = { CODICE: 1, TIPO: 3, INSTALLAZIONE: 5 };
 /** Voce di menu nel foglio. Trigger semplice: compare da sola alla riapertura. */
 function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu('Acquadirete')
-    .addItem('Stampa foglio di lavoro', 'stampaRapportino')
+    .createMenu('Foglio di lavoro')
+    .addItem('Stampa per questo cliente', 'stampaRapportino')
     .addToUi();
 }
 
