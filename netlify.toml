@@ -11,6 +11,16 @@
 [functions]
   directory = "netlify/functions"
 
+# /moduli/* — modelli dei moduli di lavoro interni (non pagine del sito).
+# Il rapportino precompilato del Gestionale_Clienti scarica di qui il suo
+# layout, quindi serve il CORS; e sono file di servizio, non contenuti da
+# far finire su Google.
+[[headers]]
+  for = "/moduli/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    X-Robots-Tag = "noindex, nofollow"
+
 # Redirect 301 dalle vecchie URL del sito ASP.NET (ancora indicizzate su Google)
 # verso le pagine nuove. Evita i 404 su chi arriva dai risultati di ricerca e
 # consolida l'autorità SEO sulle pagine attuali.
