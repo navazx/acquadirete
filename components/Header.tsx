@@ -177,12 +177,12 @@ export default function Header() {
 
             {/* Mobile Menu Icon Toggle */}
             <div className="flex xl:hidden items-center gap-2 ml-auto">
-              {/* Icona scura sul celeste: bianca darebbe 2.18:1, sotto la soglia 3:1 delle icone. */}
+              {/* Stessi colori del tasto telefono qui accanto: i due sono una coppia. */}
               <a
                 href={whatsappHref('Buongiorno Acquadirete, vorrei informazioni sui depuratori acqua.')}
                 target="_blank"
                 referrerPolicy="no-referrer"
-                className="flex items-center justify-center bg-blue-400 text-slate-900 p-2.5 rounded-xl border border-blue-400 hover:bg-blue-300 transition-colors"
+                className="flex items-center justify-center bg-blue-50 text-blue-600 p-2.5 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors"
                 title="Scrivici su WhatsApp"
               >
                 <WhatsAppIcon size={18} />
@@ -196,10 +196,10 @@ export default function Header() {
               </a>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="bg-gray-100 text-gray-700 p-2.5 rounded-xl hover:bg-gray-200 transition-colors outline-none cursor-pointer"
+                className="flex items-center justify-center bg-blue-50 text-blue-600 p-2.5 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors outline-none cursor-pointer"
                 aria-label="Toggle menu"
               >
-                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
           </div>
