@@ -1,0 +1,289 @@
+/**
+ * Gestionale_Clienti — foglio di lavoro precompilato (v1).
+ *
+ * Aggiunge alla scheda Clienti un link per riga: lo clicchi e ti si apre il
+ * rapportino di intervento già compilato con i dati di quel cliente, pronto
+ * da stampare. Il prezzo NON viene compilato: resta vuoto di proposito.
+ *
+ * Il layout NON sta qui dentro: viene scaricato dal sito a ogni apertura.
+ * La fonte unica è il modulo cartaceo `moduli/rapportino-intervento.html`;
+ * `node moduli/genera-template-appsscript.mjs` ne ricava il modello coi
+ * segnaposto e lo mette in `sito/public/moduli/`, che va online col deploy.
+ * Quindi: cambi il foglio di carta, rigeneri, fai il deploy — e il
+ * precompilato è già allineato senza toccare Apps Script.
+ *
+ * ── Installazione ─────────────────────────────────────────────────────────
+ * ATTENZIONE: va in un progetto AUTONOMO (script.google.com → Nuovo progetto),
+ * NON dentro il progetto legato al foglio. Quello legato non riesce a servire
+ * app web su questo account: qualsiasi distribuzione risponde "Impossibile
+ * aprire il file" senza mai far partire lo script. Un progetto autonomo con
+ * lo stesso identico codice funziona.
+ * L'automazione lead → cliente resta dov'è: è un onEdit, non c'entra.
+ *
+ * 1. script.google.com → Nuovo progetto → incolla questo.
+ * 2. Salva, poi Distribuisci → Nuova distribuzione → tipo "App web",
+ *    "Esegui come: me", "Chi ha accesso: solo io". Autorizza.
+ * 3. Copia l'URL che finisce con /exec e incollalo in URL_APP qui sotto,
+ *    poi esegui una volta la funzione `scriviLink` dal menu dell'editor:
+ *    riempie la colonna dei link in Clienti.
+ *
+ * Copia di riserva di questo script: cartella acquadirete/documenti.
+ */
+
+// Incolla qui l'URL della distribuzione (finisce con /exec).
+const URL_APP = '';
+
+// Il modello del rapportino, pubblicato col sito.
+const URL_MODELLO = 'https://www.acquadirete.it/moduli/rapportino-modello.html';
+
+// Il foglio Gestionale_Clienti, aperto per ID.
+// Questo script vive in un progetto AUTONOMO, non legato al foglio: i progetti
+// legati a un foglio, su questo account, non riescono a servire app web
+// (verificato il 7 ago 2026 — un progetto autonomo con lo stesso codice
+// funziona, quello legato dà sempre "Impossibile aprire il file", su qualsiasi
+// distribuzione e senza mai registrare un'esecuzione).
+const ID_FOGLIO = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
+
+function foglio() {
+  return SpreadsheetApp.openById(ID_FOGLIO);
+}
+
+const SCHEDA_CLIENTI = 'Clienti';
+const SCHEDA_IMPIANTI = 'Impianti-Manutenzioni';
+
+// I link vanno in I: la H di Clienti è già occupata da "Zona giro".
+const COLONNA_LINK = 9;
+const RIGA_INTESTAZIONI = 4; // in entrambe le schede i titoli sono sulla riga 4
+
+// Colonne (1 = A). Cambia qui se sposti qualcosa nel foglio.
+// Clienti:  A Codice · B Nome · C Indirizzo · D Città · E Provincia ·
+//           F Telefono/Contatto · G Referente · H Zona giro
+const CLI = { CODICE: 1, NOME: 2, INDIRIZZO: 3, CITTA: 4, CONTATTO: 6 };
+// Impianti: A Codice · B Nome · C Tipo impianto · D Zona · E Data installazione ·
+//           F Frequenza · G Prossima manutenzione · H Giorni · I Stato · J Note/Prezzo
+const IMP = { CODICE: 1, TIPO: 3, INSTALLAZIONE: 5 };
+
+
+/** Punto d'ingresso: apre il rapportino del cliente indicato da ?c=C012 */
+function doGet(e) {
+  const codice = String((e && e.parameter && e.parameter.c) || '').trim().toUpperCase();
+  if (!codice) return errore('Manca il codice cliente nel link (serve ?c=C0xx).');
+
+  const ss = foglio();
+  const cliente = trovaPerCodice(ss.getSheetByName(SCHEDA_CLIENTI), codice);
+  if (!cliente) return errore('Nessun cliente col codice ' + codice + ' nella scheda ' + SCHEDA_CLIENTI + '.');
+
+  // L'impianto può non esserci ancora: in quel caso i suoi campi restano vuoti.
+  const impianto = trovaPerCodice(ss.getSheetByName(SCHEDA_IMPIANTI), codice) || [];
+
+  const nome = String(cliente[CLI.NOME - 1] || '').trim();
+  const contatto = String(cliente[CLI.CONTATTO - 1] || '').trim();
+  const tipo = String(impianto[IMP.TIPO - 1] || '').trim();
+  const caselle = caselleImpianto(tipo);
+  const luogo = dividiCitta(String(cliente[CLI.CITTA - 1] || ''));
+
+  const valori = {
+    CODICE: codice,
+    NOME: nome,
+    INDIRIZZO: String(cliente[CLI.INDIRIZZO - 1] || '').trim(),
+    CAP: luogo.cap,
+    COMUNE: luogo.comune,
+    TELEFONO: soloTelefono(contatto),
+    EMAIL: soloEmail(contatto),
+    DATA_INSTALLAZIONE: dataItaliana(impianto[IMP.INSTALLAZIONE - 1]),
+    // In Impianti-Manutenzioni "Tipo impianto" contiene il modello commerciale
+    // ("Nathalie 100 GPD", "Chloé con gassata"), quindi va sempre nel campo
+    // Modello. Le caselle si barrano solo quando il testo lo dice chiaramente.
+    MODELLO: tipo,
+    K_OSMOSI: caselle.osmosi,
+    K_MICRO: caselle.micro,
+    K_CARBONI: caselle.carboni,
+    K_GASATORE: caselle.gasatore
+  };
+
+  let modulo = scaricaModello();
+  Object.keys(valori).forEach(function (chiave) {
+    modulo = modulo.split('{{' + chiave + '}}').join(fugaHtml(valori[chiave]));
+  });
+
+  // Stampa automatica appena la pagina è pronta.
+  modulo = modulo.replace('</body>',
+    '<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script></body>');
+
+  return lanciatore(nome || codice, modulo);
+}
+
+
+/** Riempie la colonna dei link in Clienti. Da lanciare a mano una volta. */
+function scriviLink() {
+  const ss = foglio();
+  if (!URL_APP) {
+    throw new Error('Prima incolla l\'URL della distribuzione in URL_APP.');
+  }
+  const sh = ss.getSheetByName(SCHEDA_CLIENTI);
+  const ultima = sh.getLastRow();
+  let scritti = 0;
+
+  // Intestazione della colonna nuova, con lo stesso stile delle altre.
+  const titolo = sh.getRange(RIGA_INTESTAZIONI, COLONNA_LINK);
+  if (!String(titolo.getValue() || '').trim()) {
+    sh.getRange(RIGA_INTESTAZIONI, COLONNA_LINK - 1).copyTo(titolo, { formatOnly: true });
+    titolo.setValue('Foglio di lavoro');
+  }
+
+  for (let r = 1; r <= ultima; r++) {
+    const codice = String(sh.getRange(r, CLI.CODICE).getValue() || '').trim();
+    if (!/^C\d+$/i.test(codice)) continue; // salta intestazioni e righe vuote
+
+    // Non si sovrascrive mai roba scritta a mano: solo celle vuote o link già
+    // messi da qui.
+    const cella = sh.getRange(r, COLONNA_LINK);
+    const attuale = String(cella.getFormula() || cella.getValue() || '').trim();
+    if (attuale && attuale.indexOf('?c=') === -1) continue;
+
+    cella.setFormula(
+      '=HYPERLINK("' + URL_APP + '?c="&' + colonnaLettera(CLI.CODICE) + r + ';"Foglio di lavoro")'
+    );
+    scritti++;
+  }
+  // Niente toast: da un progetto autonomo non c'è una finestra del foglio
+  // davanti all'utente. Il risultato si legge nel log dell'editor.
+  Logger.log('Link scritti su ' + scritti + ' clienti nella colonna ' + colonnaLettera(COLONNA_LINK) + '.');
+}
+
+
+// ── Aiutanti ───────────────────────────────────────────────────────────────
+
+/** Scarica il modello dal sito, tenendolo in cache un'ora per non rifare la
+ *  chiamata a ogni clic. Se il sito non risponde si ferma con un messaggio
+ *  chiaro invece di stampare un foglio mezzo vuoto. */
+function scaricaModello() {
+  const cache = CacheService.getScriptCache();
+  const salvato = cache.get('modello');
+  if (salvato) return salvato;
+
+  const res = UrlFetchApp.fetch(URL_MODELLO, { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) {
+    throw new Error('Modello non raggiungibile (HTTP ' + res.getResponseCode() + '): ' + URL_MODELLO);
+  }
+  const testo = res.getContentText('UTF-8');
+  cache.put('modello', testo, 3600);
+  return testo;
+}
+
+/** Svuota la cache del modello: da lanciare dopo un deploy del sito se vuoi
+ *  vedere subito le modifiche senza aspettare l'ora. */
+function aggiornaModello() {
+  CacheService.getScriptCache().remove('modello');
+  Logger.log('Modello ricaricato dal sito al prossimo clic.');
+}
+
+/** Cerca il codice nella colonna A, senza dare per scontata la riga d'inizio:
+ *  così funziona qualunque sia l'intestazione della scheda. */
+function trovaPerCodice(sh, codice) {
+  if (!sh) return null;
+  const ultima = sh.getLastRow();
+  if (ultima < 1) return null;
+  const righe = sh.getRange(1, 1, ultima, sh.getLastColumn()).getValues();
+  for (let i = 0; i < righe.length; i++) {
+    if (String(righe[i][0] || '').trim().toUpperCase() === codice) return righe[i];
+  }
+  return null;
+}
+
+/** Dal "tipo impianto" ricava quali caselle barrare. Nel dubbio non barra:
+ *  una casella sbagliata è peggio di una casella vuota, perché il tecnico
+ *  legge il foglio di fretta e si fida. "GPD" (gallons per day) compare solo
+ *  sugli osmosi; "soda/gassata/CO2/bombola" solo dove c'è il gasatore. */
+function caselleImpianto(tipo) {
+  const t = String(tipo).toLowerCase();
+  const r = {
+    osmosi:   /(osmosi|\bgpd\b)/.test(t) ? 'x' : '',
+    micro:    /microfiltr/.test(t) ? 'x' : '',
+    carboni:  /carbon/.test(t) ? 'x' : '',
+    gasatore: /(gasat|frizzant|gassat|soda|co2|bombola)/.test(t) ? 'x' : ''
+  };
+  r.trovata = Boolean(r.osmosi || r.micro || r.carboni || r.gasatore);
+  return r;
+}
+
+/** In Clienti la città spesso contiene anche il CAP ("50025 MONTESPERTOLI"),
+ *  ma non sempre ("FIRENZE"): quando c'è lo separa, altrimenti lascia il CAP
+ *  vuoto da riempire a penna. */
+function dividiCitta(citta) {
+  const s = String(citta).replace(/\s+/g, ' ').trim();
+  const m = s.match(/^(\d{5})\s+(.*)$/);
+  return m ? { cap: m[1], comune: m[2].trim() } : { cap: '', comune: s };
+}
+
+/** La colonna Contatto tiene a volte il telefono, a volte l'email, a volte
+ *  entrambi: li separa così finiscono nei campi giusti del modulo. */
+function soloTelefono(contatto) {
+  const pezzi = String(contatto).split(/[\s;,\/]+/);
+  for (let i = 0; i < pezzi.length; i++) {
+    if (pezzi[i].indexOf('@') === -1 && (pezzi[i].match(/\d/g) || []).length >= 6) return pezzi[i];
+  }
+  return contatto.indexOf('@') === -1 ? contatto : '';
+}
+
+function soloEmail(contatto) {
+  const pezzi = String(contatto).split(/[\s;,\/]+/);
+  for (let i = 0; i < pezzi.length; i++) {
+    if (pezzi[i].indexOf('@') !== -1) return pezzi[i];
+  }
+  return '';
+}
+
+function dataItaliana(v) {
+  if (!v) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+  }
+  return String(v).trim();
+}
+
+function fugaHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function colonnaLettera(n) {
+  let s = '';
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - m - 1) / 26; }
+  return s;
+}
+
+/** Messaggio leggibile al posto di una schermata bianca quando il link è
+ *  sbagliato o il cliente non esiste. */
+function errore(messaggio) {
+  return HtmlService.createHtmlOutput(
+    '<div style="font-family:Arial,Helvetica,sans-serif;color:#01278B;padding:20px;text-align:center">' +
+    '<p><b>Foglio di lavoro</b></p><p>' + fugaHtml(messaggio) + '</p></div>'
+  ).setTitle('Foglio di lavoro');
+}
+
+/** L'app web di Google serve le pagine dentro un iframe, dove le regole di
+ *  stampa @page (A4, margini) non vengono applicate. Per avere in stampa
+ *  esattamente il modulo che abbiamo verificato, il modulo viene aperto in una
+ *  scheda vera come blob: lì il CSS di stampa vale per intero. */
+function lanciatore(chi, modulo) {
+  const dati = JSON.stringify(modulo).replace(/<\//g, '<\\/');
+  const html =
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank">' +
+    '<style>body{font-family:Arial,Helvetica,sans-serif;color:#01278B;padding:18px;text-align:center}' +
+    'button{font-size:15px;padding:10px 22px;border:0;border-radius:6px;background:#01278B;color:#fff;cursor:pointer}' +
+    'p{font-size:13px}small{color:#4a68ad}</style></head><body>' +
+    '<p>Foglio di lavoro di <b>' + fugaHtml(chi) + '</b>.</p>' +
+    '<button onclick="apri()">Apri e stampa</button>' +
+    '<p><small id="avviso"></small></p>' +
+    '<script>var M=' + dati + ';' +
+    'function apri(){' +
+    ' var u=URL.createObjectURL(new Blob([M],{type:"text/html"}));' +
+    ' var w=window.open(u,"_blank");' +
+    ' if(!w){document.getElementById("avviso").textContent=' +
+    '   "Il browser ha bloccato la finestra: consenti i popup per questo sito e riprova.";}' +
+    '}<\/script></body></html>';
+  return HtmlService.createHtmlOutput(html)
+    .setTitle('Foglio di lavoro')
+    .setWidth(360).setHeight(200);
+}
