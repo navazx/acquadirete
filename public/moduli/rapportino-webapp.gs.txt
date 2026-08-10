@@ -13,25 +13,17 @@
  * precompilato è già allineato senza toccare Apps Script.
  *
  * ── Installazione ─────────────────────────────────────────────────────────
- * ATTENZIONE: va in un progetto AUTONOMO (script.google.com → Nuovo progetto),
- * NON dentro il progetto legato al foglio. Quello legato non riesce a servire
- * app web su questo account: qualsiasi distribuzione risponde "Impossibile
- * aprire il file" senza mai far partire lo script. Un progetto autonomo con
- * lo stesso identico codice funziona.
- * L'automazione lead → cliente resta dov'è: è un onEdit, non c'entra.
+ * Va nel progetto Apps Script LEGATO al foglio (Estensioni → Apps Script),
+ * accanto a Codice.gs che contiene l'automazione lead → cliente. I menu
+ * esistono solo negli script legati a un documento.
+ * Basta incollare e salvare: il menu compare alla riapertura del foglio.
  *
- * 1. script.google.com → Nuovo progetto → incolla questo.
- * 2. Salva, poi Distribuisci → Nuova distribuzione → tipo "App web",
- *    "Esegui come: me", "Chi ha accesso: solo io". Autorizza.
- * 3. Copia l'URL che finisce con /exec e incollalo in URL_APP qui sotto,
- *    poi esegui una volta la funzione `scriviLink` dal menu dell'editor:
- *    riempie la colonna dei link in Clienti.
+ * Niente app web: su questo account non vengono servite (qualsiasi
+ * distribuzione risponde "Impossibile aprire il file" senza mai far partire
+ * lo script). Il `doGet` qui sotto resta solo come avanzo innocuo.
  *
  * Copia di riserva di questo script: cartella acquadirete/documenti.
  */
-
-// Incolla qui l'URL della distribuzione (finisce con /exec).
-const URL_APP = '';
 
 // Il modello del rapportino, pubblicato col sito.
 const URL_MODELLO = 'https://www.acquadirete.it/moduli/rapportino-modello.html';
@@ -50,20 +42,18 @@ function foglio() {
   return SpreadsheetApp.getActive() || SpreadsheetApp.openById(ID_FOGLIO);
 }
 
-const SCHEDA_CLIENTI = 'Clienti';
-const SCHEDA_IMPIANTI = 'Impianti-Manutenzioni';
-
-// I link vanno in I: la H di Clienti è già occupata da "Zona giro".
-const COLONNA_LINK = 9;
-const RIGA_INTESTAZIONI = 4; // in entrambe le schede i titoli sono sulla riga 4
+// Dal 7 ago 2026 anagrafica e impianto stanno su una scheda sola: una riga
+// per cliente. Prima erano "Clienti" e "Impianti-Manutenzioni" separate.
+const SCHEDA_CLIENTI = 'Clienti-Impianti';
 
 // Colonne (1 = A). Cambia qui se sposti qualcosa nel foglio.
-// Clienti:  A Codice · B Nome · C Indirizzo · D Città · E Provincia ·
-//           F Telefono/Contatto · G Referente · H Zona giro
-const CLI = { CODICE: 1, NOME: 2, INDIRIZZO: 3, CITTA: 4, CONTATTO: 6 };
-// Impianti: A Codice · B Nome · C Tipo impianto · D Zona · E Data installazione ·
-//           F Frequenza · G Prossima manutenzione · H Giorni · I Stato · J Note/Prezzo
-const IMP = { CODICE: 1, TIPO: 3, INSTALLAZIONE: 5 };
+// A Codice · B Nome · C Indirizzo · D Città · E Provincia · F Telefono/Contatto ·
+// G Referente · H Tipo impianto · I Data installazione · J Frequenza ·
+// K Prossima manutenzione · L Giorni alla scadenza · M Stato · N Note/Prezzo
+const COL = {
+  CODICE: 1, NOME: 2, INDIRIZZO: 3, CITTA: 4, CONTATTO: 6,
+  TIPO: 8, INSTALLAZIONE: 9
+};
 
 
 /** Voce di menu nel foglio. Trigger semplice: compare da sola alla riapertura. */
@@ -84,7 +74,7 @@ function stampaRapportino() {
     return;
   }
   const riga = sh.getActiveRange().getRow();
-  const codice = String(sh.getRange(riga, CLI.CODICE).getValue() || '').trim().toUpperCase();
+  const codice = String(sh.getRange(riga, COL.CODICE).getValue() || '').trim().toUpperCase();
   if (!/^C\d+$/.test(codice)) {
     ui.alert('Riga ' + riga + ': in colonna A non c\'è un codice cliente (tipo C012).');
     return;
@@ -122,27 +112,25 @@ function doGet(e) {
  *  Usato sia dal menu che dal doGet. */
 function costruisci(codice) {
   const ss = foglio();
-  const cliente = trovaPerCodice(ss.getSheetByName(SCHEDA_CLIENTI), codice);
-  if (!cliente) throw new Error('Nessun cliente col codice ' + codice + ' nella scheda ' + SCHEDA_CLIENTI + '.');
+  // Una riga sola per cliente: anagrafica e impianto insieme.
+  const riga = trovaPerCodice(ss.getSheetByName(SCHEDA_CLIENTI), codice);
+  if (!riga) throw new Error('Nessun cliente col codice ' + codice + ' nella scheda ' + SCHEDA_CLIENTI + '.');
 
-  // L'impianto può non esserci ancora: in quel caso i suoi campi restano vuoti.
-  const impianto = trovaPerCodice(ss.getSheetByName(SCHEDA_IMPIANTI), codice) || [];
-
-  const nome = String(cliente[CLI.NOME - 1] || '').trim();
-  const contatto = String(cliente[CLI.CONTATTO - 1] || '').trim();
-  const tipo = String(impianto[IMP.TIPO - 1] || '').trim();
+  const nome = String(riga[COL.NOME - 1] || '').trim();
+  const contatto = String(riga[COL.CONTATTO - 1] || '').trim();
+  const tipo = String(riga[COL.TIPO - 1] || '').trim();
   const caselle = caselleImpianto(tipo);
-  const luogo = dividiCitta(String(cliente[CLI.CITTA - 1] || ''));
+  const luogo = dividiCitta(String(riga[COL.CITTA - 1] || ''));
 
   const valori = {
     CODICE: codice,
     NOME: nome,
-    INDIRIZZO: String(cliente[CLI.INDIRIZZO - 1] || '').trim(),
+    INDIRIZZO: String(riga[COL.INDIRIZZO - 1] || '').trim(),
     CAP: luogo.cap,
     COMUNE: luogo.comune,
     TELEFONO: soloTelefono(contatto),
     EMAIL: soloEmail(contatto),
-    DATA_INSTALLAZIONE: dataItaliana(impianto[IMP.INSTALLAZIONE - 1]),
+    DATA_INSTALLAZIONE: dataItaliana(riga[COL.INSTALLAZIONE - 1]),
     // In Impianti-Manutenzioni "Tipo impianto" contiene il modello commerciale
     // ("Nathalie 100 GPD", "Chloé con gassata"), quindi va sempre nel campo
     // Modello. Le caselle si barrano solo quando il testo lo dice chiaramente.
@@ -166,42 +154,10 @@ function costruisci(codice) {
 }
 
 
-/** Riempie la colonna dei link in Clienti. Da lanciare a mano una volta. */
-function scriviLink() {
-  const ss = foglio();
-  if (!URL_APP) {
-    throw new Error('Prima incolla l\'URL della distribuzione in URL_APP.');
-  }
-  const sh = ss.getSheetByName(SCHEDA_CLIENTI);
-  const ultima = sh.getLastRow();
-  let scritti = 0;
-
-  // Intestazione della colonna nuova, con lo stesso stile delle altre.
-  const titolo = sh.getRange(RIGA_INTESTAZIONI, COLONNA_LINK);
-  if (!String(titolo.getValue() || '').trim()) {
-    sh.getRange(RIGA_INTESTAZIONI, COLONNA_LINK - 1).copyTo(titolo, { formatOnly: true });
-    titolo.setValue('Foglio di lavoro');
-  }
-
-  for (let r = 1; r <= ultima; r++) {
-    const codice = String(sh.getRange(r, CLI.CODICE).getValue() || '').trim();
-    if (!/^C\d+$/i.test(codice)) continue; // salta intestazioni e righe vuote
-
-    // Non si sovrascrive mai roba scritta a mano: solo celle vuote o link già
-    // messi da qui.
-    const cella = sh.getRange(r, COLONNA_LINK);
-    const attuale = String(cella.getFormula() || cella.getValue() || '').trim();
-    if (attuale && attuale.indexOf('?c=') === -1) continue;
-
-    cella.setFormula(
-      '=HYPERLINK("' + URL_APP + '?c="&' + colonnaLettera(CLI.CODICE) + r + ';"Foglio di lavoro")'
-    );
-    scritti++;
-  }
-  // Niente toast: da un progetto autonomo non c'è una finestra del foglio
-  // davanti all'utente. Il risultato si legge nel log dell'editor.
-  Logger.log('Link scritti su ' + scritti + ' clienti nella colonna ' + colonnaLettera(COLONNA_LINK) + '.');
-}
+// `scriviLink` è stata tolta il 7 ago 2026 con l'unione delle schede.
+// Scriveva i link in colonna I, che ora è "Data installazione": lanciarla
+// avrebbe cancellato una colonna di dati veri. I link non servono più
+// comunque, il rapportino si apre dal menu.
 
 
 // ── Aiutanti ───────────────────────────────────────────────────────────────
@@ -297,12 +253,6 @@ function dataItaliana(v) {
 function fugaHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function colonnaLettera(n) {
-  let s = '';
-  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - m - 1) / 26; }
-  return s;
 }
 
 /** Messaggio leggibile al posto di una schermata bianca quando il link è
