@@ -46,14 +46,73 @@ function foglio() {
 // per cliente. Prima erano "Clienti" e "Impianti-Manutenzioni" separate.
 const SCHEDA_CLIENTI = 'Clienti-Impianti';
 
-// Colonne (1 = A). Cambia qui se sposti qualcosa nel foglio.
-// A Codice · B Nome · C Indirizzo · D Città · E Provincia · F Telefono/Contatto ·
-// G Referente · H Tipo impianto · I Data installazione · J Frequenza ·
-// K Prossima manutenzione · L Giorni alla scadenza · M Stato · N Note/Prezzo
-const COL = {
-  CODICE: 1, NOME: 2, INDIRIZZO: 3, CITTA: 4, CONTATTO: 6,
-  TIPO: 8, INSTALLAZIONE: 9
+// Le colonne si cercano PER NOME dell'intestazione, non per posizione.
+// Tre volte in due giorni le colonne del Gestionale si sono spostate e lo
+// script ha continuato a leggere gli stessi indici, riempiendo i campi con i
+// dati sbagliati senza dare errore: il modo peggiore di rompersi, perché il
+// foglio esce comunque e sembra a posto. Cercando l'intestazione, spostare o
+// inserire colonne non fa più danni; e se un'intestazione sparisce o viene
+// rinominata, lo script si ferma dicendo quale, invece di indovinare.
+//
+// Per ogni campo bastano una parola o due che compaiano nell'intestazione,
+// confrontate senza accenti, maiuscole né punteggiatura.
+const INTESTAZIONI = {
+  CODICE:        ['codice'],
+  NOME:          ['nome', 'ragione sociale'],
+  INDIRIZZO:     ['indirizzo'],
+  CITTA:         ['citta', 'comune'],
+  CONTATTO:      ['telefono', 'contatto'],
+  TIPO:          ['tipo impianto', 'impianto'],
+  INSTALLAZIONE: ['data installazione', 'installazione']
 };
+
+/** Toglie accenti, maiuscole, punteggiatura e spazi doppi: così "Città" e
+ *  "CITTA'" combaciano, e "Telefono / Contatto" combacia con "telefono". */
+function normalizza(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .replace(/[àáâä]/g, 'a').replace(/[èéêë]/g, 'e').replace(/[ìíîï]/g, 'i')
+    .replace(/[òóôö]/g, 'o').replace(/[ùúûü]/g, 'u')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Trova la riga delle intestazioni (quella che contiene "codice") e mappa
+ *  ogni campo alla sua colonna. Restituisce { riga, col: {CODICE: n, ...} }. */
+function mappaColonne(sh) {
+  const quante = Math.min(sh.getLastRow(), 15);
+  const griglia = sh.getRange(1, 1, quante, sh.getLastColumn()).getValues();
+
+  for (let r = 0; r < griglia.length; r++) {
+    const celle = griglia[r].map(normalizza);
+    if (celle.indexOf('codice') === -1) continue; // non è la riga dei titoli
+
+    const col = {};
+    const mancanti = [];
+    Object.keys(INTESTAZIONI).forEach(function (campo) {
+      const chiavi = INTESTAZIONI[campo];
+      let trovata = -1;
+      // Prima le corrispondenze esatte, poi quelle parziali: così "Codice"
+      // non viene rubato da "Codice destinatario" se un giorno esistesse.
+      for (let k = 0; k < chiavi.length && trovata === -1; k++) trovata = celle.indexOf(chiavi[k]);
+      for (let k = 0; k < chiavi.length && trovata === -1; k++) {
+        for (let c = 0; c < celle.length && trovata === -1; c++) {
+          if (celle[c] && celle[c].indexOf(chiavi[k]) !== -1) trovata = c;
+        }
+      }
+      if (trovata === -1) mancanti.push(chiavi[0]);
+      else col[campo] = trovata + 1;
+    });
+
+    if (mancanti.length) {
+      throw new Error('Nella scheda "' + sh.getName() + '" non trovo le colonne: ' +
+        mancanti.join(', ') + '. Se le hai rinominate, aggiorna INTESTAZIONI nello script.');
+    }
+    return { riga: r + 1, col: col };
+  }
+  throw new Error('Nella scheda "' + sh.getName() + '" non trovo la riga delle intestazioni (nessuna cella "Codice" nelle prime ' + quante + ' righe).');
+}
 
 
 /** Voce di menu nel foglio. Trigger semplice: compare da sola alla riapertura. */
@@ -74,14 +133,15 @@ function stampaRapportino() {
     return;
   }
   const riga = sh.getActiveRange().getRow();
-  const codice = String(sh.getRange(riga, COL.CODICE).getValue() || '').trim().toUpperCase();
-  if (!/^C\d+$/.test(codice)) {
-    ui.alert('Riga ' + riga + ': in colonna A non c\'è un codice cliente (tipo C012).');
-    return;
-  }
 
-  let out;
+  let out, codice;
   try {
+    const mappa = mappaColonne(sh);
+    codice = String(sh.getRange(riga, mappa.col.CODICE).getValue() || '').trim().toUpperCase();
+    if (!/^C\d+$/.test(codice)) {
+      ui.alert('Riga ' + riga + ': nella colonna "Codice" non c\'è un codice cliente (tipo C012).');
+      return;
+    }
     out = costruisci(codice);
   } catch (err) {
     ui.alert(String(err.message || err));
@@ -112,8 +172,13 @@ function doGet(e) {
  *  Usato sia dal menu che dal doGet. */
 function costruisci(codice) {
   const ss = foglio();
+  const sh = ss.getSheetByName(SCHEDA_CLIENTI);
+  if (!sh) throw new Error('Non trovo la scheda "' + SCHEDA_CLIENTI + '".');
+
+  const mappa = mappaColonne(sh);
+  const COL = mappa.col;
   // Una riga sola per cliente: anagrafica e impianto insieme.
-  const riga = trovaPerCodice(ss.getSheetByName(SCHEDA_CLIENTI), codice);
+  const riga = trovaPerCodice(sh, codice, COL.CODICE);
   if (!riga) throw new Error('Nessun cliente col codice ' + codice + ' nella scheda ' + SCHEDA_CLIENTI + '.');
 
   const nome = String(riga[COL.NOME - 1] || '').trim();
@@ -186,15 +251,15 @@ function aggiornaModello() {
   Logger.log('Modello ricaricato dal sito al prossimo clic.');
 }
 
-/** Cerca il codice nella colonna A, senza dare per scontata la riga d'inizio:
- *  così funziona qualunque sia l'intestazione della scheda. */
-function trovaPerCodice(sh, codice) {
+/** Cerca il codice nella colonna indicata, senza dare per scontata la riga
+ *  d'inizio: così funziona qualunque sia l'altezza dell'intestazione. */
+function trovaPerCodice(sh, codice, colCodice) {
   if (!sh) return null;
   const ultima = sh.getLastRow();
   if (ultima < 1) return null;
   const righe = sh.getRange(1, 1, ultima, sh.getLastColumn()).getValues();
   for (let i = 0; i < righe.length; i++) {
-    if (String(righe[i][0] || '').trim().toUpperCase() === codice) return righe[i];
+    if (String(righe[i][colCodice - 1] || '').trim().toUpperCase() === codice) return righe[i];
   }
   return null;
 }
