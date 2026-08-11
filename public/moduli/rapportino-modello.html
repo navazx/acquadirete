@@ -101,8 +101,13 @@
   .chk i.x { position: relative; }
   .chk i.x::before, .chk i.x::after {
     content: ''; position: absolute;
-    left: -.3mm; top: 1.15mm;          /* metà casella, meno metà spessore */
-    width: 3.2mm; height: .5mm;
+    /* 50% è il centro del quadratino: da lì si torna indietro di mezza barra.
+       Così il centraggio non dipende da conti a mano sui bordi. */
+    left: 50%; top: 50%;
+    width: 4.2mm; height: .55mm;       /* lunga quanto la diagonale, non il lato:
+                                          ruotata di 45° una barra lunga come il
+                                          lato coprirebbe solo il 70% */
+    margin-left: -2.1mm; margin-top: -.275mm;
     background: var(--ink);
   }
   .chk i.x::before { transform: rotate(45deg); }
