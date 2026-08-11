@@ -93,12 +93,20 @@
     display: inline-block; width: 3.2mm; height: 3.2mm; border: .3mm solid var(--line);
     vertical-align: -.5mm; margin-right: 1.2mm;
   }
-  /* Casella già barrata dal precompilato (classe aggiunta solo dallo script). */
+  /* Casella già barrata dal precompilato (classe aggiunta solo dallo script).
+     Il segno si disegna con due barre ruotate invece che col carattere "×":
+     il glifo è molto più piccolo della sua em e sta in alto rispetto alla
+     linea di base, quindi veniva minuscolo e spostato in su. Due barre
+     posizionate a mano riempiono la casella e restano centrate. */
   .chk i.x { position: relative; }
-  .chk i.x::after {
-    content: '×'; position: absolute; left: 0; right: 0; top: -1.1mm;
-    text-align: center; font-size: 9pt; line-height: 1; font-weight: 700;
+  .chk i.x::before, .chk i.x::after {
+    content: ''; position: absolute;
+    left: -.3mm; top: 1.15mm;          /* metà casella, meno metà spessore */
+    width: 3.2mm; height: .5mm;
+    background: var(--ink);
   }
+  .chk i.x::before { transform: rotate(45deg); }
+  .chk i.x::after  { transform: rotate(-45deg); }
   .opzioni { padding: 1.3mm 2mm .6mm; }
   /* Riga di dettaglio agganciata all'opzione sopra (es. peso bombola) */
   .sotto-opzione { margin-top: .6mm; padding-top: 1mm; border-top: .25mm dotted var(--lbl); }
