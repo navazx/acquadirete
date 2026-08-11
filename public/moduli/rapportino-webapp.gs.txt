@@ -315,6 +315,36 @@ function dataItaliana(v) {
   return String(v).trim();
 }
 
+/** Controlla che le colonne di Clienti-Impianti siano ancora dove
+ *  l'automazione lead -> cliente (Codice.gs) si aspetta di trovarle.
+ *  Quella scrive per posizione, quindi se le colonne si spostano
+ *  riempirebbe i campi sbagliati senza accorgersene: meglio fermarla.
+ *  Restituisce '' se va tutto bene, altrimenti il messaggio da mostrare. */
+function verificaLayout(sh) {
+  const attese = [
+    [1, 'codice'], [2, 'nome'], [3, 'indirizzo'], [4, 'citta'], [5, 'provincia'],
+    [6, 'telefono'], [7, 'referente'], [8, 'zona giro'], [9, 'tipo impianto'],
+    [12, 'prossima manutenzione'], [13, 'giorni'], [14, 'stato'], [15, 'note']
+  ];
+
+  const quante = Math.min(sh.getLastRow(), 15);
+  const griglia = sh.getRange(1, 1, quante, sh.getLastColumn()).getValues();
+  let titoli = null;
+  for (let r = 0; r < griglia.length && !titoli; r++) {
+    const celle = griglia[r].map(normalizza);
+    if (celle.indexOf('codice') !== -1) titoli = celle;
+  }
+  if (!titoli) return 'Non trovo la riga delle intestazioni in ' + sh.getName() + '.';
+
+  const fuori = [];
+  attese.forEach(function (a) {
+    const t = titoli[a[0] - 1] || '';
+    if (t.indexOf(a[1]) === -1) fuori.push(a[0] + ': aspetto "' + a[1] + '", trovo "' + (t || 'vuota') + '"');
+  });
+  if (!fuori.length) return '';
+  return 'Le colonne di ' + sh.getName() + ' si sono spostate: non copio il lead per non scrivere nei campi sbagliati. ' + fuori.join('; ') + '.';
+}
+
 function fugaHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
