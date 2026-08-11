@@ -78,9 +78,16 @@ function normalizza(s) {
     .trim();
 }
 
-/** Trova la riga delle intestazioni (quella che contiene "codice") e mappa
- *  ogni campo alla sua colonna. Restituisce { riga, col: {CODICE: n, ...} }. */
+/** Le colonne che servono al rapportino. */
 function mappaColonne(sh) {
+  return colonnePerNome(sh, INTESTAZIONI);
+}
+
+/** Generico: data una scheda e una mappa {CAMPO: [parole da cercare]}, trova
+ *  la riga delle intestazioni (quella che contiene "codice") e la colonna di
+ *  ogni campo. Restituisce { riga, col: {CAMPO: n, ...}, larghezza }.
+ *  Lo usano sia il rapportino sia l'automazione lead → cliente. */
+function colonnePerNome(sh, spec) {
   const quante = Math.min(sh.getLastRow(), 15);
   const griglia = sh.getRange(1, 1, quante, sh.getLastColumn()).getValues();
 
@@ -90,8 +97,8 @@ function mappaColonne(sh) {
 
     const col = {};
     const mancanti = [];
-    Object.keys(INTESTAZIONI).forEach(function (campo) {
-      const chiavi = INTESTAZIONI[campo];
+    Object.keys(spec).forEach(function (campo) {
+      const chiavi = spec[campo];
       let trovata = -1;
       // Prima le corrispondenze esatte, poi quelle parziali: così "Codice"
       // non viene rubato da "Codice destinatario" se un giorno esistesse.
@@ -107,9 +114,9 @@ function mappaColonne(sh) {
 
     if (mancanti.length) {
       throw new Error('Nella scheda "' + sh.getName() + '" non trovo le colonne: ' +
-        mancanti.join(', ') + '. Se le hai rinominate, aggiorna INTESTAZIONI nello script.');
+        mancanti.join(', ') + '. Se le hai rinominate, aggiorna l\'elenco nello script.');
     }
-    return { riga: r + 1, col: col };
+    return { riga: r + 1, col: col, larghezza: celle.length };
   }
   throw new Error('Nella scheda "' + sh.getName() + '" non trovo la riga delle intestazioni (nessuna cella "Codice" nelle prime ' + quante + ' righe).');
 }
@@ -315,35 +322,10 @@ function dataItaliana(v) {
   return String(v).trim();
 }
 
-/** Controlla che le colonne di Clienti-Impianti siano ancora dove
- *  l'automazione lead -> cliente (Codice.gs) si aspetta di trovarle.
- *  Quella scrive per posizione, quindi se le colonne si spostano
- *  riempirebbe i campi sbagliati senza accorgersene: meglio fermarla.
- *  Restituisce '' se va tutto bene, altrimenti il messaggio da mostrare. */
-function verificaLayout(sh) {
-  const attese = [
-    [1, 'codice'], [2, 'nome'], [3, 'indirizzo'], [4, 'citta'], [5, 'provincia'],
-    [6, 'telefono'], [7, 'referente'], [8, 'zona giro'], [9, 'tipo impianto'],
-    [12, 'prossima manutenzione'], [13, 'giorni'], [14, 'stato'], [15, 'note']
-  ];
-
-  const quante = Math.min(sh.getLastRow(), 15);
-  const griglia = sh.getRange(1, 1, quante, sh.getLastColumn()).getValues();
-  let titoli = null;
-  for (let r = 0; r < griglia.length && !titoli; r++) {
-    const celle = griglia[r].map(normalizza);
-    if (celle.indexOf('codice') !== -1) titoli = celle;
-  }
-  if (!titoli) return 'Non trovo la riga delle intestazioni in ' + sh.getName() + '.';
-
-  const fuori = [];
-  attese.forEach(function (a) {
-    const t = titoli[a[0] - 1] || '';
-    if (t.indexOf(a[1]) === -1) fuori.push(a[0] + ': aspetto "' + a[1] + '", trovo "' + (t || 'vuota') + '"');
-  });
-  if (!fuori.length) return '';
-  return 'Le colonne di ' + sh.getName() + ' si sono spostate: non copio il lead per non scrivere nei campi sbagliati. ' + fuori.join('; ') + '.';
-}
+/** `verificaLayout` è stata tolta l'11 ago 2026: serviva a fermare
+ *  l'automazione lead → cliente quando le colonne si spostavano, ma ora
+ *  anche quella le cerca per nome con `colonnePerNome`, quindi non c'è più
+ *  niente da fermare. */
 
 function fugaHtml(s) {
   return String(s == null ? '' : s)

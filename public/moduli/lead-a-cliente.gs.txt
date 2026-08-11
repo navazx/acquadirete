@@ -1,0 +1,152 @@
+/**
+ * Gestionale_Clienti — automazione "lead → cliente" (v9).
+ * Quando in Lead-Contatti imposti lo Stato su "Cliente", crea la scheda del
+ * nuovo cliente nella scheda unica "Clienti-Impianti" col prossimo codice C0xx.
+ *
+ * Storia delle versioni (le prime scrivevano su due schede separate):
+ * v2: la riga nuova eredita la formattazione della tabella e il telefono
+ *     resta testo (conserva il "+" del prefisso).
+ * v3: la nota è solo "Da lead del gg/mm/aaaa", senza orario né le
+ *     domande/codici del modulo (restano in Lead-Contatti).
+ * v4: la riga nasce con le formule di manutenzione: basta compilare Data
+ *     installazione e Frequenza (mesi) e si calcola tutto il resto.
+ * v5: il controllo anti-doppioni riconosce il nome anche se invertito o con
+ *     maiuscole diverse (confronto per insieme di parole).
+ * v6: il nome viene scritto TUTTO MAIUSCOLO, cognome per primo ("BENCINI LUCIA").
+ * v7: una scheda sola. Clienti e Impianti-Manutenzioni sono stati unificati in
+ *     "Clienti-Impianti" (una riga per cliente, anagrafica + impianto insieme).
+ * v8: aggiunta la colonna "Zona giro" (Z1-ZX), presa dalle note del lead dove
+ *     il modulo la scrive già come "Zona: Z4 — ...".
+ * v9: le colonne si cercano PER NOME, non più per posizione. In due giorni il
+ *     foglio è cambiato tre volte e ogni volta questa automazione avrebbe
+ *     scritto nelle colonne sbagliate senza accorgersene — il modo peggiore
+ *     di rompersi, perché il dato finisce nel campo di fianco e nessuno se ne
+ *     accorge. Ora sposta pure le colonne: le ritrova. Se invece una sparisce
+ *     o la rinomini, si ferma e ti dice quale.
+ *     Sono anche sparite le formule di "Giorni alla scadenza" e "Stato":
+ *     quelle colonne non ci sono più, la scadenza si legge dal colore di
+ *     "Prossima manutenzione".
+ *
+ * Installazione: nel foglio → Estensioni → Apps Script → incolla → salva.
+ * È un "trigger semplice" (onEdit): funziona da solo, senza autorizzazioni.
+ * `colonnePerNome` e `normalizza` stanno in RapportinoWebApp.gs, nello stesso
+ * progetto: in Apps Script i file condividono lo stesso spazio dei nomi.
+ * Copia di riserva di questo script: cartella acquadirete/documenti.
+ */
+
+// Per ogni campo bastano una o due parole che compaiano nell'intestazione,
+// confrontate senza accenti, maiuscole né punteggiatura.
+const COLONNE_CLIENTI = {
+  CODICE:        ['codice'],
+  NOME:          ['nome', 'ragione sociale'],
+  PROVINCIA:     ['provincia'],
+  CONTATTO:      ['telefono', 'contatto'],
+  ZONA:          ['zona giro', 'zona'],
+  TIPO:          ['tipo impianto', 'impianto'],
+  INSTALLAZIONE: ['data installazione', 'installazione'],
+  FREQUENZA:     ['frequenza'],
+  MANUTENZIONE:  ['prossima manutenzione', 'manutenzione'],
+  NOTE:          ['note']
+};
+
+function onEdit(e) {
+  const range = e.range;
+  const sheet = range.getSheet();
+  // Reagisce solo alla colonna F (Stato) di Lead-Contatti, una cella alla volta
+  if (sheet.getName() !== 'Lead-Contatti') return;
+  if (range.getColumn() !== 6 || range.getNumRows() > 1 || range.getNumColumns() > 1) return;
+  if (String(e.value) !== 'Cliente') return;
+
+  const ss = e.source;
+  const lead = sheet.getRange(range.getRow(), 1, 1, 7).getValues()[0];
+  // lead = [Data, Nome, Telefono/Email, Provenienza, Interesse, Stato, Note]
+  const nome = String(lead[1] || '').trim();
+  if (!nome) return;
+
+  // Nome per l'anagrafica: TUTTO MAIUSCOLO, cognome per primo
+  // (i lead arrivano come "Nome Cognome": primo token = nome, resto = cognome)
+  const parti = nome.split(/\s+/);
+  const nomeAnagrafica = (parti.length < 2
+    ? nome
+    : parti.slice(1).join(' ') + ' ' + parti[0]).toUpperCase();
+
+  const clienti = ss.getSheetByName('Clienti-Impianti');
+  if (!clienti) {
+    ss.toast('Scheda "Clienti-Impianti" non trovata.', 'Lead → Cliente', 8);
+    return;
+  }
+
+  // Dove sono le colonne oggi. Se una manca, meglio fermarsi che indovinare.
+  let mappa;
+  try {
+    mappa = colonnePerNome(clienti, COLONNE_CLIENTI);
+  } catch (err) {
+    ss.toast(String(err.message || err), 'Lead → Cliente', 20);
+    return;
+  }
+  const col = mappa.col;
+  const prima = mappa.riga + 1;                                   // prima riga di dati
+  const nRighe = Math.max(clienti.getLastRow() - mappa.riga, 1);
+
+  // Niente doppioni: confronto per insieme di parole, così "Lucia Bencini"
+  // combacia con "BENCINI LUCIA" a prescindere dall'ordine e dalle maiuscole
+  const chiave = function (s) {
+    return String(s).toLowerCase().split(/\s+/).filter(Boolean).sort().join(' ');
+  };
+  const nomi = clienti.getRange(prima, col.NOME, nRighe, 1).getValues().flat().map(chiave);
+  if (nomi.indexOf(chiave(nome)) !== -1) {
+    ss.toast(nome + ' è già tra i clienti: nessuna copia fatta.', 'Lead → Cliente', 8);
+    return;
+  }
+
+  // Prossimo codice libero C0xx
+  let max = 0;
+  clienti.getRange(prima, col.CODICE, nRighe, 1).getValues().flat().forEach(function (c) {
+    const m = String(c).match(/^C(\d+)$/i);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  const codice = 'C' + ('000' + (max + 1)).slice(-3);
+
+  // Provincia e zona del giro, ricavate dalle note del lead: il modulo scrive
+  // già la zona nel formato "Zona: Z4 — Empoli, Montespertoli, …".
+  const note = String(lead[6] || '');
+  let prov = '';
+  if (/prato/i.test(note)) prov = 'PO';
+  else if (/pistoia/i.test(note)) prov = 'PT';
+  else if (/firenze|scandicci|sesto fiorentino|bagno a ripoli|campi bisenzio|signa|empol|montespertoli|valdelsa/i.test(note)) prov = 'FI';
+  const zona = (note.match(/\bZ[1-8X]\b/) || [''])[0];
+
+  // Riga nuova: formattazione ereditata da quella sopra, telefono forzato a
+  // testo (altrimenti "+39..." viene letto come numero e perde il "+").
+  const r = clienti.getLastRow() + 1;
+  clienti.getRange(r - 1, 1, 1, mappa.larghezza)
+         .copyTo(clienti.getRange(r, 1, 1, mappa.larghezza), { formatOnly: true });
+  clienti.getRange(r, col.CONTATTO).setNumberFormat('@');
+
+  // Un campo alla volta, ognuno nella sua colonna: così l'ordine non conta.
+  const dataLead = String(lead[0] || '').split(',')[0].trim();
+  clienti.getRange(r, col.CODICE).setValue(codice);
+  clienti.getRange(r, col.NOME).setValue(nomeAnagrafica);
+  clienti.getRange(r, col.PROVINCIA).setValue(prov);
+  clienti.getRange(r, col.CONTATTO).setValue(String(lead[2] || ''));
+  clienti.getRange(r, col.ZONA).setValue(zona);
+  clienti.getRange(r, col.TIPO).setValue(String(lead[4] || ''));
+  clienti.getRange(r, col.NOTE).setValue(dataLead ? 'Da lead del ' + dataLead : '');
+
+  // Prossima manutenzione: si calcola da sola appena compili Data
+  // installazione e Frequenza. Il colore della cella fa il resto.
+  const cInst = lettera(col.INSTALLAZIONE);
+  const cFreq = lettera(col.FREQUENZA);
+  clienti.getRange(r, col.MANUTENZIONE).setFormula(
+    '=IF(OR($' + cInst + r + '="";$' + cFreq + r + '="");"";EDATE($' + cInst + r + ';$' + cFreq + r + '))'
+  );
+
+  ss.toast(nome + ' aggiunto come cliente ' + codice + '. Completa indirizzo e dati impianto.', 'Lead → Cliente', 8);
+}
+
+/** Numero di colonna → lettera (1 = A). Serve per scrivere le formule. */
+function lettera(n) {
+  let s = '';
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - m - 1) / 26; }
+  return s;
+}
