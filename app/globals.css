@@ -57,3 +57,15 @@
   --color-slate-900: #1f2937; /* testo principale */
   --color-slate-950: #111827;
 }
+
+/* Caroselli a scorrimento orizzontale (es. recensioni in home): la barra
+   di scorrimento nativa si nasconde, lo swipe/drag resta. */
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

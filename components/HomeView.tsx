@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Check,
   ShieldCheck,
   Droplets,
   ThumbsUp,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
   Clock,
@@ -20,19 +21,78 @@ import { GOOGLE_PROFILE_URL, CONTACT } from '../lib/siteConfig';
 import { REVIEWS } from '../lib/reviews';
 import { Review } from '../lib/types';
 
-// Le tre recensioni mostrate in home, scelte perché raccontano tre cose
-// diverse: il venditore che non insiste, l'assistenza negli anni, la
-// rapidità. Il testo NON si copia qui: si prende per id da
-// lib/google-reviews.json, così resta una fonte sola.
+// Le prime recensioni del carosello in home, scelte perché raccontano tre
+// cose diverse: il venditore che non insiste, l'assistenza negli anni, la
+// rapidità. Dopo queste scorrono tutte le altre. Il testo NON si copia qui:
+// si prende per id da lib/google-reviews.json, così resta una fonte sola.
 const HOME_REVIEW_IDS = ['g7', 'g3', 'g2'];
 
 export default function HomeView() {
   const { openModal } = useModal();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const reviewTrackRef = useRef<HTMLDivElement | null>(null);
 
-  const homeReviews = HOME_REVIEW_IDS
+  // Prima le tre scelte a mano, poi tutte le altre: in orizzontale ci stanno
+  // senza allungare la pagina.
+  const pinnedReviews = HOME_REVIEW_IDS
     .map((id) => REVIEWS.find((r) => r.id === id))
     .filter((r): r is Review => Boolean(r));
+  const homeReviews: Review[] = [
+    ...pinnedReviews,
+    ...REVIEWS.filter((r) => !HOME_REVIEW_IDS.includes(r.id)),
+  ];
+
+  // Scorre di poco meno di una schermata, così la card di bordo resta visibile
+  // e si capisce che il nastro continua.
+  const scrollReviews = (direction: 1 | -1) => {
+    const track = reviewTrackRef.current;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  };
+
+  // Trascinamento col dito/mouse. Sul touch ci pensa già il browser (è un
+  // normale contenitore con overflow-x), quindi lì non tocchiamo niente: qui
+  // si aggiunge solo il "prendi e trascina" col mouse, che da desktop non
+  // esisterebbe. Durante il trascinamento si spengono snap e scroll fluido,
+  // altrimenti il nastro non segue il puntatore; alla fine si riaccendono e
+  // la card si aggancia da sé.
+  const reviewDrag = useRef<{ startX: number; startScroll: number; moved: boolean } | null>(null);
+
+  const startReviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'touch') return;
+    const track = reviewTrackRef.current;
+    if (!track) return;
+    reviewDrag.current = { startX: e.clientX, startScroll: track.scrollLeft, moved: false };
+    track.style.scrollBehavior = 'auto';
+    track.style.scrollSnapType = 'none';
+  };
+
+  const moveReviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const track = reviewTrackRef.current;
+    const drag = reviewDrag.current;
+    if (!track || !drag) return;
+    const dx = e.clientX - drag.startX;
+    if (!drag.moved) {
+      if (Math.abs(dx) < 4) return; // clic fermo: lascia stare la selezione del testo
+      drag.moved = true;
+      track.style.userSelect = 'none';
+      track.setPointerCapture(e.pointerId);
+    }
+    track.scrollLeft = drag.startScroll - dx;
+  };
+
+  const endReviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const track = reviewTrackRef.current;
+    const drag = reviewDrag.current;
+    if (!track || !drag) return;
+    reviewDrag.current = null;
+    track.style.scrollBehavior = '';
+    track.style.scrollSnapType = '';
+    track.style.userSelect = '';
+    if (drag.moved && track.hasPointerCapture(e.pointerId)) {
+      track.releasePointerCapture(e.pointerId);
+    }
+  };
 
   const faqs = [
     {
@@ -205,27 +265,57 @@ export default function HomeView() {
         </div>
       </section>
 
-      {/* Recensioni vere: le parole dei clienti subito dopo le nostre promesse */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Non crederci sulla parola: leggi la loro.
-          </h2>
-          <p className="text-sm text-slate-600">
-            Tre recensioni fra le oltre 130 che i nostri clienti hanno lasciato su Google, tutte a 5 stelle.
-          </p>
+      {/* Recensioni vere: le parole dei clienti subito dopo le nostre promesse.
+          Scorrono in orizzontale (swipe da telefono, frecce da desktop) così
+          ne stanno tante senza allungare la home. */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="max-w-2xl space-y-3 text-center sm:text-left">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+              Non crederci sulla parola: leggi la loro.
+            </h2>
+            <p className="text-sm text-slate-600">
+              Alcune delle oltre 130 recensioni che i nostri clienti hanno lasciato su Google, tutte a 5 stelle. Scorri per leggerle.
+            </p>
+          </div>
+
+          <div className="hidden md:flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => scrollReviews(-1)}
+              aria-label="Recensioni precedenti"
+              className="w-10 h-10 rounded-full border border-slate-250 bg-white text-slate-700 flex items-center justify-center hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollReviews(1)}
+              aria-label="Recensioni successive"
+              className="w-10 h-10 rounded-full border border-slate-250 bg-white text-slate-700 flex items-center justify-center hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors cursor-pointer"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div
+          ref={reviewTrackRef}
+          onPointerDown={startReviewDrag}
+          onPointerMove={moveReviewDrag}
+          onPointerUp={endReviewDrag}
+          onPointerCancel={endReviewDrag}
+          className="no-scrollbar flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 md:cursor-grab md:active:cursor-grabbing"
+        >
           {homeReviews.map((review) => (
             <figure
               key={review.id}
-              className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
+              className="snap-start shrink-0 w-[80vw] max-w-[330px] sm:w-[330px] bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
             >
               <div className="text-amber-400 text-sm font-bold tracking-widest" aria-label={`${review.rating} stelle su 5`}>
                 ★★★★★
               </div>
-              <blockquote className="text-sm text-slate-700 leading-relaxed flex-1">
+              <blockquote className="text-sm text-slate-700 leading-relaxed flex-1 line-clamp-6">
                 &laquo;{review.text}&raquo;
               </blockquote>
               <figcaption className="text-xs text-slate-500 border-t border-slate-150 pt-3">
@@ -236,7 +326,7 @@ export default function HomeView() {
           ))}
         </div>
 
-        <div className="text-center">
+        <div className="text-center sm:text-left">
           <a
             href={GOOGLE_PROFILE_URL}
             target="_blank"
