@@ -1,3 +1,36 @@
+# ---------------------------------------------------------------------------
+#  Header di sicurezza (aggiunti il 2026-08-30 dopo l'audit).
+#  Prima il sito non ne mandava nessuno: in produzione c'era solo
+#  Strict-Transport-Security, che mette Netlify per conto suo.
+#
+#  X-Frame-Options        impedisce di caricare il sito dentro un iframe
+#                         altrui. Senza, chiunque puo' incorniciarlo in una
+#                         pagina propria e far compilare il modulo a chi crede
+#                         di essere da un'altra parte.
+#  X-Content-Type-Options il browser rispetta il Content-Type dichiarato
+#                         invece di provare a indovinarlo dal contenuto.
+#  Referrer-Policy        verso i siti esterni esce solo il dominio, non
+#                         l'indirizzo esatto della pagina di partenza.
+#  Permissions-Policy     il sito non usa posizione, microfono o fotocamera:
+#                         le neghiamo in partenza.
+#
+#  La CSP e' in prova (Report-Only): segnala le violazioni nella console del
+#  browser senza bloccare niente. Va lasciata cosi' finche' non si e' certi
+#  che non tagli fuori Meta Pixel e gtag.js, che partono solo dopo il consenso
+#  ai cookie e quindi non si vedono al primo giro. Quando la console resta
+#  pulita anche dopo aver accettato i cookie, basta rinominare l'header in
+#  "Content-Security-Policy" per renderla attiva.
+#
+#  NB: i commenti nei file _headers vanno a inizio riga, mai dentro un blocco
+#  indentato — li' Netlify li leggerebbe come nomi di header.
+# ---------------------------------------------------------------------------
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.facebook.com https://www.google.com https://www.google.it https://googleads.g.doubleclick.net https://stats.g.doubleclick.net; font-src 'self'; connect-src 'self' https://www.facebook.com https://graph.facebook.com https://www.google-analytics.com https://region1.google-analytics.com https://googleads.g.doubleclick.net; frame-src https://www.facebook.com https://td.doubleclick.net; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'
+
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 

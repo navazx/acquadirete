@@ -82,7 +82,16 @@ function takeMatch(fields, regexp) {
 
 function verifySignature(raw, header) {
   const secret = process.env.META_APP_SECRET;
-  if (!secret) return true; // verifica attiva solo se il secret è configurato
+  // Senza secret si rifiuta, non si accetta (cambiato il 2026-08-30 dopo
+  // l'audit: prima qui c'era `return true`, cioè una variabile cancellata per
+  // sbaglio avrebbe spalancato l'endpoint a chiunque invece di chiuderlo).
+  // META_APP_SECRET è configurata su Netlify — verificato il 30/8 con un POST
+  // senza firma, che risponde 401. Se un giorno l'endpoint iniziasse a
+  // rispondere 401 a Meta, il primo posto da guardare è quella variabile.
+  if (!secret) {
+    console.error('META_APP_SECRET mancante: richiesta rifiutata');
+    return false;
+  }
   if (!header?.startsWith('sha256=')) return false;
   const expected = createHmac('sha256', secret).update(raw).digest('hex');
   const got = header.slice('sha256='.length);
@@ -97,9 +106,11 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
   const token = process.env.META_PAGE_TOKEN;
   if (!token) throw new Error('META_PAGE_TOKEN mancante');
 
-  const res = await fetch(
-    `${GRAPH}/${leadgen_id}?fields=created_time,field_data&access_token=${encodeURIComponent(token)}`
-  );
+  // Il token va nell'header, non nella query string: nella URL finirebbe nei
+  // log di ogni intermediario (cambiato il 2026-08-30 dopo l'audit).
+  const res = await fetch(`${GRAPH}/${leadgen_id}?fields=created_time,field_data`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
   const lead = await res.json();
 

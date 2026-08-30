@@ -51,18 +51,12 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const zonaScelta = ZONE.find((z) => z.code === formData.zona);
+  // Campo trappola per i bot: è nascosto, nessuna persona lo compila mai.
+  // Se arriva pieno, /api/lead scarta la richiesta. Sta fuori da formData
+  // apposta, così non finisce per sbaglio in nessun altro invio.
+  const [website, setWebsite] = useState('');
 
-  const saveLocalLead = () => {
-    // Conserva sempre una copia locale della richiesta (utile come backup).
-    const leads = JSON.parse(localStorage.getItem('acquadirete_leads') || '[]');
-    leads.push({
-      ...formData,
-      date: new Date().toISOString(),
-      id: Math.random().toString(36).substr(2, 9)
-    });
-    localStorage.setItem('acquadirete_leads', JSON.stringify(leads));
-  };
+  const zonaScelta = ZONE.find((z) => z.code === formData.zona);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +86,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           servizio: servizioLabel,
           messaggio: formData.messaggio,
           pagina: window.location.pathname,
+          website,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -99,7 +94,6 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
         throw new Error(data.error || 'Invio non riuscito');
       }
 
-      saveLocalLead();
       // Evento di conversione per Meta Ads: parte solo se l'utente ha
       // accettato i cookie di marketing (fbq esiste solo in quel caso).
       window.fbq?.('track', 'Lead', { content_name: servizioLabel });
@@ -112,7 +106,6 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       // In sviluppo (next dev) /api/lead non esiste, è una funzione Netlify:
       // simuliamo l'invio riuscito per poter provare il form in locale.
       if (process.env.NODE_ENV === 'development') {
-        saveLocalLead();
         setIsSubmitted(true);
         return;
       }
@@ -374,6 +367,26 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
             </>
           )}
         </button>
+
+        {/* Campo trappola per i bot. Non è type="hidden" apposta: molti bot
+            saltano i campi nascosti e compilano invece tutto quello che
+            somiglia a un input vero. Va quindi tolto dalla vista via CSS, e
+            sottratto a tastiera e lettori di schermo perché nessuna persona ci
+            finisca dentro per sbaglio. Se arriva pieno, /api/lead scarta la
+            richiesta senza dirlo. Sta in fondo, non in cima: il form usa
+            `space-y-4`, che dà un margine a ogni figlio tranne il primo — in
+            cima avrebbe spinto giù il campo Nome di 16px pur essendo
+            invisibile. */}
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className="absolute -left-[9999px] h-0 w-0 opacity-0"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
       </form>
     </div>
   );
