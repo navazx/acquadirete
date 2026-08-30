@@ -1,19 +1,19 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Check,
   ShieldCheck,
   Droplets,
   ThumbsUp,
-  ChevronLeft,
   ChevronRight,
   Sparkles,
   Clock,
   MapPin,
   Award,
 } from 'lucide-react';
+import CardCarousel from './CardCarousel';
 import WaterCalc from './WaterCalc';
 import { useModal } from './ModalProvider';
 import { ROUTES } from '../lib/routes';
@@ -30,7 +30,6 @@ const HOME_REVIEW_IDS = ['g7', 'g3', 'g2'];
 export default function HomeView() {
   const { openModal } = useModal();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const reviewTrackRef = useRef<HTMLDivElement | null>(null);
 
   // Prima le tre scelte a mano, poi tutte le altre: in orizzontale ci stanno
   // senza allungare la pagina.
@@ -41,58 +40,6 @@ export default function HomeView() {
     ...pinnedReviews,
     ...REVIEWS.filter((r) => !HOME_REVIEW_IDS.includes(r.id)),
   ];
-
-  // Scorre di poco meno di una schermata, così la card di bordo resta visibile
-  // e si capisce che il nastro continua.
-  const scrollReviews = (direction: 1 | -1) => {
-    const track = reviewTrackRef.current;
-    if (!track) return;
-    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
-  };
-
-  // Trascinamento col dito/mouse. Sul touch ci pensa già il browser (è un
-  // normale contenitore con overflow-x), quindi lì non tocchiamo niente: qui
-  // si aggiunge solo il "prendi e trascina" col mouse, che da desktop non
-  // esisterebbe. Durante il trascinamento si spengono snap e scroll fluido,
-  // altrimenti il nastro non segue il puntatore; alla fine si riaccendono e
-  // la card si aggancia da sé.
-  const reviewDrag = useRef<{ startX: number; startScroll: number; moved: boolean } | null>(null);
-
-  const startReviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'touch') return;
-    const track = reviewTrackRef.current;
-    if (!track) return;
-    reviewDrag.current = { startX: e.clientX, startScroll: track.scrollLeft, moved: false };
-    track.style.scrollBehavior = 'auto';
-    track.style.scrollSnapType = 'none';
-  };
-
-  const moveReviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const track = reviewTrackRef.current;
-    const drag = reviewDrag.current;
-    if (!track || !drag) return;
-    const dx = e.clientX - drag.startX;
-    if (!drag.moved) {
-      if (Math.abs(dx) < 4) return; // clic fermo: lascia stare la selezione del testo
-      drag.moved = true;
-      track.style.userSelect = 'none';
-      track.setPointerCapture(e.pointerId);
-    }
-    track.scrollLeft = drag.startScroll - dx;
-  };
-
-  const endReviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const track = reviewTrackRef.current;
-    const drag = reviewDrag.current;
-    if (!track || !drag) return;
-    reviewDrag.current = null;
-    track.style.scrollBehavior = '';
-    track.style.scrollSnapType = '';
-    track.style.userSelect = '';
-    if (drag.moved && track.hasPointerCapture(e.pointerId)) {
-      track.releasePointerCapture(e.pointerId);
-    }
-  };
 
   const faqs = [
     {
@@ -269,48 +216,23 @@ export default function HomeView() {
           Scorrono in orizzontale (swipe da telefono, frecce da desktop) così
           ne stanno tante senza allungare la home. */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="max-w-2xl space-y-3 text-center sm:text-left">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-              Non crederci sulla parola: leggi la loro.
-            </h2>
-            <p className="text-sm text-slate-600">
-              Alcune delle oltre 130 recensioni che i nostri clienti hanno lasciato su Google, tutte a 5 stelle. Scorri per leggerle.
-            </p>
-          </div>
-
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => scrollReviews(-1)}
-              aria-label="Recensioni precedenti"
-              className="w-10 h-10 rounded-full border border-slate-250 bg-white text-slate-700 flex items-center justify-center hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollReviews(1)}
-              aria-label="Recensioni successive"
-              className="w-10 h-10 rounded-full border border-slate-250 bg-white text-slate-700 flex items-center justify-center hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors cursor-pointer"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <div
-          ref={reviewTrackRef}
-          onPointerDown={startReviewDrag}
-          onPointerMove={moveReviewDrag}
-          onPointerUp={endReviewDrag}
-          onPointerCancel={endReviewDrag}
-          className="no-scrollbar flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 md:cursor-grab md:active:cursor-grabbing"
+        <CardCarousel
+          label="Recensioni"
+          header={
+            <>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                Non crederci sulla parola: leggi la loro.
+              </h2>
+              <p className="text-sm text-slate-600">
+                Alcune delle oltre 130 recensioni che i nostri clienti hanno lasciato su Google, tutte a 5 stelle. Scorri per leggerle.
+              </p>
+            </>
+          }
         >
           {homeReviews.map((review) => (
             <figure
               key={review.id}
-              className="snap-start shrink-0 w-[80vw] max-w-[330px] sm:w-[330px] bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
+              className="w-[80vw] max-w-[330px] sm:w-[330px] bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
             >
               <div className="text-amber-400 text-sm font-bold tracking-widest" aria-label={`${review.rating} stelle su 5`}>
                 ★★★★★
@@ -324,7 +246,7 @@ export default function HomeView() {
               </figcaption>
             </figure>
           ))}
-        </div>
+        </CardCarousel>
 
         <div className="text-center sm:text-left">
           <a
@@ -339,21 +261,24 @@ export default function HomeView() {
         </div>
       </section>
 
-      {/* Core Services Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
-            Depuratori con acqua refrigerata e gassata, anche per piccoli spazi
-          </h2>
-          <p className="text-xs text-slate-500 max-w-xl mx-auto leading-relaxed">
-            Scegli la categoria adatta alle tue necessità. Installiamo solo sistemi certificati di altissima qualità tecnologica progettati per durare a lungo.
-          </p>
-        </div>
-
-        {/* Services Row Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Core Services Section — anche qui un nastro: quattro card impilate su
+          telefono erano mezzo schermo a testa. */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <CardCarousel
+          label="Servizi"
+          header={
+            <>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                Depuratori con acqua refrigerata e gassata, anche per piccoli spazi
+              </h2>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Scegli la categoria adatta alle tue necessità. Installiamo solo sistemi certificati di altissima qualità tecnologica progettati per durare a lungo.
+              </p>
+            </>
+          }
+        >
           {/* Card 1: Domestico */}
-          <div className="bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+          <div className="w-[80vw] max-w-[285px] sm:w-[285px] bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <Droplets size={22} />
@@ -378,7 +303,7 @@ export default function HomeView() {
           </div>
 
           {/* Card 2: Osmosi Inversa */}
-          <div className="bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+          <div className="w-[80vw] max-w-[285px] sm:w-[285px] bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <Sparkles size={22} />
@@ -403,7 +328,7 @@ export default function HomeView() {
           </div>
 
           {/* Card 3: Uffici e Ristoranti */}
-          <div className="bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+          <div className="w-[80vw] max-w-[285px] sm:w-[285px] bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <Clock size={22} />
@@ -428,7 +353,7 @@ export default function HomeView() {
           </div>
 
           {/* Card 4: Assistenza e manutenzione */}
-          <div className="bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+          <div className="w-[80vw] max-w-[285px] sm:w-[285px] bg-white rounded-xl border border-slate-250 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <ShieldCheck size={22} />
@@ -451,7 +376,7 @@ export default function HomeView() {
               <ChevronRight size={12} />
             </Link>
           </div>
-        </div>
+        </CardCarousel>
       </section>
 
       {/* Calculator Call-out Section */}
