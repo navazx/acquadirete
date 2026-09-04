@@ -1,0 +1,36 @@
+name: Report SEO mensile
+
+# Il 1° di ogni mese alle 07:10 UTC (~09:10 ora italiana d'estate).
+# workflow_dispatch permette di lanciarlo a mano dalla tab "Actions" per test.
+#
+# Questo lavoro prima stava in una routine cloud (`report-seo-mensile`), dove
+# però la chiave del service account era incollata per intero dentro il testo
+# del prompt — quindi finiva anche nel log di ogni esecuzione. Qui la chiave
+# vive nel secret GSC_KEY_JSON e non compare mai in chiaro.
+# Spostato il 2026-08-30 dopo l'audit di sicurezza.
+on:
+  schedule:
+    - cron: '10 7 1 * *'
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA del commit e non al tag: vedi il commento
+      # in keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Genera il report da Search Console e mandalo su Telegram
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # chat_id non è segreto (inutile senza il token): valore diretto.
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/seo-report.mjs
