@@ -15,7 +15,7 @@ const HEADERS = ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse',
 const clip = (v, max) => (v == null ? '' : String(v).slice(0, max));
 
 // ---------------------------------------------------------------------------
-//  Difese anti-abuso (aggiunte il 2026-08-30 dopo l'audit di sicurezza).
+//  Difese anti-abuso (aggiunte il 2026-09-04 dopo l'audit di sicurezza).
 //  Prima l'endpoint accettava qualsiasi POST da chiunque: con un ciclo banale
 //  si riempiva la scheda Lead-Contatti di righe finte e il telefono di
 //  notifiche. Le tre difese qui sotto sono dossi, non muri: fermano i bot

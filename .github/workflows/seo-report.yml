@@ -7,7 +7,7 @@ name: Report SEO mensile
 # però la chiave del service account era incollata per intero dentro il testo
 # del prompt — quindi finiva anche nel log di ogni esecuzione. Qui la chiave
 # vive nel secret GSC_KEY_JSON e non compare mai in chiaro.
-# Spostato il 2026-08-30 dopo l'audit di sicurezza.
+# Spostato il 2026-09-04 dopo l'audit di sicurezza.
 on:
   schedule:
     - cron: '10 7 1 * *'

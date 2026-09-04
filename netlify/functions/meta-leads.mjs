@@ -82,10 +82,10 @@ function takeMatch(fields, regexp) {
 
 function verifySignature(raw, header) {
   const secret = process.env.META_APP_SECRET;
-  // Senza secret si rifiuta, non si accetta (cambiato il 2026-08-30 dopo
+  // Senza secret si rifiuta, non si accetta (cambiato il 2026-09-04 dopo
   // l'audit: prima qui c'era `return true`, cioè una variabile cancellata per
   // sbaglio avrebbe spalancato l'endpoint a chiunque invece di chiuderlo).
-  // META_APP_SECRET è configurata su Netlify — verificato il 30/8 con un POST
+  // META_APP_SECRET è configurata su Netlify — verificato il 4/9 con un POST
   // senza firma, che risponde 401. Se un giorno l'endpoint iniziasse a
   // rispondere 401 a Meta, il primo posto da guardare è quella variabile.
   if (!secret) {
@@ -107,7 +107,7 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
   if (!token) throw new Error('META_PAGE_TOKEN mancante');
 
   // Il token va nell'header, non nella query string: nella URL finirebbe nei
-  // log di ogni intermediario (cambiato il 2026-08-30 dopo l'audit).
+  // log di ogni intermediario (cambiato il 2026-09-04 dopo l'audit).
   const res = await fetch(`${GRAPH}/${leadgen_id}?fields=created_time,field_data`, {
     headers: { Authorization: `Bearer ${token}` },
   });

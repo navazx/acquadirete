@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-#  Header di sicurezza (aggiunti il 2026-08-30 dopo l'audit).
+#  Header di sicurezza (aggiunti il 2026-09-04 dopo l'audit).
 #  Prima il sito non ne mandava nessuno: in produzione c'era solo
 #  Strict-Transport-Security, che mette Netlify per conto suo.
 #
