@@ -134,7 +134,12 @@ export default async (req) => {
     return Response.json({ ok: true });
   } catch (err) {
     console.error('Scrittura lead su Google Sheet fallita:', err);
-    return Response.json({ ok: false }, { status: 500 });
+    // `causa` è una categoria grossolana (variabile-assente, json-non-valido,
+    // json-incompleto, google-rifiuta): non rivela nulla di sfruttabile ma
+    // permette di capire un guasto di configurazione dall'esterno, senza
+    // dover leggere i log delle funzioni. Il messaggio per la persona resta
+    // quello generico gestito dal form.
+    return Response.json({ ok: false, causa: err?.causa ?? 'sconosciuta' }, { status: 500 });
   }
 };
 

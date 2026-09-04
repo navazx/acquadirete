@@ -13,10 +13,36 @@ const b64url = (input) =>
 // Cache del token tra invocazioni "calde" della stessa istanza della funzione.
 let tokenCache = { token: null, exp: 0 };
 
+// Errore con una "causa" grossolana attaccata, così chi chiama può dire cosa
+// non va senza mai stampare il contenuto della chiave. Serve per capire in
+// fretta un guasto di configurazione: il 4 settembre 2026, dopo la
+// sostituzione della chiave, /api/lead ha smesso di scrivere e dal 500 nudo
+// non si capiva se mancasse la variabile, se fosse incollata male o se fosse
+// Google a rifiutarla.
+const guasto = (causa, messaggio) => Object.assign(new Error(messaggio), { causa });
+
 export async function getAccessToken() {
   if (tokenCache.token && Date.now() < tokenCache.exp) return tokenCache.token;
-  const key = JSON.parse(process.env.GSC_KEY_JSON || '{}');
-  if (!key.client_email) throw new Error('GSC_KEY_JSON mancante o non valida');
+
+  const grezzo = process.env.GSC_KEY_JSON;
+  if (!grezzo) {
+    throw guasto('variabile-assente',
+      'GSC_KEY_JSON non arriva alla funzione: o non esiste su Netlify, o e\' segnata ' +
+      'come "secret", o ha uno scope ristretto. Deve essere non-secret e valida per tutti i contesti.');
+  }
+  let key;
+  try {
+    key = JSON.parse(grezzo);
+  } catch {
+    throw guasto('json-non-valido',
+      `GSC_KEY_JSON c'e' (${grezzo.length} caratteri) ma non e' JSON valido: probabilmente ` +
+      'il contenuto del file e\' stato incollato a meta\' o con qualcosa intorno.');
+  }
+  if (!key.client_email || !key.private_key) {
+    throw guasto('json-incompleto',
+      'GSC_KEY_JSON e\' JSON valido ma non e\' una chiave di service account: ' +
+      `mancano ${!key.client_email ? 'client_email' : ''}${!key.client_email && !key.private_key ? ' e ' : ''}${!key.private_key ? 'private_key' : ''}.`);
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: 'RS256', typ: 'JWT' };
@@ -42,7 +68,11 @@ export async function getAccessToken() {
       assertion: `${unsigned}.${sig}`,
     }),
   });
-  if (!res.ok) throw new Error(`Autenticazione Google fallita (${res.status}): ${await res.text()}`);
+  if (!res.ok) {
+    throw guasto('google-rifiuta',
+      `Google non accetta la chiave (${res.status}): ${await res.text()}. ` +
+      'La chiave e\' scritta bene ma non e\' valida: revocata, di un altro progetto, o appena creata e non ancora propagata.');
+  }
   const { access_token } = await res.json();
   tokenCache = { token: access_token, exp: Date.now() + 50 * 60 * 1000 };
   return access_token;
