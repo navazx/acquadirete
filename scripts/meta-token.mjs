@@ -15,6 +15,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const PAGINA = '1164447766749757';           // pagina Facebook Acquadirete
 const API = 'https://graph.facebook.com/v21.0';
@@ -30,7 +31,12 @@ const SERVONO = [
   ['instagram_content_publish', 'PUBBLICARE su Instagram'],
 ];
 
-const percorso = resolve(process.argv[2] || '../token-meta.txt');
+// Il percorso di default parte da dove sta lo script, non da dove viene
+// lanciato: cosi' il comando funziona anche da un'altra cartella.
+const CARTELLA_SCRIPT = dirname(fileURLToPath(import.meta.url));
+const percorso = process.argv[2]
+  ? resolve(process.argv[2])
+  : resolve(CARTELLA_SCRIPT, '../../token-meta.txt');
 const spia = (t) => `${t.slice(0, 6)}…${t.slice(-4)} (${t.length} caratteri)`;
 
 function leggiToken() {
