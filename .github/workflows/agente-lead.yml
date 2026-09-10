@@ -1,0 +1,32 @@
+name: Agente lead
+
+# Ogni mattina alle 06:15 UTC (~08:15 ora italiana d'estate), prima che Matteo
+# inizi il giro. Il lunedi' lo stesso script aggiunge da se' i controlli
+# settimanali (preventivi fermi, schede incomplete, conversione per canale).
+# workflow_dispatch per lanciarlo a mano dalla tab "Actions".
+on:
+  schedule:
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  lead:
+    runs-on: ubuntu-latest
+    steps:
+      # Le azioni sono agganciate allo SHA del commit, non al tag "v4":
+      # un tag si puo' spostare, lo SHA no. Vedi il commento in keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Controlla i lead fermi e avvisa su Telegram
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # chat_id non è segreto (inutile senza il token): valore diretto.
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/agente-lead.mjs

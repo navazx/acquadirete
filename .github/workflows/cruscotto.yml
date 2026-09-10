@@ -1,0 +1,29 @@
+name: Cruscotto settimanale
+
+# Ogni lunedi' alle 06:40 UTC (~08:40 ora italiana d'estate).
+# Scrive una riga nella scheda "Cruscotto" del Gestionale con i numeri della
+# settimana appena chiusa: e' la memoria storica su cui gli altri agenti
+# decidono se la rotta va corretta. Se la riga della settimana c'e' gia',
+# lo script non scrive niente (si puo' rilanciare senza fare danni).
+on:
+  schedule:
+    - cron: '40 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  cruscotto:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Scrivi la riga della settimana sul Gestionale
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+        run: node scripts/cruscotto.mjs

@@ -33,14 +33,18 @@ function loadKey() {
 const b64url = (input) =>
   Buffer.from(input).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
-/** Access token OAuth2 tramite service account (JWT firmato RS256, niente login interattivo). */
-export async function getAccessToken() {
+/**
+ * Access token OAuth2 tramite service account (JWT firmato RS256, niente login
+ * interattivo). Lo scope e' un parametro perche' gli agenti che scrivono sul
+ * Gestionale chiedono spreadsheets, mentre gli script SEO chiedono webmasters.
+ */
+export async function getAccessToken(scope = 'https://www.googleapis.com/auth/webmasters.readonly') {
   const key = loadKey();
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: 'RS256', typ: 'JWT' };
   const claim = {
     iss: key.client_email,
-    scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+    scope,
     aud: 'https://oauth2.googleapis.com/token',
     exp: now + 3600,
     iat: now,
