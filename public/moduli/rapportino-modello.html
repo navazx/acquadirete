@@ -6,7 +6,8 @@
 <style>
   /* ------------------------------------------------------------------
      RAPPORTINO DI INTERVENTO — Acquadirete di Stefano Piconese
-     Formato: A4 verticale, stampa a 1 colore (#01278B) + retini.
+     Formato: A4 verticale, stampa in NERO (la tavolozza blu resta
+     nel CSS, commentata) + retini grigi.
      Destinazione: carta chimica autocopiante 2 copie (CB/CF).
      Per il PDF da tipografia: stampa da Chrome > Salva come PDF,
      margini "Nessuno", "Grafica di sfondo" ATTIVA, scala 100%.
@@ -14,13 +15,32 @@
 
   @page { size: A4 portrait; margin: 9mm; }
 
+  /* TAVOLOZZA IN NERO — questo modulo si stampa in bianco e nero.
+     Il blu e i retini azzurri uscivano da una laser B/N come grigi
+     chiarissimi: filetti ed etichette sparivano. Qui sotto i valori
+     in nero e grigi scuri, tarati per reggere la retinatura.
+     La versione a un colore blu NON va cancellata: sta nel blocco
+     commentato subito dopo, per riattivarla si scambiano i due. */
   :root {
-    --ink:  #01278B;          /* colore unico di stampa            */
-    --line: #01278B;          /* filetti                            */
-    --lbl:  #4a68ad;          /* etichette (retino ~70%)            */
-    --bar:  #dbe3f4;          /* retino ~15% per le barre sezione   */
-    --soft: #f0f3fb;          /* retino ~7% per i campi calcolati   */
+    --ink:  #000;             /* testo e filetti                    */
+    --line: #000;             /* filetti                            */
+    --lbl:  #333;             /* etichette (grigio 80%)             */
+    --bar:  #d5d5d5;          /* barre di sezione                   */
+    --soft: #ededed;          /* fondo dei campi calcolati          */
+    --hint: #333;             /* note a lato dei titoli             */
   }
+
+  /* Versione a 1 colore blu Acquadirete — NON CANCELLARE.
+     Per tornarci: commenta il blocco sopra e togli i commenti a questo.
+  :root {
+    --ink:  #01278B;
+    --line: #01278B;
+    --lbl:  #4a68ad;
+    --bar:  #dbe3f4;
+    --soft: #f0f3fb;
+    --hint: #22409b;
+  }
+  */
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -46,7 +66,9 @@
 
   /* ---------- TESTATA ---------- */
   .testata { display: flex; align-items: flex-start; gap: 4mm; padding-bottom: 2mm; }
-  .testata img { width: 30mm; }
+  /* Il logo è tinta unita #01278B: brightness(0) lo porta a nero pieno
+     senza toccare logo.svg. Tornando alla tavolozza blu, togliere il filtro. */
+  .testata img { width: 30mm; filter: brightness(0); }
   .azienda { flex: 1; padding-top: 1mm; }
   .azienda .nome { font-size: 11pt; font-weight: 700; letter-spacing: .2mm; }
   .azienda .dati { font-size: 7pt; color: var(--lbl); line-height: 1.45; margin-top: .8mm; }
@@ -67,7 +89,7 @@
     font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .4mm;
     padding: 1mm 2mm; margin-top: 1mm; border: .3mm solid var(--line); border-bottom: none;
   }
-  h2 .hint { float: right; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 6.5pt; color: #22409b; }
+  h2 .hint { float: right; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 6.5pt; color: var(--hint); }
 
   /* ---------- GRIGLIA CAMPI ---------- */
   .sez { border: .3mm solid var(--line); border-top: none; }
@@ -175,6 +197,35 @@
     margin-top: 1.4mm; padding-top: 1mm; border-top: .3mm solid var(--line);
     display: flex; justify-content: space-between; font-size: 6pt; color: var(--lbl);
   }
+
+  /* ---------- COMPILAZIONE A SCHERMO ----------
+     Il modulo si può riempire dal computer e poi stampare. Tutto quello che
+     segue vale SOLO a schermo: in stampa la barra sparisce e i campi
+     riempiti escono identici a come li stampa il Gestionale (classe .v).
+     I campi non stanno nell'HTML ma li crea lo script in fondo alla pagina:
+     genera-template-appsscript.mjs cerca "<label>...</label></div>" per
+     infilarci i suoi segnaposto, e un .v scritto qui glielo farebbe mancare. */
+  .barra-compila {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9;
+    background: #1c1c1c; color: #fff; padding: 2.5mm 4mm;
+    font-size: 9pt; display: flex; align-items: center; gap: 4mm;
+  }
+  .barra-compila button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    background: #fff; color: #1c1c1c; border: 0; border-radius: 1.2mm; padding: 1.5mm 4mm;
+  }
+  .barra-compila .nota { color: #c9c9c9; font-size: 8pt; }
+  .barra-compila .avviso { color: #ffd479; font-size: 8pt; font-weight: 700; }
+  body.compilabile { padding-top: 16mm; }
+
+  @media screen {
+    .compilabile [contenteditable] { background: #fff8dc; border-radius: .6mm; }
+    .compilabile [contenteditable]:hover { background: #fff2b0; }
+    .compilabile [contenteditable]:focus { background: #ffe98a; outline: .4mm solid #000; }
+    .compilabile .chk { cursor: pointer; }
+    .compilabile .chk i:hover { background: #ffe98a; }
+  }
+  @media print { .barra-compila { display: none !important; } body.compilabile { padding-top: 0; } }
 </style>
 </head>
 <body>
@@ -385,5 +436,83 @@
   </div>
 
 </div>
+
+<script>
+/* Rende il modulo compilabile a schermo. Non tocca la struttura salvata su
+   disco: i campi nascono qui, a pagina aperta. Niente salvataggio automatico,
+   apposta: ricaricando la pagina il modulo torna vuoto e non ci si ritrova
+   addosso i dati del cliente precedente. */
+(function () {
+  // Sul MODELLO coi segnaposto non si attiva: quel file è solo lo stampo
+  // che legge lo script del Gestionale. I segnaposto si cercano dove il
+  // generatore li mette (dentro i .v e nella classe delle caselle), NON
+  // nell'innerHTML della pagina: questo script sta dentro il body e la
+  // stringa dei segnaposto la contiene lui stesso, quindi si escluderebbe
+  // sempre da solo.
+  var SEGNAPOSTO = /^{{[A-Z_]+}}$/;
+  var eModello = [].some.call(document.querySelectorAll('.v'), function (v) {
+    return SEGNAPOSTO.test(v.textContent.trim());
+  }) || !!document.querySelector('.chk i[class*="{{"]');
+  if (eModello) return;
+
+  var giaPieno = [].slice.call(document.querySelectorAll('.v'))
+    .some(function (v) { return v.textContent.trim() !== ''; });
+
+  function scrivibile(el) { el.setAttribute('contenteditable', 'true'); }
+
+  // Campi con etichetta: si aggiunge il .v che in stampa è identico a quello
+  // del precompilato.
+  [].forEach.call(document.querySelectorAll('.c'), function (c) {
+    // Le celle che contengono caselle da barrare si spuntano, non si
+    // scrivono: infilarci un campo le fa crescere da 8,2 a 15,7mm e il
+    // foglio finisce a pagina due.
+    if (!c.querySelector('label') || c.querySelector('.chk')) return;
+    // Se il campo esiste già viene dal Gestionale: si rende comunque
+    // correggibile (l'avviso in barra dice che la correzione vale solo
+    // per questa stampa), altrimenti si crea vuoto.
+    var v = c.querySelector('.v');
+    if (!v) { v = document.createElement('div'); v.className = 'v'; c.appendChild(v); }
+    scrivibile(v);
+  });
+
+  // Numero e data in testata, celle vuote delle tabelle, righe delle note.
+  [].forEach.call(document.querySelectorAll('.numero .val, .note .riga-scrittura'), scrivibile);
+  [].forEach.call(document.querySelectorAll('td'), function (td) {
+    if (td.textContent.trim() === '') scrivibile(td);
+  });
+
+  // Caselle da barrare: stesso segno che usa il precompilato (classe x).
+  [].forEach.call(document.querySelectorAll('.chk'), function (chk) {
+    var i = chk.querySelector('i');
+    if (!i) return;
+    chk.addEventListener('click', function (e) {
+      if (e.target.isContentEditable) return;
+      i.classList.toggle('x');
+    });
+  });
+
+  // Una riga sola per campo: l'a-capo sfonderebbe la gabbia.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.isContentEditable) e.preventDefault();
+  });
+  // Incolla sempre come testo semplice, altrimenti arrivano font e colori.
+  document.addEventListener('paste', function (e) {
+    if (!e.target.isContentEditable) return;
+    e.preventDefault();
+    var t = (e.clipboardData || window.clipboardData).getData('text').replace(/s+/g, ' ');
+    document.execCommand('insertText', false, t);
+  });
+
+  var barra = document.createElement('div');
+  barra.className = 'barra-compila';
+  barra.innerHTML = '<button type="button">Stampa</button>' +
+    '<span class="nota">Clicca sui campi per scrivere, sulle caselle per barrarle. ' +
+    'Ricaricando la pagina il modulo torna vuoto.</span>' +
+    (giaPieno ? '<span class="avviso">Le modifiche valgono solo per questa stampa: non tornano nel Gestionale.</span>' : '');
+  barra.querySelector('button').addEventListener('click', function () { window.print(); });
+  document.body.appendChild(barra);
+  document.body.classList.add('compilabile');
+})();
+</script>
 </body>
 </html>
