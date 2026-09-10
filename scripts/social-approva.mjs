@@ -28,6 +28,7 @@ function ordine(testi) {
   for (const testo of [...testi].reverse()) {
     const t = testo.toUpperCase().replace(/\s+/g, ' ').trim();
     if (t === 'SCARTA') return { azione: 'scarta' };
+    if (t === 'RIMANDA' || t === 'SALTA') return { azione: 'rimanda' };
     const m = t.match(/^PUBBLICA(?:\s+([123]))?$/);
     if (m) return { azione: 'pubblica', variante: Number(m[1] || 1) };
   }
@@ -55,11 +56,11 @@ async function main() {
   if (!cosa) {
     // Un "PUBBLICA 9" o un "pubblica domani" sono tentativi andati a vuoto:
     // meglio dirlo, altrimenti resta a credere di aver pubblicato.
-    if (testi.some((t) => /^\s*(pubblica|scarta)/i.test(t))) {
+    if (testi.some((t) => /^\s*(pubblica|scarta|rimanda|salta)/i.test(t))) {
       await messaggio(
         'Non ho capito e non ho pubblicato niente.\n' +
         'Gli ordini che riconosco sono esattamente questi:\n' +
-        'PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3)\nSCARTA',
+        'PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3)\nRIMANDA\nSCARTA',
       );
     }
     return;
@@ -67,8 +68,23 @@ async function main() {
 
   if (cosa.azione === 'scarta') {
     salva(BOZZA, { ...bozza, scartato: new Date().toISOString() });
-    await messaggio('Bozza scartata, non ho pubblicato niente.');
+    await messaggio('Bozza scartata, non ho pubblicato niente. Sabato te ne preparo una nuova.');
     console.log('Scartata.');
+    return;
+  }
+
+  // RIMANDA non butta niente: toglie il segno di "gia' mandata", e per questo
+  // sabato la stessa bozza torna identica. La differenza con SCARTA e' tutta qui:
+  // scartare chiude la partita, rimandare la rimette in fila.
+  if (cosa.azione === 'rimanda') {
+    const rimandi = (bozza.rimandi || 0) + 1;
+    const { inviato, ...resto } = bozza;
+    salva(BOZZA, { ...resto, rimandata: new Date().toISOString(), rimandi });
+    await messaggio(
+      `Niente post questa settimana. Le idee restano: te le ripropongo sabato.` +
+      (rimandi >= 3 ? '\n\nSiamo a tre rimandi: se non ti convincono, SCARTA e ne preparo di nuove.' : ''),
+    );
+    console.log(`Rimandata (${rimandi}).`);
     return;
   }
 

@@ -1,7 +1,11 @@
 name: Social - manda la bozza
 
-# Parte quando una bozza nuova compare nel repo (la scrive l'agente che compone
-# il post) e la manda su Telegram con la foto e le tre varianti.
+# Due modi di partire:
+#  - quando una bozza nuova compare nel repo (la scrive l'agente che compone)
+#  - ogni sabato alle 07:30 UTC, mezz'ora dopo l'agente, per ripresentare una
+#    bozza RIMANDATA la settimana prima: le idee non si buttano, tornano in fila.
+# Chi e' gia' stata mandata e aspetta risposta non viene rimandata due volte.
+#
 # Non pubblica niente: pubblicare tocca a "Social - esegui la risposta",
 # e solo dopo un PUBBLICA esplicito.
 on:
@@ -9,7 +13,13 @@ on:
     branches: [main]
     paths:
       - 'agenti/social-bozza.json'
+  schedule:
+    - cron: '30 7 * * 6'
   workflow_dispatch:
+
+# Per segnare sul file che la bozza e' partita.
+permissions:
+  contents: write
 
 jobs:
   bozza:
@@ -29,3 +39,16 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
         run: node scripts/social-bozza.mjs
+
+      - name: Segna che e' partita
+        run: |
+          if [ -z "$(git status --porcelain agenti/)" ]; then
+            echo "Niente da segnare."
+            exit 0
+          fi
+          git config user.name  "agente-social"
+          git config user.email "noreply@acquadirete.it"
+          git add agenti/
+          # [skip ci] o questo commit richiamerebbe il workflow su se stesso.
+          git commit -m "Social: bozza mandata su Telegram [skip ci]"
+          git push

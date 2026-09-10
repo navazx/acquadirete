@@ -9,11 +9,23 @@ finiscono online, servono a far parlare fra loro i pezzi che girano su GitHub.
 2. Il commit fa partire *Social - manda la bozza*, che manda foto e varianti su Telegram.
 3. Matteo risponde. Ogni mezz'ora *Social - esegui la risposta* legge Telegram:
    - `PUBBLICA` (o `PUBBLICA 2`, `PUBBLICA 3`) → Facebook e Instagram
-   - `SCARTA` → archiviata, non si pubblica niente
+   - `RIMANDA` (o `SALTA`) → niente post questa settimana, **ma le idee restano**
+   - `SCARTA` → archiviata, la prossima sarà nuova
    - qualsiasi altra cosa → non si pubblica. Nel dubbio si sta fermi.
 4. La bozza viene ricommittata con dentro l'esito, e resta lì come archivio.
 
 Se Matteo non risponde non succede niente: nessun sollecito, nessuna pubblicazione.
+
+## Rimandare non è scartare
+
+`RIMANDA` toglie dalla bozza il segno `inviato` e incrementa `rimandi`. Il sabato
+dopo il workflow gira a vuoto sull'agente che compone — che si ferma, perché una
+bozza in attesa c'è già — e la ripresenta **identica**, dicendo quante volte è stata
+rimandata. Al terzo rimando il messaggio suggerisce di scartarla, senza farlo da sé:
+la decisione resta di Matteo.
+
+`SCARTA` invece chiude la partita: la bozza prende il campo `scartato` e non è più
+in attesa, quindi il sabato dopo l'agente ne compone una nuova.
 
 ## Il formato della bozza
 

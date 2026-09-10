@@ -11,7 +11,7 @@
 //    node scripts/social-bozza.mjs --prova
 // ============================================================================
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { messaggio, foto } from './lib/telegram.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
@@ -31,17 +31,27 @@ async function main() {
     console.log(`Bozza gia' pubblicata il ${b.pubblicato}: non rimando niente.`);
     return;
   }
-  if (b.inviato) {
-    console.log('Bozza gia' + "'" + ' mandata: aspetto la risposta.');
+  if (b.scartato) {
+    console.log('Bozza scartata: non rimando niente.');
     return;
   }
+  if (b.inviato) {
+    console.log("Bozza gia' mandata: aspetto la risposta.");
+    return;
+  }
+
+  // Una bozza rimandata torna identica la settimana dopo: le idee non si buttano,
+  // si rimettono in fila. RIMANDA cancella `inviato`, ed e' cosi' che si ripresenta.
+  const rimandi = b.rimandi || 0;
 
   // Senza foto si va avanti lo stesso: Facebook accetta un post di solo testo,
   // Instagram no. Meglio mezzo post che nessun post.
   const urlFoto = b.foto ? `${SITO}/${b.foto.replace(/^\/+/, '')}` : null;
 
   const testo = [
-    `Post social — tema: ${b.tema}`,
+    rimandi
+      ? `Post social — tema: ${b.tema} (rimandato ${rimandi === 1 ? 'una volta' : `${rimandi} volte`})`
+      : `Post social — tema: ${b.tema}`,
     urlFoto ? '' : 'SENZA FOTO: va solo su Facebook, Instagram le pretende.\nSe ne metti una in sito/public/assets/social/ ci va anche Instagram.',
     '',
     ...b.varianti.flatMap((v, i) => [
@@ -50,10 +60,13 @@ async function main() {
       '',
     ]),
     'Rispondi:',
-    `PUBBLICA 1 (oppure 2, 3) — va su Facebook e Instagram`,
-    'SCARTA — non se ne fa nulla',
+    'PUBBLICA 1 (oppure 2, 3) — va su Facebook e Instagram',
+    'RIMANDA — salti la settimana, le idee te le ripropongo sabato prossimo',
+    'SCARTA — non se ne fa nulla e la prossima e\' nuova',
     '',
-    'Se non rispondi non pubblico niente.',
+    rimandi >= 3
+      ? 'Te l\'ho gia\' riproposta tre volte: se non ti convince, SCARTA e sabato te ne preparo una diversa.'
+      : 'Se non rispondi non pubblico niente.',
   ].filter((r) => r !== undefined).join('\n');
 
   if (prova) {
@@ -64,7 +77,11 @@ async function main() {
 
   if (urlFoto) await foto(urlFoto, `Post social — tema: ${b.tema}`);
   await messaggio(testo);
-  console.log(`Bozza mandata: ${b.varianti.length} varianti, foto ${b.foto || '(nessuna)'}`);
+
+  // Segnare l'invio evita che il giro schedulato del sabato la rimandi una
+  // seconda volta quando e' gia' partita col push.
+  writeFileSync(BOZZA, `${JSON.stringify({ ...b, inviato: new Date().toISOString() }, null, 2)}\n`);
+  console.log(`Bozza mandata: ${b.varianti.length} varianti, foto ${b.foto || '(nessuna)'}${rimandi ? `, rimandata ${rimandi} volte` : ''}`);
 }
 
 main().catch((e) => {
