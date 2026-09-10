@@ -1,0 +1,31 @@
+name: Social - manda la bozza
+
+# Parte quando una bozza nuova compare nel repo (la scrive l'agente che compone
+# il post) e la manda su Telegram con la foto e le tre varianti.
+# Non pubblica niente: pubblicare tocca a "Social - esegui la risposta",
+# e solo dopo un PUBBLICA esplicito.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agenti/social-bozza.json'
+  workflow_dispatch:
+
+jobs:
+  bozza:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Manda la bozza su Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/social-bozza.mjs

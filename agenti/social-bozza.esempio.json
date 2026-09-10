@@ -1,0 +1,18 @@
+{
+  "tema": "installazione",
+  "foto": "assets/social/esempio.jpg",
+  "varianti": [
+    {
+      "testo": "Impianto a osmosi inversa installato questa settimana a Bagno a Ripoli. Il miscelatore a 5 vie ha preso il posto del rubinetto che c'era gia': niente fori nuovi nel piano, e un rubinetto solo invece di due.",
+      "hashtag": ["#depuratoreacqua", "#firenze", "#osmosiinversa", "#acquabuona"]
+    },
+    {
+      "testo": "Una cosa che ci chiedono spesso: \"mi tocca bucare il piano della cucina?\". No. Il miscelatore multivia usa il foro del rubinetto che hai gia'. Questo e' quello montato ieri a Bagno a Ripoli.",
+      "hashtag": ["#depuratoreacqua", "#firenze", "#cucina", "#acquabuona"]
+    },
+    {
+      "testo": "Acqua liscia, fredda e frizzante dallo stesso rubinetto, piu' calda e fredda dell'acquedotto. Cinque vie in un miscelatore solo. Installato a Bagno a Ripoli.",
+      "hashtag": ["#depuratoreacqua", "#firenze", "#acquafrizzante", "#prato"]
+    }
+  ]
+}
