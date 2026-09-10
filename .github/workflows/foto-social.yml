@@ -1,0 +1,52 @@
+name: Social - metti in riga le foto
+
+# Parte quando compaiono foto nuove in public/assets/social/.
+# Matteo le butta li' come gli escono dal telefono: questo le converte in JPEG,
+# le raddrizza, taglia dal centro se sono troppo alte o troppo panoramiche, le
+# rimpicciolisce e toglie i dati EXIF (dentro c'e' anche il luogo dello scatto).
+# Instagram rifiuta senza spiegare: meglio arrivarci con le foto gia' a posto.
+#
+# Chi e' gia' in regola non viene toccato, quindi rilanciarlo non fa danni.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/assets/social/**'
+  workflow_dispatch:
+
+# Per ricommittare le foto sistemate.
+permissions:
+  contents: write
+
+jobs:
+  foto:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      # sharp legge anche gli HEIC dell'iPhone. E' una devDependency dichiarata.
+      - name: Installa le dipendenze
+        run: npm ci
+
+      - name: Metti in riga le foto
+        run: node scripts/normalizza-foto.mjs
+
+      - name: Registra le foto sistemate
+        run: |
+          if [ -z "$(git status --porcelain public/assets/social/)" ]; then
+            echo "Nessuna foto da sistemare."
+            exit 0
+          fi
+          git config user.name  "agente-foto"
+          git config user.email "noreply@acquadirete.it"
+          git add public/assets/social/
+          # [skip ci] evita che questo commit richiami il workflow su se stesso.
+          git commit -m "Foto social messe in riga per Instagram [skip ci]"
+          git push

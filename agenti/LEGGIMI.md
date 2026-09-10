@@ -29,15 +29,23 @@ nel sito e vanno online col deploy).
 
 ## Le foto
 
-Vanno in `sito/public/assets/social/`. Perché Instagram le accetti:
+Vanno in `sito/public/assets/social/`, **così come escono dal telefono**. Non
+serve ritagliarle, convertirle o rinominarle: al primo push ci pensa il workflow
+*Social - metti in riga le foto* (`scripts/normalizza-foto.mjs`), che
 
-- **JPEG** (il PNG viene rifiutato)
-- **proporzioni fra 4:5 e 1.91:1** — quadrata o orizzontale va bene, verticale
-  stretta no
-- **sotto gli 8 MB**, e almeno 1080 pixel di lato lungo
+- le raddrizza secondo l'orientamento della fotocamera
+- le converte in JPEG, anche partendo dagli HEIC dell'iPhone
+- taglia dal centro solo quanto basta se sono troppo alte o troppo panoramiche
+  (Instagram accetta da 4:5 a 1.91:1, e rifiuta senza spiegare perché)
+- le porta a 1440px di lato lungo
+- **toglie i dati EXIF**, dove fra le altre cose c'è il luogo dello scatto
 
-Un nome che dica cosa sono aiuta chi compone a sceglierle:
-`impianto-bagno-a-ripoli.jpg` è utile, `IMG_2831.jpg` no.
+Chi è già in regola non viene toccato. **Attenzione: la foto originale viene
+sostituita** dalla versione sistemata — l'originale a piena risoluzione resta solo
+dove ce l'hai tu.
+
+Il nome del file non conta: chi compone la bozza **apre la foto e guarda cosa c'è
+dentro**, quindi `IMG_2831.jpg` va benissimo.
 
 ## Doppie pubblicazioni
 
