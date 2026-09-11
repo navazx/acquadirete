@@ -1,0 +1,14 @@
+{
+  "controllato": "2026-09-11T17:03:09.408Z",
+  "pagine": 23,
+  "linkInterni": 26,
+  "problemi": [
+    {
+      "gravita": "da sistemare",
+      "chiave": "titolo-lungo",
+      "pagina": "/contatti/",
+      "testo": "titolo di 68 caratteri, oltre 60: \"Contatti | Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete\"",
+      "primaVolta": "2026-09-11"
+    }
+  ]
+}
