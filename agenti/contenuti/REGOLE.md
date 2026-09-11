@@ -26,7 +26,6 @@ _nessuna per ora_
 
 ## Coda
 
-- `erogatore-frizzante-ufficio-costi` — quanto costa un erogatore frizzante in ufficio
 - `domande-prima-contratto-depuratore` — le domande da fare prima di firmare un contratto per il depuratore
 - `quanto-si-risparmia-senza-bottiglie` — quanto si risparmia davvero smettendo di comprare bottiglie
 
