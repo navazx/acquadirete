@@ -1,0 +1,52 @@
+name: Agente SEO tecnico
+
+# Ogni lunedi' alle 07:05 UTC (~09:05 ora italiana d'estate) passa tutte le
+# pagine della sitemap: link rotti, redirect delle vecchie pagine, titoli e
+# description fuori misura, canonical, H1, immagini, pagine orfane.
+# Su Telegram manda solo i problemi nuovi e i rotti ancora aperti; se non c'e'
+# niente, tace. Lo stato resta in agenti/seo/controllo.json, da cui l'agente
+# delle correzioni sa cosa sistemare.
+#
+# Ha preso il posto della routine cloud "guardiano-404-redirect", che aveva il
+# token del bot scritto nel prompt.
+on:
+  schedule:
+    - cron: '5 7 * * 1'
+  workflow_dispatch:
+
+# Per registrare lo stato del controllo.
+permissions:
+  contents: write
+
+jobs:
+  seo:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Controlla il sito
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/agente-seo.mjs
+
+      - name: Registra lo stato del controllo
+        run: |
+          if [ -z "$(git status --porcelain agenti/seo/)" ]; then
+            echo "Stato invariato."
+            exit 0
+          fi
+          git config user.name  "agente-seo"
+          git config user.email "noreply@acquadirete.it"
+          git add agenti/seo/
+          # [skip netlify]: file di servizio, il sito non va ripubblicato.
+          git commit -m "SEO: controllo del sito [skip netlify]"
+          git pull --rebase origin main
+          git push origin HEAD:main
