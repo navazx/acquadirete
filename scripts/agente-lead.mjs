@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================================
-//  AGENTE LEAD E CLIENTI  —  gira ogni mattina su GitHub Actions
+//  AGENTE LEAD E CLIENTI  —  gira ogni mattina come funzione programmata Netlify
 //
 //  Guarda la scheda Lead-Contatti del Gestionale e avvisa su Telegram quando
 //  un contatto sta fermo. E' l'agente piu' vicino ai soldi: un lead richiamato
@@ -16,11 +16,18 @@
 //  Se non c'e' niente da fare NON manda nulla: il silenzio vuol dire tutto a posto.
 //  Non scrive mai sul foglio e non contatta mai i clienti: solo avvisi a Matteo.
 //
+//  Dove gira: netlify/functions/agente-lead.mjs importa componiAvvisoLead() da
+//  qui. Fino all'11 set 2026 partiva da GitHub Actions, che accoda i giri
+//  programmati: quello delle 08:15 e' partito alle 13:19, e un avviso sui lead
+//  da richiamare che arriva a pomeriggio inoltrato ha perso il suo senso.
+//  Il workflow GitHub resta solo per lanciarlo a mano.
+//
 //  Prova in locale (stampa a schermo invece di mandare il Telegram):
 //    GSC_KEY_FILE="../seo-report/gsc-key-readonly.json" node scripts/agente-lead.mjs
 //  Aggiungi --settimanale per vedere anche i controlli del lunedi'.
 // ============================================================================
 
+import { pathToFileURL } from 'node:url';
 import { sendTelegram, TELEGRAM_READY } from './lib/gsc.mjs';
 import { sheetsToken, leggi, leggiLead, giorniDa, oreDa } from './lib/gestionale.mjs';
 
@@ -28,17 +35,21 @@ const ORE_RICHIAMO = 24;
 const GIORNI_PREVENTIVO = 7;
 const GIORNI_CONTATTATO = 21;
 
-// I controlli lenti girano il lunedi': ripeterli ogni giorno diventa rumore e
-// smetti di leggerli. Quelli urgenti invece vanno visti tutte le mattine.
-const settimanale = process.argv.includes('--settimanale') || new Date().getDay() === 1;
-
 /** Confronta i nomi come insiemi di parole: regge "MARIO ROSSI" contro "ROSSI MARIO". */
 const chiaveNome = (n) =>
   String(n).toLowerCase().replace(/[^a-zà-ÿ\s]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
 const riga = (l, quanto) => `• ${l.nome} — ${l.contatto || 'nessun contatto'} (${quanto}, ${l.provenienza || 'origine ignota'})`;
 
-async function main() {
+/**
+ * Legge il Gestionale e compone l'avviso. Torna null se non c'e' niente da dire.
+ * I controlli lenti (`settimanale`) si fanno il lunedi': ripeterli ogni giorno
+ * diventa rumore e si smette di leggerli. Quelli urgenti vanno visti ogni mattina.
+ *
+ * Le date del foglio sono ora italiana: chi chiama deve aver impostato
+ * TZ=Europe/Rome, altrimenti su un server in UTC i conti slittano di due ore.
+ */
+export async function componiAvvisoLead({ settimanale = false } = {}) {
   const token = await sheetsToken();
   const lead = await leggiLead(token);
 
@@ -136,23 +147,39 @@ async function main() {
     blocchi.push(`CONVERSIONE PER PROVENIENZA (da sempre)\n${conversione}`);
   }
 
-  if (!blocchi.length) {
+  if (!blocchi.length) return null;
+
+  return {
+    testo: `Agente lead — ${new Date().toLocaleDateString('it-IT')}\n\n${blocchi.join('\n\n')}`,
+    blocchi: blocchi.length,
+    daRichiamare: daRichiamare.length,
+  };
+}
+
+async function main() {
+  process.env.TZ = 'Europe/Rome';
+  const settimanale = process.argv.includes('--settimanale') || new Date().getDay() === 1;
+  const avviso = await componiAvvisoLead({ settimanale });
+
+  if (!avviso) {
     console.log('Niente da segnalare: nessun lead fermo.');
     return;
   }
-
-  const testo = `Agente lead — ${new Date().toLocaleDateString('it-IT')}\n\n${blocchi.join('\n\n')}`;
-
   if (!TELEGRAM_READY) {
     console.log('(Telegram non configurato: stampo qui)\n');
-    console.log(testo);
+    console.log(avviso.testo);
     return;
   }
-  await sendTelegram(testo);
-  console.log(`Avviso inviato: ${blocchi.length} blocchi, ${daRichiamare.length} da richiamare.`);
+  await sendTelegram(avviso.testo);
+  console.log(`Avviso inviato: ${avviso.blocchi} blocchi, ${avviso.daRichiamare} da richiamare.`);
 }
 
-main().catch((e) => {
-  console.error(e.message);
-  process.exit(1);
-});
+// Parte da sola solo se lanciata da terminale o da GitHub Actions: quando la
+// importa la funzione Netlify deve limitarsi a offrire componiAvvisoLead().
+const lanciataDaTerminale = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (lanciataDaTerminale) {
+  main().catch((e) => {
+    console.error(e.message);
+    process.exit(1);
+  });
+}

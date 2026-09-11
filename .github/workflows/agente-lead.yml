@@ -1,12 +1,14 @@
-name: Agente lead
+name: Agente lead (avvio a mano)
 
-# Ogni mattina alle 06:15 UTC (~08:15 ora italiana d'estate), prima che Matteo
-# inizi il giro. Il lunedi' lo stesso script aggiunge da se' i controlli
-# settimanali (preventivi fermi, schede incomplete, conversione per canale).
-# workflow_dispatch per lanciarlo a mano dalla tab "Actions".
+# Il giro di ogni mattina NON parte piu' da qui: dall'11 set 2026 e' una
+# funzione programmata di Netlify (netlify/functions/agente-lead.mjs).
+# GitHub accodava i giri programmati di ore -- quello delle 08:15 e' partito
+# alle 13:19 -- e un avviso sui lead da richiamare che arriva al pomeriggio
+# ha perso il suo senso.
+#
+# Resta l'avvio a mano dalla tab "Actions", comodo per una prova.
+# Attenzione: lanciato a mano manda il Telegram vero.
 on:
-  schedule:
-    - cron: '15 6 * * *'
   workflow_dispatch:
 
 jobs:
