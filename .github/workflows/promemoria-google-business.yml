@@ -1,0 +1,38 @@
+name: Promemoria scheda Google
+
+# Parte quando la routine cloud "promemoria-google-business" (il 15 del mese)
+# scrive le idee di stagione in agenti/promemoria/google-business.md, e le manda
+# su Telegram. La routine non ha nessun token: scrive nel repo, e il messaggio
+# lo manda questo workflow con il token preso dai secret.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agenti/promemoria/google-business.md'
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: stampa il testo senza mandarlo'
+        type: boolean
+        default: true
+
+jobs:
+  promemoria:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Manda il promemoria
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          # Al push inputs e' vuoto, quindi PROVA non e' "true" e il messaggio parte.
+          PROVA: ${{ inputs.prova }}
+        run: node scripts/promemoria.mjs agenti/promemoria/google-business.md

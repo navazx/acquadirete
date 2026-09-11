@@ -1,0 +1,35 @@
+name: Sentinella del sito
+
+# Cinque giri al giorno (alle :17 delle 02, 06, 10, 14, 18 UTC) controlla che il
+# sito risponda, che il redirect senza www funzioni e che il certificato HTTPS
+# sia valido. Se e' tutto a posto non manda niente.
+#
+# Sta su GitHub e non su Netlify apposta: un controllo che gira sul servizio che
+# sorveglia tace proprio quando quel servizio e' giu'. GitHub a volte ritarda o
+# salta un giro programmato: per questo i giri sono cinque e non uno.
+#
+# Ha preso il posto della routine cloud "monitoraggio-giornaliero-acquadirete",
+# che aveva il token del bot scritto nel prompt.
+on:
+  schedule:
+    - cron: '17 2,6,10,14,18 * * *'
+  workflow_dispatch:
+
+jobs:
+  sentinella:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Il sito è online?
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/sentinella.mjs

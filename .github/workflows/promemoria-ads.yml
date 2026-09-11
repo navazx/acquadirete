@@ -1,0 +1,38 @@
+name: Promemoria Google Ads
+
+# Il 18 di ogni mese alle 07:00 UTC manda su Telegram il promemoria per la
+# revisione dei termini di ricerca. Il testo sta in agenti/promemoria/ads.md:
+# si corregge li', con un commit.
+#
+# Ha preso il posto della routine cloud "promemoria-termini-ricerca-ads", che
+# mandava un testo sempre uguale ma con il token del bot scritto nel prompt.
+on:
+  schedule:
+    - cron: '0 7 18 * *'
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: stampa il testo senza mandarlo'
+        type: boolean
+        default: true
+
+jobs:
+  promemoria:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Manda il promemoria
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          # Nel giro programmato inputs e' vuoto, quindi PROVA non e' "true" e il messaggio parte.
+          PROVA: ${{ inputs.prova }}
+        run: node scripts/promemoria.mjs agenti/promemoria/ads.md
