@@ -1,0 +1,58 @@
+name: Risposte su Telegram
+
+# Ogni mezz'ora fra le 06:00 e le 20:00 UTC legge cosa ha scritto Matteo al bot
+# ed esegue: PUBBLICA / RIMANDA / SCARTA per il post social, APPROVA / RIFIUTA
+# per le proposte degli agenti (articoli, correzioni SEO).
+# E' l'unico lettore di Telegram: due si ruberebbero i messaggi a vicenda.
+# Se non c'e' niente in sospeso non fa e non dice niente.
+#
+# Nota: GitHub i giri programmati li fa partire quando puo', anche con ore di
+# ritardo. Per un post o un articolo va bene; per cose urgenti no.
+on:
+  schedule:
+    - cron: '*/30 6-20 * * *'
+  workflow_dispatch:
+
+# Per unire a main le proposte approvate e registrare cosa e' stato fatto.
+permissions:
+  contents: write
+
+jobs:
+  risposte:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Identità per i commit
+        run: |
+          git config --global user.name  "agente-risposte"
+          git config --global user.email "noreply@acquadirete.it"
+
+      - name: Leggi le risposte ed esegui
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          META_PUBLISH_TOKEN: ${{ secrets.META_PUBLISH_TOKEN }}
+        run: node scripts/risposte.mjs
+
+      - name: Registra nel repo cosa è stato fatto
+        run: |
+          if [ -z "$(git status --porcelain agenti/)" ]; then
+            echo "Niente da registrare."
+            exit 0
+          fi
+          git add agenti/
+          # [skip netlify]: sono file di servizio, il sito non va ripubblicato.
+          # Le proposte approvate sono gia' state spinte a parte, senza la sigla.
+          git commit -m "Telegram: eseguite le risposte di Matteo [skip netlify]"
+          git pull --rebase origin main
+          git push origin HEAD:main

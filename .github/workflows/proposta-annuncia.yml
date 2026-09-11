@@ -1,0 +1,53 @@
+name: Proposta - presentala a Matteo
+
+# Parte quando un agente spinge un ramo proposta/... (un articolo, delle
+# correzioni SEO). Prova a costruire il sito con quelle modifiche: se non si
+# costruisce, a Matteo arriva solo l'errore, perche' approvarla romperebbe il
+# sito. Se si costruisce, la registra fra le proposte in attesa e gliela manda
+# su Telegram. L'approvazione passa da "Risposte su Telegram".
+on:
+  push:
+    branches:
+      - 'proposta/**'
+
+# Per registrare la proposta in agenti/proposte.json su main.
+permissions:
+  contents: write
+
+jobs:
+  annuncia:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del ramo proposto
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      # Stessa versione di Node che usa Netlify per costruire il sito.
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      - name: Installa le dipendenze
+        run: npm ci
+
+      - name: Prova a costruire il sito
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee /tmp/build.log
+
+      - name: Identità per i commit
+        run: |
+          git config --global user.name  "agente-proposte"
+          git config --global user.email "noreply@acquadirete.it"
+
+      - name: Presenta la proposta
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          BUILD_ESITO: ${{ steps.build.outcome }}
+        run: node scripts/proposta-annuncia.mjs

@@ -7,7 +7,7 @@ finiscono online, servono a far parlare fra loro i pezzi che girano su GitHub.
 
 1. **Chi compone** scrive `social-bozza.json` e lo committa su `main`.
 2. Il commit fa partire *Social - manda la bozza*, che manda foto e varianti su Telegram.
-3. Matteo risponde. Ogni mezz'ora *Social - esegui la risposta* legge Telegram:
+3. Matteo risponde. Ogni mezz'ora *Risposte su Telegram* (`scripts/risposte.mjs`) legge Telegram:
    - `PUBBLICA` (o `PUBBLICA 2`, `PUBBLICA 3`) → Facebook e Instagram
    - `RIMANDA` (o `SALTA`) → niente post questa settimana, **ma le idee restano**
    - `SCARTA` → archiviata, la prossima sarà nuova
@@ -15,6 +15,36 @@ finiscono online, servono a far parlare fra loro i pezzi che girano su GitHub.
 4. La bozza viene ricommittata con dentro l'esito, e resta lì come archivio.
 
 Se Matteo non risponde non succede niente: nessun sollecito, nessuna pubblicazione.
+
+## Le proposte: articoli e correzioni SEO
+
+Gli agenti che cambiano il sito non toccano mai `main`. Lavorano su un ramo a parte,
+e il sito cambia solo se Matteo dice di sì.
+
+1. L'agente spinge un ramo `proposta/articolo-<slug>` oppure `proposta/seo-<data>`.
+   Nel messaggio di commit: prima riga il titolo, sotto le note per Matteo.
+2. Il push fa partire *Proposta - presentala a Matteo*, che **prova a costruire il
+   sito** con quelle modifiche. Se non si costruisce, a Matteo arriva solo l'errore.
+3. Se si costruisce, la proposta finisce in `agenti/proposte.json` con stato
+   `in attesa` e arriva su Telegram. Per gli articoli arriva anche il testo completo,
+   preso da `agenti/anteprime/<slug>.md`.
+4. *Risposte su Telegram* esegue la risposta:
+   - `APPROVA ARTICOLO` / `APPROVA SEO` → il ramo si unisce a `main` e va online
+   - `RIFIUTA ARTICOLO` / `RIFIUTA SEO` e il motivo → il ramo si cancella. Il motivo,
+     per gli articoli, finisce in `agenti/contenuti/lezioni.md`
+   - con una sola proposta aperta basta `APPROVA` o `RIFIUTA`
+
+Una proposta per tipo alla volta: finché ce n'è una in attesa, l'agente non ne
+prepara un'altra dello stesso tipo.
+
+Le regole per scrivere gli articoli stanno in `agenti/contenuti/REGOLE.md`.
+
+## Un solo lettore di Telegram
+
+Telegram consegna ogni messaggio a chi lo legge per primo. Per questo **c'è un solo
+script che legge le risposte di Matteo**, `scripts/risposte.mjs`, e smista gli ordini:
+post social da una parte, proposte dall'altra. Un secondo lettore ruberebbe gli
+ordini al primo. L'ultimo messaggio letto sta in `agenti/telegram-stato.json`.
 
 ## Rimandare non è scartare
 

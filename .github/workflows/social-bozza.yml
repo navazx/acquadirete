@@ -49,6 +49,8 @@ jobs:
           git config user.name  "agente-social"
           git config user.email "noreply@acquadirete.it"
           git add agenti/
-          # [skip ci] o questo commit richiamerebbe il workflow su se stesso.
+          # [skip ci] qui fa saltare il deploy di Netlify: il file toccato non è una
+          # pagina del sito. (Il workflow non ripartirebbe comunque: i commit fatti col
+          # token di GitHub non ne avviano altri.)
           git commit -m "Social: bozza mandata su Telegram [skip ci]"
           git push

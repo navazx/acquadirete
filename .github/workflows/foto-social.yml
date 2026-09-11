@@ -48,5 +48,7 @@ jobs:
           git config user.email "noreply@acquadirete.it"
           git add public/assets/social/
           # [skip ci] evita che questo commit richiami il workflow su se stesso.
-          git commit -m "Foto social messe in riga per Instagram [skip ci]"
+          # Niente [skip ci]: Netlify lo legge come "non pubblicare", e le foto
+          # sistemate devono andare online, perché Instagram le scarica dal sito.
+          git commit -m "Foto social messe in riga per Instagram"
           git push

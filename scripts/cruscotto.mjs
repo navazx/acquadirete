@@ -73,7 +73,7 @@ async function datiGsc() {
 
 function contaArticoli() {
   try {
-    return (readFileSync('lib/blogPosts.ts', 'utf8').match(/^\s{4}slug:/gm) || []).length;
+    return (readFileSync('lib/blogPosts.ts', 'utf8').match(/^\s{4}"?slug"?\s*:/gm) || []).length;
   } catch {
     return '';
   }
