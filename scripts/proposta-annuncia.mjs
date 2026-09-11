@@ -63,7 +63,14 @@ async function main() {
 
   git('fetch', 'origin', 'main');
   const oggetto = git('log', '-1', '--format=%s');
-  const note = git('log', '-1', '--format=%b').slice(0, 2500);
+  // Le righe finali come "Co-Authored-By:" o "Claude-Session:" servono a git, non
+  // a Matteo che legge dal telefono.
+  const note = git('log', '-1', '--format=%b')
+    .split('\n')
+    .filter((r) => !/^(co-authored-by|claude-session|signed-off-by):/i.test(r.trim()))
+    .join('\n')
+    .trim()
+    .slice(0, 2500);
   const titolo = oggetto.replace(/^(articolo|seo)\s*:\s*/i, '');
   const cambiati = git('diff', '--name-only', 'origin/main...HEAD').split('\n').filter(Boolean);
 
