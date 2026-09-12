@@ -19,9 +19,15 @@
 //  Quando avvisa subito, e perche':
 //    - recensione da 3 stelle o meno: una risposta tardiva costa, Matteo deve
 //      saperlo oggi e non quando arriva la bozza
-//    - il totale e' cambiato ma Google non ci fa vedere la recensione: l'API
-//      ne restituisce al massimo 5, quindi una nuova puo' restare nascosta.
-//      Meglio dirgli "vai a guardare" che tacere
+//    - il totale e' cambiato ma Google non ci fa vedere la recensione.
+//      **OGGI E' SEMPRE COSI'**: la scheda di Acquadirete non ha un indirizzo
+//      pubblico (e' un'attivita' che va dal cliente), e per quelle Google non
+//      restituisce affatto il campo "reviews" — verificato il 12 set 2026: alla
+//      richiesta con FieldMask "…,reviews" risponde con id, displayName, rating,
+//      userRatingCount, googleMapsUri e basta. Il totale invece e' giusto (135).
+//      Quindi oggi questo agente sa DIRE che e' arrivata una recensione, non
+//      leggerla. Per il testo (e per rispondere da qui) serve la Google Business
+//      Profile API, che e' gratis ma va chiesta e approvata da Google.
 //    - il totale e' sceso: una recensione e' stata cancellata o nascosta
 //  Per le altre sta zitto: il messaggio arriva dopo, con la risposta pronta.
 //  Due messaggi per la stessa recensione sarebbero rumore.
@@ -65,8 +71,10 @@ const RICERCHE = [
   'Acquadirete Montespertoli',
   'Acquadirete depuratori acqua Montespertoli',
 ].filter(Boolean);
-// La pagina dove Matteo legge e risponde davvero alle recensioni.
+// La pagina dove Matteo risponde davvero alle recensioni, e la scheda pubblica
+// dove si leggono (stesso CID che usa il sito in lib/siteConfig.ts).
 const LINK_RECENSIONI = 'https://business.google.com/reviews';
+const LINK_SCHEDA = 'https://www.google.com/maps?cid=10356560254821251978';
 // Oltre questi giorni una recensione non e' "nuova": e' solo comparsa fra le
 // cinque che Google ci mostra a rotazione.
 const GIORNI_RECENTE = 60;
@@ -209,11 +217,19 @@ async function main() {
     );
   }
   if (nascoste > 0) {
+    const una = nascoste === 1;
+    // Due motivi diversi per cui non si legge il testo, e a Matteo va detto
+    // quello vero: se Google non manda NESSUNA recensione e' perche' la scheda
+    // di Acquadirete non ha un indirizzo pubblico (vedi LEGGIMI); se ne manda
+    // qualcuna ma meno del salto, e' il tetto delle cinque.
+    const perche = recensioni.length
+      ? "Google me ne fa vedere solo cinque per volta, e questa non c'e'."
+      : 'Il testo Google non me lo da\': la tua scheda non ha un indirizzo pubblico, e per quelle le recensioni via programma non le passa.';
     avvisi.push(
-      `Su Google ci ${nascoste === 1 ? "e' una recensione in piu'" : `sono ${nascoste} recensioni in piu'`} ` +
-      `(da ${stato.totale} a ${totale}) ma non ${nascoste === 1 ? 'riesco a leggerla' : 'riesco a leggerle'}: ` +
-      'Google me ne fa vedere solo cinque.\n' +
-      `Vai a guardare qui: ${LINK_RECENSIONI}`,
+      `Su Google ${una ? "e' arrivata una recensione nuova" : `sono arrivate ${nascoste} recensioni nuove`} ` +
+      `(da ${stato.totale} a ${totale}).\n${perche}\n\n` +
+      `${una ? 'Leggila' : 'Leggile'} qui: ${LINK_SCHEDA}\n` +
+      `Per rispondere: ${LINK_RECENSIONI}`,
     );
   }
   if (differenza < 0) {
