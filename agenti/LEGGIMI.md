@@ -60,12 +60,26 @@ Il giro è in tre pezzi, perché nessuno dei tre può fare il lavoro degli altri
 **La risposta la incolla Matteo a mano**, dal profilo Google. Non è una scelta:
 Google non dà modo di rispondere da fuori.
 
-Due cose che sembrano difetti e non lo sono:
+### Oggi il pezzo 2 è fermo, e il motivo è di Google
 
-- **Google ne mostra solo cinque**, le "più rilevanti", e ruotano. Quindi una
-  recensione vecchia può comparire domani e sembrare nuova: va in coda solo quella
-  scritta negli ultimi 60 giorni. E se il totale sale senza che si veda la
-  recensione, il sensore dice a Matteo di andare a guardare col suo occhio.
+**Google non ci dà il testo delle recensioni di Acquadirete.** La scheda su Maps non
+ha un indirizzo pubblico (è un'attività che va dal cliente), e per quelle l'API
+risponde con nome, media e *numero* di recensioni, ma il campo con le recensioni non
+lo manda affatto — verificato il 12 set 2026 chiedendolo esplicitamente.
+
+Quindi il sensore fa quello che può, che non è poco: **si accorge che è arrivata una
+recensione** (il totale è giusto, 135) e lo dice, con il link per leggerla e quello
+per rispondere. Quello che non può fare è preparare la risposta, perché non sa cosa
+c'è scritto. La routine che scrive le bozze è **spenta** finché non cambia qualcosa.
+
+Per avere il testo — e per rispondere senza uscire da qui — serve la **Google
+Business Profile API**: è gratis, ma va chiesta a Google e approvata.
+
+Altre due cose che sembrano difetti e non lo sono:
+
+- **Anche quando Google manda le recensioni, ne manda cinque**, le "più rilevanti", e
+  ruotano. Quindi una recensione vecchia può comparire domani e sembrare nuova: va in
+  coda solo quella scritta negli ultimi 60 giorni.
 - **Per le recensioni belle non arriva nessun avviso subito**, solo la risposta
   pronta qualche giorno dopo. Due messaggi per la stessa recensione sarebbero
   rumore. Le eccezioni sono quelle da 3 stelle o meno, dove aspettare costa: lì
