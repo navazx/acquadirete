@@ -26,8 +26,12 @@ e il sito cambia solo se Matteo dice di sì.
 2. Il push fa partire *Proposta - presentala a Matteo*, che **prova a costruire il
    sito** con quelle modifiche. Se non si costruisce, a Matteo arriva solo l'errore.
 3. Se si costruisce, la proposta finisce in `agenti/proposte.json` con stato
-   `in attesa` e arriva su Telegram. Per gli articoli arriva anche il testo completo,
-   preso da `agenti/anteprime/<slug>.md`.
+   `in attesa` e arriva su Telegram **con l'anteprima come file**, presa da
+   `agenti/anteprime/`: il testo completo per gli articoli, il prima e dopo in
+   italiano per le correzioni SEO. Senza anteprima il messaggio non si capisce, ed è
+   successo davvero: la prima proposta SEO aveva tutta la correzione stipata nella
+   prima riga del commit (che diventa il titolo) e come dettaglio un link a GitHub.
+   **La prima riga del commit è un titolo corto, il resto sta nell'anteprima.**
 4. *Risposte su Telegram* esegue la risposta:
    - `APPROVA ARTICOLO` / `APPROVA SEO` → il ramo si unisce a `main` e va online
    - `RIFIUTA ARTICOLO` / `RIFIUTA SEO` e il motivo → il ramo si cancella. Il motivo,
