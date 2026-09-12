@@ -43,6 +43,34 @@ prepara un'altra dello stesso tipo.
 
 Le regole per scrivere gli articoli stanno in `agenti/contenuti/REGOLE.md`.
 
+## Le recensioni su Google
+
+Il giro è in tre pezzi, perché nessuno dei tre può fare il lavoro degli altri.
+
+1. **Il sensore** (`scripts/agente-recensioni.mjs`, ogni mattina su GitHub) chiede a
+   Google le recensioni e le confronta con quelle già viste, in
+   `recensioni/stato.json`. Le nuove le mette in coda in
+   `recensioni/da-rispondere.json`.
+2. **L'agente nel cloud** (lunedì, mercoledì, venerdì) legge la coda e scrive la
+   risposta pronta da incollare in `recensioni/bozze/<data>-<nome>.md`, poi svuota
+   la coda. Le regole stanno in `recensioni/REGOLE.md`.
+3. **Il postino** (`scripts/recensioni-bozza.mjs`) manda a Matteo le bozze che non
+   ha ancora mandato, e se le segna in `recensioni/mandate.json`.
+
+**La risposta la incolla Matteo a mano**, dal profilo Google. Non è una scelta:
+Google non dà modo di rispondere da fuori.
+
+Due cose che sembrano difetti e non lo sono:
+
+- **Google ne mostra solo cinque**, le "più rilevanti", e ruotano. Quindi una
+  recensione vecchia può comparire domani e sembrare nuova: va in coda solo quella
+  scritta negli ultimi 60 giorni. E se il totale sale senza che si veda la
+  recensione, il sensore dice a Matteo di andare a guardare col suo occhio.
+- **Per le recensioni belle non arriva nessun avviso subito**, solo la risposta
+  pronta qualche giorno dopo. Due messaggi per la stessa recensione sarebbero
+  rumore. Le eccezioni sono quelle da 3 stelle o meno, dove aspettare costa: lì
+  l'avviso parte lo stesso giorno.
+
 ## Un solo lettore di Telegram
 
 Telegram consegna ogni messaggio a chi lo legge per primo. Per questo **c'è un solo

@@ -1,0 +1,64 @@
+name: Recensioni - guarda se ce ne sono di nuove
+
+# Ogni giorno alle 06:50 UTC (~08:50 ora italiana d'estate) chiede a Google le
+# recensioni dell'attivita' e le confronta con quelle gia' viste. Le nuove
+# finiscono in coda in agenti/recensioni/da-rispondere.json, da cui l'agente nel
+# cloud prende cosa scrivere.
+#
+# Su Telegram parla solo quando serve davvero: una recensione da 3 stelle o meno
+# (che non puo' aspettare la bozza), oppure il totale che si muove senza che
+# Google ci faccia vedere la recensione. Per le altre tace: il messaggio arriva
+# dopo, con la risposta pronta da incollare.
+#
+# Serve il secret GOOGLE_PLACES_API_KEY: e' la stessa chiave che il sito usa per
+# mostrare le recensioni in home (su Netlify si chiama uguale).
+on:
+  schedule:
+    - cron: '50 6 * * *'
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: stampa cosa manderebbe senza mandarlo'
+        type: boolean
+        default: true
+
+# Per ricordarsi quali recensioni ha gia' visto.
+permissions:
+  contents: write
+
+jobs:
+  recensioni:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Guarda le recensioni
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          # Nel giro programmato inputs e' vuoto, quindi PROVA non e' "true".
+          PROVA: ${{ inputs.prova }}
+        run: node scripts/agente-recensioni.mjs
+
+      - name: Ricorda cosa ha visto
+        if: ${{ inputs.prova != true }}
+        run: |
+          if [ -z "$(git status --porcelain agenti/recensioni/)" ]; then
+            echo "Nessuna novita' da registrare."
+            exit 0
+          fi
+          git config user.name  "agente-recensioni"
+          git config user.email "noreply@acquadirete.it"
+          git add agenti/recensioni/
+          # [skip netlify]: file di servizio, il sito non va ripubblicato.
+          git commit -m "Recensioni: controllo giornaliero [skip netlify]"
+          git pull --rebase origin main
+          git push origin HEAD:main

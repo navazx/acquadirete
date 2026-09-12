@@ -1,0 +1,62 @@
+name: Recensioni - manda la risposta pronta
+
+# Parte appena l'agente nel cloud scrive una bozza di risposta in
+# agenti/recensioni/bozze/. Manda a Matteo il testo da incollare sul profilo
+# Google, come messaggio normale: una risposta si copia, non si scarica.
+#
+# Manda solo quello che non ha ancora mandato (agenti/recensioni/mandate.json),
+# quindi rilanciarlo a mano non fa arrivare tutto due volte.
+#
+# Il push dell'agente nel cloud fa partire questo workflow perche' e' fatto con
+# le credenziali dell'app di Claude: i commit fatti col token di GitHub, invece,
+# non avviano altri workflow.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agenti/recensioni/bozze/**'
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: stampa le bozze senza mandarle'
+        type: boolean
+        default: true
+
+# Per segnare quali bozze sono partite.
+permissions:
+  contents: write
+
+jobs:
+  bozza:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Manda le risposte pronte
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          PROVA: ${{ inputs.prova }}
+        run: node scripts/recensioni-bozza.mjs
+
+      - name: Segna quali sono partite
+        if: ${{ inputs.prova != true }}
+        run: |
+          if [ -z "$(git status --porcelain agenti/recensioni/)" ]; then
+            echo "Niente da segnare."
+            exit 0
+          fi
+          git config user.name  "agente-recensioni"
+          git config user.email "noreply@acquadirete.it"
+          git add agenti/recensioni/
+          # [skip netlify]: file di servizio, il sito non va ripubblicato.
+          git commit -m "Recensioni: risposte mandate su Telegram [skip netlify]"
+          git pull --rebase origin main
+          git push origin HEAD:main
