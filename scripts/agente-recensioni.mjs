@@ -55,9 +55,16 @@ const CARTELLA = path.join(RADICE, 'agenti', 'recensioni');
 const STATO = path.join(CARTELLA, 'stato.json');
 const CODA = path.join(CARTELLA, 'da-rispondere.json');
 
-const PLACE_QUERY =
-  process.env.GOOGLE_PLACE_QUERY ||
-  'Acquadirete di Stefano Piconese, Via 1° Maggio 6, Montespertoli';
+// Ricerche da provare in fila per trovare l'attivita' su Google, dalla piu'
+// precisa alla piu' larga. La prima versione passava anche l'indirizzo
+// ("Via 1° Maggio 6") e Google non trovava niente: il grado e il civico
+// stringono troppo. Meglio nome + paese.
+const RICERCHE = [
+  process.env.GOOGLE_PLACE_QUERY,
+  'Acquadirete di Stefano Piconese Montespertoli',
+  'Acquadirete Montespertoli',
+  'Acquadirete depuratori acqua Montespertoli',
+].filter(Boolean);
 // La pagina dove Matteo legge e risponde davvero alle recensioni.
 const LINK_RECENSIONI = 'https://business.google.com/reviews';
 // Oltre questi giorni una recensione non e' "nuova": e' solo comparsa fra le
@@ -86,20 +93,28 @@ async function chiediAGoogle() {
   if (!chiave) throw new Error('Manca GOOGLE_PLACES_API_KEY fra i secret del repo.');
 
   let placeId = process.env.GOOGLE_PLACE_ID;
-  if (!placeId) {
+  for (const query of placeId ? [] : RICERCHE) {
     const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': chiave,
-        'X-Goog-FieldMask': 'places.id',
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress',
       },
-      body: JSON.stringify({ textQuery: PLACE_QUERY, languageCode: 'it' }),
+      body: JSON.stringify({ textQuery: query, languageCode: 'it' }),
     });
     if (!res.ok) throw new Error(`Google (ricerca attivita'): HTTP ${res.status} — ${await res.text()}`);
-    placeId = (await res.json()).places?.[0]?.id;
-    if (!placeId) throw new Error(`Google non trova l'attivita' cercando "${PLACE_QUERY}".`);
+    const trovati = (await res.json()).places ?? [];
+    console.log(`Ricerca "${query}": ${trovati.length ? trovati.map((p) => `${p.displayName?.text} — ${p.formattedAddress} [${p.id}]`).join(' | ') : 'niente'}`);
+    if (trovati[0]?.id) {
+      placeId = trovati[0].id;
+      // Da mettere in GOOGLE_PLACE_ID nel workflow: cosi' si salta la ricerca,
+      // che costa una chiamata in piu' e puo' cambiare risultato nel tempo.
+      console.log(`Place ID da fissare nel workflow: ${placeId}`);
+      break;
+    }
   }
+  if (!placeId) throw new Error(`Google non trova l'attivita'. Provate: ${RICERCHE.join(' / ')}`);
 
   const res = await fetch(
     `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=it`,
