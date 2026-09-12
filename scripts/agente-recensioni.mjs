@@ -101,7 +101,11 @@ async function chiediAGoogle() {
         'X-Goog-Api-Key': chiave,
         'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress',
       },
-      body: JSON.stringify({ textQuery: query, languageCode: 'it' }),
+      // includePureServiceAreaBusinesses: Acquadirete su Maps non ha un
+      // indirizzo pubblico (e' un'attivita' che va dal cliente). Senza questo
+      // parametro Google non la restituisce affatto nelle ricerche via API,
+      // e infatti le prime prove tornavano zero risultati.
+      body: JSON.stringify({ textQuery: query, languageCode: 'it', includePureServiceAreaBusinesses: true }),
     });
     if (!res.ok) throw new Error(`Google (ricerca attivita'): HTTP ${res.status} — ${await res.text()}`);
     const trovati = (await res.json()).places ?? [];
