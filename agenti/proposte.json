@@ -14,8 +14,10 @@
     "tipo": "SEO",
     "titolo": "1 correzione /contatti/ — titolo da 68 a 60 caratteri: \"Contatti | Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete\" → \"Contatti | Depuratori Firenze, Prato e Pistoia | Acquadirete\"",
     "creata": "2026-09-11T17:06:55.110Z",
-    "stato": "in attesa",
+    "stato": "annullata",
     "sha": "fa83e4a4f9164180e47f02e232a5cb42dbacea60",
-    "url": null
+    "url": null,
+    "decisa": "2026-09-12T16:12:38.411Z",
+    "motivo": "messaggio illeggibile: rifatta con l anteprima in italiano"
   }
 ]

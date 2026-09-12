@@ -30,6 +30,21 @@ const gitMain = (...args) => git('-C', CARTELLA_MAIN, ...args);
 const ramo = process.env.GITHUB_REF_NAME || git('rev-parse', '--abbrev-ref', 'HEAD');
 const tipo = ramo.startsWith('proposta/articolo-') ? 'ARTICOLO' : ramo.startsWith('proposta/seo-') ? 'SEO' : null;
 
+/**
+ * Quando manca l'anteprima: le righe di testo cambiate, in chiaro. Un "prima e
+ * dopo" si capisce dal telefono; un link a GitHub no.
+ */
+function cambiamentiInChiaro(cambiati) {
+  const soloSito = cambiati.filter((f) => !f.startsWith('agenti/'));
+  const diff = git('diff', '-U0', 'origin/main...HEAD', '--', ...(soloSito.length ? soloSito : cambiati));
+  const righe = diff.split('\n').filter((r) => /^[+-][^+-]/.test(r) && r.slice(1).trim());
+  if (!righe.length) {
+    return `File toccati: ${cambiati.join(', ')}\nIl dettaglio: ${REPO}/compare/main...${ramo}`;
+  }
+  const mostrate = righe.slice(0, 24).map((r) => `${r.startsWith('-') ? 'prima:' : 'dopo:'} ${r.slice(1).trim()}`);
+  return ['Cosa cambia:', ...mostrate, righe.length > 24 ? `…e altre ${righe.length - 24} righe.` : ''].filter(Boolean).join('\n');
+}
+
 /** Mette la proposta fra quelle in attesa, su main, senza toccare il ramo. */
 function registra(voce) {
   git('fetch', 'origin', 'main');
@@ -92,16 +107,18 @@ async function main() {
   const slug = anteprima ? anteprima.split('/').pop().replace(/\.md$/, '') : null;
   const url = tipo === 'ARTICOLO' && slug ? `${SITO}/blog/${slug}/` : null;
 
-  registra({ ramo, tipo, titolo, creata: new Date().toISOString(), stato: 'in attesa', sha: git('rev-parse', 'HEAD'), url });
+  registra({ ramo, tipo, titolo: titolo.slice(0, 120), creata: new Date().toISOString(), stato: 'in attesa', sha: git('rev-parse', 'HEAD'), url });
+
+  const testa = tipo === 'ARTICOLO'
+    ? `Articolo proposto: «${titolo}»`
+    : `Correzioni SEO proposte: ${titolo}`;
 
   const testo = [
-    tipo === 'ARTICOLO' ? `Articolo proposto: «${titolo}»` : `Correzioni SEO proposte: ${titolo}`,
+    testa,
     '',
     note || '(nessuna nota dall\'agente)',
     '',
-    anteprima
-      ? 'Il testo completo è nel file qui sotto.'
-      : `Le modifiche, file per file: ${REPO}/compare/main...${ramo}`,
+    anteprima ? 'Il dettaglio è nel file qui sotto.' : cambiamentiInChiaro(cambiati),
     '',
     `APPROVA ${tipo} — va online`,
     `RIFIUTA ${tipo} e il motivo — non va online, e il motivo resta come lezione`,
