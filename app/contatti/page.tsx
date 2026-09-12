@@ -7,7 +7,7 @@ import FacebookIcon from '../../components/FacebookIcon';
 import { CONTACT, telHref, whatsappHref, SOCIAL, OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Contatti | Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete',
+  title: 'Contatti | Depuratori Firenze, Prato e Pistoia | Acquadirete',
   description:
     'Contatta Acquadirete per depuratori, osmosi inversa, cambio filtri e assistenza a Firenze, Prato e Pistoia. Telefono, WhatsApp e modulo sopralluogo gratuito.',
   alternates: { canonical: '/contatti' },
