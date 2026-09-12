@@ -19,5 +19,14 @@
     "url": null,
     "decisa": "2026-09-12T16:12:38.411Z",
     "motivo": "messaggio illeggibile: rifatta con l anteprima in italiano"
+  },
+  {
+    "ramo": "proposta/seo-2026-09-12",
+    "tipo": "SEO",
+    "titolo": "1 correzione",
+    "creata": "2026-09-12T16:15:58.985Z",
+    "stato": "in attesa",
+    "sha": "6f9af44fdfcf815e8c2f195b41d0434cfbfb2dfe",
+    "url": null
   }
 ]
