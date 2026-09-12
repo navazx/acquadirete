@@ -122,10 +122,12 @@ async function chiediAGoogle() {
 
   const res = await fetch(
     `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=it`,
-    { headers: { 'X-Goog-Api-Key': chiave, 'X-Goog-FieldMask': 'rating,userRatingCount,reviews' } },
+    { headers: { 'X-Goog-Api-Key': chiave, 'X-Goog-FieldMask': 'id,displayName,rating,userRatingCount,reviews,googleMapsUri' } },
   );
   if (!res.ok) throw new Error(`Google (dettagli): HTTP ${res.status} — ${await res.text()}`);
-  return res.json();
+  const dati = await res.json();
+  console.log(`Google ha risposto con: ${Object.keys(dati).join(', ') || '(niente)'} — recensioni nel corpo: ${(dati.reviews ?? []).length}`);
+  return dati;
 }
 
 /** Dalla risposta di Google alle recensioni come le scriviamo noi. */

@@ -10,8 +10,10 @@ name: Recensioni - guarda se ce ne sono di nuove
 # Google ci faccia vedere la recensione. Per le altre tace: il messaggio arriva
 # dopo, con la risposta pronta da incollare.
 #
-# Serve il secret GOOGLE_PLACES_API_KEY: e' la stessa chiave che il sito usa per
-# mostrare le recensioni in home (su Netlify si chiama uguale).
+# Serve il secret GOOGLE_PLACES_API_KEY, creato il 12 set 2026 nel progetto
+# Google Cloud acquadirete-seo e limitato alla sola Places API (New).
+# Attenzione: le recensioni che il SITO mostra sono un'altra cosa — stanno a mano
+# in lib/google-reviews.json e questo agente non le tocca.
 on:
   schedule:
     - cron: '50 6 * * *'
@@ -42,6 +44,9 @@ jobs:
       - name: Guarda le recensioni
         env:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          # Identificativo della scheda Google di Acquadirete: non e un segreto, e
+          # fissarlo evita una chiamata di ricerca al giorno.
+          GOOGLE_PLACE_ID: ChIJo-rhk09RKhMRiruMK67kuY8
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
           # Nel giro programmato inputs e' vuoto, quindi PROVA non e' "true".
