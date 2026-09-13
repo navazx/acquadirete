@@ -6,8 +6,8 @@
 //  agenti/promemoria/ e si corregge con un commit, senza toccare nessuna
 //  routine. E nessun token scritto in giro: sta nei secret di GitHub.
 //
-//  Uso:    node scripts/promemoria.mjs agenti/promemoria/ads.md
-//  Prova:  node scripts/promemoria.mjs agenti/promemoria/ads.md --prova
+//  Uso:    node scripts/promemoria.mjs agenti/promemoria/google-business.md
+//  Prova:  node scripts/promemoria.mjs agenti/promemoria/google-business.md --prova
 // ============================================================================
 
 import { readFileSync, existsSync } from 'node:fs';
