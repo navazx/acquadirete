@@ -6,12 +6,22 @@ name: Risposte su Telegram
 # E' l'unico lettore di Telegram: due si ruberebbero i messaggi a vicenda.
 # Se non c'e' niente in sospeso non fa e non dice niente.
 #
-# Nota: GitHub i giri programmati li fa partire quando puo', anche con ore di
-# ritardo. Per un post o un articolo va bene; per cose urgenti no.
+# Nota: GitHub i giri programmati li fa partire quando puo' — il 12 set 2026 ne
+# ha fatti 5 invece di 29. Per questo c'e' la "sveglia" su Netlify
+# (netlify/functions/sveglia-risposte.mjs): ogni 15 minuti guarda se Matteo ha
+# scritto e, solo se si', fa partire questo workflow subito. Il cron qui sotto
+# resta come rete di sicurezza, se la sveglia si rompe.
 on:
   schedule:
     - cron: '*/30 6-20 * * *'
   workflow_dispatch:
+
+# Mai due giri insieme: leggerebbero gli stessi messaggi prima che uno dei due li
+# segni come letti, ed eseguirebbero due volte lo stesso ordine (un post doppio,
+# un merge ripetuto). Chi arriva dopo aspetta in fila, non viene annullato.
+concurrency:
+  group: risposte-telegram
+  cancel-in-progress: false
 
 # Per unire a main le proposte approvate e registrare cosa e' stato fatto.
 permissions:
