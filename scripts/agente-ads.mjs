@@ -38,6 +38,77 @@
 // ============================================================================
 
 import { query, euro } from './lib/ads.mjs';
+import { sheetsToken, leggiLead } from './lib/gestionale.mjs';
+
+// --- META ADS ----------------------------------------------------------------
+// Token dell'utente di sistema "Acquadirete Automazioni" con ads_read, e ruolo
+// "Visualizza le prestazioni" sull'account pubblicitario: legge, non spende.
+// E' un token SEPARATO da quello dei lead (su Netlify): se salta, i lead
+// continuano ad arrivare. Poche chiamate al mese, di proposito: a luglio 2026
+// l'antifrode di Meta aveva bloccato l'account sviluppatore dopo una raffica di
+// chiamate ravvicinate.
+const GRAPH = 'https://graph.facebook.com/v21.0';
+
+async function graph(percorso, parametri = {}) {
+  const url = new URL(`${GRAPH}/${percorso}`);
+  for (const [k, v] of Object.entries(parametri)) url.searchParams.set(k, typeof v === 'string' ? v : JSON.stringify(v));
+  url.searchParams.set('access_token', process.env.META_ADS_TOKEN);
+  const res = await fetch(url);
+  const dati = await res.json();
+  if (!res.ok || dati.error) throw new Error(`Meta: ${dati.error?.message || `HTTP ${res.status}`}`);
+  return dati;
+}
+
+// Meta conta lo stesso lead sotto piu' nomi: se ne prende uno, non si sommano.
+const leadDaAzioni = (azioni = []) => {
+  const trova = (tipo) => Number(azioni.find((a) => a.action_type === tipo)?.value || 0);
+  return trova('lead') || trova('onsite_conversion.lead_grouped') || trova('leadgen_grouped');
+};
+
+async function leggiMeta(ora, prima) {
+  if (!process.env.META_ADS_TOKEN) return { assente: true };
+  const account = (await graph('me/adaccounts', { fields: 'account_id,name,currency' })).data?.[0];
+  if (!account) throw new Error("Meta: il token non vede nessun account pubblicitario (manca l'assegnazione?)");
+  const totale = async (p) => {
+    const r = (await graph(`act_${account.account_id}/insights`, {
+      fields: 'spend,clicks,impressions,actions',
+      time_range: { since: p.da, until: p.a },
+    })).data?.[0] ?? {};
+    return { spesa: Number(r.spend || 0), clic: Number(r.clicks || 0), lead: leadDaAzioni(r.actions) };
+  };
+  const campagne = (await graph(`act_${account.account_id}/insights`, {
+    level: 'campaign',
+    fields: 'campaign_name,spend,actions',
+    time_range: { since: ora.da, until: ora.a },
+  })).data ?? [];
+  return {
+    account,
+    ora: await totale(ora),
+    prima: await totale(prima),
+    campagne: campagne
+      .map((c) => ({ nome: c.campaign_name, spesa: Number(c.spend || 0), lead: leadDaAzioni(c.actions) }))
+      .filter((c) => c.spesa > 0)
+      .sort((a, b) => b.spesa - a.spesa),
+  };
+}
+
+// --- IL GESTIONALE -----------------------------------------------------------
+// Il numero che conta non e' quello che dichiara la piattaforma, ma quante
+// persone sono davvero finite in Lead-Contatti, e quante sono diventate clienti.
+async function leggiFoglio(p) {
+  const da = new Date(`${p.da}T00:00:00`);
+  const a = new Date(`${p.a}T23:59:59`);
+  const lead = (await leggiLead(await sheetsToken())).filter((l) => l.data && l.data >= da && l.data <= a);
+  const conta = (filtro) => {
+    const scelti = lead.filter(filtro);
+    return { lead: scelti.length, clienti: scelti.filter((l) => l.stato === 'Cliente').length };
+  };
+  return {
+    meta: conta((l) => /meta|facebook|instagram/i.test(l.provenienza)),
+    sito: conta((l) => /sito/i.test(l.provenienza)),
+    totale: lead.length,
+  };
+}
 
 const giorno = (d) => d.toISOString().slice(0, 10);
 const GIORNO_MS = 24 * 60 * 60 * 1000;
@@ -107,6 +178,21 @@ async function main() {
   const prima = await periodo(new Date(ieri.getTime() - 30 * GIORNO_MS));
 
   const [tOra, tPrima] = [await totali(ora), await totali(prima)];
+
+  // Meta e il foglio non devono far saltare la parte Google: se si rompono, il
+  // messaggio lo dice e il resto arriva lo stesso.
+  let meta;
+  try {
+    meta = await leggiMeta(ora, prima);
+  } catch (e) {
+    meta = { errore: e.message };
+  }
+  let foglio;
+  try {
+    foglio = await leggiFoglio(ora);
+  } catch (e) {
+    foglio = { errore: e.message };
+  }
 
   const termini = (await query(
     `SELECT search_term_view.search_term, search_term_view.status,
@@ -187,8 +273,9 @@ async function main() {
   // --- il messaggio
   const costoConv = (t) => (t.conversioni ? eur(t.spesa / t.conversioni) : '—');
   const r = [];
-  r.push(`Google Ads — revisione del mese (${ora.da.slice(8)}/${ora.da.slice(5, 7)} → ${ora.a.slice(8)}/${ora.a.slice(5, 7)})`);
+  r.push(`Pubblicità — revisione del mese (${ora.da.slice(8)}/${ora.da.slice(5, 7)} → ${ora.a.slice(8)}/${ora.a.slice(5, 7)})`);
   r.push('');
+  r.push('GOOGLE ADS');
   r.push(`Clic: ${tOra.clic}${variazione(tOra.clic, tPrima.clic)}`);
   r.push(`Spesa: ${eur(tOra.spesa)}${variazione(tOra.spesa, tPrima.spesa)}`);
   r.push(`Conversioni: ${tOra.conversioni} (il mese prima ${tPrima.conversioni})`);
@@ -199,6 +286,41 @@ async function main() {
     r.push('Occhio: con così poche conversioni la differenza fra un mese e l\'altro è per lo più caso, non un segnale.');
   }
   r.push('');
+
+  r.push('META ADS');
+  if (meta.assente) {
+    r.push('Non collegato: manca il secret META_ADS_TOKEN.');
+  } else if (meta.errore) {
+    r.push(`Non sono riuscito a leggerlo: ${meta.errore}. Il resto della revisione è valido.`);
+  } else {
+    const cpl = (t) => (t.lead ? eur(t.spesa / t.lead) : '—');
+    r.push(`Spesa: ${eur(meta.ora.spesa)}${variazione(meta.ora.spesa, meta.prima.spesa)}`);
+    r.push(`Lead secondo Meta: ${meta.ora.lead} (il mese prima ${meta.prima.lead}) · costo per lead ${cpl(meta.ora)} (prima ${cpl(meta.prima)})`);
+    for (const c of meta.campagne.slice(0, 4)) r.push(`• ${c.nome}: ${eur(c.spesa)}, ${c.lead} lead`);
+  }
+  r.push('');
+
+  // Il confronto che conta davvero: persone sul foglio, e clienti.
+  r.push('SUL GESTIONALE (persone vere, stesso periodo)');
+  if (foglio.errore) {
+    r.push(`Non sono riuscito a leggerlo: ${foglio.errore}`);
+  } else {
+    const perLead = (spesa, n) => (n ? eur(spesa / n) : '—');
+    const conSpesa = !meta.assente && !meta.errore;
+    r.push(
+      `Da Meta: ${foglio.meta.lead} lead, ${foglio.meta.clienti} clienti` +
+      (conSpesa ? ` · ${perLead(meta.ora.spesa, foglio.meta.lead)} a lead${foglio.meta.clienti ? `, ${perLead(meta.ora.spesa, foglio.meta.clienti)} a cliente` : ''}` : ''),
+    );
+    if (conSpesa) {
+      if (meta.ora.lead > foglio.meta.lead) {
+        r.push(`Meta dichiara ${meta.ora.lead} lead ma sul foglio ne sono arrivati ${foglio.meta.lead}: la differenza sono doppioni uniti, o contatti persi per strada.`);
+      }
+    }
+    r.push(`Dal sito: ${foglio.sito.lead} lead, ${foglio.sito.clienti} clienti (sito = Google Ads + ricerca normale + visite dirette: non si separano)`);
+    r.push('I clienti di questo mese si vedono meglio fra qualche settimana: il sopralluogo e la firma arrivano dopo il contatto.');
+  }
+  r.push('');
+  r.push('GOOGLE ADS — PULIZIA');
   r.push(
     `Parte nascosta da Google: ${nascosto.clic} clic, ${eur(nascosto.spesa)}, ${nascosto.conversioni} conversioni su ${tOra.conversioni}. ` +
     (nascosto.conversioni >= tOra.conversioni && tOra.conversioni > 0

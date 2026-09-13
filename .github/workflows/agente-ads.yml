@@ -1,6 +1,6 @@
 name: Agente Ads - revisione mensile
 
-# Il 18 di ogni mese alle 07:00 UTC legge Google Ads (ultimi 30 giorni contro i
+# Il 18 di ogni mese alle 07:00 UTC legge Google Ads e Meta Ads, piu' i lead veri del Gestionale, (ultimi 30 giorni contro i
 # 30 prima) e manda su Telegram la revisione fatta: numeri, parte nascosta dei
 # termini, marchi rientrati dalla porta laterale, parole sconosciute da valutare.
 #
@@ -36,6 +36,9 @@ jobs:
       - name: Leggi Google Ads e manda la revisione
         env:
           GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          # Meta: utente di sistema con ads_read e ruolo 'Visualizza le prestazioni'.
+          # Token separato da quello dei lead (su Netlify): se salta, i lead arrivano lo stesso.
+          META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
           # Nel giro programmato inputs e' vuoto, quindi PROVA non e' "true" e il messaggio parte.
