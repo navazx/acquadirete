@@ -1,5 +1,5 @@
 {
-  "letto": "2026-09-14T15:38:02.204Z",
+  "letto": "2026-09-14T15:51:19.659Z",
   "periodo": "2026-08-15 → 2026-09-11",
   "segnalati": [
     "prima-pagina|acqua firenze potabile",
@@ -11,5 +11,61 @@
     "soglia|depuratore acqua osmosi inversa gratis",
     "concorrenza|depuratori acqua firenze",
     "concorrenza|depuratori acqua prato"
+  ],
+  "segnali": [
+    {
+      "tipo": "prima-pagina",
+      "ricerca": "acqua firenze potabile",
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
+    },
+    {
+      "tipo": "prima-pagina",
+      "ricerca": "acqua potabile firenze",
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
+    },
+    {
+      "tipo": "prima-pagina",
+      "ricerca": "acqua rubinetto firenze",
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
+    },
+    {
+      "tipo": "soglia",
+      "ricerca": "depuratore acqua casa gratis",
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 40,
+      "clic": 0,
+      "posizione": 10.9
+    },
+    {
+      "tipo": "concorrenza",
+      "ricerca": "depuratore acqua firenze",
+      "pagina": null
+    },
+    {
+      "tipo": "soglia",
+      "ricerca": "depuratore acqua gratis",
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 105,
+      "clic": 0,
+      "posizione": 10.8
+    },
+    {
+      "tipo": "soglia",
+      "ricerca": "depuratore acqua osmosi inversa gratis",
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 83,
+      "clic": 0,
+      "posizione": 9.7
+    },
+    {
+      "tipo": "concorrenza",
+      "ricerca": "depuratori acqua firenze",
+      "pagina": null
+    },
+    {
+      "tipo": "concorrenza",
+      "ricerca": "depuratori acqua prato",
+      "pagina": null
+    }
   ]
 }
