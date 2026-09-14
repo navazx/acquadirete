@@ -81,7 +81,7 @@ export default function HomeView() {
           </h1>
 
           <p className="text-base text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
-            Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che serve: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-slate-900 font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia.
+            Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che serve: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-slate-900 font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia. Assistenza locale, con persone vere: interventi in pochi giorni e macchina sostitutiva in caso di guasto.
           </p>
 
           {/* Una pagina per città: da qui Google capisce quale mostrare per "depuratore acqua <città>". */}
@@ -94,7 +94,7 @@ export default function HomeView() {
           </p>
 
           {/* Google certified stars badge */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center pt-2">
+          <div className="flex items-center justify-center pt-2">
             <a
               href={GOOGLE_PROFILE_URL}
               target="_blank"
@@ -105,10 +105,6 @@ export default function HomeView() {
               <span className="text-amber-400 text-lg font-bold leading-none">★★★★★</span>
               <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">130+ Recensioni Google 5.0</span>
             </a>
-            <div className="text-xs text-slate-600 text-center leading-relaxed">
-              <strong className="text-slate-900 block font-bold uppercase tracking-wider text-[10px]">Assistenza locale, persone vere</strong>
-              Interventi in pochi giorni e macchina sostitutiva in caso di guasto.
-            </div>
           </div>
 
           {/* Fast CTAs */}
