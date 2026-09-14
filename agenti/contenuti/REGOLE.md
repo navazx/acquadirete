@@ -8,14 +8,48 @@ Se una regola va cambiata, si cambia qui.
 
 1. **Una domanda vera di un cliente**, se ce n'è una nella sezione qui sotto. Vale
    più di qualsiasi argomento pensato a tavolino.
-2. **Il primo argomento della coda** che non sia già un articolo.
-3. Se la coda è finita: **un tema legato a una pagina servizio che nessun articolo
+2. **Un articolo che sta a un passo dalla prima pagina**: vedi "Arricchire un articolo
+   che c'è già" qui sotto. Se ce n'è uno, questo mese si lavora quello **al posto** di
+   un articolo nuovo: un articolo che Google già mostra cento volte al mese vale più
+   di uno che parte da zero.
+3. **Il primo argomento della coda** che non sia già un articolo.
+4. Se la coda è finita: **un tema legato a una pagina servizio che nessun articolo
    copre ancora**. Per capire quali sono scoperte, guardare i `relatedServices` degli
    articoli esistenti. Nella proposta va detto chiaramente che l'argomento l'ha
    scelto l'agente, così Matteo lo sa.
 
 Mai due articoli sullo stesso tema. Prima di scegliere si leggono titoli e slug di
 tutti gli articoli in `lib/blogPosts.ts`.
+
+## Arricchire un articolo che c'è già
+
+Il controllo SEO del lunedì scrive `agenti/seo/posizioni.json`. Fra i `segnali`
+guarda quelli con **`tipo: "soglia"`** e una `pagina` che comincia con `/blog/`:
+ricerche con tante viste e zero clic, per cui l'articolo sta fra il 9° e il 15° posto,
+cioè in fondo alla prima pagina o all'inizio della seconda. Lì non clicca quasi
+nessuno, e **il titolo non c'entra**: l'articolo deve salire.
+
+- Salta gli articoli che compaiono in `agenti/seo/posizioni-lavorate.md` negli ultimi
+  60 giorni. Le pagine che non sono del blog **non sono tue**, anche se sono in soglia.
+- Se ce ne sono più di uno, prendi quello con più viste sommando le sue ricerche.
+- Leggi le ricerche che lo riguardano: dicono cosa cerca la gente. L'articolo sale se
+  risponde meglio **a quelle domande**. Aggiungi 1-2 sezioni nuove, o allarga quelle
+  che ci sono, e 1 FAQ se manca proprio la risposta alla ricerca. Il titolo della
+  pagina (H1) e il `metaTitle` si ritoccano solo se non contengono le parole cercate.
+- **Non cambiare lo slug**, e non buttare via quello che c'è: si aggiunge e si
+  migliora, non si riscrive da capo. Le "Regole che non si discutono" valgono uguali,
+  e sui temi di costi vale ancora di più il divieto di cifre.
+- **Collegamenti verso l'articolo**: 2-3 articoli correlati che non lo linkano ancora
+  lo aggiungono ai loro `relatedPosts`. È la parte che lo fa salire di più.
+- Non cambiare `publishedAt`. Aggiorna `readingMinutes` se il testo è cresciuto.
+- Ramo `proposta/articolo-<slug esistente>`. Anteprima in
+  `agenti/anteprime/<slug esistente>.md`, scritta per chi l'articolo non l'ha
+  davanti: **perché** lo si arricchisce (ricerche, viste, posizione, zero clic, in
+  italiano: *"quando cercano «depuratore acqua gratis» l'articolo esce all'11° posto,
+  105 volte in un mese, e nessuno clicca"*), poi **solo le parti nuove o cambiate**
+  per intero, poi i collegamenti aggiunti.
+- Commit: prima riga `Articolo: arricchito «<titolo>»`.
+- Aggiungi una riga in `agenti/seo/posizioni-lavorate.md` sul ramo della proposta.
 
 ## Domande dei clienti
 

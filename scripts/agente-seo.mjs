@@ -282,7 +282,13 @@ async function posizioni() {
     const segnali = trovaSegnali(dati);
     const testo = componiPosizioni(dati, segnali, prima.segnalati || []);
     // Si ricordano solo i segnali ancora veri: se una ricerca esce e poi rientra, si torna a dirlo.
-    const stato = { letto: new Date().toISOString(), periodo: dati.periodo, segnalati: segnali.map((s) => s.chiave) };
+    // `segnali` per intero serve agli agenti che ci lavorano sopra (correzioni SEO, Contenuti).
+    const stato = {
+      letto: new Date().toISOString(),
+      periodo: dati.periodo,
+      segnalati: segnali.map((s) => s.chiave),
+      segnali: segnali.map(({ chiave, testo, ...resto }) => resto),
+    };
     return { testo, stato, avviso: `${segnali.length} segnali sulle posizioni.` };
   } catch (e) {
     return { testo: `POSIZIONI SU GOOGLE: lettura fallita (${e.message}). Il controllo del sito qui sopra è comunque valido.`, stato: null, avviso: e.message };

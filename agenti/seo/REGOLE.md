@@ -19,6 +19,34 @@ o di strategia si lascia al controllo, che lo segnala, e a Matteo.
 | `link-redirect` | far puntare il link direttamente alla destinazione finale |
 | `canonical-diverso` | far puntare il canonical all'indirizzo della pagina stessa |
 
+## Dalle posizioni su Google: titoli che non convincono
+
+Il controllo del lunedì legge anche Search Console e scrive `agenti/seo/posizioni.json`.
+Lì dentro, fra i `segnali`, ti riguardano **solo quelli con `tipo: "vetrina"`**: una
+ricerca per cui la pagina sta in alto (fino all'8° posto), ha molte viste e **zero
+clic**. La gente la vede e passa oltre: il titolo o la description non convincono.
+
+- Prima guarda `agenti/seo/posizioni-lavorate.md`: se la pagina ci compare negli
+  ultimi 60 giorni, **lasciala stare**.
+- Guarda con curl come sono oggi titolo e description, e chiediti se rispondono a
+  quella ricerca. Se la ricerca è "acqua rubinetto firenze" e il titolo parla d'altro,
+  il motivo è quello.
+- Riscrivili perché chi ha fatto quella ricerca capisca subito che la risposta è lì.
+  Valgono tutte le regole di "Titoli e description" qui sotto: limiti di caratteri,
+  italiano piano, niente numeri inventati, niente promesse.
+- **Non cambiare la parola chiave per cui la pagina è già forte** per inseguire
+  un'altra ricerca: se le ricerche della stessa pagina tirano in direzioni diverse,
+  scegli quella con più viste e dillo nell'anteprima.
+- Nell'anteprima, nel "Perché", scrivi i numeri veri: la ricerca, le viste, la
+  posizione, zero clic. Esempio: *"Quando cercano «acqua firenze potabile» la pagina
+  esce al 5° posto, 40 volte in un mese, e nessuno clicca."*
+- Aggiungi una riga in `agenti/seo/posizioni-lavorate.md` sul ramo della proposta.
+- Va nella **stessa proposta** delle correzioni del controllo, se ce ne sono.
+
+`tipo: "soglia"` e `tipo: "concorrenza"` **non sono tuoi**: il primo richiede di
+riscrivere il testo, il secondo una scelta su quale pagina tenere. Gli altri tipi
+(prima pagina, sale, scende, fuori) sono solo notizie.
+
 ## Cosa NON tocchi mai
 
 - **Gli indirizzi delle pagine** e gli slug. Mai.
@@ -46,8 +74,8 @@ o di strategia si lascia al controllo, che lo segnala, e a Matteo.
 
 ## La proposta
 
-- Leggi `agenti/seo/controllo.json`. Se non c'è niente fra le cose che puoi
-  correggere, **fermati senza creare niente**.
+- Leggi `agenti/seo/controllo.json` e `agenti/seo/posizioni.json`. Se in nessuno dei
+  due c'è qualcosa che puoi correggere, **fermati senza creare niente**.
 - Ramo `proposta/seo-<AAAA-MM-GG>`, creato da `main`. Mai su `main`.
 - Dopo le modifiche: `npm ci` e `npm run build` devono passare.
 - **Scrivi sempre l'anteprima** in `agenti/anteprime/seo-<AAAA-MM-GG>.md`. È il file

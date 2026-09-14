@@ -43,6 +43,14 @@ prepara un'altra dello stesso tipo.
 
 Le regole per scrivere gli articoli stanno in `agenti/contenuti/REGOLE.md`.
 
+**Dalle posizioni su Google alle proposte.** Il controllo SEO del lunedì scrive
+`seo/posizioni.json`. Due tipi di segnale diventano lavoro: `vetrina` (pagina in alto,
+zero clic → l'agente delle correzioni SEO riscrive titolo e description) e `soglia` su
+un articolo del blog (fra il 9° e il 15° posto → l'agente Contenuti lo arricchisce al
+posto di un articolo nuovo). Chi lavora una pagina lo segna in
+`seo/posizioni-lavorate.md` e per 60 giorni non la si ritocca. `concorrenza` e le
+pagine dei servizi in soglia restano a Matteo: toccano le pagine che portano i contatti.
+
 ## Le recensioni su Google
 
 Il giro è in tre pezzi, perché nessuno dei tre può fare il lavoro degli altri.

@@ -20,6 +20,10 @@
 //  niente sulla SEO) e quelle con poche viste (rumore).
 //
 //  Ogni segnalazione parte UNA volta: lo stato resta in agenti/seo/posizioni.json.
+//  Da lì le leggono gli agenti che ci lavorano sopra: "vetrina" l'agente delle
+//  correzioni SEO (agenti/seo/REGOLE.md), "soglia" sugli articoli del blog
+//  l'agente Contenuti (agenti/contenuti/REGOLE.md). Chi ha già lavorato una
+//  pagina lo scrive in agenti/seo/posizioni-lavorate.md, così non si rifà.
 // ============================================================================
 
 import { getAccessToken, query, ymd, windows } from './gsc.mjs';
@@ -67,7 +71,11 @@ export async function leggiPosizioni() {
 
 export function trovaSegnali({ ora, prima }) {
   const segnali = [];
-  const aggiungi = (tipo, q, pagina, testo) => segnali.push({ chiave: `${tipo}|${q}`, tipo, pagina, testo });
+  // I numeri restano nello stato perché li leggono gli agenti che ci lavorano sopra.
+  const aggiungi = (tipo, q, pagina, testo, c) => segnali.push({
+    chiave: `${tipo}|${q}`, tipo, ricerca: q, pagina, testo,
+    ...(c && { viste: c.viste, clic: c.clic, posizione: Math.round(c.pos * 10) / 10 }),
+  });
 
   for (const [q, pagine] of ora.ricerche) {
     const c = pagine[0]; // la pagina che Google mostra di più per questa ricerca
@@ -90,7 +98,7 @@ export function trovaSegnali({ ora, prima }) {
     // ritoccare il titolo non serve (errore già fatto una volta, 9 set 2026).
     if (c.viste >= VETRINA_VISTE && c.clic === 0 && c.pos <= VETRINA_POS) {
       const tipo = c.pos <= TITOLO_POS ? 'vetrina' : 'soglia';
-      aggiungi(tipo, q, c.pagina, `"${q}" — ${c.viste} viste in posizione ${pos(c.pos)}, nessun clic`);
+      aggiungi(tipo, q, c.pagina, `"${q}" — ${c.viste} viste in posizione ${pos(c.pos)}, nessun clic`, c);
     }
 
     const contendenti = pagine.filter((x) => x.viste >= CONCORRENZA_VISTE);
@@ -112,6 +120,21 @@ const TITOLI = {
   scende: 'SCENDONO',
 };
 
+// Chi ci lavora sopra: una segnalazione senza nessuno che la prende in carico è
+// solo un promemoria, ed è quello che gli agenti non devono essere.
+export const blog = (pagina) => Boolean(pagina && pagina.startsWith('/blog/') && pagina !== '/blog/');
+function chiCiPensa(tipo, pagine) {
+  if (tipo === 'vetrina') return '→ Ci pensa l\'agente SEO: al suo prossimo giro del lunedì ti propone titolo e descrizione nuovi.';
+  if (tipo === 'soglia') {
+    const articoli = pagine.filter(blog).length;
+    if (articoli === pagine.length) return '→ Ci pensa l\'agente Contenuti: il 5 del mese ti propone l\'articolo arricchito al posto di uno nuovo.';
+    if (articoli) return '→ Gli articoli li arricchisce l\'agente Contenuti il 5 del mese. Le pagine dei servizi no: portano i contatti, e si decidono insieme a Claude dal PC.';
+    return '→ Sono pagine dei servizi: portano i contatti, quindi nessun agente le riscrive da solo. Si decidono insieme a Claude dal PC.';
+  }
+  if (tipo === 'concorrenza') return '→ Qui va scelto quale pagina deve vincere, e tocca le pagine che portano i contatti: nessun agente lo fa da solo. Si decide insieme a Claude dal PC.';
+  return null;
+}
+
 /** Testo del blocco "posizioni", o null se non c'è niente di nuovo da dire. */
 export function componiPosizioni(dati, segnali, giaSegnalati) {
   const visti = new Set(giaSegnalati);
@@ -130,7 +153,8 @@ export function componiPosizioni(dati, segnali, giaSegnalati) {
     for (const s of delTipo) gruppi.set(s.pagina, [...(gruppi.get(s.pagina) || []), s.testo]);
     const righe = [...gruppi].map(([pagina, testi]) =>
       pagina ? `${pagina}\n${testi.slice(0, 5).map((t) => `  • ${t}`).join('\n')}` : testi.map((t) => `• ${t}`).join('\n'));
-    blocchi.push(`${TITOLI[tipo]}\n${righe.join('\n')}`);
+    const chi = chiCiPensa(tipo, [...gruppi.keys()]);
+    blocchi.push(`${TITOLI[tipo]}\n${righe.join('\n')}${chi ? `\n${chi}` : ''}`);
   }
   return blocchi.join('\n\n');
 }
