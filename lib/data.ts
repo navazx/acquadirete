@@ -96,7 +96,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     }
   },
   depuratore: {
-    title: 'Depuratore acqua a casa tua a Firenze',
+    title: 'Depuratore acqua a Firenze, a casa tua',
     subtitle: 'Acqua buona, leggera e sicura direttamente dal rubinetto di casa. Installiamo e seguiamo l\'impianto noi, tu non pensi a niente.',
     heroImage: heroDepuratore,
     problem: [

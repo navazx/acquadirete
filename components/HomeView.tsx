@@ -74,7 +74,7 @@ export default function HomeView() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.8),transparent_65%)] pointer-events-none"></div>
         <div className="max-w-4xl mx-auto space-y-6 text-center relative z-10">
           <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-            Depuratore acqua a Firenze:<br />
+            Depuratori acqua a Firenze e Prato:<br />
             <span className="text-blue-600">
               acqua buona dal rubinetto, per sempre.
             </span>
@@ -82,6 +82,15 @@ export default function HomeView() {
 
           <p className="text-base text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
             Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che serve: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-slate-900 font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia.
+          </p>
+
+          {/* Una pagina per città: da qui Google capisce quale mostrare per "depuratore acqua <città>". */}
+          <p className="text-sm text-slate-600">
+            <Link href={ROUTES.depuratore} className="font-semibold text-blue-700 hover:underline">Depuratore acqua a Firenze</Link>
+            <span className="mx-2 text-slate-400">·</span>
+            <Link href={ROUTES.prato} className="font-semibold text-blue-700 hover:underline">a Prato</Link>
+            <span className="mx-2 text-slate-400">·</span>
+            <Link href={ROUTES.pistoia} className="font-semibold text-blue-700 hover:underline">a Pistoia</Link>
           </p>
 
           {/* Google certified stars badge */}

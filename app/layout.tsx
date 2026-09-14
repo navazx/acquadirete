@@ -30,7 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Depuratore Acqua Firenze | Acquadirete',
+  title: 'Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete',
   description:
     'Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 130 recensioni a 5 stelle su Google. Sopralluogo gratuito.',
   alternates: { canonical: '/' },
