@@ -59,6 +59,19 @@ export async function aggiungi(token, range, righe, inputOption = 'RAW') {
   );
 }
 
+/**
+ * Scrive righe a partire da una cella precisa, sovrascrivendo senza inserire
+ * righe nuove: serve dove sopra e sotto ci sono grafici e formule che non
+ * devono spostarsi (la scheda Cruscotto).
+ */
+export async function scrivi(token, range, righe, inputOption = 'RAW') {
+  return call(
+    token,
+    `/values/${encodeURIComponent(range)}?valueInputOption=${inputOption}`,
+    { method: 'PUT', body: JSON.stringify({ values: righe }) },
+  );
+}
+
 /** Crea la scheda con la riga di intestazione se non c'e'. Torna true se l'ha creata. */
 export async function creaSchedaSeManca(token, titolo, intestazioni) {
   if ((await listaSchede(token)).includes(titolo)) return false;

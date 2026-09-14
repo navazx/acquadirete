@@ -26,4 +26,7 @@ jobs:
       - name: Scrivi la riga della settimana sul Gestionale
         env:
           GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          # Spesa Meta della settimana: stesso token in sola lettura dell'agente Ads.
+          # Se manca o scade, la riga si scrive lo stesso con la spesa Meta vuota.
+          META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
         run: node scripts/cruscotto.mjs
