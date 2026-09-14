@@ -106,16 +106,6 @@ export default function HomeView() {
               <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">130+ Recensioni Google 5.0</span>
             </a>
           </div>
-
-          {/* Fast CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-            <button
-              onClick={openModal}
-              className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
-            >
-              Richiedi un Sopralluogo Gratuito
-            </button>
-          </div>
         </div>
       </section>
 
@@ -213,6 +203,15 @@ export default function HomeView() {
                 Al <strong className="text-slate-900 font-semibold">{CONTACT.phoneDisplay}</strong> risponde Stefano, sempre lo stesso numero dal 2005. Centinaia di impianti tra Firenze, Prato e Pistoia e oltre 130 recensioni a 5 stelle su Google.
               </p>
             </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={openModal}
+              className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
+            >
+              Richiedi un Sopralluogo Gratuito
+            </button>
           </div>
         </div>
       </section>
@@ -387,6 +386,15 @@ export default function HomeView() {
       {/* Calculator Call-out Section */}
       <section id="calc-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <WaterCalc />
+        {/* Chi ha appena visto quanto spende in bottiglie è il momento giusto per chiedere. */}
+        <div className="flex justify-center pt-8">
+          <button
+            onClick={openModal}
+            className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
+          >
+            Richiedi un Sopralluogo Gratuito
+          </button>
+        </div>
       </section>
 
       {/* FAQ Interactive Accordion */}
