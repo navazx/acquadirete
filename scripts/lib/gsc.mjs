@@ -1,6 +1,6 @@
 // ============================================================================
 //  Funzioni condivise per gli script che leggono Google Search Console
-//  e mandano avvisi su Telegram (seo-report.mjs, keyword-alert.mjs).
+//  e mandano avvisi su Telegram (seo-report.mjs e lib/posizioni.mjs dell'agente SEO).
 //
 //  Zero dipendenze npm: solo moduli nativi di Node (crypto, fetch).
 //

@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Le azioni sono agganciate allo SHA del commit, non al tag "v4":
-      # un tag si puo' spostare, lo SHA no. Vedi il commento in keyword-alert.yml.
+      # un tag si puo' spostare, lo SHA no. Vedi il commento in agente-seo.yml.
       - name: Checkout del repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

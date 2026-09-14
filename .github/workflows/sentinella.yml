@@ -19,7 +19,7 @@ jobs:
   sentinella:
     runs-on: ubuntu-latest
     steps:
-      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
       - name: Checkout del repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

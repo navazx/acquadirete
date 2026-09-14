@@ -7,6 +7,11 @@ name: Agente SEO tecnico
 # niente, tace. Lo stato resta in agenti/seo/controllo.json, da cui l'agente
 # delle correzioni sa cosa sistemare.
 #
+# Nello stesso messaggio, le posizioni su Google lette da Search Console
+# (stato in agenti/seo/posizioni.json). Hanno preso il posto dell'"Alert
+# keyword" (keyword-alert.yml), tolto il 14 set 2026: mandava un elenco ogni
+# lunedi' anche senza novita', con posizioni mediate fra pagine diverse.
+#
 # Ha preso il posto della routine cloud "guardiano-404-redirect", che aveva il
 # token del bot scritto nel prompt.
 on:
@@ -22,7 +27,12 @@ jobs:
   seo:
     runs-on: ubuntu-latest
     steps:
-      # Azioni agganciate allo SHA, non al tag. Vedi keyword-alert.yml.
+      # Le azioni sono agganciate allo SHA del commit, non al tag "v4".
+      # Un tag si puo' spostare: se quello di un'azione molto diffusa venisse
+      # dirottato, il codice ostile girerebbe qui dentro, dove GSC_KEY_JSON e
+      # TELEGRAM_BOT_TOKEN sono nell'ambiente, e se li porterebbe via.
+      # Lo SHA no. Per aggiornare: prendere il nuovo SHA del tag e sostituirlo,
+      # lasciando il commento con la versione leggibile.
       - name: Checkout del repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -33,6 +43,7 @@ jobs:
 
       - name: Controlla il sito
         env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
         run: node scripts/agente-seo.mjs

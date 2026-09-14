@@ -21,10 +21,16 @@
 //  Lo stato resta in agenti/seo/controllo.json: e' da li' che l'agente che
 //  prepara le correzioni sa cosa sistemare.
 //
-//  Guarda solo pagine pubbliche: non ha bisogno di nessuna chiave.
+//  In fondo allo stesso messaggio, le POSIZIONI SU GOOGLE lette da Search
+//  Console (lib/posizioni.mjs): è l'ex "Alert keyword", che mandava un elenco
+//  ogni lunedì anche senza novità. Anche qui solo le cose nuove; se né il sito
+//  né le posizioni hanno niente da dire, non parte nessun messaggio.
+//  Il controllo delle pagine non ha bisogno di chiavi; le posizioni sì
+//  (GSC_KEY_JSON), e senza vengono saltate senza fermare il resto.
 //
 //  Prova (stampa il messaggio, non manda niente e non scrive lo stato):
 //    node scripts/agente-seo.mjs --prova
+//    GSC_KEY_FILE=".../gsc-key-readonly.json" node scripts/agente-seo.mjs --prova
 // ============================================================================
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -33,6 +39,9 @@ import { pathToFileURL } from 'node:url';
 const SITO = (process.env.SITO_URL || 'https://www.acquadirete.it').replace(/\/+$/, '');
 const HOST_NOSTRI = new Set([new URL(SITO).host, 'acquadirete.it', 'www.acquadirete.it']);
 const STATO = 'agenti/seo/controllo.json';
+// Separato di proposito: controllo.json lo legge l'agente delle correzioni, e le
+// posizioni non sono roba che si corregge a macchina.
+const STATO_POSIZIONI = 'agenti/seo/posizioni.json';
 
 const MAX_TITOLO = 60;
 const MAX_DESCRIPTION = 160;
@@ -258,10 +267,35 @@ function componiMessaggio({ problemi, pagine, link }, precedenti) {
   return { testo: blocchi.join('\n\n'), nuovi, risolti };
 }
 
+/**
+ * Il blocco delle posizioni su Google. Se Search Console non risponde, il
+ * controllo del sito parte lo stesso: i due pezzi non devono cadere insieme.
+ */
+async function posizioni() {
+  if (!process.env.GSC_KEY_JSON && !process.env.GSC_KEY_FILE) {
+    return { testo: null, stato: null, avviso: 'Posizioni saltate: manca GSC_KEY_JSON.' };
+  }
+  try {
+    const { leggiPosizioni, trovaSegnali, componiPosizioni } = await import('./lib/posizioni.mjs');
+    const prima = existsSync(STATO_POSIZIONI) ? JSON.parse(readFileSync(STATO_POSIZIONI, 'utf8')) : { segnalati: [] };
+    const dati = await leggiPosizioni();
+    const segnali = trovaSegnali(dati);
+    const testo = componiPosizioni(dati, segnali, prima.segnalati || []);
+    // Si ricordano solo i segnali ancora veri: se una ricerca esce e poi rientra, si torna a dirlo.
+    const stato = { letto: new Date().toISOString(), periodo: dati.periodo, segnalati: segnali.map((s) => s.chiave) };
+    return { testo, stato, avviso: `${segnali.length} segnali sulle posizioni.` };
+  } catch (e) {
+    return { testo: `POSIZIONI SU GOOGLE: lettura fallita (${e.message}). Il controllo del sito qui sopra è comunque valido.`, stato: null, avviso: e.message };
+  }
+}
+
 async function main() {
   const precedente = existsSync(STATO) ? JSON.parse(readFileSync(STATO, 'utf8')) : { problemi: [] };
   const esito = await controllaSito();
-  const { testo, nuovi, risolti } = componiMessaggio(esito, precedente.problemi || []);
+  const { testo: testoSito, nuovi, risolti } = componiMessaggio(esito, precedente.problemi || []);
+  const pos = await posizioni();
+  console.log(pos.avviso);
+  const testo = [testoSito, pos.testo].filter(Boolean).join('\n\n━━━━━━━━━━━━━━\n\n') || null;
 
   const primaVolta = new Map((precedente.problemi || []).map((p) => [`${p.chiave}|${p.pagina}`, p.primaVolta]));
   const oggi = new Date().toISOString().slice(0, 10);
@@ -280,6 +314,7 @@ async function main() {
 
   mkdirSync('agenti/seo', { recursive: true });
   writeFileSync(STATO, `${JSON.stringify(stato, null, 2)}\n`);
+  if (pos.stato) writeFileSync(STATO_POSIZIONI, `${JSON.stringify(pos.stato, null, 2)}\n`);
 
   if (testo) {
     const { messaggio } = await import('./lib/telegram.mjs');
