@@ -8,12 +8,22 @@
 //
 //  Uso:    node scripts/promemoria.mjs agenti/promemoria/google-business.md
 //  Prova:  node scripts/promemoria.mjs agenti/promemoria/google-business.md --prova
+//
+//  --link <indirizzo> [--link-testo "..."]: aggiunge in fondo un link fisso.
+//  Sta qui e non nel testo scritto dalla routine perche' non deve dipendere da
+//  quello che l'agente si ricorda di mettere.
 // ============================================================================
 
 import { readFileSync, existsSync } from 'node:fs';
 
 const file = process.argv[2];
 const prova = process.argv.includes('--prova') || process.env.PROVA === 'true';
+const opzione = (nome) => {
+  const i = process.argv.indexOf(nome);
+  return i > -1 ? process.argv[i + 1] : undefined;
+};
+const link = opzione('--link');
+const linkTesto = opzione('--link-testo') || 'Apri qui:';
 
 async function main() {
   if (!file || !existsSync(file)) {
@@ -21,11 +31,16 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const testo = readFileSync(file, 'utf8').trim();
+  let testo = readFileSync(file, 'utf8').trim();
   if (!testo) {
     console.log(`Il file ${file} è vuoto: non mando niente.`);
     process.exitCode = 1;
     return;
+  }
+  if (link) {
+    const coda = `\n\n${linkTesto}\n${link}`;
+    // Telegram taglia a 4096 caratteri: si accorcia il testo, mai il link.
+    testo = testo.slice(0, 4096 - coda.length) + coda;
   }
   if (prova) {
     console.log(`(prova: niente Telegram, ${testo.length} caratteri)\n\n${testo}`);

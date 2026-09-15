@@ -1,6 +1,6 @@
 name: Promemoria scheda Google
 
-# Parte quando la routine cloud "promemoria-google-business" (il 15 del mese)
+# Parte quando la routine cloud "agente-scheda-google" (il 15 del mese)
 # scrive le idee di stagione in agenti/promemoria/google-business.md, e le manda
 # su Telegram. La routine non ha nessun token: scrive nel repo, e il messaggio
 # lo manda questo workflow con il token preso dai secret.
@@ -35,4 +35,9 @@ jobs:
           TELEGRAM_CHAT_ID: '6369351410'
           # Al push inputs e' vuoto, quindi PROVA non e' "true" e il messaggio parte.
           PROVA: ${{ inputs.prova }}
-        run: node scripts/promemoria.mjs agenti/promemoria/google-business.md
+        # Il link apre direttamente la finestra "Aggiungi post" del profilo
+        # (provato il 15 set 2026 dal Chrome di Matteo, loggato come proprietario).
+        run: >-
+          node scripts/promemoria.mjs agenti/promemoria/google-business.md
+          --link-testo "Scrivi il post qui (si apre già la finestra):"
+          --link "https://www.google.com/search?q=Acquadirete+di+Stefano+Piconese#mpd=promote/updates/add"
