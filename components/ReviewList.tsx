@@ -5,8 +5,17 @@ import { Star, Filter, ShieldCheck, User, ExternalLink, PenLine } from 'lucide-r
 import { Review } from '../lib/types';
 import { REVIEWS, REVIEW_RATING, REVIEW_TOTAL, REVIEWS_ARE_LIVE } from '../lib/reviews';
 import { GOOGLE_PROFILE_URL, GOOGLE_WRITE_REVIEW_URL } from '../lib/siteConfig';
+import CardCarousel from './CardCarousel';
+import ReviewCard from './ReviewCard';
 
-export default function ReviewList() {
+type Props = {
+  /** Recensioni in un nastro orizzontale invece che in griglia: nelle pagine
+   *  servizio e negli articoli la griglia allungava troppo la pagina. La
+   *  pagina /recensioni resta a griglia, lì le recensioni sono il contenuto. */
+  carousel?: boolean;
+};
+
+export default function ReviewList({ carousel = false }: Props) {
   const [reviews] = useState<Review[]>(REVIEWS);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'domestico' | 'business' | 'assistenza'>('all');
 
@@ -104,7 +113,16 @@ export default function ReviewList() {
         </div>
       )}
 
-      {/* Grid of Reviews */}
+      {carousel ? (
+        <CardCarousel
+          label="Recensioni"
+          header={<p className="text-sm text-slate-600">Scorri per leggerle tutte.</p>}
+        >
+          {filteredReviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))}
+        </CardCarousel>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="reviews-grid">
         {filteredReviews.map((review) => (
           <div
@@ -145,6 +163,7 @@ export default function ReviewList() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

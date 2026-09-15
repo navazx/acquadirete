@@ -14,6 +14,7 @@ import {
   Award,
 } from 'lucide-react';
 import CardCarousel from './CardCarousel';
+import ReviewCard from './ReviewCard';
 import WaterCalc from './WaterCalc';
 import { useModal } from './ModalProvider';
 import { ROUTES } from '../lib/routes';
@@ -237,21 +238,7 @@ export default function HomeView() {
           }
         >
           {homeReviews.map((review) => (
-            <figure
-              key={review.id}
-              className="w-[80vw] max-w-[330px] sm:w-[330px] bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
-            >
-              <div className="text-amber-400 text-sm font-bold tracking-widest" aria-label={`${review.rating} stelle su 5`}>
-                ★★★★★
-              </div>
-              <blockquote className="text-sm text-slate-700 leading-relaxed flex-1 line-clamp-6">
-                &laquo;{review.text}&raquo;
-              </blockquote>
-              <figcaption className="text-xs text-slate-500 border-t border-slate-150 pt-3">
-                <span className="block font-bold text-slate-900">{review.author}</span>
-                {review.date} · recensione Google verificata
-              </figcaption>
-            </figure>
+            <ReviewCard key={review.id} review={review} />
           ))}
         </CardCarousel>
 

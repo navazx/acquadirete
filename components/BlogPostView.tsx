@@ -183,7 +183,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
             <ChevronRight size={12} />
           </Link>
         </div>
-        <ReviewList />
+        <ReviewList carousel />
       </section>
 
       {/* CTA finale */}

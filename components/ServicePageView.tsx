@@ -65,11 +65,17 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
   };
 
   return (
-    <div id="service-view" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-16">
+    <div id="service-view" className="pb-12 md:pb-16 space-y-16">
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
+      {/* Testata a tutta larghezza con lo stesso sfondo azzurro dell'hero
+          della home: senza, le pagine servizio erano chiaro su chiaro. */}
+      <section className="relative bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 overflow-hidden px-4 sm:px-6 lg:px-8 pt-10 md:pt-12 pb-14 md:pb-20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.8),transparent_65%)] pointer-events-none"></div>
+        <div className="relative max-w-7xl mx-auto space-y-10">
 
       {/* Custom Breadcrumb */}
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -129,10 +135,16 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           </div>
         </div>
       </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
 
       {/* Specific features list */}
-      <div className="bg-slate-50 p-6 md:p-10 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-4">
+      <div className="relative overflow-hidden bg-blue-50 p-6 md:p-10 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Stessa trama a puntini della sezione "Perché fidarsi di noi" in home. */}
+        <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(#0f6cbd_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+        <div className="relative space-y-4">
           <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">{serviceInfo.benefitsTitle}</h2>
           <div className="space-y-3 pt-1">
             {serviceInfo.benefits.map((benefit, idx) => (
@@ -150,20 +162,24 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           )}
         </div>
 
-        {/* Inline micro contact box customized for the specific page */}
-        <div className="flex flex-col justify-between bg-white p-6 rounded-lg border border-slate-200">
+        {/* Inline micro contact box customized for the specific page.
+            md:self-center: senza, il riquadro si allungava quanto la colonna
+            accanto e dove c'è il box "nota" (es. acqua frizzante) restava un
+            buco bianco sopra il pulsante. Così è alto quanto il suo contenuto
+            e sta a metà della colonna. */}
+        <div className="relative flex flex-col justify-between md:self-center bg-blue-600 p-6 rounded-lg border border-blue-500 shadow-md">
           <div className="space-y-3">
-            <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[11px]">Pronto per iniziare?</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="font-bold text-white uppercase tracking-widest text-[11px]">Pronto per iniziare?</h3>
+            <p className="text-xs text-blue-50 leading-relaxed">
               Richiedi ora un sopralluogo gratuito: veniamo da te, valutiamo la tua acqua e ti diciamo come stanno le cose. Decidi tu, senza nessuna pressione.
             </p>
             <a
               href={telHref()}
               title="Chiamaci al telefono"
-              className="bg-slate-50 p-3.5 rounded-lg flex items-center gap-2.5 border border-slate-150 hover:border-blue-300 transition-colors"
+              className="bg-white/10 p-3.5 rounded-lg flex items-center gap-2.5 border border-white/20 hover:bg-white/15 transition-colors"
             >
-              <Phone size={14} className="text-blue-500" />
-              <span className="text-xs text-slate-700">Parla direttamente con noi: <strong className="font-bold">{CONTACT.phoneDisplay}</strong></span>
+              <Phone size={14} className="text-white" />
+              <span className="text-xs text-blue-50">Parla direttamente con noi: <strong className="font-bold text-white">{CONTACT.phoneDisplay}</strong></span>
             </a>
           </div>
           <button
@@ -265,7 +281,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
             <ChevronRight size={12} />
           </Link>
         </div>
-        <ReviewList />
+        <ReviewList carousel />
       </section>
 
       {/* Brief custom form at the bottom of the page */}
@@ -288,6 +304,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           <ContactForm initialService={serviceId === 'prato' ? 'depuratore' : serviceId} />
         </div>
       </section>
+      </div>
 
     </div>
   );

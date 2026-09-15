@@ -164,7 +164,7 @@ export default function CardCarousel({ header, children, label }: Props) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onClickCapture={swallowClickAfterDrag}
-        className="no-scrollbar flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 md:cursor-grab md:active:cursor-grabbing [&>*]:snap-start [&>*]:shrink-0"
+        className="no-scrollbar flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 -mx-4 px-4 scroll-px-4 sm:mx-0 sm:px-0 sm:scroll-px-0 md:cursor-grab md:active:cursor-grabbing [&>*]:snap-start [&>*]:shrink-0"
       >
         {children}
       </div>
