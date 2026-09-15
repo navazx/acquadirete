@@ -113,30 +113,17 @@ export default function HomeView() {
           I quattro dati che c'erano (sopralluogo gratis, 10 anni di garanzia,
           dal 2005, 130+ recensioni) non sono persi: sono dentro al testo. */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch">
-          <div className="lg:col-span-5 bg-slate-100">
-            {/* Su mobile la foto è ritagliata in alto (aspect-[4/3] + object-top):
-                si tiene la parte con le facce e si taglia il pavimento in basso,
-                che occupava schermo senza dire niente. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/assets/hero-assistenza-team.webp"
-              alt="Stefano e Matteo di Acquadirete nella loro officina"
-              width={900}
-              height={900}
-              loading="eager"
-              decoding="async"
-              className="object-cover object-top w-full h-full aspect-[4/3] sm:aspect-square lg:aspect-auto lg:min-h-[380px]"
-            />
-          </div>
-          <div className="lg:col-span-7 p-6 md:p-10 space-y-5">
-            <span className="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-100">
-              Chi viene a casa tua
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-              Siamo Stefano e Matteo.
-            </h2>
-            <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="order-2 lg:order-1 space-y-6">
+            <div className="space-y-3">
+              <span className="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-100">
+                Chi viene a casa tua
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+                Siamo Stefano e Matteo.
+              </h2>
+            </div>
+            <div className="space-y-4 text-base text-slate-600 leading-relaxed">
               <p>
                 Acquadirete è un&apos;officina e due persone: <strong className="text-slate-900 font-semibold">Stefano</strong>, che ha iniziato nel 2005, e <strong className="text-slate-900 font-semibold">Matteo</strong>, suo figlio. Non abbiamo agenti, non abbiamo un call center: a casa tua veniamo noi due, e quando chiami rispondiamo noi due.
               </p>
@@ -154,6 +141,22 @@ export default function HomeView() {
             >
               Fissa il sopralluogo gratuito
             </button>
+          </div>
+
+          <div className="order-1 lg:order-2 relative">
+            {/* Riquadro azzurro sfalsato dietro la foto: su telefono scende solo
+                in basso, così non esce dal margine laterale. */}
+            <div className="absolute inset-0 translate-y-3 sm:-translate-x-5 sm:translate-y-5 bg-blue-100 rounded-2xl" aria-hidden="true"></div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/hero-assistenza-team.webp"
+              alt="Stefano e Matteo di Acquadirete nella loro officina"
+              width={900}
+              height={900}
+              loading="eager"
+              decoding="async"
+              className="relative rounded-2xl shadow-lg object-cover object-top w-full aspect-[16/10] sm:aspect-[4/3] lg:aspect-[5/4]"
+            />
           </div>
         </div>
       </section>
