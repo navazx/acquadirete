@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Phone, Check, ShieldCheck, ChevronRight } from 'lucide-react';
 import ContactForm from './ContactForm';
 import ReviewList from './ReviewList';
+import PageBand from './PageBand';
 import { useModal } from './ModalProvider';
 import { SERVICES_INFO } from '../lib/data';
 import { CONTACT, telHref, SITE_URL } from '../lib/siteConfig';
@@ -71,11 +72,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      {/* Testata a tutta larghezza con lo stesso sfondo azzurro dell'hero
-          della home: senza, le pagine servizio erano chiaro su chiaro. */}
-      <section className="relative bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 overflow-hidden px-4 sm:px-6 lg:px-8 pt-10 md:pt-12 pb-14 md:pb-20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.8),transparent_65%)] pointer-events-none"></div>
-        <div className="relative max-w-7xl mx-auto space-y-10">
+      <PageBand className="space-y-10">
 
       {/* Custom Breadcrumb */}
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -135,8 +132,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           </div>
         </div>
       </div>
-        </div>
-      </section>
+      </PageBand>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
 
@@ -171,7 +167,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           <div className="space-y-3">
             <h3 className="font-bold text-white uppercase tracking-widest text-[11px]">Pronto per iniziare?</h3>
             <p className="text-xs text-blue-50 leading-relaxed">
-              Richiedi ora un sopralluogo gratuito: veniamo da te, valutiamo la tua acqua e ti diciamo come stanno le cose. Decidi tu, senza nessuna pressione.
+              Niente telefonate insistenti, niente &laquo;depuratori gratis&raquo; che gratis non sono, niente contratti firmati in salotto. Il sopralluogo è gratuito: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose. Poi decidi tu, con calma: il preventivo vale 3 mesi.
             </p>
             <a
               href={telHref()}

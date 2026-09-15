@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import ReviewList from '../../components/ReviewList';
 import OpenModalButton from '../../components/OpenModalButton';
+import PageBand from '../../components/PageBand';
 import { REVIEWS, REVIEW_RATING, REVIEW_TOTAL } from '../../lib/reviews';
 import { CONTACT, SITE_URL, OG_DEFAULTS } from '../../lib/siteConfig';
 
@@ -47,8 +48,9 @@ const reviewSchema = {
 
 export default function RecensioniPage() {
   return (
-    <div id="recensioni-view" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-12">
+    <div id="recensioni-view" className="pb-12 md:pb-16 space-y-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }} />
+      <PageBand>
       <div className="text-center max-w-3xl mx-auto space-y-5 block">
         <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
           Feedback Clienti
@@ -56,22 +58,25 @@ export default function RecensioniPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
           Oltre 130 Recensioni Google a 5 Stelle
         </h1>
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           Siamo orgogliosi della fiducia che le famiglie e le attività commerciali di Firenze, Prato e Pistoia ci riservano da anni. Leggi le testimonianze certificate o invia la tua recensione sul servizio ricevuto.
         </p>
       </div>
+      </PageBand>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
       <ReviewList />
 
       {/* Micro CTA to contact */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 md:p-8 text-center max-w-2xl mx-auto space-y-4">
-        <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Ti va di provarla a casa tua?</h2>
-        <p className="text-sm text-slate-600 leading-relaxed">
+      <div className="bg-blue-600 border border-blue-500 shadow-md rounded-xl p-6 md:p-8 text-center max-w-2xl mx-auto space-y-4">
+        <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Pronto per iniziare?</h2>
+        <p className="text-sm text-blue-50 leading-relaxed">
           Siamo Stefano e Matteo: veniamo noi, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Il sopralluogo è gratuito, tra Firenze, Prato e Pistoia.
         </p>
         <OpenModalButton className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer transition-colors">
           Prenota il sopralluogo gratuito
         </OpenModalButton>
+      </div>
       </div>
     </div>
   );

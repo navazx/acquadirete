@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronRight, Clock } from 'lucide-react';
 import { BLOG_POSTS } from '../../lib/blogPosts';
 import { OG_DEFAULTS } from '../../lib/siteConfig';
+import PageBand from '../../components/PageBand';
 
 export const metadata: Metadata = {
   title: 'Blog | Guide su Depuratori e Trattamento Acqua | Acquadirete',
@@ -14,7 +15,8 @@ export const metadata: Metadata = {
 
 export default function BlogIndexPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-12">
+    <div className="pb-12 md:pb-16 space-y-12">
+      <PageBand>
       <div className="text-center max-w-3xl mx-auto space-y-5">
         <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
           Guide Acquadirete
@@ -22,12 +24,13 @@ export default function BlogIndexPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
           Guide sul trattamento dell'acqua
         </h1>
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           Risposte chiare alle domande che ci fanno più spesso, scritte da chi installa depuratori a Firenze, Prato e Pistoia dal 2005.
         </p>
       </div>
+      </PageBand>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-0">
         {BLOG_POSTS.map((post) => (
           <Link
             key={post.slug}

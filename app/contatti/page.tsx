@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Phone, MapPin, Clock } from 'lucide-react';
 import ContactForm from '../../components/ContactForm';
+import PageBand from '../../components/PageBand';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import InstagramIcon from '../../components/InstagramIcon';
 import FacebookIcon from '../../components/FacebookIcon';
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
 
 export default function ContattiPage() {
   return (
-    <div id="contatti-view" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-16">
+    <div id="contatti-view" className="pb-12 md:pb-16 space-y-12">
+      <PageBand>
       <div className="text-center max-w-3xl mx-auto space-y-5">
         <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
           Provincia di Firenze, Prato e Pistoia
@@ -24,12 +26,13 @@ export default function ContattiPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
           Contatta Acquadirete
         </h1>
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           Hai delle domande sui nostri depuratori, l'osmosi o hai bisogno di un cambio filtri o assistenza multimarca a Firenze, Prato e Pistoia? Siamo qui per aiutarti.
         </p>
       </div>
+      </PageBand>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Contact details */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm space-y-6">
@@ -37,7 +40,7 @@ export default function ContattiPage() {
 
             <div className="space-y-4 text-xs">
               <div className="flex items-start gap-3">
-                <div className="bg-slate-100 text-slate-600 p-2 rounded-lg border border-slate-200 shrink-0 mt-0.5">
+                <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shrink-0 mt-0.5">
                   <MapPin size={16} />
                 </div>
                 <div>
@@ -48,7 +51,7 @@ export default function ContattiPage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="bg-slate-100 text-slate-600 p-2 rounded-lg border border-slate-200 shrink-0 mt-0.5">
+                <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shrink-0 mt-0.5">
                   <Phone size={16} />
                 </div>
                 <div>
@@ -59,7 +62,7 @@ export default function ContattiPage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="bg-slate-100 text-slate-600 p-2 rounded-lg border border-slate-200 shrink-0 mt-0.5">
+                <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shrink-0 mt-0.5">
                   <Clock size={16} />
                 </div>
                 <div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, Clock, ChevronRight } from 'lucide-react';
 import ContactForm from './ContactForm';
 import ReviewList from './ReviewList';
+import PageBand from './PageBand';
 import { SITE_URL } from '../lib/siteConfig';
 import { ROUTES, PAGE_BREADCRUMB } from '../lib/routes';
 import { BLOG_POSTS } from '../lib/blogPosts';
@@ -58,13 +59,14 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
   });
 
   return (
-    <div id="blog-post-view" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-16">
+    <div id="blog-post-view" className="pb-12 md:pb-16 space-y-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
+      <PageBand className="space-y-10">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
         <Link href={ROUTES.home} title="Torna alla home" className="hover:text-blue-600 cursor-pointer">Home</Link>
@@ -82,12 +84,15 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
           {post.title}
         </h1>
-        <div className="flex items-center justify-center gap-3 text-[11px] text-slate-400 font-semibold">
+        <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 font-semibold">
           <span>{publishedDate}</span>
           <span>·</span>
           <span className="flex items-center gap-1"><Clock size={12} /> {post.readingMinutes} min di lettura</span>
         </div>
       </div>
+      </PageBand>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
 
       {/* Body */}
       <div className="max-w-3xl mx-auto w-full space-y-10">
@@ -206,6 +211,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
           <ContactForm initialService="test_acqua" />
         </div>
       </section>
+      </div>
     </div>
   );
 }
