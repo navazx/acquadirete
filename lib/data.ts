@@ -31,7 +31,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Centinaia di impianti installati tra Firenze, Prato e Pistoia.',
       'Assistenza rapida, in pochi giorni.',
       'Macchina sostitutiva in caso di guasto: la tua famiglia o la tua attività non resta mai senz\'acqua.',
-      'Oltre 120 recensioni a 5 stelle su Google.'
+      'Oltre 130 recensioni a 5 stelle su Google.'
     ],
     faqs: [
       {
@@ -47,7 +47,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
         a: 'Ce ne occupiamo noi: ti ricordiamo noi quando è il momento di sostituire i filtri, così non ci devi pensare.'
       }
     ],
-    ctaLabel: 'Richiedi un sopralluogo gratuito a Prato',
+    ctaLabel: 'Richiedi il sopralluogo gratuito a Prato',
     localSeo: {
       heading: 'Depuratori d\'acqua a Prato e provincia',
       body: [
@@ -70,7 +70,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Centinaia di impianti installati tra Firenze, Prato e Pistoia.',
       'Assistenza rapida, in pochi giorni.',
       'Macchina sostitutiva in caso di guasto: la tua famiglia o la tua attività non resta mai senz\'acqua.',
-      'Oltre 120 recensioni a 5 stelle su Google.'
+      'Oltre 130 recensioni a 5 stelle su Google.'
     ],
     faqs: [
       {
@@ -86,7 +86,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
         a: 'Ce ne occupiamo noi: ti ricordiamo noi quando è il momento di sostituire i filtri, così non ci devi pensare.'
       }
     ],
-    ctaLabel: 'Richiedi un sopralluogo gratuito a Pistoia',
+    ctaLabel: 'Richiedi il sopralluogo gratuito a Pistoia',
     localSeo: {
       heading: 'Depuratori d\'acqua a Pistoia e provincia',
       body: [
@@ -109,7 +109,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Centinaia di impianti installati a Firenze e provincia.',
       'Acqua leggera e sicura, con il contenuto di minerali regolato in base alle tue esigenze.',
       'Macchina sostitutiva in caso di guasto: non resti mai senz\'acqua.',
-      'Oltre 120 recensioni a 5 stelle su Google da clienti veri.'
+      'Oltre 130 recensioni a 5 stelle su Google da clienti veri.'
     ],
     faqs: [
       {
@@ -125,7 +125,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
         a: 'Interveniamo in pochi giorni e, se serve, ti lasciamo una macchina sostitutiva. Zero pensieri.'
       }
     ],
-    ctaLabel: 'Richiedi un sopralluogo gratuito',
+    ctaLabel: 'Richiedi il sopralluogo gratuito',
     localSeo: {
       heading: 'Installazione depuratori d\'acqua a Firenze',
       body: [
@@ -167,7 +167,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
         a: 'Al contrario: togliendo il cloro, la maggior parte delle persone trova l\'acqua più buona di quella in bottiglia.'
       }
     ],
-    ctaLabel: 'Richiedi un sopralluogo gratuito',
+    ctaLabel: 'Richiedi il sopralluogo gratuito',
     localSeo: {
       heading: 'Impianti a osmosi inversa a Firenze e provincia',
       body: [
@@ -211,7 +211,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       title: 'Non sai quale scegliere?',
       body: 'Carboni attivi o osmosi inversa? Dipende dalla tua acqua e da cosa cerchi. Facciamo un sopralluogo gratuito, valutiamo la tua acqua e ti consigliamo la soluzione giusta — anche se è la più semplice.'
     },
-    ctaLabel: 'Richiedi un sopralluogo gratuito',
+    ctaLabel: 'Richiedi il sopralluogo gratuito',
     localSeo: {
       heading: 'Microfiltrazione a carboni attivi a Firenze, Prato e Pistoia',
       body: [
@@ -259,7 +259,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       title: 'A casa e in azienda',
       body: 'La funzione fredda e frizzante si abbina sia agli impianti domestici sia agli erogatori per uffici e ristoranti: ti consigliamo la versione più adatta al tuo spazio e ai tuoi consumi.'
     },
-    ctaLabel: 'Richiedi un sopralluogo gratuito',
+    ctaLabel: 'Richiedi il sopralluogo gratuito',
     localSeo: {
       heading: 'Acqua frizzante dal rubinetto a Firenze, Prato e Pistoia',
       body: [
@@ -283,7 +283,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Assistenza rapida e macchina sostitutiva in caso di guasto: il tuo servizio non si ferma mai.',
       'Manutenzione gestita da noi: ti avvisiamo noi quando intervenire.',
       'Fornitore serio e tracciabile, non un venditore porta a porta: preventivo chiaro e fattura.',
-      'Oltre 120 recensioni a 5 stelle su Google.'
+      'Oltre 130 recensioni a 5 stelle su Google.'
     ],
     ctaLabel: 'Richiedi un preventivo gratuito',
     localSeo: {

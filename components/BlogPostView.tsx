@@ -68,7 +68,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
 
       <PageBand className="space-y-10">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
         <Link href={ROUTES.home} title="Torna alla home" className="hover:text-blue-600 cursor-pointer">Home</Link>
         <ChevronRight size={10} className="text-slate-400" />
         <Link href="/blog" title="Torna al blog" className="hover:text-blue-600 cursor-pointer">Blog</Link>
@@ -78,13 +78,13 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
 
       {/* Article header */}
       <div className="max-w-3xl mx-auto w-full space-y-5 text-center">
-        <span className="bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-500/20 inline-block">
+        <span className="bg-blue-500/10 text-blue-600 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-500/20 inline-block">
           Guide Acquadirete
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
           {post.title}
         </h1>
-        <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 font-semibold">
+        <div className="flex items-center justify-center gap-3 text-xs text-slate-500 font-semibold">
           <span>{publishedDate}</span>
           <span>·</span>
           <span className="flex items-center gap-1"><Clock size={12} /> {post.readingMinutes} min di lettura</span>
@@ -126,7 +126,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
                   <span className="text-blue-600 text-base">{activeFaq === index ? '−' : '+'}</span>
                 </div>
                 {activeFaq === index && (
-                  <p className="text-xs text-slate-500 leading-relaxed mt-3.5 pt-3.5 border-t border-slate-150 animate-in fade-in duration-200">
+                  <p className="text-sm text-slate-500 leading-relaxed mt-3.5 pt-3.5 border-t border-slate-150 animate-in fade-in duration-200">
                     {faq.a}
                   </p>
                 )}
@@ -139,7 +139,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
       {/* Altri articoli correlati */}
       {post.relatedPosts && post.relatedPosts.length > 0 && (
         <div className="max-w-3xl mx-auto w-full flex flex-wrap items-center gap-2.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Leggi anche:</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Leggi anche:</span>
           {post.relatedPosts.map((relatedSlug) => {
             const relatedPost = BLOG_POSTS.find((p) => p.slug === relatedSlug);
             if (!relatedPost) return null;
@@ -148,7 +148,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
                 key={relatedSlug}
                 href={`/blog/${relatedSlug}`}
                 title={relatedPost.title}
-                className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
+                className="text-xs font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
               >
                 {relatedPost.title}
               </Link>
@@ -159,13 +159,13 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
 
       {/* Servizi correlati: link interni contestuali */}
       <div className="max-w-3xl mx-auto w-full flex flex-wrap items-center gap-2.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Ti potrebbe interessare anche:</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Ti potrebbe interessare anche:</span>
         {post.relatedServices.map((relatedId) => (
           <Link
             key={relatedId}
             href={ROUTES[relatedId]}
             title={PAGE_BREADCRUMB[relatedId]}
-            className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
+            className="text-xs font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
           >
             {PAGE_BREADCRUMB[relatedId]}
           </Link>
@@ -194,11 +194,11 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
       {/* CTA finale */}
       <section className="bg-blue-50 text-slate-900 rounded-xl p-6 md:p-10 border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-7 space-y-6">
-          <span className="bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest block px-3 py-1.5 rounded-lg border border-blue-200 w-fit">
+          <span className="bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest block px-3 py-1.5 rounded-lg border border-blue-200 w-fit">
             Contatto Rapido
           </span>
           <h3 className="text-2xl md:text-3xl font-bold tracking-tight">Non sai ancora cosa ti serve? Te lo diciamo noi</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-sm text-slate-600 leading-relaxed">
             Veniamo da te in provincia di Firenze, Prato e Pistoia, analizziamo la tua acqua e ti consigliamo la soluzione giusta — anche quando è la più semplice.
           </p>
           <div className="space-y-2 text-xs font-semibold text-slate-700">

@@ -52,7 +52,7 @@ export default function RecensioniPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }} />
       <PageBand>
       <div className="text-center max-w-3xl mx-auto space-y-5 block">
-        <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
+        <span className="inline-block bg-blue-500/10 text-blue-600 text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
           Feedback Clienti
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -74,7 +74,7 @@ export default function RecensioniPage() {
           Siamo Stefano e Matteo: veniamo noi, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Il sopralluogo è gratuito, tra Firenze, Prato e Pistoia.
         </p>
         <OpenModalButton className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-lg cursor-pointer transition-colors">
-          Prenota il sopralluogo gratuito
+          Richiedi il sopralluogo gratuito
         </OpenModalButton>
       </div>
       </div>

@@ -12,11 +12,10 @@ export default function FloatingWhatsApp() {
       id="floating-whatsapp-button"
       title="Contatta Acquadirete su WhatsApp"
     >
-      <span className="text-xs font-bold pl-1 max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap leading-none hidden md:inline uppercase tracking-widest text-[9px]">
+      <span className="text-xs font-bold pl-1 max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap leading-none hidden md:inline uppercase tracking-widest text-xs">
         WhatsApp Rapido
       </span>
       <WhatsAppIcon size={26} className="text-white" />
-      <span className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center animate-bounce">1</span>
     </a>
   );
 }

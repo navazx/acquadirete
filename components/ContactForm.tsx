@@ -154,7 +154,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           </strong> è stata correttamente presa in carico.
         </p>
 
-        <div className="bg-blue-50/70 border border-blue-100/80 rounded-xl p-4 w-full max-w-sm mb-6 text-left text-xs text-blue-900 space-y-2.5">
+        <div className="bg-blue-50/70 border border-blue-100/80 rounded-xl p-4 w-full max-w-sm mb-6 text-left text-sm text-blue-900 space-y-2.5">
           <div className="flex items-center gap-2">
             <Clock size={14} className="text-blue-600 shrink-0" />
             <span>Ti ricontattiamo al <strong className="font-bold">{formData.telefono}</strong> al più presto.</span>
@@ -181,13 +181,13 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       id="lead-contact-form"
     >
       <div className="mb-6">
-        <span className="inline-block bg-blue-50 text-blue-800 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-md border border-blue-100">
+        <span className="inline-block bg-blue-50 text-blue-800 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-md border border-blue-100">
           Preventivo e Sopralluogo Gratuito
         </span>
         <h3 className="text-xl md:text-2xl font-bold text-blue-900 mt-4 tracking-tight">
           Richiedi informazioni
         </h3>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Compila ora il modulo rapido. Ti richiamiamo entro poche ore senza alcun impegno.
         </p>
       </div>
@@ -195,7 +195,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Name input */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
             Nome e Cognome <span className="text-blue-500 font-extrabold">*</span>
           </label>
           <div className="relative">
@@ -215,7 +215,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
         {/* Phone Input */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
             Numero di Telefono <span className="text-blue-500 font-extrabold">*</span>
           </label>
           <div className="relative">
@@ -235,7 +235,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
         {/* Email Input */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
             Indirizzo Email (facoltativo)
           </label>
           <div className="relative">
@@ -254,7 +254,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
         {/* Neighborhood Select */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
             In quale zona si trova la casa? <span className="text-blue-500 font-extrabold">*</span>
           </label>
           <div className="relative">
@@ -282,7 +282,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
               ma sotto al menù, così chi ha un comune piccolo si riconosce
               invece di ripiegare su "Altro". */}
           {zonaScelta?.comuni && (
-            <p className="text-[11px] text-slate-500 mt-1.5 leading-tight">
+            <p className="text-xs text-slate-500 mt-1.5 leading-tight">
               Comprende: {zonaScelta.comuni}
             </p>
           )}
@@ -290,7 +290,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
         {/* Service Selector */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
             Impianto di Interesse
           </label>
           <div className="relative">
@@ -315,7 +315,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
         {/* Message Input */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
             Note o richieste particolari (facoltativo)
           </label>
           <div className="relative">
@@ -342,7 +342,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
             checked={formData.accettaPrivacy}
             onChange={(e) => setFormData({ ...formData, accettaPrivacy: e.target.checked })}
           />
-          <label htmlFor="privacy-checkbox" className="text-[11px] text-slate-500 leading-tight select-none cursor-pointer">
+          <label htmlFor="privacy-checkbox" className="text-xs text-slate-500 leading-snug select-none cursor-pointer">
             Acconsento al trattamento dei dati personali ai fini del ricontatto commerciale in base alla Privacy Policy di Acquadirete. <span className="text-blue-500 font-extrabold">*</span>
           </label>
         </div>
@@ -363,7 +363,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           ) : (
             <>
               <Send size={15} />
-              <span>Invia Richiesta Richiamami</span>
+              <span>Richiamatemi</span>
             </>
           )}
         </button>

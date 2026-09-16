@@ -59,9 +59,9 @@ export default function WaterCalc() {
         <div className="space-y-5">
           {/* Slider for family members */}
           <div className="space-y-2">
-            <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <div className="flex justify-between items-baseline gap-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
               <span>Numero Componenti Famiglia</span>
-              <span className="text-blue-600 font-mono text-sm">{familyMembers} {familyMembers === 1 ? 'Persona' : 'Persone'}</span>
+              <span className="text-blue-600 font-mono text-sm whitespace-nowrap shrink-0">{familyMembers} {familyMembers === 1 ? 'Persona' : 'Persone'}</span>
             </div>
             <input
               type="range"
@@ -71,7 +71,7 @@ export default function WaterCalc() {
               value={familyMembers}
               onChange={(e) => setFamilyMembers(parseInt(e.target.value))}
             />
-            <div className="flex justify-between text-[9px] text-slate-500 font-mono tracking-wider">
+            <div className="flex justify-between gap-2 text-xs leading-tight text-slate-500 [&>span:nth-child(2)]:text-center [&>span:last-child]:text-right">
               <span>1 Persona</span>
               <span>4 Persone</span>
               <span>8 Persone</span>
@@ -80,9 +80,9 @@ export default function WaterCalc() {
 
           {/* Slider for crate cost */}
           <div className="space-y-2">
-            <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <div className="flex justify-between items-baseline gap-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
               <span>Costo medio cassa d'acqua (6 x 1.5L)</span>
-              <span className="text-blue-600 font-mono text-sm">{crateCost.toFixed(2)} €</span>
+              <span className="text-blue-600 font-mono text-sm whitespace-nowrap shrink-0">{crateCost.toFixed(2)} €</span>
             </div>
             <input
               type="range"
@@ -93,7 +93,7 @@ export default function WaterCalc() {
               value={crateCost}
               onChange={(e) => setCrateCost(parseFloat(e.target.value))}
             />
-            <div className="flex justify-between text-[9px] text-slate-500 font-mono tracking-wider">
+            <div className="flex justify-between gap-2 text-xs leading-tight text-slate-500 [&>span:nth-child(2)]:text-center [&>span:last-child]:text-right">
               <span>1.00 € (Economica)</span>
               <span>2.50 € (Media)</span>
               <span>5.00 € (Premium/Vetro)</span>
@@ -104,7 +104,7 @@ export default function WaterCalc() {
           <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-slate-200">
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-slate-900 block">Usi l'acqua minerale per cucinare?</span>
-              <span className="text-[11px] text-slate-500 block">Pasta, tè, caffè, brodi, lavaggio frutta.</span>
+              <span className="text-xs text-slate-500 block">Pasta, tè, caffè, brodi, lavaggio frutta.</span>
             </div>
             <button
               onClick={() => setCookWithBottled(!cookWithBottled)}
@@ -130,35 +130,35 @@ export default function WaterCalc() {
           <div className="relative z-10 space-y-6">
             {/* Money Saved Highlight */}
             <div className="text-center pb-5 border-b border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">
                 Risparmio Annuo Stimato
               </span>
               <span className="text-4xl md:text-5xl font-bold text-blue-600 font-mono">
                 ~ {results.moneySaved} €
               </span>
-              <span className="text-[11px] text-slate-500 block mt-1.5">
+              <span className="text-xs text-slate-500 block mt-1.5">
                 pari al costo di acquisto di ben <strong className="text-slate-900">{Math.round(results.moneySaved / (crateCost/6))}</strong> bottiglie.
               </span>
             </div>
 
             {/* Environmental stats rows */}
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="bg-white p-3 rounded-lg border border-slate-200">
-                <span className="text-xl md:text-2xl font-bold text-blue-600 block font-mono">{results.bottlesSaved}</span>
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider block mt-1">Bottiglie</span>
+              <div className="bg-white px-1.5 py-3 sm:p-3 rounded-lg border border-slate-200">
+                <span className="text-lg sm:text-xl md:text-2xl whitespace-nowrap font-bold text-blue-600 block font-mono">{results.bottlesSaved}</span>
+                <span className="text-xs text-slate-500 uppercase sm:tracking-wider block mt-1">Bottiglie</span>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-slate-200">
-                <span className="text-xl md:text-2xl font-bold text-emerald-600 block font-mono">{results.plasticKgSaved} kg</span>
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider block mt-1">Plastica</span>
+              <div className="bg-white px-1.5 py-3 sm:p-3 rounded-lg border border-slate-200">
+                <span className="text-lg sm:text-xl md:text-2xl whitespace-nowrap font-bold text-emerald-600 block font-mono">{results.plasticKgSaved} kg</span>
+                <span className="text-xs text-slate-500 uppercase sm:tracking-wider block mt-1">Plastica</span>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-slate-200">
-                <span className="text-xl md:text-2xl font-bold text-teal-600 block font-mono">{results.co2Saved} kg</span>
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider block mt-1">CO₂</span>
+              <div className="bg-white px-1.5 py-3 sm:p-3 rounded-lg border border-slate-200">
+                <span className="text-lg sm:text-xl md:text-2xl whitespace-nowrap font-bold text-teal-700 block font-mono">{results.co2Saved} kg</span>
+                <span className="text-xs text-slate-500 uppercase sm:tracking-wider block mt-1">CO₂</span>
               </div>
             </div>
 
             {/* Micro warning indicator */}
-            <div className="flex items-start gap-2 text-[11px] text-slate-600 bg-white/70 border border-slate-200 p-3 rounded-lg">
+            <div className="flex items-start gap-2 text-xs text-slate-600 bg-white/70 border border-slate-200 p-3 rounded-lg">
               <AlertCircle size={14} className="text-blue-600 shrink-0 mt-0.5" />
               <span>
                 Immagina la comodità e lo sforzo evitato: non dovrai trasportare{' '}

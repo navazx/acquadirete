@@ -65,7 +65,7 @@ export default function CookieConsent() {
       style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
     >
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-2.5 sm:gap-6">
-        <p className="text-[11px] sm:text-xs text-slate-600 leading-snug flex-1 text-center sm:text-left">
+        <p className="text-xs sm:text-xs text-slate-600 leading-snug flex-1 text-center sm:text-left">
           Usiamo cookie tecnici e, con il tuo consenso, cookie di marketing per misurare le nostre inserzioni.{' '}
           <Link href="/cookie-policy" title="Leggi la Cookie Policy" className="text-blue-600 font-semibold hover:underline">Cookie Policy</Link>
         </p>

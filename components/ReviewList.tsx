@@ -40,7 +40,7 @@ export default function ReviewList({ carousel = false }: Props) {
                 <Star key={i} size={18} className="fill-amber-400 text-amber-400" />
               ))}
             </div>
-            <p className="text-[10px] text-slate-500 font-bold font-mono uppercase tracking-widest">
+            <p className="text-xs text-slate-500 font-bold font-mono uppercase tracking-widest">
               Media recensioni Google
             </p>
           </div>
@@ -49,14 +49,14 @@ export default function ReviewList({ carousel = false }: Props) {
           <div className="text-center space-y-1.5 md:border-x md:border-slate-200 px-4">
             <span className="text-3xl font-black text-blue-600 block font-mono">{REVIEW_TOTAL}+</span>
             <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">Valutazioni Certificate</span>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+            <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
               Il 100% degli utenti tra Firenze, Prato e Pistoia ha votato Acquadirete con il massimo punteggio per serietà ed efficienza dei nostri depuratori d'acqua.
             </p>
           </div>
 
           {/* Call to action */}
           <div className="flex flex-col items-center md:items-end justify-center">
-            <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 bg-white px-3.5 py-1.5 rounded-md border border-slate-200 font-bold uppercase tracking-wider mb-4">
+            <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-white px-3.5 py-1.5 rounded-md border border-slate-200 font-bold uppercase tracking-wider mb-4">
               <ShieldCheck size={14} className="text-emerald-600" />
               <span>Verificate al 100%</span>
             </div>
@@ -89,7 +89,7 @@ export default function ReviewList({ carousel = false }: Props) {
       {/* Filter Tabs — nascosti per le recensioni Google (prive di categoria) */}
       {!REVIEWS_ARE_LIVE && (
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mr-2 flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-500 mr-2 flex items-center gap-1.5">
             <Filter size={13} /> FILTRA RECENSIONI:
           </span>
           {[
@@ -101,7 +101,7 @@ export default function ReviewList({ carousel = false }: Props) {
             <button
               key={filter.id}
               onClick={() => setSelectedFilter(filter.id as 'all' | 'domestico' | 'business' | 'assistenza')}
-              className={`px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${
                 selectedFilter === filter.id
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -137,13 +137,13 @@ export default function ReviewList({ carousel = false }: Props) {
                     <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <span className="text-[9px] bg-slate-50 text-slate-500 px-2.5 py-0.5 rounded-md border border-slate-200 font-mono font-bold uppercase tracking-wider">
+                <span className="text-xs bg-slate-50 text-slate-500 px-2.5 py-0.5 rounded-md border border-slate-200 font-mono font-bold uppercase tracking-wider">
                   Cliente Verificato
                 </span>
               </div>
 
               {/* Review Text */}
-              <p className="text-xs text-slate-600 leading-relaxed italic">
+              <p className="text-sm text-slate-600 leading-relaxed italic">
                 "{review.text}"
               </p>
             </div>
@@ -155,7 +155,7 @@ export default function ReviewList({ carousel = false }: Props) {
               </div>
               <div className="text-xs">
                 <p className="font-bold text-slate-900 leading-none">{review.author}</p>
-                <p className="text-slate-400 text-[9px] mt-1 uppercase tracking-wider font-semibold">
+                <p className="text-slate-500 text-xs mt-1 uppercase tracking-wider font-semibold">
                   {[review.role, review.location, review.date].filter(Boolean).join(' • ')}
                 </p>
               </div>

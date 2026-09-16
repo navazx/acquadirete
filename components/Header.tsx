@@ -112,7 +112,7 @@ export default function Header() {
                 <span className="text-xl font-bold tracking-tight leading-none">
                   <span className="text-[#2196e3]">Acqua</span><span className="text-[#16306e]">direte</span>
                 </span>
-                <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase leading-none mt-1">
+                <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase leading-none mt-1">
                   Firenze · Prato · Pistoia
                 </span>
               </div>
@@ -126,7 +126,7 @@ export default function Header() {
                   id={`nav-link-${item.id}`}
                   href={ROUTES[item.id]}
                   title={PAGE_BREADCRUMB[item.id]}
-                  className={`px-2 py-2 rounded-md text-[11px] font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  className={`px-1.5 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                     isActive(ROUTES[item.id])
                       ? 'text-blue-600 font-extrabold border-b-2 border-blue-600 rounded-none'
                       : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'
@@ -139,7 +139,7 @@ export default function Header() {
                 href="/blog"
                 id="nav-link-blog"
                 title="Blog: guide su depuratori e trattamento acqua"
-                className={`px-2 py-2 rounded-md text-[11px] font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                className={`px-1.5 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                   isBlogActive
                     ? 'text-blue-600 font-extrabold border-b-2 border-blue-600 rounded-none'
                     : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'
@@ -153,7 +153,7 @@ export default function Header() {
                   id={`nav-link-${item.id}`}
                   href={ROUTES[item.id]}
                   title={PAGE_BREADCRUMB[item.id]}
-                  className={`px-2 py-2 rounded-md text-[11px] font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  className={`px-1.5 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                     isActive(ROUTES[item.id])
                       ? 'text-blue-600 font-extrabold border-b-2 border-blue-600 rounded-none'
                       : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'
@@ -259,7 +259,7 @@ export default function Header() {
                   }}
                   className="w-full text-center bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold py-3 rounded-xl shadow-lg shadow-mint-500/25 cursor-pointer"
                 >
-                  Richiedi Informazioni
+                  Richiedi il sopralluogo gratuito
                 </button>
               </div>
             </div>

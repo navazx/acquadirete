@@ -75,7 +75,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       <PageBand className="space-y-10">
 
       {/* Custom Breadcrumb */}
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
         <Link href={ROUTES.home} title="Torna alla home" className="hover:text-blue-600 cursor-pointer">Home</Link>
         <ChevronRight size={10} className="text-slate-400" />
         <span className="text-blue-600">{PAGE_BREADCRUMB[serviceId]}</span>
@@ -84,7 +84,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       {/* Service Header Segment */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
         <div className="lg:col-span-7 space-y-5">
-          <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-500/20">
+          <span className="inline-block bg-blue-500/10 text-blue-600 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-500/20">
             Servizi Acquadirete · Firenze, Prato e Pistoia
           </span>
           <h1 className="text-3xl md:text-4xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight pt-1">
@@ -95,7 +95,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           </p>
           <div className="space-y-3">
             {serviceInfo.problem.map((para, idx) => (
-              <p key={idx} className="text-xs text-slate-500 leading-relaxed">
+              <p key={idx} className="text-sm text-slate-500 leading-relaxed">
                 {para}
               </p>
             ))}
@@ -125,7 +125,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
             <div className="bg-emerald-50 text-emerald-600 p-2 rounded-lg">
               <ShieldCheck size={20} />
             </div>
-            <div className="text-[10px]">
+            <div className="text-xs">
               <p className="font-bold text-slate-900 uppercase tracking-wider leading-none">Dal 2005 sul territorio</p>
               <p className="text-slate-500 mt-1 leading-tight">Centinaia di impianti tra Firenze, Prato e Pistoia.</p>
             </div>
@@ -144,7 +144,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">{serviceInfo.benefitsTitle}</h2>
           <div className="space-y-3 pt-1">
             {serviceInfo.benefits.map((benefit, idx) => (
-              <div key={idx} className="flex gap-2 text-xs text-slate-700 leading-relaxed font-semibold">
+              <div key={idx} className="flex gap-2 text-sm text-slate-700 leading-relaxed font-semibold">
                 <Check size={14} className="text-blue-600 shrink-0 mt-0.5" />
                 <span>{benefit}</span>
               </div>
@@ -153,7 +153,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           {serviceInfo.note && (
             <div className="mt-4 bg-white border border-slate-200 rounded-lg p-4">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-1.5">{serviceInfo.note.title}</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">{serviceInfo.note.body}</p>
+              <p className="text-sm text-slate-500 leading-relaxed">{serviceInfo.note.body}</p>
             </div>
           )}
         </div>
@@ -165,8 +165,8 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
             e sta a metà della colonna. */}
         <div className="relative flex flex-col justify-between md:self-center bg-blue-600 p-6 rounded-lg border border-blue-500 shadow-md">
           <div className="space-y-3">
-            <h3 className="font-bold text-white uppercase tracking-widest text-[11px]">Pronto per iniziare?</h3>
-            <p className="text-xs text-blue-50 leading-relaxed">
+            <h3 className="font-bold text-white uppercase tracking-widest text-xs">Pronto per iniziare?</h3>
+            <p className="text-sm text-blue-50 leading-relaxed">
               Niente telefonate insistenti, niente &laquo;depuratori gratis&raquo; che gratis non sono, niente contratti firmati in salotto. Il sopralluogo è gratuito: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose. Poi decidi tu, con calma: il preventivo vale 3 mesi.
             </p>
             <a
@@ -180,7 +180,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           </div>
           <button
             onClick={openModal}
-            className="mt-6 w-full bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold py-3 text-[10px] uppercase tracking-widest rounded-lg cursor-pointer"
+            className="mt-6 w-full bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold py-3 text-xs uppercase tracking-widest rounded-lg cursor-pointer"
           >
             {serviceInfo.ctaLabel}
           </button>
@@ -215,7 +215,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
                   <span className="text-blue-600 text-base">{activeServiceFaq === index ? '−' : '+'}</span>
                 </div>
                 {activeServiceFaq === index && (
-                  <p className="text-xs text-slate-500 leading-relaxed mt-3.5 pt-3.5 border-t border-slate-150 animate-in fade-in duration-200">
+                  <p className="text-sm text-slate-500 leading-relaxed mt-3.5 pt-3.5 border-t border-slate-150 animate-in fade-in duration-200">
                     {faq.a}
                   </p>
                 )}
@@ -227,13 +227,13 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
 
       {/* Servizi correlati: link interni contestuali */}
       <div className="max-w-3xl mx-auto w-full flex flex-wrap items-center gap-2.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Ti potrebbe interessare anche:</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Ti potrebbe interessare anche:</span>
         {RELATED_SERVICES[serviceId].map((relatedId) => (
           <Link
             key={relatedId}
             href={ROUTES[relatedId]}
             title={PAGE_BREADCRUMB[relatedId]}
-            className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
+            className="text-xs font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
           >
             {PAGE_BREADCRUMB[relatedId]}
           </Link>
@@ -243,7 +243,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       {/* Articoli del blog correlati */}
       {BLOG_LINKS[serviceId] && BLOG_LINKS[serviceId]!.length > 0 && (
         <div className="max-w-3xl mx-auto w-full flex flex-wrap items-center gap-2.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Approfondisci sul blog:</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Approfondisci sul blog:</span>
           {BLOG_LINKS[serviceId]!.map((slug) => {
             const post = BLOG_POSTS.find((p) => p.slug === slug);
             if (!post) return null;
@@ -252,7 +252,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
                 key={slug}
                 href={`/blog/${slug}`}
                 title={post.title}
-                className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
+                className="text-xs font-bold uppercase tracking-widest text-blue-600 hover:underline bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer"
               >
                 {post.title}
               </Link>
@@ -283,11 +283,11 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
       {/* Brief custom form at the bottom of the page */}
       <section className="bg-blue-50 text-slate-900 rounded-xl p-6 md:p-10 border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-7 space-y-6">
-          <span className="bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest block px-3 py-1.5 rounded-lg border border-blue-200 w-fit">
+          <span className="bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest block px-3 py-1.5 rounded-lg border border-blue-200 w-fit">
             Contatto Rapido
           </span>
           <h3 className="text-2xl md:text-3xl font-bold tracking-tight">Un'acqua pulita comincia da qui</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-sm text-slate-600 leading-relaxed">
             Siamo attivi in provincia di Firenze, Prato e Pistoia: Montespertoli, Empolese, Scandicci, Sesto Fiorentino, Bagno a Ripoli, Lastra a Signa e dintorni. Compila il modulo a fianco, veniamo da te a valutare la tua acqua.
           </p>
           <div className="space-y-2 text-xs font-semibold text-slate-700">

@@ -117,7 +117,7 @@ export default function HomeView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="space-y-3">
-              <span className="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-100">
+              <span className="inline-block bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-100">
                 Chi viene a casa tua
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -140,7 +140,7 @@ export default function HomeView() {
               onClick={openModal}
               className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-6 py-3.5 rounded-lg shadow-sm transition-colors cursor-pointer text-xs"
             >
-              Fissa il sopralluogo gratuito
+              Richiedi il sopralluogo gratuito
             </button>
           </div>
 
@@ -167,7 +167,7 @@ export default function HomeView() {
         <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(#0f6cbd_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
         <div className="max-w-4xl mx-auto space-y-10 relative z-10">
           <div className="text-center space-y-5">
-            <span className="inline-block bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-200">
+            <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-200">
               Perché Fidarsi di Noi
             </span>
             <h2 className="text-3xl md:text-3xl font-bold tracking-tight">
@@ -182,28 +182,28 @@ export default function HomeView() {
             <div className="bg-blue-600 p-6 rounded-lg border border-blue-500 space-y-2">
               <Award className="text-white mb-1" size={22} />
               <h3 className="text-base font-bold text-white">10 Anni di Garanzia</h3>
-              <p className="text-xs text-blue-50 leading-relaxed">
+              <p className="text-sm text-blue-50 leading-relaxed">
                 <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili). Se in questi dieci anni qualcosa non va, veniamo a sistemarlo noi: non ti giriamo a un numero verde.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ThumbsUp className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Consulenza Onesta</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed">
                 Niente agenti, niente canoni che non finiscono mai. Ti proponiamo solo quello che ti serve, con due prezzi scritti: quanto costa l&apos;impianto e quanto costa mantenerlo negli anni. Dopo aver provato l&apos;acqua a casa tua, non prima.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ShieldCheck className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Non resti mai senz'acqua</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed">
                 Se si guasta veniamo in pochi giorni, non in settimane. E se serve tempo per ripararlo ti lasciamo una macchina sostitutiva: non ti facciamo tornare alle bottiglie.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <MapPin className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Una persona, non un call center</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed">
                 Al <strong className="text-slate-900 font-semibold">{CONTACT.phoneDisplay}</strong> risponde Stefano, sempre lo stesso numero dal 2005. Centinaia di impianti tra Firenze, Prato e Pistoia e oltre 130 recensioni a 5 stelle su Google.
               </p>
             </div>
@@ -214,7 +214,7 @@ export default function HomeView() {
               onClick={openModal}
               className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
             >
-              Richiedi un Sopralluogo Gratuito
+              Richiedi il sopralluogo gratuito
             </button>
           </div>
         </div>
@@ -265,7 +265,7 @@ export default function HomeView() {
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
                 Depuratori con acqua refrigerata e gassata, anche per piccoli spazi
               </h2>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 leading-relaxed">
                 Scegli la categoria adatta alle tue necessità. Installiamo solo sistemi certificati di altissima qualità tecnologica progettati per durare a lungo.
               </p>
             </>
@@ -278,7 +278,7 @@ export default function HomeView() {
                 <Droplets size={22} />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Carboni Attivi</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 leading-relaxed">
                 Microfiltrazione che elimina cloro, odori e cattivi sapori mantenendo i minerali naturali dell'acqua. Semplice, senza scarto d'acqua.
               </p>
               <ul className="text-xs text-slate-600 font-medium space-y-1.5 pt-2">
@@ -289,7 +289,7 @@ export default function HomeView() {
             <Link
               href={ROUTES.carboni}
               title="Scopri i depuratori a carboni attivi"
-              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
             >
               <span>Scopri Dettagli</span>
               <ChevronRight size={12} />
@@ -303,7 +303,7 @@ export default function HomeView() {
                 <Sparkles size={22} />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Osmosi Inversa</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 leading-relaxed">
                 La tecnologia di purificazione molecolare definitiva. Regolazione del residuo fisso per avere un'acqua oligominerale ultra leggera.
               </p>
               <ul className="text-xs text-slate-600 font-medium space-y-1.5 pt-2">
@@ -314,7 +314,7 @@ export default function HomeView() {
             <Link
               href={ROUTES.osmosi}
               title="Scopri come funziona l'osmosi inversa"
-              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
             >
               <span>Osmosi Spiegata</span>
               <ChevronRight size={12} />
@@ -328,7 +328,7 @@ export default function HomeView() {
                 <Clock size={22} />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Uffici e Ristoranti</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 leading-relaxed">
                 Acqua microfiltrata, liscia o frizzante, dalla tua rete per uffici, bar e ristoranti. Stop a ordini, casse e vuoti da gestire.
               </p>
               <ul className="text-xs text-slate-600 font-medium space-y-1.5 pt-2">
@@ -339,7 +339,7 @@ export default function HomeView() {
             <Link
               href={ROUTES.business}
               title="Scopri le soluzioni per uffici e ristoranti"
-              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
             >
               <span>Soluzioni Business</span>
               <ChevronRight size={12} />
@@ -353,7 +353,7 @@ export default function HomeView() {
                 <ShieldCheck size={22} />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Assistenza &amp; Filtri</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 leading-relaxed">
                 Sostituzione filtri, sanificazione e riparazioni, anche per impianti di altre marche a Firenze, Prato e Pistoia.
               </p>
               <ul className="text-xs text-slate-600 font-medium space-y-1.5 pt-2">
@@ -364,7 +364,7 @@ export default function HomeView() {
             <Link
               href={ROUTES.assistenza}
               title="Scopri il servizio di assistenza e manutenzione"
-              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+              className="mt-6 w-full py-3 rounded-lg border border-slate-200 hover:border-blue-600 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
             >
               <span>Servizio Assistenza</span>
               <ChevronRight size={12} />
@@ -382,7 +382,7 @@ export default function HomeView() {
             onClick={openModal}
             className="bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold tracking-widest uppercase px-8 py-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer text-xs"
           >
-            Richiedi un Sopralluogo Gratuito
+            Richiedi il sopralluogo gratuito
           </button>
         </div>
       </section>
@@ -406,43 +406,13 @@ export default function HomeView() {
                 <span className="text-blue-600 text-base">{activeFaq === index ? '−' : '+'}</span>
               </div>
               {activeFaq === index && (
-                <p className="text-xs text-slate-500 leading-relaxed mt-3.5 pt-3.5 border-t border-slate-150 animate-in fade-in duration-200">
+                <p className="text-sm text-slate-500 leading-relaxed mt-3.5 pt-3.5 border-t border-slate-150 animate-in fade-in duration-200">
                   {faq.a}
                 </p>
               )}
             </div>
           ))}
         </div>
-      </section>
-
-      {/* Inline contact review hook page */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-50 rounded-xl p-8 border border-slate-200">
-        <div className="lg:col-span-8 space-y-4">
-          <h3 className="text-2xl font-bold text-slate-950">Vuoi leggere cosa dicono i nostri clienti?</h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Abbiamo installato i nostri impianti in centinaia di abitazioni, studi professionali e appartamenti nel centro storico e in periferia. Sfoglia tutte le recensioni certificate su Google Maps.
-          </p>
-          <div className="flex gap-2">
-            <Link
-              href={ROUTES.recensioni}
-              title="Leggi tutte le recensioni certificate"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest px-5 py-3 rounded-lg shadow-sm cursor-pointer inline-block"
-            >
-              Leggi Tutte le Recensioni
-            </Link>
-          </div>
-        </div>
-        <a
-          href={GOOGLE_PROFILE_URL}
-          target="_blank"
-          rel="noreferrer"
-          title="Leggi le recensioni su Google"
-          className="block lg:col-span-4 bg-white p-5 rounded-lg border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center cursor-pointer"
-        >
-          <div className="text-amber-500 text-xl font-bold mb-1">★★★★★</div>
-          <p className="text-xs text-slate-800 font-bold uppercase tracking-wider">130+ Recensioni Eccellenti</p>
-          <p className="text-xs text-slate-500 mt-1">Nessun punteggio inferiore a 5 stelle a testimonianza dell'amore per l'acqua pura e l'assistenza locale.</p>
-        </a>
       </section>
     </div>
   );

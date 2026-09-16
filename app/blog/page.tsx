@@ -18,7 +18,7 @@ export default function BlogIndexPage() {
     <div className="pb-12 md:pb-16 space-y-12">
       <PageBand>
       <div className="text-center max-w-3xl mx-auto space-y-5">
-        <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
+        <span className="inline-block bg-blue-500/10 text-blue-600 text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
           Guide Acquadirete
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -40,13 +40,13 @@ export default function BlogIndexPage() {
           >
             <div className="space-y-3">
               <h2 className="text-lg font-bold text-slate-900 leading-snug">{post.title}</h2>
-              <p className="text-xs text-slate-500 leading-relaxed">{post.excerpt}</p>
+              <p className="text-sm text-slate-500 leading-relaxed">{post.excerpt}</p>
             </div>
             <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
-              <span className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold">
+              <span className="flex items-center gap-1 text-xs text-slate-500 font-semibold">
                 <Clock size={12} /> {post.readingMinutes} min
               </span>
-              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-600">
+              <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-blue-600">
                 Leggi <ChevronRight size={12} />
               </span>
             </div>

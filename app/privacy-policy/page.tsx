@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
       <div className="mb-10">
-        <Link href="/" title="Torna alla home" className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:underline">
+        <Link href="/" title="Torna alla home" className="text-xs font-bold uppercase tracking-widest text-blue-600 hover:underline">
           ← Torna alla home
         </Link>
         <h1 className="mt-4 text-3xl font-bold text-slate-900 tracking-tight">Informativa sulla Privacy</h1>
@@ -141,7 +141,7 @@ export default function PrivacyPolicyPage() {
           <p>Il Titolare si riserva di modificare la presente informativa, dandone evidenza su questa pagina. Si invita a consultarla periodicamente.</p>
         </section>
 
-        <p className="text-xs text-slate-400 pt-4 border-t border-slate-200">
+        <p className="text-xs text-slate-500 pt-4 border-t border-slate-200">
           Ultimo aggiornamento: 18 giugno 2026
         </p>
       </div>

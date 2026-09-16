@@ -20,7 +20,7 @@ export default function ContattiPage() {
     <div id="contatti-view" className="pb-12 md:pb-16 space-y-12">
       <PageBand>
       <div className="text-center max-w-3xl mx-auto space-y-5">
-        <span className="inline-block bg-blue-500/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
+        <span className="inline-block bg-blue-500/10 text-blue-600 text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg border border-blue-500/20">
           Provincia di Firenze, Prato e Pistoia
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -36,17 +36,17 @@ export default function ContattiPage() {
         {/* Contact details */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm space-y-6">
-            <h2 className="font-bold text-slate-950 uppercase tracking-widest text-[11px] pb-2 border-b border-slate-100">Recapiti Ufficiali</h2>
+            <h2 className="font-bold text-slate-950 uppercase tracking-widest text-xs pb-2 border-b border-slate-100">Recapiti Ufficiali</h2>
 
-            <div className="space-y-4 text-xs">
+            <div className="space-y-4 text-sm">
               <div className="flex items-start gap-3">
                 <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shrink-0 mt-0.5">
                   <MapPin size={16} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Indirizzo Sede</h3>
+                  <h3 className="font-bold text-slate-900 uppercase tracking-wide text-xs">Indirizzo Sede</h3>
                   <p className="text-slate-500 mt-1">{CONTACT.addressLine}, {CONTACT.addressCity}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Riceviamo su appuntamento.</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Riceviamo su appuntamento.</p>
                 </div>
               </div>
 
@@ -55,9 +55,9 @@ export default function ContattiPage() {
                   <Phone size={16} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Telefono e Assistenza</h3>
+                  <h3 className="font-bold text-slate-900 uppercase tracking-wide text-xs">Telefono e Assistenza</h3>
                   <a href={telHref()} title="Chiamaci al telefono" className="text-blue-600 font-bold block mt-1 hover:underline">{CONTACT.phoneDisplay}</a>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Disponibile anche su WhatsApp: {CONTACT.whatsappDisplay}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Disponibile anche su WhatsApp: {CONTACT.whatsappDisplay}</p>
                 </div>
               </div>
 
@@ -66,7 +66,7 @@ export default function ContattiPage() {
                   <Clock size={16} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Orari</h3>
+                  <h3 className="font-bold text-slate-900 uppercase tracking-wide text-xs">Orari</h3>
                   {CONTACT.hours.map((h, i) => (
                     <p key={i} className="text-slate-500 mt-1">{h}</p>
                   ))}
@@ -78,7 +78,7 @@ export default function ContattiPage() {
             <div className="bg-emerald-50/55 border border-emerald-200 rounded-lg p-4 flex items-center justify-between">
               <div className="space-y-1">
                 <h3 className="font-bold text-emerald-900 text-xs uppercase tracking-wider">Preferisci WhatsApp?</h3>
-                <p className="text-[11px] text-emerald-600 leading-tight">Scrivici su WhatsApp: ti rispondiamo subito.</p>
+                <p className="text-sm text-emerald-700 leading-tight">Scrivici su WhatsApp: ti rispondiamo subito.</p>
               </div>
               <a
                 href={whatsappHref('Buongiorno Acquadirete, desidero informazioni.')}
@@ -93,7 +93,7 @@ export default function ContattiPage() {
 
             {/* Social links */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Seguici sui social</h3>
+              <h3 className="font-bold text-slate-900 uppercase tracking-wide text-xs">Seguici sui social</h3>
               <div className="flex items-center gap-2.5">
                 <a
                   href={SOCIAL.instagram}

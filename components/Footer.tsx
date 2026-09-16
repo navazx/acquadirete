@@ -151,7 +151,7 @@ export default function Footer() {
               onClick={openModal}
               className="text-slate-900 bg-mint-400 hover:bg-mint-500 px-4 py-2 border border-mint-500 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-md inline-flex items-center gap-1.5"
             >
-              Richiedi Informazioni
+              Richiedi il sopralluogo gratuito
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-left md:text-left space-y-1">
             <p>&copy; {currentYear} {CONTACT.companyName}. Tutti i diritti riservati.</p>
-            <p className="text-[10px]">P.IVA {CONTACT.vat} — {CONTACT.addressLine}, {CONTACT.addressCity}.</p>
+            <p className="text-xs">P.IVA {CONTACT.vat} — {CONTACT.addressLine}, {CONTACT.addressCity}.</p>
           </div>
           <div className="flex gap-4 font-semibold text-slate-600">
             <Link href="/privacy-policy" title="Leggi la Privacy Policy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
