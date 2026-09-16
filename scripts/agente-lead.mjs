@@ -7,7 +7,8 @@
 //  in un'ora chiude molto piu' di uno richiamato dopo tre giorni.
 //
 //  Cosa segnala:
-//    ogni giorno   - "Da richiamare" da piu' di 24 ore
+//    ogni giorno   - tutti i "Da richiamare": prima i nuovi (meno di 24 ore),
+//                    poi quelli in ritardo
 //    il lunedi'    - "Preventivo inviato" fermo da oltre 7 giorni
 //                  - "Contattato" fermo da oltre 21 giorni, mai deciso
 //                  - lead diventati "Cliente" senza riga in Clienti-Impianti
@@ -39,6 +40,14 @@ const GIORNI_CONTATTATO = 21;
 const chiaveNome = (n) =>
   String(n).toLowerCase().replace(/[^a-zà-ÿ\s]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
+/** "oggi alle 07:10" / "ieri alle 18:42": per i lead arrivati da meno di un giorno. */
+function arrivato(d) {
+  const ora = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const oggi = new Date();
+  const stessoGiorno = d.toDateString() === oggi.toDateString();
+  return `arrivato ${stessoGiorno ? 'oggi' : 'ieri'} alle ${ora}`;
+}
+
 const riga = (l, quanto) => `• ${l.nome} — ${l.contatto || 'nessun contatto'} (${quanto}, ${l.provenienza || 'origine ignota'})`;
 
 /**
@@ -55,16 +64,31 @@ export async function componiAvvisoLead({ settimanale = false } = {}) {
 
   const blocchi = [];
 
-  // --- urgente: chi ha alzato la mano e non e' stato richiamato -------------
-  const daRichiamare = lead
-    .filter((l) => l.stato === 'Da richiamare' && l.data && oreDa(l.data) >= ORE_RICHIAMO)
-    .sort((a, b) => a.data - b.data);
+  // --- chi ha alzato la mano e non e' stato richiamato -----------------------
+  // Tutti, anche gli arrivati da poche ore: il messaggio del mattino Matteo lo
+  // usa come lista delle chiamate. Fino al 16 set 2026 i lead con meno di 24 ore
+  // restavano fuori (avevano gia' avuto l'avviso istantaneo), e dalla lista
+  // mancavano proprio i contatti piu' freschi.
+  const tutti = lead.filter((l) => l.stato === 'Da richiamare');
+  const nuovi = tutti
+    .filter((l) => l.data && oreDa(l.data) < ORE_RICHIAMO)
+    .sort((a, b) => b.data - a.data);
+  const inRitardo = tutti
+    .filter((l) => !l.data || oreDa(l.data) >= ORE_RICHIAMO)
+    .sort((a, b) => (a.data || 0) - (b.data || 0));
+  const daRichiamare = [...nuovi, ...inRitardo];
 
-  if (daRichiamare.length) {
+  if (nuovi.length) {
     blocchi.push(
-      `DA RICHIAMARE (${daRichiamare.length})\n` +
-        daRichiamare
+      `DA RICHIAMARE, NUOVI (${nuovi.length})\n` + nuovi.map((l) => riga(l, arrivato(l.data))).join('\n'),
+    );
+  }
+  if (inRitardo.length) {
+    blocchi.push(
+      `DA RICHIAMARE, IN RITARDO (${inRitardo.length})\n` +
+        inRitardo
           .map((l) => {
+            if (!l.data) return riga(l, 'data mancante sul foglio');
             const g = giorniDa(l.data);
             return riga(l, g >= 1 ? `${g} ${g === 1 ? 'giorno' : 'giorni'} fa` : `${oreDa(l.data)} ore fa`);
           })
