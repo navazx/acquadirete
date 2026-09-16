@@ -93,10 +93,12 @@ export default function Header() {
       <nav className="bg-white border-b border-slate-150">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 h-20">
-            {/* Logo area */}
+            {/* Logo area. Sui telefoni stretti (360px e meno) il logo si rimpicciolisce:
+                a misura piena spingeva i tre tasti fuori dallo schermo e la pagina
+                scorreva di lato. */}
             <Link
               href={ROUTES.home}
-              className="flex items-center gap-2.5 cursor-pointer shrink-0"
+              className="flex items-center gap-2 sm:gap-2.5 cursor-pointer shrink-0"
               id="header-logo"
               title="Acquadirete — torna alla home"
             >
@@ -106,13 +108,13 @@ export default function Header() {
                 alt="Acquadirete — depuratori acqua a Firenze, Prato e Pistoia"
                 width={500}
                 height={319}
-                className="h-10 w-auto object-contain shrink-0"
+                className="h-7 min-[360px]:h-8 sm:h-10 w-auto object-contain shrink-0"
               />
               <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight leading-none">
+                <span className="text-base min-[360px]:text-lg sm:text-xl font-bold tracking-tight leading-none">
                   <span className="text-[#2196e3]">Acqua</span><span className="text-[#16306e]">direte</span>
                 </span>
-                <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase leading-none mt-1">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 tracking-wide sm:tracking-widest uppercase leading-none mt-1 max-[359px]:hidden">
                   Firenze · Prato · Pistoia
                 </span>
               </div>
@@ -176,7 +178,7 @@ export default function Header() {
             </div>
 
             {/* Mobile Menu Icon Toggle */}
-            <div className="flex xl:hidden items-center gap-2 ml-auto">
+            <div className="flex xl:hidden items-center gap-1.5 sm:gap-2 ml-auto">
               {/* Stessi colori del tasto telefono qui accanto: i due sono una coppia. */}
               <a
                 href={whatsappHref('Buongiorno Acquadirete, vorrei informazioni sui depuratori acqua.')}

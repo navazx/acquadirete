@@ -162,7 +162,7 @@ export default function WaterCalc() {
               <AlertCircle size={14} className="text-blue-600 shrink-0 mt-0.5" />
               <span>
                 Immagina la comodità e lo sforzo evitato: non dovrai trasportare{' '}
-                <strong className="text-slate-900">{Math.round((results.bottlesSaved * 1.5))} kg</strong> d'acqua ogni anno per le scale di casa tua a Firenze!
+                <strong className="text-slate-900">{Math.round((results.bottlesSaved * 1.5))} kg</strong> d'acqua ogni anno per le scale di casa tua!
               </span>
             </div>
           </div>

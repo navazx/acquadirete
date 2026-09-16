@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Rete di sicurezza: se un elemento esce anche di pochi pixel dallo schermo
+   (è successo con il logo nella barra da telefono), la pagina non deve
+   scorrere di lato. "clip" e non "hidden": hidden rompe l'header sticky. */
+html,
+body {
+  overflow-x: clip;
+}
+
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
