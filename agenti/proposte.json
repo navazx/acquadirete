@@ -29,5 +29,14 @@
     "sha": "6f9af44fdfcf815e8c2f195b41d0434cfbfb2dfe",
     "url": null,
     "decisa": "2026-09-12T16:24:04.391Z"
+  },
+  {
+    "ramo": "proposta/articolo-domande-prima-contratto-depuratore",
+    "tipo": "ARTICOLO",
+    "titolo": "Recensioni: controllo giornaliero [skip netlify]",
+    "creata": "2026-09-18T17:21:29.525Z",
+    "stato": "in attesa",
+    "sha": "d1542bcbd6d349f67d692457d377147e2289fe52",
+    "url": null
   }
 ]
