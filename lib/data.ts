@@ -30,7 +30,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Presenti su Prato e provincia dal 2005 — un punto di riferimento locale, non un numero verde.',
       'Centinaia di impianti installati tra Firenze, Prato e Pistoia.',
       'Assistenza rapida, in pochi giorni.',
-      'Macchina sostitutiva in caso di guasto: la tua famiglia o la tua attività non resta mai senz\'acqua.',
+      'Se la riparazione richiede tempo, ti lasciamo una macchina sostitutiva: niente ritorno alle bottiglie.',
       'Oltre 130 recensioni a 5 stelle su Google.'
     ],
     faqs: [
@@ -69,7 +69,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Presenti su Pistoia e provincia dal 2005 — un punto di riferimento locale, non un numero verde.',
       'Centinaia di impianti installati tra Firenze, Prato e Pistoia.',
       'Assistenza rapida, in pochi giorni.',
-      'Macchina sostitutiva in caso di guasto: la tua famiglia o la tua attività non resta mai senz\'acqua.',
+      'Se la riparazione richiede tempo, ti lasciamo una macchina sostitutiva: niente ritorno alle bottiglie.',
       'Oltre 130 recensioni a 5 stelle su Google.'
     ],
     faqs: [
@@ -108,7 +108,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Dal 2005 sul territorio — una persona che risponde e che conosci, non un call center.',
       'Centinaia di impianti installati a Firenze e provincia.',
       'Acqua leggera e sicura, con il contenuto di minerali regolato in base alle tue esigenze.',
-      'Macchina sostitutiva in caso di guasto: non resti mai senz\'acqua.',
+      'Se la riparazione richiede tempo, ti lasciamo una macchina sostitutiva: niente ritorno alle bottiglie.',
       'Oltre 130 recensioni a 5 stelle su Google da clienti veri.'
     ],
     faqs: [
@@ -280,7 +280,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     benefitsTitle: 'Perché affidarsi a noi',
     benefits: [
       'Dal 2005 sul territorio, con centinaia di impianti tra Firenze, Prato e Pistoia.',
-      'Assistenza rapida e macchina sostitutiva in caso di guasto: il tuo servizio non si ferma mai.',
+      'Assistenza rapida e, se la riparazione richiede tempo, una macchina sostitutiva.',
       'Manutenzione gestita da noi: ti avvisiamo noi quando intervenire.',
       'Fornitore serio e tracciabile, non un venditore porta a porta: preventivo chiaro e fattura.',
       'Oltre 130 recensioni a 5 stelle su Google.'
@@ -290,7 +290,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       heading: 'Erogatori d\'acqua per attività a Firenze, Prato e Pistoia',
       body: [
         'Forniamo erogatori e depuratori d\'acqua a uffici, studi professionali, bar, ristoranti e hotel di Firenze, Prato e Pistoia. Acqua microfiltrata liscia o frizzante collegata alla rete, da servire al personale, ai clienti o al tavolo, senza più boccioni e casse da gestire.',
-        'Assistenza rapida, manutenzione programmata e macchina sostitutiva in caso di guasto fanno sì che il tuo servizio non si fermi mai. Siamo un fornitore serio e tracciabile del territorio fin dal 2005.'
+        'Assistenza rapida, manutenzione programmata e macchina sostitutiva quando serve: così i giorni di fermo sono il meno possibile. Siamo un fornitore serio e tracciabile del territorio fin dal 2005.'
       ]
     }
   },

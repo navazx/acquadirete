@@ -195,7 +195,7 @@ export default function HomeView() {
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ShieldCheck className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-slate-900">Non resti mai senz'acqua</h3>
+              <h3 className="text-base font-bold text-slate-900">Guasti? Ci pensiamo noi</h3>
               <p className="text-sm text-slate-600 leading-relaxed">
                 Se si guasta veniamo in pochi giorni, non in settimane. E se serve tempo per ripararlo ti lasciamo una macchina sostitutiva: non ti facciamo tornare alle bottiglie.
               </p>
