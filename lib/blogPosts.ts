@@ -895,7 +895,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Chi viene a casa quando si rompe',
         paragraphs: [
           'Un depuratore prima o poi ha bisogno di un intervento. Chiedi chi verrà: un tecnico della ditta o una ditta esterna a cui viene girata la chiamata? Da dove parte, e in quanti giorni arriva di solito?',
-          'Chiedi anche a chi telefoni quando c\'è un problema: a una persona che conosce il tuo impianto o a un numero verde dove ogni volta rispiega tutto da capo. E cosa succede nei giorni in cui l\'impianto è fermo. Noi, per esempio, in caso di guasto lasciamo una macchina sostitutiva, così la famiglia non resta senz\'acqua. Non tutti lo fanno, ed è una domanda che vale la pena fare.',
+          'Chiedi anche a chi telefoni quando c\'è un problema: a una persona che conosce il tuo impianto o a un numero verde dove ogni volta rispiega tutto da capo. E cosa succede nei giorni in cui l\'impianto è fermo. Noi, per esempio, quando la riparazione richiede tempo e serve, lasciamo una macchina sostitutiva. Non tutti lo fanno, ed è una domanda che vale la pena fare.',
         ],
       },
       {
@@ -915,7 +915,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Anche il nostro preventivo, con le stesse domande',
         paragraphs: [
-          'Ci fa piacere essere il secondo preventivo. Lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e a tutte le domande di questa pagina rispondiamo per iscritto, sul preventivo.',
+          'Ci fa piacere essere il secondo preventivo. Lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e a queste domande rispondiamo volentieri, prima che tu decida. Le voci principali le trovi scritte sul preventivo.',
           'Il sopralluogo è gratuito: passiamo a dare un\'occhiata alla tua acqua e al tuo lavello, e ti lasciamo un preventivo da mettere nella seconda colonna. Poi decidi tu, con calma.',
         ],
       },

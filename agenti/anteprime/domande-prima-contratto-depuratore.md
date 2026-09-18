@@ -29,7 +29,7 @@ Poi una domanda che quasi nessuno fa: la manutenzione è obbligatoria con quella
 
 Un depuratore prima o poi ha bisogno di un intervento. Chiedi chi verrà: un tecnico della ditta o una ditta esterna a cui viene girata la chiamata? Da dove parte, e in quanti giorni arriva di solito?
 
-Chiedi anche a chi telefoni quando c'è un problema: a una persona che conosce il tuo impianto o a un numero verde dove ogni volta rispiega tutto da capo. E cosa succede nei giorni in cui l'impianto è fermo. Noi, per esempio, in caso di guasto lasciamo una macchina sostitutiva, così la famiglia non resta senz'acqua. Non tutti lo fanno, ed è una domanda che vale la pena fare.
+Chiedi anche a chi telefoni quando c'è un problema: a una persona che conosce il tuo impianto o a un numero verde dove ogni volta rispiega tutto da capo. E cosa succede nei giorni in cui l'impianto è fermo. Noi, per esempio, quando la riparazione richiede tempo e serve, lasciamo una macchina sostitutiva. Non tutti lo fanno, ed è una domanda che vale la pena fare.
 
 ## Chi lo installa, e cosa guarda prima
 
@@ -45,7 +45,7 @@ Poi porta tutti e due allo stesso numero di anni e somma. Spesso il preventivo p
 
 ## Anche il nostro preventivo, con le stesse domande
 
-Ci fa piacere essere il secondo preventivo. Lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e a tutte le domande di questa pagina rispondiamo per iscritto, sul preventivo.
+Ci fa piacere essere il secondo preventivo. Lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e a queste domande rispondiamo volentieri, prima che tu decida. Le voci principali le trovi scritte sul preventivo.
 
 Il sopralluogo è gratuito: passiamo a dare un'occhiata alla tua acqua e al tuo lavello, e ti lasciamo un preventivo da mettere nella seconda colonna. Poi decidi tu, con calma.
 
@@ -68,7 +68,7 @@ Il costo totale per tutta la durata del contratto, cosa comprende la manutenzion
 - Pagine servizio suggerite: Depuratore acqua Firenze, Assistenza, Osmosi inversa.
 - Articoli vecchi che ora puntano a questo: "Depuratore gratis: come funzionano i contratti" e "L'installatore è sparito: cosa fare" (in quest'ultimo prende il posto del link ad "Acqua frizzante per bar e ristoranti", che lì c'entrava poco).
 
-## Da verificare con te
+## Corretto dopo la tua risposta (18 set)
 
-- "A tutte le domande di questa pagina rispondiamo per iscritto, sul preventivo": è vero per i preventivi che fate? Se no, lo tolgo.
-- "In caso di guasto lasciamo una macchina sostitutiva": è sulla pagina di Prato, confermi che vale sempre?
+- Preventivo scritto, "più o meno": ora dice che alle domande rispondiamo volentieri e che le voci principali sono scritte sul preventivo.
+- Macchina sostitutiva, "solo se necessario": ora dice che la lasciamo quando la riparazione richiede tempo e serve.
