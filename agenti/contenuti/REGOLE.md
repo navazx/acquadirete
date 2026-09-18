@@ -105,6 +105,11 @@ conto, "te lo diciamo col sopralluogo gratuito". Nessuna cifra.
   gratis". Senza allarmismi: sapore, sedimenti, non pericolo. Consiglio gratuito da
   dare: far scorrere l'acqua dopo lunghe soste.
 - Il sopralluogo è gratuito.
+- **Macchina sostitutiva: solo se necessario** (Matteo, 18 set 2026). Mai "in caso di
+  guasto" detto come se valesse sempre, mai "non resti mai senz'acqua": si scrive
+  "quando la riparazione richiede tempo e serve".
+- **Preventivo scritto: "più o meno"**. Non promettere che ogni risposta è messa per
+  iscritto: "le voci principali le trovi scritte sul preventivo".
 
 ## Come si scrive nel codice
 
