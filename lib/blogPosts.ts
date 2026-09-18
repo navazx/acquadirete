@@ -94,7 +94,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-22',
     readingMinutes: 5,
     relatedServices: ['depuratore', 'assistenza'],
-    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'installatore-depuratore-scomparso-cosa-fare'],
+    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'installatore-depuratore-scomparso-cosa-fare', 'domande-prima-contratto-depuratore'],
     sections: [
       {
         paragraphs: [
@@ -218,7 +218,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-24',
     readingMinutes: 5,
     relatedServices: ['assistenza', 'depuratore'],
-    relatedPosts: ['depuratore-acqua-gratis-contratti', 'acqua-frizzante-bar-ristoranti'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'domande-prima-contratto-depuratore'],
     sections: [
       {
         paragraphs: [
@@ -855,6 +855,83 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Cosa è incluso di solito nella manutenzione?',
         a: 'Cambio filtri, sostituzione della bombola di CO₂ per la frizzante e controllo generale della macchina. Chiedi sempre se è tutto compreso nel contratto o se qualche voce si paga a parte.',
+      },
+    ],
+  },
+  {
+    slug: 'domande-prima-contratto-depuratore',
+    title: 'Prima di firmare per un depuratore: le domande da fare e come confrontare due preventivi',
+    metaTitle: 'Contratto Depuratore: Cosa Chiedere Prima di Firmare',
+    metaDescription:
+      'Stai per firmare per un depuratore? Le domande da fare su costo totale, manutenzione e assistenza, e come mettere due preventivi uno accanto all\'altro.',
+    excerpt:
+      'Grande marchio, venditore passato a casa o ditta della zona: prima di firmare per un depuratore ci sono alcune domande da fare. E un modo semplice per confrontare due preventivi.',
+    publishedAt: '2026-09-18',
+    readingMinutes: 4,
+    relatedServices: ['depuratore', 'assistenza', 'osmosi'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore'],
+    sections: [
+      {
+        paragraphs: [
+          'Hai in mano un preventivo per un depuratore, magari da un grande marchio o da un venditore che è passato a casa, e stai pensando di firmare. È il momento giusto per fare domande: dopo la firma le risposte contano molto meno.',
+          'Qui trovi le domande che faremmo noi al tuo posto, divise per argomento, e un modo semplice per mettere due preventivi uno accanto all\'altro. Valgono per chiunque, anche per il nostro preventivo.',
+        ],
+      },
+      {
+        heading: 'Quanto pago in tutto, non al mese',
+        paragraphs: [
+          'La prima domanda è la più semplice e la più evitata: quanto spendo in tutto, dall\'installazione alla fine del contratto? Una cifra al giorno o al mese sembra sempre piccola. Quello che conta è il totale, moltiplicato per tutti gli anni che il contratto ti impegna.',
+          'Nel totale devono esserci l\'impianto, l\'installazione, la manutenzione di ogni anno, i filtri e, se prendi l\'acqua frizzante, le bombole. E alla fine del contratto l\'impianto è tuo, va restituito o si continua a pagare? Chiedi che tutto questo sia scritto sul preventivo, non solo detto a voce.',
+        ],
+      },
+      {
+        heading: 'Cosa c\'è dentro la manutenzione, e cosa no',
+        paragraphs: [
+          'La manutenzione è la voce che fa più differenza negli anni, ed è anche quella spiegata peggio. Chiedi ogni quanto si cambiano i filtri, se il cambio è compreso o si paga a parte, se c\'è anche la sanificazione, e se l\'uscita del tecnico ha un costo suo.',
+          'Poi una domanda che quasi nessuno fa: la manutenzione è obbligatoria con quella ditta, o posso scegliere? E il prezzo può cambiare durante il contratto? Se la risposta è "obbligatoria, e il prezzo lo decidiamo noi", ti stai impegnando per anni su una cifra che non conosci.',
+        ],
+      },
+      {
+        heading: 'Chi viene a casa quando si rompe',
+        paragraphs: [
+          'Un depuratore prima o poi ha bisogno di un intervento. Chiedi chi verrà: un tecnico della ditta o una ditta esterna a cui viene girata la chiamata? Da dove parte, e in quanti giorni arriva di solito?',
+          'Chiedi anche a chi telefoni quando c\'è un problema: a una persona che conosce il tuo impianto o a un numero verde dove ogni volta rispiega tutto da capo. E cosa succede nei giorni in cui l\'impianto è fermo. Noi, per esempio, in caso di guasto lasciamo una macchina sostitutiva, così la famiglia non resta senz\'acqua. Non tutti lo fanno, ed è una domanda che vale la pena fare.',
+        ],
+      },
+      {
+        heading: 'Chi lo installa, e cosa guarda prima',
+        paragraphs: [
+          'Alcune offerte ti mandano l\'impianto in una scatola, con i tubi e le istruzioni per montarlo da solo. Se non è quello che vuoi, chiedi se l\'installazione la fa un tecnico ed è compresa nel prezzo.',
+          'Chiedi anche se serve un foro nuovo nel piano della cucina. Spesso non serve: con un miscelatore a più vie si sostituisce il rubinetto che hai già, usando lo stesso foro, e in cucina resta un rubinetto solo. Infine, un buon segnale: chi ti propone un impianto dovrebbe prima guardare la tua acqua, al tuo rubinetto. Se ti offre la stessa macchina che offre a tutti senza averla vista, chiedi perché proprio quella.',
+        ],
+      },
+      {
+        heading: 'Come mettere due preventivi uno accanto all\'altro',
+        paragraphs: [
+          'Due preventivi si confrontano solo se dicono le stesse cose. Prendi un foglio e fai due colonne. In ogni colonna scrivi le stesse voci: prezzo dell\'impianto, installazione, manutenzione all\'anno, filtri, durata del contratto, penali se vuoi uscire prima, di chi è l\'impianto alla fine, chi interviene in caso di guasto.',
+          'Poi porta tutti e due allo stesso numero di anni e somma. Spesso il preventivo più basso al mese non è il più basso alla fine. Se in una colonna resta una casella vuota, quella è la domanda da fare prima di firmare, per iscritto.',
+        ],
+      },
+      {
+        heading: 'Anche il nostro preventivo, con le stesse domande',
+        paragraphs: [
+          'Ci fa piacere essere il secondo preventivo. Lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e a tutte le domande di questa pagina rispondiamo per iscritto, sul preventivo.',
+          'Il sopralluogo è gratuito: passiamo a dare un\'occhiata alla tua acqua e al tuo lavello, e ti lasciamo un preventivo da mettere nella seconda colonna. Poi decidi tu, con calma.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Conviene davvero chiedere più di un preventivo?',
+        a: 'Sì. Un depuratore ti accompagna per anni, e le differenze vere stanno nella manutenzione e nell\'assistenza, non nel prezzo del primo giorno. Due preventivi con le stesse voci ti fanno vedere subito dove sono.',
+      },
+      {
+        q: 'Il venditore dice che l\'offerta vale solo oggi. Cosa faccio?',
+        a: 'Prendi tempo. Un\'offerta seria resta valida anche qualche giorno, il tempo di leggerla e confrontarla. Se hai già firmato a casa, leggi il nostro articolo sui contratti per il depuratore "gratis": spiega cosa puoi fare.',
+      },
+      {
+        q: 'Cosa devo farmi scrivere sul preventivo?',
+        a: 'Il costo totale per tutta la durata del contratto, cosa comprende la manutenzione e quanto costa ogni anno, la durata e le penali per uscire prima, di chi è l\'impianto alla fine e chi interviene in caso di guasto.',
       },
     ],
   },

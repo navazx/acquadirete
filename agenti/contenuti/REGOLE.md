@@ -60,7 +60,6 @@ _nessuna per ora_
 
 ## Coda
 
-- `domande-prima-contratto-depuratore` — le domande da fare prima di firmare un contratto per il depuratore
 - `quanto-si-risparmia-senza-bottiglie` — quanto si risparmia davvero smettendo di comprare bottiglie
 
 Attenzione: sono tutti temi di costi e risparmi, cioè quelli più a rischio di numeri
