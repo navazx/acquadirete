@@ -91,6 +91,7 @@ export default function Footer() {
               { href: ROUTES.frizzante, label: 'Acqua Frizzante e Refrigerata' },
               { href: ROUTES.business, label: 'Depuratori Uffici e Ristoranti' },
               { href: ROUTES.assistenza, label: 'Manutenzione e Assistenza' },
+              { href: ROUTES.prezzi, label: 'Prezzi' },
             ].map((item) => (
               <li key={item.href}>
                 <Link
