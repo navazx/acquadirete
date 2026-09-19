@@ -7,37 +7,42 @@ import { OG_DEFAULTS } from '../../lib/siteConfig';
 export const metadata: Metadata = {
   title: 'Prezzi Depuratori Acqua: da 400 € Installato | Acquadirete',
   description:
-    'Quanto costa un depuratore con Acquadirete: impianti installati da 400 € a 4.000 €, manutenzione da 60 €. E il confronto su 5 anni con noleggio e "gratis".',
+    'Quanto costa un depuratore con Acquadirete: impianti installati da 400 € a 4.000 €, manutenzione da 60 €. E un esempio su 10 anni contro un contratto «gratis».',
   alternates: { canonical: '/prezzi-depuratori' },
   openGraph: { ...OG_DEFAULTS, url: '/prezzi-depuratori' },
 };
 
-// Cifre date da Stefano il 19 set 2026. Le colonne noleggio e "gratis" usano
-// prezzi pubblici di concorrenti a Firenze (settembre 2026), senza nominarli.
+// Esempio scelto da Matteo il 19 set 2026: osmosi base da 1.500 € con
+// manutenzione da 70 € l'anno, contro un contratto "gratis" di 10 anni.
+// Colonna "gratis": cifre di Stefano (250-300 € l'anno di manutenzione, circa
+// 60 € di "smaltimento" a intervento), confermate da casi pubblici: lettera
+// ADUC (abbonamento decennale 2.200 € + 48-60 € a intervento per "smaltimento
+// filtri"), guide di settore che citano 300-400 € l'anno per 10-12 anni.
 const CONFRONTO = [
   {
-    voce: 'Spesa iniziale',
-    acquisto: 'Da 400 € a 4.000 €, installazione compresa. Anche a rate a tasso zero',
-    noleggio: 'Spesso nessuna',
-    gratis: 'Nessuna',
+    voce: 'Il primo giorno',
+    acquisto: '1.500 €, installazione compresa. Anche a rate a tasso zero',
+    gratis: '0 € per l’impianto, ma firmi 10 anni di manutenzione, spesso con un finanziamento',
   },
   {
-    voce: 'Negli anni',
-    acquisto: 'Manutenzione da 60 €',
-    noleggio: 'Canone da circa 25 € al mese (acqua naturale) o 39 € (frizzante)',
-    gratis: 'Canone "da 1 € al giorno", cioè circa 30 € al mese',
+    voce: 'Ogni anno',
+    acquisto: 'Manutenzione: 70 €',
+    gratis: 'Manutenzione: 250-300 €',
   },
   {
-    voce: 'In 5 anni, circa',
-    acquisto: 'Da 700 € (impianto base più 5 manutenzioni)',
-    noleggio: 'Da 1.500 € (naturale) a oltre 2.300 € (frizzante)',
-    gratis: 'Circa 1.800 € e oltre',
+    voce: 'Ogni volta che viene il tecnico',
+    acquisto: 'Niente in più: è dentro la manutenzione',
+    gratis: 'Circa 60 € in più, spesso chiamati «smaltimento filtri»',
+  },
+  {
+    voce: 'In 10 anni',
+    acquisto: '2.200 € in tutto',
+    gratis: 'Da 3.100 a 3.600 € circa',
   },
   {
     voce: 'Alla fine',
     acquisto: "L'impianto è tuo e scegli tu chi fa la manutenzione",
-    noleggio: "L'impianto resta loro: o rinnovi, o lo restituisci",
-    gratis: 'Dipende dal contratto: leggi durata e penali prima di firmare',
+    gratis: 'Hai speso da 900 a 1.400 € in più. E se era in comodato, l’impianto non è nemmeno tuo',
   },
 ];
 
@@ -47,8 +52,8 @@ const FAQ = [
     a: "Perché dentro ci sono impianti molto diversi: un filtro a carboni attivi sotto il lavello non è un'osmosi inversa con acqua fredda e frizzante e un rubinetto a 5 vie. Col sopralluogo gratuito guardiamo la tua acqua e ti diciamo quale ti serve davvero, anche quando basta il più semplice.",
   },
   {
-    q: 'Il noleggio non conviene mai?',
-    a: "Per qualcuno può avere senso non spendere tutto subito. Ma quasi sempre, somma dopo somma, costa di più di un acquisto, e alla fine l'impianto non è tuo. Noi vendiamo e, se preferisci, rateizziamo a tasso zero: paghi a rate, e a fine pagamento l'impianto è tuo.",
+    q: 'Il contratto «gratis» non conviene mai?',
+    a: "Non spendere nulla all'inizio è comodo, ma quasi sempre, somma dopo somma, costa di più di un acquisto, ti lega per anni e alla fine l'impianto spesso non è tuo. Se non vuoi pagare tutto subito, noi rateizziamo a tasso zero: paghi a rate, e a fine pagamento l'impianto è tuo.",
   },
   {
     q: 'Il preventivo è vincolante?',
@@ -92,34 +97,35 @@ export default function PrezziPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Su 5 anni: acquisto, noleggio e &laquo;gratis&raquo; a confronto</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Un esempio su 10 anni: acquisto o contratto &laquo;gratis&raquo;</h2>
           <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">
-            Le colonne del noleggio e del &laquo;gratis&raquo; usano prezzi che altre aziende pubblicano a Firenze. Sono indicativi, ma il punto si vede lo stesso: una cifra al mese sembra piccola, sommata per anni no.
+            Prendiamo un&apos;osmosi inversa base da 1.500 € con la manutenzione a 70 € l&apos;anno, e mettiamola accanto a un contratto &laquo;gratis&raquo; come quelli che vediamo in giro: l&apos;impianto non si paga, ma firmi dieci anni di manutenzione a un prezzo alto, e a ogni visita del tecnico c&apos;è una voce in più.
           </p>
           <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm">
-            <table className="w-full min-w-[640px] text-sm text-left">
+            <table className="w-full min-w-[520px] text-sm text-left">
               <thead className="bg-blue-50 text-slate-900">
                 <tr>
-                  <th scope="col" className="p-4 font-bold w-1/5"></th>
-                  <th scope="col" className="p-4 font-bold">Acquisto da noi</th>
-                  <th scope="col" className="p-4 font-bold">Noleggio tutto incluso</th>
-                  <th scope="col" className="p-4 font-bold">Depuratore &laquo;gratis&raquo;</th>
+                  <th scope="col" className="p-4 font-bold w-1/4"></th>
+                  <th scope="col" className="p-4 font-bold">Osmosi base comprata da noi</th>
+                  <th scope="col" className="p-4 font-bold">Contratto &laquo;gratis&raquo; di 10 anni</th>
                 </tr>
               </thead>
               <tbody>
                 {CONFRONTO.map((r) => (
-                  <tr key={r.voce} className="border-t border-slate-200 align-top">
+                  <tr key={r.voce} className={`border-t border-slate-200 align-top ${r.voce === 'In 10 anni' ? 'bg-slate-50 font-semibold text-slate-900' : ''}`}>
                     <th scope="row" className="p-4 font-semibold text-slate-900">{r.voce}</th>
-                    <td className="p-4 text-slate-700">{r.acquisto}</td>
-                    <td className="p-4 text-slate-700">{r.noleggio}</td>
-                    <td className="p-4 text-slate-700">{r.gratis}</td>
+                    <td className="p-4 text-slate-700 tabular-nums">{r.acquisto}</td>
+                    <td className="p-4 text-slate-700 tabular-nums">{r.gratis}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">
-            Un&apos;avvertenza onesta: confronta sempre la stessa cosa. Un nostro impianto con acqua fredda e frizzante non si mette accanto a un noleggio di sola acqua naturale. Per confrontare due preventivi voce per voce trovi una guida qui:{' '}
+            <strong className="text-slate-900">E le offerte &laquo;da 1 € al giorno&raquo;?</strong> Fai il conto: sono 365 € l&apos;anno. Chiedi per quanti anni si paga, cosa è compreso (manutenzione, filtri, uscite del tecnico) e di chi è l&apos;impianto alla fine. Su 10 anni fanno 3.650 €.
+          </p>
+          <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">
+            È un esempio: con acqua fredda e frizzante il prezzo dell&apos;impianto sale, ma il conto si fa allo stesso modo. Per confrontare due preventivi voce per voce trovi una guida qui:{' '}
             <Link href="/blog/domande-prima-contratto-depuratore/" className="text-blue-600 font-semibold hover:underline">
               le domande da fare prima di firmare
             </Link>
