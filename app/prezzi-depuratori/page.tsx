@@ -70,10 +70,10 @@ export default function PrezziPage() {
             Prezzi chiari
           </span>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight text-balance">
-            Quanto costa un depuratore, detto prima
+            Quanto costa un depuratore? Te lo diciamo subito
           </h1>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Quasi nessuno scrive i prezzi, e molti li nascondono dietro un &laquo;da 1 € al giorno&raquo;. Noi ti diciamo subito le cifre vere, e poi il prezzo esatto per casa tua col sopralluogo gratuito.
+            Quasi nessuno scrive i prezzi, e molti li nascondono dietro un &laquo;da 1 € al giorno&raquo;. Noi le cifre vere le scriviamo qui, e il prezzo esatto per casa tua te lo diamo col sopralluogo gratuito.
           </p>
         </div>
       </PageBand>
