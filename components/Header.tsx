@@ -28,12 +28,14 @@ export default function Header() {
   }, [isMenuOpen]);
 
   const mainNavItems: { id: PageId; label: string }[] = [
-    { id: 'home', label: 'Home' },
+    // Niente voce "Home": ci porta già il logo. Il posto è andato a "Prezzi"
+    // (19 set 2026), che dalla home altrimenti non si trovava.
     { id: 'osmosi', label: 'Osmosi' },
     { id: 'carboni', label: 'Carboni' },
     { id: 'frizzante', label: 'Frizzante' },
     { id: 'business', label: 'Uffici e Ristoranti' },
     { id: 'assistenza', label: 'Assistenza' },
+    { id: 'prezzi', label: 'Prezzi' },
   ];
   const trailingNavItems: { id: PageId; label: string }[] = [
     { id: 'recensioni', label: 'Recensioni' },
