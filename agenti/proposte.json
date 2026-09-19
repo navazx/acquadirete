@@ -49,5 +49,14 @@
     "sha": "a8170dc59fcce1a7d6ebbf1e5f2d8098b5ef3434",
     "url": null,
     "decisa": "2026-09-18T17:44:15.643Z"
+  },
+  {
+    "ramo": "proposta/seo-2026-09-19-prezzi",
+    "tipo": "SEO",
+    "titolo": "pagina Prezzi nuova",
+    "creata": "2026-09-19T15:33:45.035Z",
+    "stato": "in attesa",
+    "sha": "0ef3ff44c1110edba59115045c6f0390fc234986",
+    "url": null
   }
 ]
