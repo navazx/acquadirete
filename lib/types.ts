@@ -13,7 +13,7 @@ export interface Review {
   source?: 'google' | 'manual';
 }
 
-export type PageId = 'home' | 'prato' | 'pistoia' | 'depuratore' | 'osmosi' | 'carboni' | 'frizzante' | 'business' | 'assistenza' | 'recensioni' | 'contatti';
+export type PageId = 'home' | 'prato' | 'pistoia' | 'depuratore' | 'osmosi' | 'carboni' | 'frizzante' | 'business' | 'assistenza' | 'recensioni' | 'contatti' | 'prezzi';
 
 export type ServicePageId = 'prato' | 'pistoia' | 'depuratore' | 'osmosi' | 'carboni' | 'frizzante' | 'business' | 'assistenza';
 

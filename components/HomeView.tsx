@@ -174,7 +174,7 @@ export default function HomeView() {
               Comprare un depuratore oggi è un campo minato.
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              Telefonate insistenti, &laquo;depuratori gratis&raquo; che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi siamo in due, <strong className="text-slate-900 font-semibold">Stefano e Matteo</strong>, e lavoriamo all&apos;opposto: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Poi ti lasciamo il tempo di pensare: il preventivo vale 3 mesi.
+              Telefonate insistenti, &laquo;depuratori gratis&raquo; che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi siamo in due, <strong className="text-slate-900 font-semibold">Stefano e Matteo</strong>, e lavoriamo all&apos;opposto: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Poi ti lasciamo il tempo di pensare: il preventivo vale 3 mesi. E i <Link href={ROUTES.prezzi} className="text-blue-600 font-semibold hover:underline">prezzi</Link> li scriviamo in chiaro: impianti installati da 400 €.
             </p>
           </div>
 

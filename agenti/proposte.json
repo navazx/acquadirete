@@ -55,8 +55,10 @@
     "tipo": "SEO",
     "titolo": "pagina Prezzi nuova",
     "creata": "2026-09-19T15:33:45.035Z",
-    "stato": "in attesa",
+    "stato": "approvata",
     "sha": "0ef3ff44c1110edba59115045c6f0390fc234986",
-    "url": null
+    "url": null,
+    "decisa": "2026-09-19",
+    "note": "approvata da Matteo in chat, al PC"
   }
 ]

@@ -14,6 +14,7 @@ export const ROUTES: Record<PageId, string> = {
   frizzante: '/acqua-frizzante-firenze',
   recensioni: '/recensioni',
   contatti: '/contatti',
+  prezzi: '/prezzi-depuratori',
 };
 
 // Etichetta breve usata nel breadcrumb delle pagine servizio.
@@ -29,4 +30,5 @@ export const PAGE_BREADCRUMB: Record<PageId, string> = {
   frizzante: 'Acqua Frizzante',
   recensioni: 'Recensioni',
   contatti: 'Contatti',
+  prezzi: 'Prezzi',
 };
