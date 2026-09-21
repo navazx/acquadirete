@@ -52,6 +52,10 @@ const FAQ = [
     a: "Perché dentro ci sono impianti molto diversi: un filtro a carboni attivi sotto il lavello non è un'osmosi inversa con acqua fredda e frizzante e un rubinetto a 5 vie. Col sopralluogo gratuito guardiamo la tua acqua e ti diciamo quale ti serve davvero, anche quando basta il più semplice.",
   },
   {
+    q: 'Perché costa più di quelli che vedo nei negozi o online?',
+    a: "Perché nella scatola c'è solo l'impianto. Da noi c'è anche chi viene prima a guardare la tua acqua e ti dice cosa ti serve davvero; chi lo installa, collega lo scarico e lo tara, e se serve fora il piano della cucina con gli attrezzi giusti; chi ti avvisa quando vanno cambiati i filtri. E se si rompe, abbiamo i ricambi e sappiamo aggiustarlo: non devi rispedire niente a nessuno. In più, 10 anni di garanzia. Il fai da te all'inizio costa meno, ma non basta saper fare un po' di idraulica: ogni macchina è diversa, e quando c'è un problema bisogna capire qual è, che pezzo serve e come cambiarlo.",
+  },
+  {
     q: 'Il contratto «gratis» non conviene mai?',
     a: "Non spendere nulla all'inizio è comodo, ma quasi sempre, somma dopo somma, costa di più di un acquisto, ti lega per anni e alla fine l'impianto spesso non è tuo. Se non vuoi pagare tutto subito, noi rateizziamo a tasso zero: paghi a rate, e a fine pagamento l'impianto è tuo.",
   },
