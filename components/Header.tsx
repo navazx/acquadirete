@@ -104,12 +104,16 @@ export default function Header() {
               id="header-logo"
               title="Acquadirete — torna alla home"
             >
+              {/* logo-header.png (188x120, 7 KB) e non logo.png (500x319, 25 KB):
+                  la goccia si vede a 32-40px, e Next mette questa immagine in
+                  preload ad alta priorita, quindi pesava sull'LCP mobile.
+                  logo.png resta per i dati strutturati in app/layout.tsx. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/logo.png"
+                src="/logo-header.png"
                 alt="Acquadirete — depuratori acqua a Firenze, Prato e Pistoia"
-                width={500}
-                height={319}
+                width={188}
+                height={120}
                 className="h-7 min-[360px]:h-8 sm:h-10 w-auto object-contain shrink-0"
               />
               <div className="flex flex-col">

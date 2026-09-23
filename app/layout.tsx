@@ -12,18 +12,21 @@ import { CONTACT, SITE_URL, OG_DEFAULTS } from '../lib/siteConfig';
 import { REVIEW_RATING, REVIEW_TOTAL } from '../lib/reviews';
 
 // Font self-hosted da Next (next/font): nessuna richiesta bloccante verso
-// Google Fonts, niente @import in CSS. Pesi identici a quelli usati prima.
+// Google Fonts, niente @import in CSS.
+// Senza l'elenco dei pesi Next scarica la versione VARIABILE del font: un solo
+// file copre tutti i pesi da 100 a 900, invece di un file separato per peso.
+// Con i pesi elencati un articolo del blog scaricava 128 KB di font (3 file da
+// 30-50 KB) e questo pesava sull'LCP mobile. Nessun peso viene perso.
+// Niente 'italic': serve in un punto solo (citazioni delle recensioni) e il
+// browser lo sintetizza, invece di scaricare un secondo set completo.
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  style: ['normal', 'italic'],
   variable: '--font-inter',
   display: 'swap',
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
 });

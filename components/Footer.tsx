@@ -24,10 +24,10 @@ export default function Footer() {
           <Link href={ROUTES.home} className="flex items-center gap-2.5 cursor-pointer" title="Acquadirete — torna alla home">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo.png"
+              src="/logo-header.png"
               alt="Acquadirete — depuratori acqua a Firenze, Prato e Pistoia"
-              width={500}
-              height={319}
+              width={188}
+              height={120}
               className="h-10 w-auto object-contain shrink-0"
             />
             <span className="text-xl font-bold text-slate-900 tracking-tight leading-none">
