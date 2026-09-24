@@ -7,6 +7,9 @@ name: Agente SEO tecnico
 # niente, tace. Lo stato resta in agenti/seo/controllo.json, da cui l'agente
 # delle correzioni sa cosa sistemare.
 #
+# Finito il controllo, nello stesso workflow parte l'agente delle correzioni
+# (job "correzioni" in fondo): prepara la proposta sui dati appena scritti.
+#
 # Nello stesso messaggio, le posizioni su Google lette da Search Console
 # (stato in agenti/seo/posizioni.json). Hanno preso il posto dell'"Alert
 # keyword" (keyword-alert.yml), tolto il 14 set 2026: mandava un elenco ogni
@@ -61,3 +64,48 @@ jobs:
           git commit -m "SEO: controllo del sito [skip netlify]"
           git pull --rebase origin main
           git push origin HEAD:main
+
+  # L'agente delle correzioni gira QUI, in coda al controllo, e non piu' a un orario
+  # suo. Prima era una routine cloud alle 09:00 del lunedi', ma il cron di GitHub
+  # arriva con ore di ritardo (il 14 e il 21 settembre 2026 il controllo e' partito
+  # alle 13:54 e alle 13:56, cioe' quasi sette ore dopo le 07:05): l'agente girava
+  # alle 09:00 e leggeva i dati della settimana prima. Agganciato con "needs" il
+  # ritardo non conta piu', perche' parte quando il controllo ha finito, qualunque
+  # ora sia.
+  correzioni:
+    needs: seo
+    runs-on: ubuntu-latest
+    # Il job prima ha appena spinto i file su main: il checkout qui sotto li prende.
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      # Serve all'azione per autenticarsi come app GitHub di Claude.
+      id-token: write
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      # Le istruzioni dell'agente stanno in .claude/skills/correzioni-seo/SKILL.md,
+      # nel repo: si leggono e si correggono come qualsiasi altro file, invece di
+      # stare nascoste nel prompt di una routine.
+      #
+      # NON passare github_token: ${{ secrets.GITHUB_TOKEN }}. Un push fatto con quel
+      # token non fa partire altri workflow, e qui serve il contrario: il push del
+      # ramo proposta/seo-* deve svegliare "Proposta - presentala a Matteo", che e'
+      # quello che manda l'anteprima su Telegram. Senza token l'azione si autentica
+      # come app GitHub di Claude e il push fa partire il workflow.
+      - name: Prepara le correzioni come proposta
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/correzioni-seo'
+          claude_args: |
+            --model claude-opus-5
+            --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
