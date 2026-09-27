@@ -37,6 +37,7 @@ const PROPOSTE = 'agenti/proposte.json';
 const LEZIONI = 'agenti/contenuti/lezioni.md';
 const SITO = 'https://www.acquadirete.it';
 const CARTELLA_FOTO = 'public/assets/social';
+const NOTE_FOTO = 'agenti/social-foto-note.json';
 
 const AIUTO =
   'Non ho capito, e non ho fatto niente.\n' +
@@ -219,25 +220,56 @@ async function eseguiProposta(o, aperte) {
 //  Foto per i post
 // ---------------------------------------------------------------------------
 
-/** Nome del file: data e numero del messaggio, cosi' due foto non si pestano. */
-export function nomeFoto(f, percorsoTelegram, giorno = oggi().slice(0, 10)) {
+const TENTATIVO = /^\s*(pubblica|scarta|rimanda|salta|approva|rifiuta)/i;
+
+/**
+ * Nome della foto senza estensione: data e numero del messaggio, cosi' due foto
+ * non si pestano. E' anche la chiave delle note, perche' un HEIC diventa .jpg.
+ */
+export const chiaveFoto = (f, giorno = oggi().slice(0, 10)) => `tg-${giorno}-${f.messaggio}`;
+
+export function nomeFoto(f, percorsoTelegram, giorno) {
   const da = f.nome || percorsoTelegram || '';
   const est = (da.match(/\.([a-z0-9]{2,5})$/i)?.[1] || 'jpg').toLowerCase();
-  return `tg-${giorno}-${f.messaggio}.${est}`;
+  return `${chiaveFoto(f, giorno)}.${est}`;
+}
+
+/**
+ * Un messaggio di testo che non e' un ordine, mandato entro due minuti da una
+ * foto senza didascalia, e' la sua descrizione: capita spesso di mandare prima
+ * la foto e poi scrivere. Con piu' foto di fila (un album) vale per tutte.
+ * Toglie da `testi` quelli usati, cosi' non vengono letti anche come ordini.
+ */
+export function attaccaNote(foto, messaggi, eOrdine = ordine) {
+  const usati = new Set();
+  for (const m of messaggi) {
+    if (eOrdine(m.testo) || TENTATIVO.test(m.testo)) continue;
+    const vicine = foto.filter((f) => !f.nota && m.data >= f.data && m.data - f.data <= 120);
+    if (!vicine.length) continue;
+    for (const f of vicine) f.nota = m.testo;
+    usati.add(m);
+  }
+  return messaggi.filter((m) => !usati.has(m)).map((m) => m.testo);
 }
 
 async function salvaFoto(elenco) {
+  // Le note stanno qui e non accanto alla foto: la cartella delle foto va online
+  // col sito, e in una nota puo' esserci il nome del cliente o la via.
+  // La chiave e' il nome senza estensione, perche' un HEIC diventa .jpg.
+  const note = leggiJson(NOTE_FOTO, {});
   let salvate = 0;
   const errori = [];
   for (const f of elenco) {
     try {
       const { dati, percorso } = await scaricaFile(f.fileId);
       writeFileSync(`${CARTELLA_FOTO}/${nomeFoto(f, percorso)}`, dati);
+      if (f.nota) note[f.chiave] = { nota: f.nota, arrivata: oggi() };
       salvate += 1;
     } catch (e) {
       errori.push(e.message);
     }
   }
+  if (Object.keys(note).length) salva(NOTE_FOTO, note);
   const inCartella = readdirSync(CARTELLA_FOTO).filter((n) => !n.startsWith('.')).length;
   const righe = [];
   if (salvate) {
@@ -245,6 +277,13 @@ async function salvaFoto(elenco) {
     righe.push(
       `${salvate === 1 ? 'Foto ricevuta' : `${salvate} foto ricevute`}: ${la} metto fra quelle per i post (ora sono ${inCartella}).`,
       `L'agente social ${la} guarda da sé quando prepara la bozza del sabato.`,
+    );
+    const scritte = [...new Set(elenco.map((f) => f.nota).filter(Boolean))];
+    righe.push(
+      '',
+      scritte.length
+        ? `Userà anche quello che hai scritto:\n${scritte.map((n) => `• «${n}»`).join('\n')}`
+        : 'Se vuoi dirgli che impianto è o dove, scrivilo insieme alla foto (o subito dopo).',
     );
   }
   if (errori.length) righe.push('', `Non sono riuscito a salvarne ${errori.length}:`, ...errori.map((e) => `• ${e}`));
@@ -256,17 +295,33 @@ async function salvaFoto(elenco) {
 async function main() {
   const aperte = leggiJson(PROPOSTE, []).filter((p) => p.stato === 'in attesa');
 
-  const { ultimoUpdate = 0 } = leggiJson(STATO, {});
-  const { testi, foto, ultimo } = await risposte(ultimoUpdate);
+  const { ultimoUpdate = 0, ultimaFoto } = leggiJson(STATO, {});
+  const { messaggi, foto, ultimo } = await risposte(ultimoUpdate);
   if (ultimo === ultimoUpdate) return;
+  for (const f of foto) f.chiave = chiaveFoto(f);
+
+  // La foto puo' essere gia' stata salvata al giro prima, e la descrizione
+  // arrivare adesso: il lettore gira ogni quarto d'ora, non aspetta.
+  const precedente = ultimaFoto && !ultimaFoto.nota ? [{ ...ultimaFoto }] : [];
+  const testi = attaccaNote([...precedente, ...foto], messaggi);
+  const ultimaOra = foto.length ? foto[foto.length - 1] : precedente[0] || ultimaFoto;
 
   // Si consuma SEMPRE quello che si e' letto, e PRIMA di agire: se qualcosa si
   // rompe a meta', l'ordine e' comunque sparito dalla coda di Telegram. Meglio un
   // ordine perso che un post doppio.
   await conferma(ultimo);
-  salva(STATO, { ultimoUpdate: ultimo });
+  salva(STATO, {
+    ultimoUpdate: ultimo,
+    ...(ultimaOra && { ultimaFoto: { chiave: ultimaOra.chiave, data: ultimaOra.data, nota: ultimaOra.nota } }),
+  });
 
   if (foto.length) await salvaFoto(foto);
+  if (precedente[0]?.nota) {
+    const note = leggiJson(NOTE_FOTO, {});
+    note[precedente[0].chiave] = { nota: precedente[0].nota, arrivata: oggi() };
+    salva(NOTE_FOTO, note);
+    await messaggio(`Ho attaccato la descrizione alla foto di prima: «${precedente[0].nota}»`);
+  }
 
   // Vale l'ultimo ordine per ciascun argomento: un PUBBLICA dopo un RIMANDA vince.
   const ordini = new Map();
@@ -274,7 +329,7 @@ async function main() {
   for (const testo of testi) {
     const o = ordine(testo);
     if (!o) {
-      if (/^\s*(pubblica|scarta|rimanda|salta|approva|rifiuta)/i.test(testo)) tentativiAVuoto = true;
+      if (TENTATIVO.test(testo)) tentativiAVuoto = true;
       continue;
     }
     // Un APPROVA senza tipo, con una sola proposta aperta, e' per quella.

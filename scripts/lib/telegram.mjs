@@ -56,15 +56,21 @@ export async function risposte(offset = 0) {
   // Le foto arrivano in due modi: come foto (Telegram le comprime, e di ogni foto
   // manda piu' misure: l'ultima e' la piu' grande) o come file, che resta intero
   // e puo' essere anche un HEIC dell'iPhone.
+  // Il testo scritto insieme alla foto (la didascalia) viaggia con lei.
   const foto = [];
   for (const { message: m } of miei) {
-    if (m.photo?.length) foto.push({ fileId: m.photo[m.photo.length - 1].file_id, messaggio: m.message_id });
+    const base = { messaggio: m.message_id, data: m.date, nota: m.caption?.trim() || undefined };
+    if (m.photo?.length) foto.push({ ...base, fileId: m.photo[m.photo.length - 1].file_id });
     else if (/^image\//.test(m.document?.mime_type || '')) {
-      foto.push({ fileId: m.document.file_id, messaggio: m.message_id, nome: m.document.file_name });
+      foto.push({ ...base, fileId: m.document.file_id, nome: m.document.file_name });
     }
   }
+  const conTesto = miei.filter((u) => u.message.text);
   return {
-    testi: miei.filter((u) => u.message.text).map((u) => u.message.text.trim()),
+    testi: conTesto.map((u) => u.message.text.trim()),
+    // Gli stessi testi con l'ora d'arrivo: servono per attaccare a una foto il
+    // messaggio mandato subito dopo, invece che come didascalia.
+    messaggi: conTesto.map((u) => ({ testo: u.message.text.trim(), data: u.message.date })),
     foto,
     ultimo: upd.length ? Math.max(...upd.map((u) => u.update_id)) : offset,
   };

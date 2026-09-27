@@ -130,6 +130,13 @@ file resta a piena qualità, anche HEIC). Il lettore delle risposte le salva in
 `public/assets/social/` con un nome tipo `tg-2026-09-27-812.jpg`, le mette in riga
 e le manda online col sito, e risponde "Foto ricevuta". Niente PC.
 
+**Si può dire all'agente cosa c'è nella foto**: che impianto è, in che zona, per
+chi. Basta scriverlo come didascalia della foto, oppure in un messaggio mandato
+entro due minuti. Finisce in `agenti/social-foto-note.json` (e non accanto alla
+foto, perché quella cartella va online col sito), e chi compone la bozza lo usa
+come fatto vero. Anche lì valgono le regole di privacy: se la nota nomina il
+cliente o la via, nel post non ci va.
+
 Dal PC vanno in `sito/public/assets/social/`, **così come escono dal telefono**. Non
 serve ritagliarle, convertirle o rinominarle: al primo push ci pensa il workflow
 *Social - metti in riga le foto* (`scripts/normalizza-foto.mjs`), che
