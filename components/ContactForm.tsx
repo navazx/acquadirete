@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Mail, Phone, User, MapPin, Clock, Sparkles, CheckCircle2, Send, MessageSquare, ChevronDown } from 'lucide-react';
 import { CONTACT } from '../lib/siteConfig';
 import { setGoogleAdsUserData, trackGoogleAdsConversion } from '../lib/googleAds';
+import { vieneDaAnnuncioGoogle } from '../lib/provenienza';
 
 const SERVICE_LABELS: Record<string, string> = {
   depuratore: 'Depuratore per la casa',
@@ -86,6 +87,9 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           servizio: servizioLabel,
           messaggio: formData.messaggio,
           pagina: window.location.pathname,
+          // Finisce nelle note del Gestionale: così si vede quanti contatti
+          // porta davvero la pubblicità, anche da chi ha rifiutato i cookie.
+          daAnnuncioGoogle: vieneDaAnnuncioGoogle(),
           website,
         }),
       });

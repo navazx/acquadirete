@@ -81,7 +81,10 @@ export default async (req) => {
     return Response.json({ ok: false, error: 'JSON non valido' }, { status: 400 });
   }
 
-  const { nome, telefono, email, zona, servizio, messaggio, pagina, website } = body ?? {};
+  const { nome, telefono, email, zona, servizio, messaggio, pagina, daAnnuncioGoogle, website } = body ?? {};
+  // Confronto stretto con true: qualunque altra cosa (stringhe comprese) vale
+  // "non da annuncio". Lo decide lib/provenienza.ts dal gclid nell'indirizzo.
+  const daAnnuncio = daAnnuncioGoogle === true;
 
   // Campo trappola: nel form è nascosto e nessuna persona lo vede, quindi se
   // arriva pieno è un bot che compila tutto quello che trova. Rispondiamo
@@ -96,10 +99,14 @@ export default async (req) => {
   }
 
   const contatto = [clip(telefono, 50), clip(email, 200)].filter(Boolean).join(' · ');
+  const origine = [
+    pagina ? `dalla pagina ${clip(pagina, 200)}` : '',
+    daAnnuncio ? 'arrivato da un annuncio Google' : '',
+  ].filter(Boolean).join(', ');
   const note = [
     zona ? `Zona: ${clip(zona, 100)}` : '',
     clip(messaggio, 1000),
-    pagina ? `(dalla pagina ${clip(pagina, 200)})` : '',
+    origine ? `(${origine})` : '',
   ].filter(Boolean).join(' — ');
 
   try {
@@ -126,6 +133,7 @@ export default async (req) => {
       zona ? `📍 ${clip(zona, 100)}` : '',
       servizio ? `🚰 ${clip(servizio, 100)}` : '',
       messaggio ? `📝 ${clip(messaggio, 500)}` : '',
+      daAnnuncio ? '📣 Arrivato da un annuncio Google' : '',
     ].filter(Boolean);
     const chiusura = esito.doppione
       ? `Aggiornata la sua riga sul foglio (riga ${esito.riga}), niente doppioni ✅`
