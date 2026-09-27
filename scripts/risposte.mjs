@@ -9,6 +9,9 @@
 //  Ordini riconosciuti:
 //    post social   PUBBLICA [1|2|3] · RIMANDA (o SALTA) · SCARTA
 //    proposte      APPROVA [ARTICOLO|SEO] · RIFIUTA [ARTICOLO|SEO] [motivo]
+//    foto          una foto (o un'immagine mandata come file) finisce fra quelle
+//                  per i post, in public/assets/social/. Il workflow poi la mette
+//                  in riga per Instagram e la manda online col sito.
 //
 //  Una proposta e' un ramo proposta/... preparato da un agente: un articolo, delle
 //  correzioni SEO. APPROVA lo unisce a main e Netlify lo mette online. RIFIUTA
@@ -16,13 +19,16 @@
 //  contenuti rilegge prima del prossimo articolo.
 //
 //  Qualsiasi altra cosa non fa nulla: nel dubbio si sta fermi.
-//  Se non c'e' niente in sospeso non legge nemmeno Telegram.
+//  Legge sempre, anche senza niente in sospeso: una foto puo' arrivare quando
+//  vuole. Un ordine arrivato quando non c'e' niente da decidere riceve risposta
+//  ("non c'e' nessun post in attesa") invece di restare in coda e scattare
+//  settimane dopo su una bozza che Matteo non ha mai visto.
 // ============================================================================
 
-import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, appendFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { messaggio, risposte, conferma } from './lib/telegram.mjs';
+import { messaggio, risposte, conferma, scaricaFile } from './lib/telegram.mjs';
 import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
@@ -30,12 +36,14 @@ const STATO = 'agenti/telegram-stato.json';
 const PROPOSTE = 'agenti/proposte.json';
 const LEZIONI = 'agenti/contenuti/lezioni.md';
 const SITO = 'https://www.acquadirete.it';
+const CARTELLA_FOTO = 'public/assets/social';
 
 const AIUTO =
   'Non ho capito, e non ho fatto niente.\n' +
   'Gli ordini che riconosco sono questi:\n\n' +
   'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · RIMANDA · SCARTA\n' +
-  'Per le proposte: APPROVA ARTICOLO · RIFIUTA ARTICOLO e il motivo';
+  'Per le proposte: APPROVA ARTICOLO · RIFIUTA ARTICOLO e il motivo\n' +
+  'Per i post: mandami una foto e la metto fra quelle da usare';
 
 const leggiJson = (f, vuoto) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : vuoto);
 const salva = (f, o) => writeFileSync(f, `${JSON.stringify(o, null, 2)}\n`);
@@ -208,22 +216,57 @@ async function eseguiProposta(o, aperte) {
 }
 
 // ---------------------------------------------------------------------------
+//  Foto per i post
+// ---------------------------------------------------------------------------
+
+/** Nome del file: data e numero del messaggio, cosi' due foto non si pestano. */
+export function nomeFoto(f, percorsoTelegram, giorno = oggi().slice(0, 10)) {
+  const da = f.nome || percorsoTelegram || '';
+  const est = (da.match(/\.([a-z0-9]{2,5})$/i)?.[1] || 'jpg').toLowerCase();
+  return `tg-${giorno}-${f.messaggio}.${est}`;
+}
+
+async function salvaFoto(elenco) {
+  let salvate = 0;
+  const errori = [];
+  for (const f of elenco) {
+    try {
+      const { dati, percorso } = await scaricaFile(f.fileId);
+      writeFileSync(`${CARTELLA_FOTO}/${nomeFoto(f, percorso)}`, dati);
+      salvate += 1;
+    } catch (e) {
+      errori.push(e.message);
+    }
+  }
+  const inCartella = readdirSync(CARTELLA_FOTO).filter((n) => !n.startsWith('.')).length;
+  const righe = [];
+  if (salvate) {
+    const la = salvate === 1 ? 'la' : 'le';
+    righe.push(
+      `${salvate === 1 ? 'Foto ricevuta' : `${salvate} foto ricevute`}: ${la} metto fra quelle per i post (ora sono ${inCartella}).`,
+      `L'agente social ${la} guarda da sé quando prepara la bozza del sabato.`,
+    );
+  }
+  if (errori.length) righe.push('', `Non sono riuscito a salvarne ${errori.length}:`, ...errori.map((e) => `• ${e}`));
+  await messaggio(righe.join('\n'));
+}
+
+// ---------------------------------------------------------------------------
 
 async function main() {
-  const bozza = existsSync(BOZZA) ? leggiJson(BOZZA) : null;
-  const socialInAttesa = Boolean(bozza && !bozza.pubblicato && !bozza.scartato);
   const aperte = leggiJson(PROPOSTE, []).filter((p) => p.stato === 'in attesa');
-  if (!socialInAttesa && !aperte.length) return;
 
   const { ultimoUpdate = 0 } = leggiJson(STATO, {});
-  const { testi, ultimo } = await risposte(ultimoUpdate);
-  if (!testi.length) return;
+  const { testi, foto, ultimo } = await risposte(ultimoUpdate);
+  if (ultimo === ultimoUpdate) return;
 
   // Si consuma SEMPRE quello che si e' letto, e PRIMA di agire: se qualcosa si
   // rompe a meta', l'ordine e' comunque sparito dalla coda di Telegram. Meglio un
   // ordine perso che un post doppio.
   await conferma(ultimo);
   salva(STATO, { ultimoUpdate: ultimo });
+
+  if (foto.length) await salvaFoto(foto);
 
   // Vale l'ultimo ordine per ciascun argomento: un PUBBLICA dopo un RIMANDA vince.
   const ordini = new Map();

@@ -2,7 +2,8 @@ name: Risposte su Telegram
 
 # Ogni mezz'ora fra le 06:00 e le 20:00 UTC legge cosa ha scritto Matteo al bot
 # ed esegue: PUBBLICA / RIMANDA / SCARTA per il post social, APPROVA / RIFIUTA
-# per le proposte degli agenti (articoli, correzioni SEO).
+# per le proposte degli agenti (articoli, correzioni SEO). Le foto mandate al
+# bot finiscono fra quelle per i post social.
 # E' l'unico lettore di Telegram: due si ruberebbero i messaggi a vicenda.
 # Se non c'e' niente in sospeso non fa e non dice niente.
 #
@@ -54,15 +55,40 @@ jobs:
           META_PUBLISH_TOKEN: ${{ secrets.META_PUBLISH_TOKEN }}
         run: node scripts/risposte.mjs
 
+      # Le foto mandate al bot sono appena finite in public/assets/social/. Vanno
+      # messe in riga qui: il push qui sotto e' fatto col token di GitHub Actions,
+      # che non fa partire altri workflow, quindi "Social - metti in riga le foto"
+      # non scatterebbe.
+      - name: Metti in riga le foto arrivate su Telegram
+        run: |
+          if [ -z "$(git status --porcelain public/assets/social/)" ]; then
+            echo "Nessuna foto nuova."
+            exit 0
+          fi
+          npm ci --no-audit --no-fund
+          node scripts/normalizza-foto.mjs
+
       - name: Registra nel repo cosa è stato fatto
         run: |
-          if [ -z "$(git status --porcelain agenti/)" ]; then
+          fatto=""
+          if [ -n "$(git status --porcelain agenti/)" ]; then
+            git add agenti/
+            # [skip netlify]: sono file di servizio, il sito non va ripubblicato.
+            # Le proposte approvate sono gia' state spinte a parte, senza la sigla.
+            git commit -m "Telegram: eseguite le risposte di Matteo [skip netlify]"
+            fatto=1
+          fi
+          # Le foto per ULTIME e SENZA [skip netlify]: Netlify guarda solo l'ultimo
+          # commit del push, e le foto devono andare online, perche' Instagram le
+          # scarica dal sito.
+          if [ -n "$(git status --porcelain public/assets/social/)" ]; then
+            git add public/assets/social/
+            git commit -m "Social: foto nuove arrivate su Telegram"
+            fatto=1
+          fi
+          if [ -z "$fatto" ]; then
             echo "Niente da registrare."
             exit 0
           fi
-          git add agenti/
-          # [skip netlify]: sono file di servizio, il sito non va ripubblicato.
-          # Le proposte approvate sono gia' state spinte a parte, senza la sigla.
-          git commit -m "Telegram: eseguite le risposte di Matteo [skip netlify]"
           git pull --rebase origin main
           git push origin HEAD:main

@@ -125,7 +125,12 @@ nel sito e vanno online col deploy).
 
 ## Le foto
 
-Vanno in `sito/public/assets/social/`, **così come escono dal telefono**. Non
+**Il modo più comodo: mandarle al bot su Telegram**, come foto o come file (il
+file resta a piena qualità, anche HEIC). Il lettore delle risposte le salva in
+`public/assets/social/` con un nome tipo `tg-2026-09-27-812.jpg`, le mette in riga
+e le manda online col sito, e risponde "Foto ricevuta". Niente PC.
+
+Dal PC vanno in `sito/public/assets/social/`, **così come escono dal telefono**. Non
 serve ritagliarle, convertirle o rinominarle: al primo push ci pensa il workflow
 *Social - metti in riga le foto* (`scripts/normalizza-foto.mjs`), che
 

@@ -52,11 +52,30 @@ export async function documento(percorso, caption) {
  */
 export async function risposte(offset = 0) {
   const upd = await chiama('getUpdates', { offset: offset ? offset + 1 : undefined, timeout: 0 });
-  const miei = upd.filter((u) => String(u.message?.chat?.id) === String(CHAT()) && u.message?.text);
+  const miei = upd.filter((u) => String(u.message?.chat?.id) === String(CHAT()));
+  // Le foto arrivano in due modi: come foto (Telegram le comprime, e di ogni foto
+  // manda piu' misure: l'ultima e' la piu' grande) o come file, che resta intero
+  // e puo' essere anche un HEIC dell'iPhone.
+  const foto = [];
+  for (const { message: m } of miei) {
+    if (m.photo?.length) foto.push({ fileId: m.photo[m.photo.length - 1].file_id, messaggio: m.message_id });
+    else if (/^image\//.test(m.document?.mime_type || '')) {
+      foto.push({ fileId: m.document.file_id, messaggio: m.message_id, nome: m.document.file_name });
+    }
+  }
   return {
-    testi: miei.map((u) => u.message.text.trim()),
+    testi: miei.filter((u) => u.message.text).map((u) => u.message.text.trim()),
+    foto,
     ultimo: upd.length ? Math.max(...upd.map((u) => u.update_id)) : offset,
   };
+}
+
+/** Scarica un file mandato al bot. Il limite di Telegram per i bot e' 20 MB. */
+export async function scaricaFile(fileId) {
+  const { file_path: percorso } = await chiama('getFile', { file_id: fileId });
+  const res = await fetch(`https://api.telegram.org/file/bot${TOKEN()}/${percorso}`);
+  if (!res.ok) throw new Error(`Telegram non mi da' il file: HTTP ${res.status}`);
+  return { dati: Buffer.from(await res.arrayBuffer()), percorso };
 }
 
 /**
