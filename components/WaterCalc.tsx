@@ -6,7 +6,7 @@ import { SavingResult } from '../lib/types';
 
 export default function WaterCalc() {
   const [familyMembers, setFamilyMembers] = useState<number>(3);
-  const [crateCost, setCrateCost] = useState<number>(2.50); // average cost for 6 bottles of 1.5L
+  const [crateCost, setCrateCost] = useState<number>(1.50); // cassa da 6 x 1,5 L: si parte da un prezzo da supermercato, prudente
   const [cookWithBottled, setCookWithBottled] = useState<boolean>(true);
 
   const results = useMemo<SavingResult>(() => {
@@ -27,7 +27,7 @@ export default function WaterCalc() {
     const totalSpendPerYear = Math.round(bottlesPerYear * singleBottleCost);
 
     // Environmental metrics
-    const plasticWeightSavedKg = Math.round((bottlesPerYear * 40) / 1000); // 40g per PET bottle
+    const plasticWeightSavedKg = Math.round((bottlesPerYear * 30) / 1000); // circa 30 g per bottiglia PET da 1,5 L
     const co2SavedKg = Math.round(bottlesPerYear * 0.18); // average 180g of CO2 per pet bottle lifecycle
 
     return {
@@ -95,7 +95,7 @@ export default function WaterCalc() {
             />
             <div className="flex justify-between gap-2 text-xs leading-tight text-slate-500 [&>span:nth-child(2)]:text-center [&>span:last-child]:text-right">
               <span>1.00 € (Economica)</span>
-              <span>2.50 € (Media)</span>
+              <span>3.00 €</span>
               <span>5.00 € (Premium/Vetro)</span>
             </div>
           </div>
@@ -128,17 +128,16 @@ export default function WaterCalc() {
           </div>
 
           <div className="relative z-10 space-y-6">
-            {/* Money Saved Highlight */}
+            {/* Spesa annua in bottiglie. Non è un "risparmio": non toglie il costo di
+                filtri e manutenzione del depuratore, quindi non va chiamato così. */}
             <div className="text-center pb-5 border-b border-slate-200">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                Risparmio Annuo Stimato
+                Quanto spendi oggi in acqua in bottiglia
               </span>
               <span className="text-4xl md:text-5xl font-bold text-blue-600 font-mono">
                 ~ {results.moneySaved} €
               </span>
-              <span className="text-xs text-slate-500 block mt-1.5">
-                pari al costo di acquisto di ben <strong className="text-slate-900">{Math.round(results.moneySaved / (crateCost/6))}</strong> bottiglie.
-              </span>
+              <span className="text-xs text-slate-500 block mt-1.5">all'anno</span>
             </div>
 
             {/* Environmental stats rows */}
