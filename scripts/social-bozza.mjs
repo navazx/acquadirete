@@ -12,7 +12,7 @@
 // ============================================================================
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { messaggio, foto } from './lib/telegram.mjs';
+import { messaggio, foto, fotoDaFile } from './lib/telegram.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
 const SITO = 'https://www.acquadirete.it';
@@ -52,7 +52,7 @@ async function main() {
     rimandi
       ? `Post social — tema: ${b.tema} (rimandato ${rimandi === 1 ? 'una volta' : `${rimandi} volte`})`
       : `Post social — tema: ${b.tema}`,
-    urlFoto ? '' : 'SENZA FOTO: va solo su Facebook, Instagram le pretende.\nSe ne metti una in sito/public/assets/social/ ci va anche Instagram.',
+    urlFoto ? '' : 'SENZA FOTO: va solo su Facebook, Instagram le pretende.\nMandami una foto qui e dalla prossima ci va anche Instagram.',
     '',
     ...b.varianti.flatMap((v, i) => [
       `${numeri[i]} ${v.testo}`,
@@ -75,7 +75,11 @@ async function main() {
     return;
   }
 
-  if (urlFoto) await foto(urlFoto, `Post social — tema: ${b.tema}`);
+  // Se la foto e' nel repo si carica da qui: un'immagine appena creata (le
+  // curiosita') al sito puo' non esserci ancora, il deploy e' in corso.
+  const locale = b.foto ? `public/${b.foto.replace(/^\/+/, '')}` : null;
+  if (locale && existsSync(locale)) await fotoDaFile(locale, `Post social — tema: ${b.tema}`);
+  else if (urlFoto) await foto(urlFoto, `Post social — tema: ${b.tema}`);
   await messaggio(testo);
 
   // Segnare l'invio evita che il giro schedulato del sabato la rimandi una

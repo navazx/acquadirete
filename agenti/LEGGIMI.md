@@ -118,6 +118,46 @@ in attesa, quindi il sabato dopo l'agente ne compone una nuova.
 - `tema` — installazione, curiosità, contesto diverso, recensione (ruotano)
 - `foto` — percorso dentro `public/assets/social/`, oppure `null`
 - `varianti` — due o tre didascalie fra cui scegliere, ognuna coi suoi hashtag
+- `grafica` — solo per le curiosità: i testi dell'immagine (vedi sotto)
+
+## La grafica delle curiosità
+
+Fra giugno e agosto 2026 Matteo pubblicava **un post su due** con una curiosità
+sull'acqua, e ogni volta la stessa immagine: etichetta CURIOSITÀ con la lampadina,
+titolo "LO SAPEVI CHE…" in blu notte con la parola chiave in azzurro, tre righe con
+un'icona tonda, e a destra la cucina col depuratore. Quello stile resta: l'immagine
+non si cerca e non si inventa, si fa con lo stampo `scripts/grafica-curiosita.mjs`.
+
+Chi compone scrive nella bozza, oltre alle varianti:
+
+```json
+"grafica": {
+  "titolo": "Lo sapevi che *il calcare* non fa male alla salute?",
+  "intro": "facoltativa: una o due frasi",
+  "punti": [
+    { "icona": "testo:Ca Mg", "titolo": "Cos'è davvero", "testo": "Una o due frasi." },
+    { "icona": "rubinetto", "titolo": "Il problema è un altro", "testo": "…" },
+    { "icona": "attrezzi", "titolo": "Ognuno ha la sua acqua", "testo": "…" }
+  ]
+}
+```
+
+- Fra asterischi la parte in azzurro: il soggetto della curiosità.
+- Esattamente tre punti, ognuno un titoletto corto e una o due frasi.
+- Icone: goccia, scudo, rubinetto, bicchiere, foglia, casa, famiglia, bottiglia,
+  filtro, onde (odori), lampadina, euro, check, cuore, bolle (frizzante), freddo,
+  attrezzi, calendario; oppure `testo:…` per due-tre caratteri dentro il cerchio
+  (`testo:Ca Mg`, `testo:NO₃`).
+
+Poi `npm ci` e `node scripts/grafica-curiosita.mjs agenti/social-bozza.json`: lo
+script scrive `public/assets/social/curiosita-<data>.jpg` e lo mette nel campo
+`foto`. **Va aperta e guardata** prima del commit: se un testo è brutto a capo o
+troppo fitto, si accorcia e si rifà. Se non ci sta, lo script si ferma e dice
+cosa accorciare. Il commit porta anche l'immagine, e **senza `[skip netlify]`**:
+Instagram la scarica dal sito.
+
+Già uscite, da non ripetere: impianti di depurazione e osmosi, acqua frizzante,
+i 700 kg di bottiglie all'anno, il calcare minerale naturale, il cloro, i nitrati.
 
 **Senza foto si pubblica lo stesso, ma solo su Facebook**: Instagram l'immagine
 la pretende, e deve stare a un indirizzo pubblico (per questo le foto vivono

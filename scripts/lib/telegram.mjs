@@ -34,6 +34,22 @@ export const messaggio = (text) =>
 export const foto = (urlFoto, caption) =>
   chiama('sendPhoto', { chat_id: CHAT(), photo: urlFoto, caption });
 
+/**
+ * Una foto caricata dal repo invece che dal sito. Serve per le immagini appena
+ * create (le curiosita'): quando parte la bozza il deploy di Netlify puo' non
+ * essere ancora finito, e l'indirizzo pubblico darebbe 404.
+ */
+export async function fotoDaFile(percorso, caption) {
+  const form = new FormData();
+  form.append('chat_id', CHAT());
+  if (caption) form.append('caption', String(caption).slice(0, 1024));
+  form.append('photo', new Blob([readFileSync(percorso)], { type: 'image/jpeg' }), percorso.split('/').pop());
+  const res = await fetch(`https://api.telegram.org/bot${TOKEN()}/sendPhoto`, { method: 'POST', body: form });
+  const dati = await res.json();
+  if (!dati.ok) throw new Error(`Telegram ha rifiutato sendPhoto: ${dati.description}`);
+  return dati.result;
+}
+
 /** Un file del repo, da aprire sul telefono (le anteprime degli articoli). */
 export async function documento(percorso, caption) {
   const form = new FormData();
