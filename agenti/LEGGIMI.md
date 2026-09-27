@@ -122,8 +122,9 @@ in attesa, quindi il sabato dopo l'agente ne compone una nuova.
 
 ## La grafica delle curiosità
 
-Fra giugno e agosto 2026 Matteo pubblicava **un post su due** con una curiosità
-sull'acqua, e ogni volta la stessa immagine: etichetta CURIOSITÀ con la lampadina,
+**Una curiosità ogni tre post** (scelta di Matteo, 27 set 2026): la settimana
+dell'anno divisibile per 3. Fra giugno e agosto 2026 Matteo le pubblicava con
+la stessa immagine ogni volta: etichetta CURIOSITÀ con la lampadina,
 titolo "LO SAPEVI CHE…" in blu notte con la parola chiave in azzurro, tre righe con
 un'icona tonda, e a destra la cucina col depuratore. Quello stile resta: l'immagine
 non si cerca e non si inventa, si fa con lo stampo `scripts/grafica-curiosita.mjs`.

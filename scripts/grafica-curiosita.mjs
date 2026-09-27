@@ -2,7 +2,7 @@
 // ============================================================================
 //  GRAFICA DELLE CURIOSITA' — lo stampo dei post "Lo sapevi che…"
 //
-//  Matteo, fra giugno e agosto 2026, pubblicava un post su due con un'immagine
+//  Matteo, fra giugno e agosto 2026, pubblicava le curiosita' con un'immagine
 //  sempre uguale: etichetta CURIOSITA' con la lampadina, titolo grande in blu
 //  notte con la parola chiave in azzurro, tre righe con un'icona tonda, e a
 //  destra la cucina col depuratore. Questo script rifa' quell'immagine con testi
