@@ -1,6 +1,14 @@
 {
-  "controllato": "2026-09-24T16:14:29.930Z",
+  "controllato": "2026-09-28T15:19:31.371Z",
   "pagine": 26,
   "linkInterni": 29,
-  "problemi": []
+  "problemi": [
+    {
+      "gravita": "rotto",
+      "chiave": "pagina-0",
+      "pagina": "/",
+      "testo": "pagina della sitemap che risponde The operation was aborted due to timeout",
+      "primaVolta": "2026-09-28"
+    }
+  ]
 }
