@@ -1,6 +1,6 @@
 {
-  "name": "Gestione Acquadirete",
-  "short_name": "Gestione",
+  "name": "Acquadirete",
+  "short_name": "Acquadirete",
   "description": "Clienti, manutenzioni e contatti di Acquadirete",
   "lang": "it",
   "scope": "/gestione/",

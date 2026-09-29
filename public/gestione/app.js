@@ -197,7 +197,7 @@
   function titolo(t, conIndietro) {
     $('titolo').textContent = t;
     $('indietro').hidden = !conIndietro;
-    document.title = t === 'Acquadirete' ? 'Gestione Acquadirete' : `${t} · Gestione`;
+    document.title = t === 'Acquadirete' ? 'Acquadirete' : `${t} · Acquadirete`;
   }
 
   function disegna(stato) {
@@ -298,11 +298,8 @@
     titolo('Acquadirete', false);
     const { scadute, presto } = contaScadenze();
     const daRichiamare = dati.lead.filter((l) => statoLead(l) === 'Da richiamare').length;
-    const ora = new Date().getHours();
-    const saluto = ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera';
     const alle = aggiornatoAlle ? new Date(aggiornatoAlle).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
     schermo.innerHTML = `
-      <p class="saluto">${saluto}!</p>
       <div class="tessere">
         <button class="tessera" data-vai="scadenze">
           <span class="ico">${icona('attrezzi')}</span>
