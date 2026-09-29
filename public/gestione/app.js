@@ -341,32 +341,60 @@
     schermo.querySelectorAll('[data-codice]').forEach((b) => { b.onclick = () => vai({ s: 'cliente', codice: b.dataset.codice }); });
   }
 
+  // Filtro delle manutenzioni: si scrive la città invece di scegliere Z1, Z2…
+  // Più città separate da virgola ("Empoli, Vinci") per un giro che ne tocca
+  // diverse; il codice di zona funziona ancora, per chi ci è abituato.
+  function filtroCitta(testo) {
+    const parti = String(testo || '').split(',').map(normalizza).filter(Boolean);
+    if (!parti.length) return () => true;
+    return (c) => {
+      const citta = normalizza(senzaCap(c.citta));
+      return parti.some((p) => citta.includes(p) || normalizza(c.zona) === p);
+    };
+  }
+
   function schermoScadenze(stato) {
     titolo('Manutenzioni', true);
-    const zona = stato.zona || '';
-    const zone = [...new Set(dati.clienti.map((c) => c.zona).filter((z) => /^Z[\dX]$/.test(z)))].sort();
-    const inZona = dati.clienti.filter((c) => !zona || c.zona === zona);
-    const conGiorni = inZona.map((c) => ({ c, s: scadenza(c) })).filter((x) => x.s.giorni != null);
-    const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
-    const scadute = conGiorni.filter((x) => x.s.giorni < 0 && x.s.giorni >= -365).sort(perData);
-    const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
-    const vecchie = conGiorni.filter((x) => x.s.giorni < -365).sort(perData).reverse();
-
+    const citta = [...new Set(dati.clienti.filter((c) => c.prossimaSeriale != null).map((c) => titoloCitta(c.citta)).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'it'));
+    // Il campo si disegna una volta sola e a ogni lettera cambia solo l'elenco:
+    // ridisegnando tutto, la tastiera del telefono si chiuderebbe.
     schermo.innerHTML = `
-      <div class="pillole">
-        <button class="pillola" data-zona="" aria-pressed="${!zona}">Tutte le zone</button>
-        ${zone.map((z) => `<button class="pillola" data-zona="${z}" aria-pressed="${zona === z}">${z}</button>`).join('')}
+      <div class="cerca con-tasto">
+        <input type="search" id="citta" list="l-citta-scad" placeholder="Scrivi la città" autocomplete="off" enterkeyhint="search" value="${esc(stato.citta || '')}">
+        <button type="button" class="tasto" id="tutte" hidden>Tutte</button>
       </div>
-      <h2 class="gruppo">Scadute (${scadute.length})</h2>
-      <div class="lista">${scadute.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}</div>
-      <h2 class="gruppo">Nei prossimi 2 mesi (${presto.length})</h2>
-      <div class="lista">${presto.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Niente in scadenza</div>'}</div>
-      ${vecchie.length ? `<button class="mostra-altri" id="vecchie">Scadute da più di un anno (${vecchie.length})</button><div class="lista" id="lista-vecchie" hidden style="margin-top:10px">${vecchie.map((x) => voceCliente(x.c)).join('')}</div>` : ''}`;
-    schermo.querySelectorAll('[data-zona]').forEach((b) => {
-      b.onclick = () => { history.replaceState({ s: 'scadenze', zona: b.dataset.zona }, '', location.pathname + location.hash); disegna(history.state); };
-    });
-    if ($('vecchie')) $('vecchie').onclick = () => { $('vecchie').hidden = true; $('lista-vecchie').hidden = false; };
-    collegaVoci();
+      <datalist id="l-citta-scad">${citta.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+      <div id="elenco"></div>`;
+    const campo = $('citta');
+
+    function elenco() {
+      const v = campo.value;
+      history.replaceState({ s: 'scadenze', citta: v }, '', location.pathname + location.hash);
+      $('tutte').hidden = !v.trim();
+      const scelti = dati.clienti.filter(filtroCitta(v));
+      if (!scelti.length) {
+        $('elenco').innerHTML = `<div class="vuoto">Nessun cliente a «${esc(v.trim())}».<br>Controlla come è scritta la città.</div>`;
+        return;
+      }
+      const conGiorni = scelti.map((c) => ({ c, s: scadenza(c) })).filter((x) => x.s.giorni != null);
+      const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
+      const scadute = conGiorni.filter((x) => x.s.giorni < 0 && x.s.giorni >= -365).sort(perData);
+      const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
+      const vecchie = conGiorni.filter((x) => x.s.giorni < -365).sort(perData).reverse();
+      $('elenco').innerHTML = `
+        <h2 class="gruppo">Scadute (${scadute.length})</h2>
+        <div class="lista">${scadute.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}</div>
+        <h2 class="gruppo">Nei prossimi 2 mesi (${presto.length})</h2>
+        <div class="lista">${presto.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Niente in scadenza</div>'}</div>
+        ${vecchie.length ? `<button class="mostra-altri" id="vecchie">Scadute da più di un anno (${vecchie.length})</button><div class="lista" id="lista-vecchie" hidden style="margin-top:10px">${vecchie.map((x) => voceCliente(x.c)).join('')}</div>` : ''}`;
+      if ($('vecchie')) $('vecchie').onclick = () => { $('vecchie').hidden = true; $('lista-vecchie').hidden = false; };
+      collegaVoci();
+    }
+
+    campo.oninput = elenco;
+    $('tutte').onclick = () => { campo.value = ''; elenco(); };
+    elenco();
   }
 
   // ---------------------------------------------------------------------

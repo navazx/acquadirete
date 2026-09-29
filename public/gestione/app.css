@@ -163,6 +163,10 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .scelta button { min-height: 58px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-weight: 700; font-size: 19px; }
 .scelta button[aria-pressed="true"] { border-color: var(--blu); background: var(--blu); color: #fff; }
 .cerca { position: sticky; top: 60px; z-index: 2; margin: -16px -16px 12px; padding: 16px 16px 8px; background: var(--fondo); }
+.cerca.con-tasto { display: flex; gap: 8px; }
+.cerca.con-tasto input { flex: 1; min-width: 0; }
+.cerca .tasto { flex: none; min-height: 58px; padding: 0 16px; background: var(--carta); border: 2px solid var(--linea); border-radius: 14px; color: var(--blu); font-weight: 700; font-size: 18px; }
+.cerca .tasto[hidden] { display: none; }
 .errore-campo { color: var(--rosso); font-weight: 600; margin: -6px 0 14px; }
 
 /* ---- Finestra di conferma (dal basso) ---- */
