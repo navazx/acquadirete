@@ -1,0 +1,15 @@
+{
+  "name": "Gestione Acquadirete",
+  "short_name": "Gestione",
+  "description": "Clienti, manutenzioni e contatti di Acquadirete",
+  "lang": "it",
+  "scope": "/gestione/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f6fa",
+  "theme_color": "#0f6cbd",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/favicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

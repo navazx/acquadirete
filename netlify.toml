@@ -21,6 +21,16 @@
     Access-Control-Allow-Origin = "*"
     X-Robots-Tag = "noindex, nofollow"
 
+# /gestione/* — app interna per il telefono di babbo (Gestionale_Clienti,
+# motore in netlify/functions/gestione.mjs). Non deve finire su Google, e il
+# telefono deve sempre riprendere l'ultima versione dei file (no-cache =
+# ricontrolla a ogni apertura, scarica solo se è cambiato).
+[[headers]]
+  for = "/gestione/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-cache"
+
 # Redirect 301 dalle vecchie URL del sito ASP.NET (ancora indicizzate su Google)
 # verso le pagine nuove. Evita i 404 su chi arriva dai risultati di ricerca e
 # consolida l'autorità SEO sulle pagine attuali.

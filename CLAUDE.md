@@ -52,6 +52,13 @@ Place ID Google (CID): `0x8fb9e4ae2b8cbb8a`, mid `/g/1tsw55w8`.
 
 Dopo la scrittura sul foglio, entrambe le funzioni mandano un avviso Telegram col riepilogo del contatto (`netlify/functions/_shared/telegram.mjs`, env `TELEGRAM_BOT_TOKEN`; best-effort: se l'invio fallisce il lead resta salvato). Le env delle funzioni su Netlify vanno impostate **non-secret e con scope "all"** (con flag secret o scope ristretto il runtime non le riceve) e ogni modifica env richiede un redeploy.
 
+## App "Gestione" (telefono di babbo)
+`/gestione/` (file in `public/gestione/`, fuori da Next) è l'app per il telefono di Stefano: manutenzioni da fare, contatti da richiamare, ricerca clienti, cliente nuovo e modifica dati. Legge e scrive il Gestionale_Clienti tramite `/api/gestione` (`netlify/functions/gestione.mjs`, logica in `_shared/gestionale.mjs`). Usa lo stesso service account dei lead (`GSC_KEY_JSON`, `LEADS_SHEET_ID`) più `GESTIONE_CHIAVE`, una chiave per persona nel formato `babbo:<chiave>,matteo:<chiave>` (il nome finisce nella colonna "Segnata da" dello storico). Si attiva un telefono una volta sola con `https://www.acquadirete.it/gestione/#chiave=<chiave>`; i link veri stanno in `acquadirete/gestione-chiavi.txt`, fuori dal repo (che è pubblico). Se un telefono si perde: si cambia solo la sua chiave e si rifà il deploy.
+
+**Regole in copia doppia.** Le automazioni di Apps Script del foglio (codice C0xx, formula di "Prossima manutenzione", zona/provincia dalla città, lead → cliente) sono onEdit e **non scattano quando scrive l'API**: `_shared/gestionale.mjs` le rifà per le righe create dall'app. Chi cambia quelle del foglio (`documenti/gestionale-lead-a-cliente.gs`) cambia anche queste, e viceversa. "Manutenzione fatta" scrive anche una riga nella scheda `Storico-Interventi` (creata alla prima volta).
+
+Prova in locale: `node scripts/gestione-locale.mjs` (anteprima "gestione", porta 3005). Legge il foglio vero con la chiave di sola lettura e scrive su una copia in memoria: si può provare ogni pulsante senza toccare niente.
+
 ## Convenzioni
 - Aggiungere una pagina servizio: creare `app/<slug>/page.tsx`, registrare lo slug in `lib/routes.ts` (e `types.ts` se serve un nuovo `PageId`), riusare `ServicePageView`.
 - Non duplicare dati di contatto o URL Google altrove: sempre da `siteConfig.ts`.
