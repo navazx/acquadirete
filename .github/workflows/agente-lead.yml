@@ -1,6 +1,7 @@
 name: Agente lead (avvio a mano)
 
-# Il giro di ogni mattina NON parte piu' da qui: dall'11 set 2026 e' una
+# Il giro di ogni mattina e' SPENTO dal 30 set 2026 (Matteo usa l'app /gestione/).
+# Prima, dall'11 set, era una
 # funzione programmata di Netlify (netlify/functions/agente-lead.mjs).
 # GitHub accodava i giri programmati di ore -- quello delle 08:15 e' partito
 # alle 13:19 -- e un avviso sui lead da richiamare che arriva al pomeriggio

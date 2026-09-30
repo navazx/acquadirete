@@ -17,11 +17,12 @@
 //  Se non c'e' niente da fare NON manda nulla: il silenzio vuol dire tutto a posto.
 //  Non scrive mai sul foglio e non contatta mai i clienti: solo avvisi a Matteo.
 //
-//  Dove gira: netlify/functions/agente-lead.mjs importa componiAvvisoLead() da
-//  qui. Fino all'11 set 2026 partiva da GitHub Actions, che accoda i giri
-//  programmati: quello delle 08:15 e' partito alle 13:19, e un avviso sui lead
-//  da richiamare che arriva a pomeriggio inoltrato ha perso il suo senso.
-//  Il workflow GitHub resta solo per lanciarlo a mano.
+//  Dove gira: da nessuna parte in automatico. Dal 30 set 2026 il giro delle
+//  08:15 (funzione programmata di Netlify) e' spento su richiesta di Matteo: i
+//  lead da richiamare li vede ogni giorno nell'app /gestione/, e il messaggio
+//  era un doppione. Resta il workflow GitHub "Agente lead (avvio a mano)" per
+//  lanciarlo quando serve. Per riaccenderlo: rimettere
+//  netlify/functions/agente-lead.mjs (e' nella storia di git).
 //
 //  Prova in locale (stampa a schermo invece di mandare il Telegram):
 //    GSC_KEY_FILE="../seo-report/gsc-key-readonly.json" node scripts/agente-lead.mjs
