@@ -103,6 +103,7 @@ async function creaFoglioFinto() {
       for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) metti(tab, r, c, '');
     },
     async copiaFormato(tab, da, a) { console.log(`  formato riga ${da} → ${a} (${tab})`); },
+    async copiaCella(tab, r1, c1, r2, c2) { console.log(`  formato cella ${r1},${c1} → ${r2},${c2} (${tab})`); },
     // In produzione è appendOrMergeRow (anti-doppioni del sito); qui accoda e basta.
     async accodaLead(riga) {
       const g = schede[TAB_LEAD];

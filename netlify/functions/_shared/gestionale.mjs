@@ -190,12 +190,40 @@ async function leggiClienti(foglio) {
   return { griglia, mappa };
 }
 
+// Colonna "Data stato" di Lead-Contatti (dal 30 set 2026): il giorno
+// dell'ultimo cambio di Stato. Vuota = lo stato non è mai cambiato da quando
+// il contatto è arrivato, quindi vale la Data di arrivo. La scrivono sia
+// questa app (cambiaStatoLead) sia l'onEdit del foglio quando lo stato si
+// cambia a mano (segnaDataStatoLead in Codice.gs): regole in copia doppia.
+// È facoltativa: se l'intestazione non c'è, la crea chi scrive per primo.
+const INTESTAZIONE_DATA_STATO = 'Data stato';
+
 async function leggiLead(foglio) {
   // FORMATTED: la colonna Data è testo ("29/06/2026, 17:22:49") o una data
   // vera a seconda di chi l'ha scritta; formattata si legge uguale.
   const griglia = await foglio.leggi(`'${TAB_LEAD}'!A1:Z2000`, 'FORMATTED_VALUE');
   const mappa = colonnePerNome(griglia, COLONNE_LEAD, 'stato');
+  // Solo corrispondenza esatta: "data" da sola è la colonna dell'arrivo.
+  const i = (griglia[mappa.riga - 1] || []).map(normalizza).indexOf(normalizza(INTESTAZIONE_DATA_STATO));
+  if (i !== -1) mappa.col.DATA_STATO = i + 1;
   return { griglia, mappa };
+}
+
+// Scrive la data di oggi in "Data stato" sulla riga `r`, creando prima
+// l'intestazione se manca (subito dopo l'ultima colonna, con lo stesso
+// aspetto delle altre intestazioni).
+async function segnaDataStato(foglio, mappa, r) {
+  let c = mappa.col.DATA_STATO;
+  const scritture = [];
+  if (!c) {
+    c = mappa.larghezza + 1;
+    await foglio.copiaCella(TAB_LEAD, mappa.riga, mappa.larghezza, mappa.riga, c).catch(() => {});
+    scritture.push({ range: `'${TAB_LEAD}'!${lettera(c)}${mappa.riga}`, values: [[INTESTAZIONE_DATA_STATO]] });
+  }
+  // USER_ENTERED: "30/09/2026" diventa una data vera (foglio in italiano),
+  // come quella che scrive l'onEdit; niente orario, quindi niente fuso.
+  scritture.push({ range: `'${TAB_LEAD}'!${lettera(c)}${r}`, values: [[testoData(oggi())]] });
+  await foglio.scrivi(scritture, 'USER_ENTERED');
 }
 
 function clienteDaRiga(r, col, numeroRiga) {
@@ -247,6 +275,8 @@ export async function leggiTutto(foglio) {
       interesse: v('INTERESSE'),
       stato: v('STATO'),
       note: v('NOTE'),
+      // "gg/mm/aaaa" dell'ultimo cambio di stato; vuoto = mai cambiato (vale data).
+      dataStato: ml.col.DATA_STATO ? v('DATA_STATO') : '',
     });
   }
 
@@ -618,7 +648,19 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
   }
 
   await foglio.scrivi([{ range: `'${TAB_LEAD}'!${lettera(mappa.col.STATO)}${r}`, values: [[stato]] }], 'RAW');
-  return { ok: true, stato, cliente };
+  // La data solo se lo stato è cambiato davvero: ritoccare lo stesso stato
+  // non deve far sembrare "appena sentito" un contatto fermo da settimane.
+  let dataStato = null;
+  if (v('STATO') !== stato) {
+    try {
+      await segnaDataStato(foglio, mappa, r);
+      dataStato = testoData(oggi());
+    } catch (err) {
+      // Lo stato è già salvato: la data è un di più, non si butta via il resto.
+      console.error('Data stato non scritta:', err);
+    }
+  }
+  return { ok: true, stato, cliente, dataStato };
 }
 
 // Contatto nuovo scritto a mano (chi telefona o scrive senza compilare il
@@ -727,6 +769,23 @@ export function creaFoglioGoogle(sheetId) {
             copyPaste: {
               source: { sheetId, startRowIndex: rigaDa - 1, endRowIndex: rigaDa, startColumnIndex: 0, endColumnIndex: larghezza },
               destination: { sheetId, startRowIndex: rigaA - 1, endRowIndex: rigaA, startColumnIndex: 0, endColumnIndex: larghezza },
+              pasteType: 'PASTE_FORMAT',
+            },
+          }],
+        }),
+      });
+    },
+    // Copia l'aspetto (non il contenuto) di una cella su un'altra.
+    async copiaCella(tab, rigaDa, colDa, rigaA, colA) {
+      const sheetId = await idScheda(tab);
+      if (sheetId == null) return;
+      await chiama(':batchUpdate', {
+        method: 'POST',
+        body: JSON.stringify({
+          requests: [{
+            copyPaste: {
+              source: { sheetId, startRowIndex: rigaDa - 1, endRowIndex: rigaDa, startColumnIndex: colDa - 1, endColumnIndex: colDa },
+              destination: { sheetId, startRowIndex: rigaA - 1, endRowIndex: rigaA, startColumnIndex: colA - 1, endColumnIndex: colA },
               pasteType: 'PASTE_FORMAT',
             },
           }],
