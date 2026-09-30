@@ -103,6 +103,13 @@ async function creaFoglioFinto() {
       for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) metti(tab, r, c, '');
     },
     async copiaFormato(tab, da, a) { console.log(`  formato riga ${da} → ${a} (${tab})`); },
+    // In produzione è appendOrMergeRow (anti-doppioni del sito); qui accoda e basta.
+    async accodaLead(riga) {
+      const g = schede[TAB_LEAD];
+      g.push(riga.map(String));
+      console.log(`  accodo lead riga ${g.length} = ${JSON.stringify(riga)}`);
+      return { doppione: false, riga: g.length };
+    },
     async accoda(tab, intestazioni, riga) {
       const g = (schede[tab] ||= [intestazioni]);
       g.push(riga);

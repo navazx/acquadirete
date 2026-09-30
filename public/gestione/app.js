@@ -64,6 +64,8 @@
     persone: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/>',
     posta: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     matita: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    orologio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    personaPiu: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -213,7 +215,7 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
@@ -221,6 +223,9 @@
   //  Finestra di conferma e messaggi
   // ---------------------------------------------------------------------
   function apriFinestra(html) {
+    // Il messaggio in basso (es. "Annulla" dell'azione prima) coprirebbe i
+    // pulsanti della finestra: si chiude.
+    $('messaggio').hidden = true;
     $('finestra').innerHTML = html;
     $('finestra').hidden = false;
     $('velo').hidden = false;
@@ -318,6 +323,10 @@
         <button class="tessera" data-vai="nuovo">
           <span class="ico">${icona('piu')}</span>
           <span><b>Nuovo cliente</b><small>Aggiungi un cliente all'elenco</small></span>
+        </button>
+        <button class="tessera" data-vai="nuovoLead">
+          <span class="ico">${icona('personaPiu')}</span>
+          <span><b>Nuovo contatto</b><small>Chi ha telefonato o scritto per informazioni</small></span>
         </button>
       </div>
       <p class="aggiornato">${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button></p>`;
@@ -425,6 +434,8 @@
       // Data e frequenza servono solo se la scadenza non c'è ancora.
       !c.prossima && !c.installazione && 'data di installazione', !c.prossima && !c.frequenza && 'ogni quanti mesi',
     ].filter(Boolean);
+    // "Rimanda" solo quando la manutenzione è da fare: scaduta o entro 2 mesi.
+    const daFare = s.giorni != null && s.giorni <= 60;
     schermo.innerHTML = `
       <div class="testa"><h2>${esc(c.nome)}</h2><p>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p></div>
       <div class="azioni">${azioni || ''}</div>
@@ -433,6 +444,7 @@
         <div style="text-align:right">${esc(s.testo)}</div>
       </div>
       <button class="btn verde grande" id="fatta" style="width:100%">${icona('spunta')} Manutenzione fatta</button>
+      ${daFare ? `<button class="btn" id="rimanda" style="width:100%;margin-top:10px">${icona('orologio')} Rimanda la manutenzione</button>` : ''}
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <h3 class="titoletto">Dati del cliente</h3>
@@ -446,7 +458,56 @@
         ${riga('Codice', c.codice)}
       </dl>`;
     $('fatta').onclick = () => chiediFatta(c);
+    if ($('rimanda')) $('rimanda').onclick = () => chiediRimanda(c);
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
+  }
+
+  // Il cliente al telefono dice "passate più avanti": un tocco sposta la
+  // data. Si parte da oggi se è già scaduta, altrimenti dalla data prevista
+  // (stessa regola del motore, in rimandaManutenzione). Si può annullare.
+  function chiediRimanda(c) {
+    const o = oggi();
+    const base = c.prossimaSeriale != null && c.prossimaSeriale > serialeOggi() ? daSeriale(c.prossimaSeriale) : o;
+    const scelte = [1, 2, 3, 6];
+    const domani = daSeriale(serialeOggi() + 1);
+    apriFinestra(`
+      <h3>Rimandare la manutenzione?</h3>
+      <p><strong>${esc(c.nome)}</strong><br>${c.prossima ? `Adesso è segnata il <strong>${esc(c.prossima)}</strong>.` : ''} Di quanto la sposto?</p>
+      <div class="lista">${scelte.map((m) => `
+        <button class="btn" type="button" data-mesi="${m}" style="justify-content:space-between">
+          <span>Di ${m === 1 ? '1 mese' : m + ' mesi'}</span><span style="color:var(--grigio);font-weight:600">${testoData(piuMesi(base, m))}</span>
+        </button>`).join('')}</div>
+      <div id="altro-giorno" hidden>
+        <label class="campo" style="margin-top:14px"><span>A che giorno?</span>
+          <input type="date" id="giorno" min="${isoDa(domani)}"></label>
+        <button class="btn pieno grande" type="button" id="si-giorno">${icona('orologio')} Rimanda a quel giorno</button>
+      </div>
+      <button class="btn" type="button" id="altro">Scelgo io il giorno</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    const rimanda = (btn, dati) => conPulsante(btn, 'Salvo…', async () => {
+      try {
+        const r = await api('rimanda', { codice: c.codice, ...dati });
+        chiudiFinestra();
+        const x = r.prossima.split('/');
+        c.prossima = r.prossima;
+        c.prossimaSeriale = serialeDa(+x[2], +x[1], +x[0]);
+        disegna(history.state);
+        messaggio(`Rimandata al ${r.prossima}`, {
+          durata: 15000,
+          azione: { testo: 'Annulla', fai: () => annulla(r.annulla) },
+        });
+        aggiornaInSottofondo();
+      } catch (err) {
+        messaggio(err.message, { errore: true, durata: 8000 });
+      }
+    });
+    $('finestra').querySelectorAll('[data-mesi]').forEach((b) => { b.onclick = () => rimanda(b, { mesi: +b.dataset.mesi }); });
+    $('altro').onclick = () => { $('altro-giorno').hidden = false; $('altro').hidden = true; $('giorno').focus(); };
+    $('si-giorno').onclick = (e) => {
+      if (!daIso($('giorno').value)) { messaggio('Scegli prima il giorno.', { errore: true }); return; }
+      rimanda(e.currentTarget, { data: $('giorno').value });
+    };
+    $('no').onclick = chiudiFinestra;
   }
 
   function chiediFatta(c) {
@@ -554,6 +615,7 @@
     const filtro = stato.filtro || (conta['Da richiamare'] ? 'Da richiamare' : 'Contattato');
     const elenco = dati.lead.filter((l) => statoLead(l) === filtro).sort((a, b) => quandoArrivato(b) - quandoArrivato(a));
     schermo.innerHTML = `
+      <button class="btn pieno" id="nuovo-lead" style="width:100%;margin-bottom:14px">${icona('personaPiu')} Aggiungi un contatto</button>
       <div class="pillole">${FILTRI_LEAD.map(([v, t]) => `<button class="pillola" data-filtro="${esc(v)}" aria-pressed="${filtro === v}">${t} (${conta[v] || 0})</button>`).join('')}</div>
       <div class="lista">${elenco.map((l) => `
         <button class="voce" data-lead="${esc(idLead(l))}">
@@ -565,6 +627,70 @@
       b.onclick = () => { history.replaceState({ s: 'lead', filtro: b.dataset.filtro }, '', location.pathname + location.hash); disegna(history.state); };
     });
     schermo.querySelectorAll('[data-lead]').forEach((b) => { b.onclick = () => vai({ s: 'schedaLead', id: b.dataset.lead }); });
+    $('nuovo-lead').onclick = () => vai({ s: 'nuovoLead' });
+  }
+
+  // Contatto nuovo scritto a mano: chi telefona o scrive senza passare dal
+  // modulo del sito. Il motore lo scrive in Lead-Contatti come quelli del
+  // sito (nuovoLead in gestionale.mjs), poi si apre la sua scheda.
+  const PROVENIENZE = [['Passaparola', 'Passaparola'], ['Meta / Facebook', 'Facebook'], ['Sito web', 'Sito web'], ['Altro', 'Altro']];
+  function schermoNuovoLead() {
+    titolo('Nuovo contatto', true);
+    const piuUsati = (valori, n) => {
+      const conta = {};
+      valori.filter(Boolean).forEach((v) => { conta[v] = (conta[v] || 0) + 1; });
+      return Object.keys(conta).sort((a, b) => conta[b] - conta[a]).slice(0, n);
+    };
+    const citta = [...new Set(dati.clienti.map((c) => titoloCitta(c.citta)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
+    const interessi = piuUsati(dati.lead.map((l) => l.interesse.trim()), 20);
+    let provenienza = 'Passaparola';
+    schermo.innerHTML = `
+      <form id="f-lead" novalidate>
+        <label class="campo"><span>Nome e cognome</span><input name="nome" autocomplete="off" autocapitalize="words" required></label>
+        <p class="errore-campo" id="err-nome" hidden>Scrivi almeno il nome.</p>
+        <label class="campo"><span>Telefono</span><input name="telefono" type="tel" inputmode="tel" autocomplete="off"></label>
+        <label class="campo"><span>Email <em>(facoltativo)</em></span><input name="email" type="email" inputmode="email" autocomplete="off" autocapitalize="none"></label>
+        <p class="errore-campo" id="err-tel" hidden>Scrivi il telefono (o l'email), se no non lo puoi richiamare.</p>
+        <label class="campo"><span>Città</span><input name="citta" list="l-citta-lead" autocomplete="off"></label>
+        <datalist id="l-citta-lead">${citta.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        <div class="campo"><span>Come ci ha conosciuto?</span>
+          <div class="scelta">${PROVENIENZE.map(([v, t]) => `<button type="button" data-prov="${esc(v)}" aria-pressed="${v === provenienza}">${t}</button>`).join('')}</div></div>
+        <label class="campo"><span>Cosa gli interessa <em>(facoltativo)</em></span><input name="interesse" list="l-interessi" autocomplete="off"></label>
+        <datalist id="l-interessi">${interessi.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        <label class="campo"><span>Note <em>(facoltativo)</em></span><textarea name="note" placeholder="Es. ha chiamato per un preventivo, richiamare dopo le 17"></textarea></label>
+        <button class="btn verde grande" style="width:100%">${icona('spunta')} Salva il contatto</button>
+      </form>`;
+    const f = $('f-lead');
+    f.querySelectorAll('[data-prov]').forEach((b) => {
+      b.onclick = () => {
+        provenienza = b.dataset.prov;
+        f.querySelectorAll('[data-prov]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      };
+    });
+    const v = (n) => f.elements[n].value.trim();
+    f.onsubmit = (e) => {
+      e.preventDefault();
+      $('err-nome').hidden = !!v('nome');
+      $('err-tel').hidden = !!(v('telefono') || v('email'));
+      if (!v('nome')) { f.elements.nome.focus(); return; }
+      if (!v('telefono') && !v('email')) { f.elements.telefono.focus(); return; }
+      conPulsante(f.querySelector('button.verde'), 'Salvo…', async () => {
+        try {
+          const r = await api('nuovoLead', {
+            nome: v('nome'), telefono: v('telefono'), email: v('email'), citta: v('citta'),
+            provenienza, interesse: v('interesse'), note: v('note'),
+          });
+          await carica().catch(() => {});
+          const l = r.doppione
+            ? dati.lead.find((x) => x.riga === r.riga)
+            : dati.lead.find((x) => x.nome === r.nome && x.data === r.data);
+          if (l) history.replaceState({ s: 'schedaLead', id: idLead(l) }, '', location.pathname + location.hash);
+          else history.replaceState({ s: 'lead', filtro: 'Da richiamare' }, '', location.pathname + location.hash);
+          disegna(history.state);
+          messaggio(r.doppione ? 'Era già tra i contatti: ho aggiornato la sua scheda ✓' : 'Contatto salvato ✓', { durata: 6000 });
+        } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
+      });
+    };
   }
 
   function trovaLeadLocale(id) {
@@ -584,7 +710,7 @@
     // dalle_17:00_alle_20:00 — (form 1869…, ad 1202…)": via i trattini bassi
     // e via i codici tecnici, che a babbo non dicono niente.
     const note = String(l.note || '').split(' — ')
-      .map((p) => p.trim().replace(/\s*\((?:storico[^)]*|form \d+[^)]*|dalla pagina[^)]*)\)\s*$/i, '').replace(/_/g, ' ').replace(/\?:\s*/g, '? ').trim())
+      .map((p) => p.trim().replace(/\s*\((?:storico[^)]*|form \d+[^)]*|dalla pagina[^)]*|scritto dall'app[^)]*)\)\s*$/i, '').replace(/_/g, ' ').replace(/\?:\s*/g, '? ').trim())
       .filter((p) => p && !/^\(?(form|ad) \d+/i.test(p))
       .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
       .join('\n');

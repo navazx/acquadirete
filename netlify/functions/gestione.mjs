@@ -15,7 +15,8 @@
 // niente scorciatoie sull'accesso.
 import { timingSafeEqual, createHash } from 'node:crypto';
 import {
-  leggiTutto, segnaFatta, annullaFatta, nuovoCliente, modificaCliente, cambiaStatoLead, notaLead, creaFoglioGoogle,
+  leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, nuovoCliente, modificaCliente,
+  nuovoLead, cambiaStatoLead, notaLead, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -60,8 +61,10 @@ const risposta = (corpo, status = 200) =>
 const AZIONI = {
   fatta: segnaFatta,
   annulla: annullaFatta,
+  rimanda: rimandaManutenzione,
   nuovo: nuovoCliente,
   modifica: modificaCliente,
+  nuovoLead,
   stato: cambiaStatoLead,
   nota: notaLead,
 };

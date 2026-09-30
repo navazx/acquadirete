@@ -14,7 +14,8 @@
 //
 // Tutte le funzioni ricevono un "foglio" (l'adattatore creato da
 // creaFoglioGoogle) così si possono provare con un foglio finto in memoria.
-import { getAccessToken } from './google-sheets.mjs';
+import { getAccessToken, appendOrMergeRow, nowInItaly } from './google-sheets.mjs';
+import { etichettaZona } from './zone.mjs';
 
 export const TAB_CLIENTI = 'Clienti-Impianti';
 export const TAB_LEAD = 'Lead-Contatti';
@@ -325,6 +326,44 @@ export async function segnaFatta(foglio, { codice, data, frequenza }, { chi = 'a
   };
 }
 
+// Il cliente al telefono chiede di rimandare: la prossima manutenzione si
+// sposta di `mesi` (partendo da oggi se è già scaduta, altrimenti dalla data
+// prevista) oppure al giorno `data` scelto. Si annulla con annullaFatta.
+// Nello storico interventi non va niente: non è un intervento fatto.
+export async function rimandaManutenzione(foglio, { codice, mesi, data }) {
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const riga = trovaCliente(griglia, mappa, codice);
+  const { col } = mappa;
+  const r = griglia[riga - 1] || [];
+  const o = oggi();
+  const serOggi = serialeDa(o.a, o.m, o.g);
+
+  let nuova;
+  if (data) {
+    nuova = leggiDataUtente(data);
+    if (!nuova) throw problema('Data non valida.');
+  } else {
+    const n = parseInt(mesi, 10);
+    if (!(n > 0 && n <= 24)) throw problema('Di quanti mesi va rimandata?');
+    const attuale = serialeDaCella(r[col.MANUTENZIONE - 1]);
+    nuova = piuMesi(attuale != null && attuale > serOggi ? dataDaSeriale(attuale) : o, n);
+  }
+  const serNuova = serialeDa(nuova.a, nuova.m, nuova.g);
+  if (serNuova <= serOggi) throw problema('La nuova data deve essere dopo oggi.');
+  if (serNuova > serOggi + 730) throw problema('È più di due anni avanti: controlla la data.');
+
+  const cellaK = `'${TAB_CLIENTI}'!${lettera(col.MANUTENZIONE)}${riga}`;
+  const [[prima = '']] = (await foglio.leggi(cellaK, 'FORMULA')).concat([['']]);
+  await foglio.scrivi([{ range: cellaK, values: [[serNuova]] }], 'RAW');
+
+  return {
+    ok: true,
+    nome: testo(r[col.NOME - 1]),
+    prossima: testoData(nuova),
+    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serNuova, frequenzaScritta: false, storico: null },
+  };
+}
+
 export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico }) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const riga = trovaCliente(griglia, mappa, codice);
@@ -582,6 +621,48 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
   return { ok: true, stato, cliente };
 }
 
+// Contatto nuovo scritto a mano (chi telefona o scrive senza compilare il
+// modulo). Nasce come quelli del sito: stesse colonne, Stato "Da richiamare",
+// nome "NOME COGNOME" in maiuscolo, zona nelle note come "Zona: Z4" così il
+// passaggio a cliente la ritrova, e lo stesso anti-doppioni del sito (stesso
+// telefono o email negli ultimi 30 giorni = si completa la riga che c'è).
+const PROVENIENZE = ['Meta / Facebook', 'Sito web', 'Passaparola', 'Altro'];
+export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
+  const nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200);
+  const telefono = testo(dati.telefono).slice(0, 50);
+  const email = testo(dati.email).slice(0, 200);
+  if (!nome) throw problema('Scrivi almeno il nome.');
+  if (!telefono && !email) throw problema('Scrivi il telefono (o l\'email), se no non lo puoi richiamare.');
+
+  const citta = testo(dati.citta).slice(0, 80);
+  let zona = '';
+  if (citta) {
+    zona = (etichettaZona(citta).match(/^Z[1-8X]\b/) || [''])[0];
+    if (!zona) {
+      const { griglia, mappa } = await leggiClienti(foglio);
+      zona = valoreConcorde(griglia.slice(mappa.riga), mappa.col.CITTA, mappa.col.ZONA, chiaveCitta(citta));
+    }
+  }
+  const note = [
+    zona ? `Zona: ${zona}` : '',
+    citta ? `Città: ${citta}` : '',
+    testo(dati.note).slice(0, 1000),
+    `(scritto dall'app da ${chi})`,
+  ].filter(Boolean).join(' — ');
+
+  const riga = [
+    nowInItaly(),
+    nome,
+    [telefono, email].filter(Boolean).join(' · '),
+    PROVENIENZE.includes(dati.provenienza) ? dati.provenienza : 'Altro',
+    testo(dati.interesse).slice(0, 100),
+    'Da richiamare',
+    note,
+  ];
+  const esito = await foglio.accodaLead(riga, { telefono, email });
+  return { ok: true, nome, data: riga[0], doppione: !!esito.doppione, riga: esito.riga ?? null };
+}
+
 export async function notaLead(foglio, { riga, data, nome, nota }) {
   riga = parseInt(riga, 10);
   const t = testo(nota).replace(/\s+/g, ' ').slice(0, 500);
@@ -651,6 +732,11 @@ export function creaFoglioGoogle(sheetId) {
           }],
         }),
       });
+    },
+    // Lead nuovo: stessa funzione del modulo del sito (anti-doppioni compreso).
+    // Scrive sul foglio di LEADS_SHEET_ID, che in produzione è lo stesso.
+    async accodaLead(riga, contatti) {
+      return appendOrMergeRow(TAB_LEAD, ['Data', 'Nome', 'Telefono / Email', 'Provenienza', 'Interesse', 'Stato', 'Note'], riga, contatti);
     },
     // Accoda una riga alla scheda (creandola con le intestazioni se non c'è).
     // Restituisce il range scritto, che serve per annullare.
