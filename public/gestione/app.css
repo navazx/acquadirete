@@ -97,6 +97,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .voce .riga2 { display: block; color: var(--grigio); font-size: 16px; margin-top: 3px; }
 .voce .riga3 { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .vuoto { padding: 28px 16px; text-align: center; color: var(--grigio); background: var(--carta); border-radius: 16px; }
+.spiega { margin: 0 2px 12px; color: var(--grigio); font-size: 15px; line-height: 1.4; }
 .mostra-altri { width: 100%; min-height: 56px; margin-top: 10px; background: none; border: 2px dashed var(--linea); border-radius: 16px; color: var(--blu); font-weight: 600; }
 
 .etichetta { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 15px; font-weight: 700; background: var(--blu-chiaro); color: var(--blu-scuro); }

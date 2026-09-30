@@ -299,10 +299,49 @@
   }
   const statoLead = (l) => l.stato || 'Da richiamare';
 
+  // Da risentire: preventivi mandati e mai chiusi, e contatti sentiti e poi
+  // lasciati li'. Prende il posto del riepilogo del lunedi' dell'agente lead
+  // (spento il 30 set 2026). Nel foglio non c'e' la data dell'ultimo contatto:
+  // si conta dall'ultima traccia datata, cioe' la nota piu' recente scritta
+  // dall'app ("gg/mm: …") o "Ha ricontattato il …", e se non ce n'e' nessuna
+  // dall'arrivo del contatto.
+  const RISENTI = { 'Preventivo inviato': 7, 'Contattato': 21 };
+  const RISENTI_MAX = 60; // un "sentito" fermo da piu' di due mesi e' freddo: resta fra i Sentiti
+  function ultimaTraccia(l) {
+    let t = quandoArrivato(l);
+    const adesso = Date.now();
+    const note = String(l.note || '');
+    for (const m of note.matchAll(/(?:^| — )(\d{2})\/(\d{2}): /g)) {
+      let a = new Date(adesso).getUTCFullYear();
+      let d = Date.UTC(a, +m[2] - 1, +m[1]);
+      if (d > adesso + GIORNO) d = Date.UTC(a - 1, +m[2] - 1, +m[1]); // nota di dicembre letta a gennaio
+      t = Math.max(t, d);
+    }
+    for (const m of note.matchAll(/Ha ricontattato il (\d{1,2})\/(\d{1,2})\/(\d{4})/g)) {
+      t = Math.max(t, Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    }
+    // Data dell'ultimo cambio di stato (colonna "Data stato", gg/mm/aaaa), se
+    // il motore la manda: vuota vuol dire stato mai cambiato dall'arrivo.
+    const s = String(l.dataStato || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (s) t = Math.max(t, Date.UTC(+s[3], +s[2] - 1, +s[1]));
+    return t;
+  }
+  function daRisentire() {
+    return dati.lead
+      .map((l) => ({ l, giorni: Math.floor((Date.now() - ultimaTraccia(l)) / GIORNO) }))
+      .filter(({ l, giorni }) => {
+        const soglia = RISENTI[statoLead(l)];
+        if (!soglia || !quandoArrivato(l)) return false;
+        return giorni >= soglia && (statoLead(l) === 'Preventivo inviato' || giorni <= RISENTI_MAX);
+      })
+      .sort((a, b) => b.giorni - a.giorni);
+  }
+
   function schermoHome() {
     titolo('Acquadirete', false);
     const { scadute, presto } = contaScadenze();
     const daRichiamare = dati.lead.filter((l) => statoLead(l) === 'Da richiamare').length;
+    const risentire = daRisentire().length;
     const alle = aggiornatoAlle ? new Date(aggiornatoAlle).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
     schermo.innerHTML = `
       <div class="tessere">
@@ -314,7 +353,7 @@
         <button class="tessera" data-vai="lead">
           <span class="ico">${icona('telefono')}</span>
           <span><b>Contatti da richiamare</b>
-          <small>${daRichiamare ? `<span class="n-rosso">${daRichiamare} da richiamare</span>` : 'Nessuno da richiamare'}</small></span>
+          <small>${daRichiamare ? `<span class="n-rosso">${daRichiamare} da richiamare</span>` : 'Nessuno da richiamare'}${risentire ? ` · ${risentire} da risentire` : ''}</small></span>
         </button>
         <button class="tessera" data-vai="cerca">
           <span class="ico">${icona('cerca')}</span>
@@ -595,8 +634,10 @@
     'Preventivo inviato': 'Gli ho mandato il preventivo',
     'Cliente': 'È diventato cliente',
   };
+  const RISENTIRE = 'risentire';
   const FILTRI_LEAD = [
     ['Da richiamare', 'Da richiamare'],
+    [RISENTIRE, 'Da risentire'],
     ['Contattato', 'Sentiti'],
     ['Preventivo inviato', 'Preventivo'],
     ['Cliente', 'Clienti'],
@@ -612,16 +653,29 @@
     titolo('Contatti', true);
     const conta = {};
     dati.lead.forEach((l) => { conta[statoLead(l)] = (conta[statoLead(l)] || 0) + 1; });
-    const filtro = stato.filtro || (conta['Da richiamare'] ? 'Da richiamare' : 'Contattato');
-    const elenco = dati.lead.filter((l) => statoLead(l) === filtro).sort((a, b) => quandoArrivato(b) - quandoArrivato(a));
+    const risentire = daRisentire();
+    conta[RISENTIRE] = risentire.length;
+    const filtro = stato.filtro || (conta['Da richiamare'] ? 'Da richiamare' : risentire.length ? RISENTIRE : 'Contattato');
+    const quanti = new Map(risentire.map(({ l, giorni }) => [l, giorni]));
+    const elenco = filtro === RISENTIRE
+      ? risentire.map(({ l }) => l)
+      : dati.lead.filter((l) => statoLead(l) === filtro).sort((a, b) => quandoArrivato(b) - quandoArrivato(a));
+    const perche = (l) => {
+      const g = quanti.get(l);
+      return statoLead(l) === 'Preventivo inviato'
+        ? `<span class="etichetta arancio">Preventivo senza risposta da ${g} giorni</span>`
+        : `<span class="etichetta arancio">Sentito e poi fermo da ${g} giorni</span>`;
+    };
     schermo.innerHTML = `
       <button class="btn pieno" id="nuovo-lead" style="width:100%;margin-bottom:14px">${icona('personaPiu')} Aggiungi un contatto</button>
       <div class="pillole">${FILTRI_LEAD.map(([v, t]) => `<button class="pillola" data-filtro="${esc(v)}" aria-pressed="${filtro === v}">${t} (${conta[v] || 0})</button>`).join('')}</div>
+      ${filtro === RISENTIRE ? '<p class="spiega">Preventivi mandati da più di una settimana, e contatti sentiti che poi non si sono più fatti vivi. Una telefonata e sai se va avanti. I giorni si contano dall\'ultima nota, o dall\'arrivo se note non ce ne sono.</p>' : ''}
       <div class="lista">${elenco.map((l) => `
         <button class="voce" data-lead="${esc(idLead(l))}">
           <b>${esc(l.nome || 'Senza nome')}</b>
           <span class="riga2">Arrivato il ${esc(String(l.data).split(',')[0] || '—')}${l.provenienza ? ' · ' + esc(l.provenienza) : ''}</span>
-          ${l.interesse ? `<span class="riga3"><span class="etichetta">${esc(l.interesse)}</span></span>` : ''}
+          ${filtro === RISENTIRE ? `<span class="riga3">${perche(l)}</span>`
+            : l.interesse ? `<span class="riga3"><span class="etichetta">${esc(l.interesse)}</span></span>` : ''}
         </button>`).join('') || '<div class="vuoto">Nessun contatto qui</div>'}</div>`;
     schermo.querySelectorAll('[data-filtro]').forEach((b) => {
       b.onclick = () => { history.replaceState({ s: 'lead', filtro: b.dataset.filtro }, '', location.pathname + location.hash); disegna(history.state); };
@@ -771,6 +825,7 @@
     try {
       const r = await api('stato', { riga: l.riga, data: l.data, nome: l.nome, stato: nuovo });
       l.stato = nuovo;
+      if (r.dataStato) l.dataStato = r.dataStato; // "Da risentire" riparte da oggi
       disegna(history.state);
       if (r.cliente && r.cliente.giaPresente) {
         messaggio(`Segnato. Era già tra i clienti (${r.cliente.codice}).`, { durata: 8000 });
