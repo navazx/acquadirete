@@ -50,7 +50,7 @@ const COLONNE_LEAD = {
 };
 
 // Valori del menu a tendina "Stato" di Lead-Contatti.
-export const STATI_LEAD = ['Da richiamare', 'Contattato', 'Preventivo inviato', 'Cliente'];
+export const STATI_LEAD = ['Da richiamare', 'Contattato', 'Preventivo inviato', 'Cliente', 'Non interessato'];
 
 // Errore con un messaggio già pronto da mostrare a babbo.
 export const problema = (messaggio, status = 400) =>

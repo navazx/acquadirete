@@ -633,6 +633,9 @@
     'Contattato': 'L\'ho sentito',
     'Preventivo inviato': 'Gli ho mandato il preventivo',
     'Cliente': 'È diventato cliente',
+    // Sentiti ma non interessati, o perditempo: si chiude la partita, e non
+    // tornano piu' fra quelli da risentire (30 set 2026, richiesta di Matteo).
+    'Non interessato': 'Non gli interessa',
   };
   const RISENTIRE = 'risentire';
   const FILTRI_LEAD = [
@@ -641,6 +644,7 @@
     ['Contattato', 'Sentiti'],
     ['Preventivo inviato', 'Preventivo'],
     ['Cliente', 'Clienti'],
+    ['Non interessato', 'Non interessati'],
   ];
   // "29/06/2026, 17:22:49" → numero ordinabile; senza data in fondo.
   function quandoArrivato(l) {
