@@ -15,7 +15,8 @@
 // niente scorciatoie sull'accesso.
 import { timingSafeEqual, createHash } from 'node:crypto';
 import {
-  leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, nuovoCliente, modificaCliente,
+  leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
+  nuovoCliente, modificaCliente,
   nuovoLead, cambiaStatoLead, notaLead, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
@@ -63,6 +64,8 @@ const AZIONI = {
   annulla: annullaFatta,
   rimanda: rimandaManutenzione,
   avviso: impostaAvviso,
+  sposta: spostaCliente,
+  importaPersi,
   nuovo: nuovoCliente,
   modifica: modificaCliente,
   nuovoLead,

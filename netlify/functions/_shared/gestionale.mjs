@@ -336,7 +336,24 @@ export async function leggiTutto(foglio) {
     });
   }
 
-  return { oggi: serialeDa(...Object.values(oggi())), clienti, lead, stati: STATI_LEAD };
+  // I clienti persi: se la scheda non c'è o non si legge, l'app va lo stesso.
+  const persi = [];
+  try {
+    const p = await leggiPersi(foglio);
+    if (p) {
+      for (let i = p.mappa.riga; i < p.griglia.length; i++) {
+        const r = p.griglia[i] || [];
+        const c = clienteDaRiga(r, p.mappa.col, i + 1);
+        if (!c.nome && !c.codice) continue;
+        const quando = p.mappa.col.PERSO_IL ? serialeDaCella(r[p.mappa.col.PERSO_IL - 1]) : null;
+        persi.push({ ...c, perso: true, persoIl: quando == null ? testo(r[(p.mappa.col.PERSO_IL || 0) - 1]) : testoData(dataDaSeriale(quando)) });
+      }
+    }
+  } catch (err) {
+    console.error('Clienti persi non letti:', err);
+  }
+
+  return { oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD };
 }
 
 // Le righe si spostano (gli ordinamenti del menu "Foglio di lavoro"): un
@@ -515,6 +532,118 @@ export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaSc
 }
 
 // ---------------------------------------------------------------------------
+//  Clienti persi
+// ---------------------------------------------------------------------------
+// Scheda "Clienti-Persi" (dal 1 ott 2026): chi non è più cliente. Prima babbo
+// li cancellava a mano (15 il 30 set, recuperati dal backup del 21 set); ora
+// dall'app si spostano qui e si possono far tornare. Riga 1 = stesse
+// intestazioni di Clienti-Impianti più "Perso il". Le automazioni del foglio
+// non la leggono: è solo un archivio.
+export const TAB_PERSI = 'Clienti-Persi';
+const INTESTAZIONE_PERSO_IL = 'Perso il';
+
+async function leggiPersi(foglio) {
+  let griglia;
+  try {
+    griglia = await foglio.leggi(`'${TAB_PERSI}'!A1:Z1000`, 'UNFORMATTED_VALUE');
+  } catch (err) {
+    if (err.status === 400) return null; // scheda non ancora creata
+    throw err;
+  }
+  if (!griglia.length) return null;
+  const mappa = colonnePerNome(griglia, COLONNE_CLIENTI, 'codice');
+  const i = (griglia[mappa.riga - 1] || []).map(normalizza).indexOf(normalizza(INTESTAZIONE_PERSO_IL));
+  if (i !== -1) mappa.col.PERSO_IL = i + 1;
+  return { griglia, mappa };
+}
+
+// La crea (se manca) copiando le intestazioni e il loro aspetto da Clienti-Impianti.
+async function preparaPersi(foglio, clienti) {
+  const esistente = await leggiPersi(foglio);
+  if (esistente) return esistente;
+  await foglio.creaScheda(TAB_PERSI);
+  const intestazioni = [...(clienti.griglia[clienti.mappa.riga - 1] || []).map(testo), INTESTAZIONE_PERSO_IL];
+  await foglio.scrivi([{ range: `'${TAB_PERSI}'!A1`, values: [intestazioni] }], 'RAW');
+  await foglio.copiaFormatoTra(TAB_CLIENTI, clienti.mappa.riga, TAB_PERSI, 1, intestazioni.length).catch(() => {});
+  return leggiPersi(foglio);
+}
+
+// I valori di una riga rimessi nell'ordine delle intestazioni dell'altra scheda.
+function perIntestazioni(valori, intestDa, intestA) {
+  const pos = new Map(intestDa.map((h, i) => [normalizza(h), i]));
+  return intestA.map((h) => { const i = pos.get(normalizza(h)); return i == null ? '' : (valori[i] ?? ''); });
+}
+
+const ultimaPiena = ({ griglia, mappa }) => {
+  let ultima = mappa.riga;
+  griglia.forEach((r, i) => { if (i >= mappa.riga && (r || []).some((c) => testo(c))) ultima = i + 1; });
+  return ultima;
+};
+
+// Sposta un cliente in Clienti-Persi (verso 'persi') o lo riporta in
+// Clienti-Impianti (verso 'clienti'). Scrive la riga di là, ricontrolla che
+// la riga di qua sia ancora quel codice e solo allora la elimina. La
+// prossima manutenzione passa come valore (la formula non sopravvive allo
+// spostamento). Si annulla spostandolo indietro.
+export async function spostaCliente(foglio, { codice, verso }) {
+  if (verso !== 'persi' && verso !== 'clienti') throw problema('Scelta non valida.');
+  const cod = testo(codice).toUpperCase();
+  const clienti = await leggiClienti(foglio);
+  const persi = verso === 'persi' ? await preparaPersi(foglio, clienti) : await leggiPersi(foglio);
+  if (!persi) throw problema('Non trovo la scheda dei clienti persi.', 409);
+  const [da, a, tabDa, tabA] = verso === 'persi'
+    ? [clienti, persi, TAB_CLIENTI, TAB_PERSI]
+    : [persi, clienti, TAB_PERSI, TAB_CLIENTI];
+
+  const riga = trovaCliente(da.griglia, da.mappa, cod);
+  const intestDa = (da.griglia[da.mappa.riga - 1] || []).map(testo);
+  const intestA = (a.griglia[a.mappa.riga - 1] || []).map(testo);
+  const valori = perIntestazioni(da.griglia[riga - 1] || [], intestDa, intestA);
+  if (verso === 'persi' && a.mappa.col.PERSO_IL) valori[a.mappa.col.PERSO_IL - 1] = testoData(oggi());
+  const nome = testo((da.griglia[riga - 1] || [])[da.mappa.col.NOME - 1]);
+
+  const nuova = ultimaPiena(a) + 1;
+  await foglio.copiaFormatoTra(tabDa, riga, tabA, nuova, Math.max(intestA.length, intestDa.length)).catch(() => {});
+  // RAW: testi restano testi (telefoni col +), date restano numeri seriali.
+  await foglio.scrivi([{ range: `'${tabA}'!A${nuova}`, values: [valori] }], 'RAW');
+
+  const controllo = await foglio.leggi(`'${tabDa}'!${lettera(da.mappa.col.CODICE)}${riga}`, 'UNFORMATTED_VALUE');
+  if (testo(controllo?.[0]?.[0]).toUpperCase() !== cod) {
+    throw problema('Il foglio è cambiato mentre spostavo: il cliente adesso compare in tutte e due le schede. Chiedi a Matteo.', 409);
+  }
+  await foglio.eliminaRiga(tabDa, riga);
+  return { ok: true, codice: cod, nome, verso, annulla: { codice: cod, verso: verso === 'persi' ? 'clienti' : 'persi' } };
+}
+
+// Una tantum, solo con la chiave di Matteo: rimette in Clienti-Persi righe
+// riprese da un backup ({ intestazione: valore }, come nel foglio). Salta i
+// codici che ci sono già in una delle due schede.
+export async function importaPersi(foglio, { righe = [] }, { chi } = {}) {
+  if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
+  if (!Array.isArray(righe) || !righe.length || righe.length > 100) throw problema('Righe non valide.');
+  const clienti = await leggiClienti(foglio);
+  const persi = await preparaPersi(foglio, clienti);
+  const codiciEsistenti = new Set([clienti, persi].flatMap(({ griglia, mappa }) =>
+    griglia.slice(mappa.riga).map((r) => testo((r || [])[mappa.col.CODICE - 1]).toUpperCase())));
+  const intestA = (persi.griglia[persi.mappa.riga - 1] || []).map(testo);
+  const aggiunti = []; const saltati = [];
+  let n = ultimaPiena(persi);
+  for (const oggetto of righe) {
+    const voci = Object.entries(oggetto || {});
+    const cod = testo((voci.find(([h]) => normalizza(h) === 'codice') || [])[1]).toUpperCase();
+    if (!/^C\d+$/.test(cod) || codiciEsistenti.has(cod)) { saltati.push(cod || '?'); continue; }
+    const valori = perIntestazioni(voci.map(([, v]) => v), voci.map(([h]) => h), intestA);
+    n += 1;
+    // Aspetto di una riga di dati vera (formato date compreso).
+    await foglio.copiaFormatoTra(TAB_CLIENTI, clienti.mappa.riga + 1, TAB_PERSI, n, intestA.length).catch(() => {});
+    await foglio.scrivi([{ range: `'${TAB_PERSI}'!A${n}`, values: [valori] }], 'RAW');
+    codiciEsistenti.add(cod);
+    aggiunti.push(cod);
+  }
+  return { ok: true, aggiunti, saltati };
+}
+
+// ---------------------------------------------------------------------------
 //  Cliente nuovo
 // ---------------------------------------------------------------------------
 
@@ -530,10 +659,25 @@ async function aggiungiRigaCliente(foglio, campi) {
   if (doppio) {
     return { giaPresente: true, codice: testo(doppio[col.CODICE - 1]), nome: testo(doppio[col.NOME - 1]) };
   }
+  // Anche fra i clienti persi: meglio farlo tornare che crearne un doppione.
+  const persi = await leggiPersi(foglio).catch(() => null);
+  const righePersi = persi ? persi.griglia.slice(persi.mappa.riga) : [];
+  const persoDoppio = persi && righePersi.find((r) => chiaveNome(r[persi.mappa.col.NOME - 1]) === chiaveNome(campi.nome));
+  if (persoDoppio) {
+    return { giaPresente: true, perso: true, codice: testo(persoDoppio[persi.mappa.col.CODICE - 1]), nome: testo(persoDoppio[persi.mappa.col.NOME - 1]) };
+  }
 
+  // Il codice nuovo tiene conto anche dei persi, così non si riusa mai.
+  // (L'onEdit del foglio guarda solo Clienti-Impianti: il caso in cui
+  // conta è un cliente scritto a mano subito dopo aver spostato fra i persi
+  // l'ultimo arrivato. Raro, ma da sapere.)
   let max = 0;
   for (const r of dati) {
     const m = testo(r[col.CODICE - 1]).match(/^C(\d+)$/i);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  for (const r of righePersi) {
+    const m = testo(r[persi.mappa.col.CODICE - 1]).match(/^C(\d+)$/i);
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
   const codice = 'C' + String(max + 1).padStart(3, '0');
@@ -861,6 +1005,43 @@ export function creaFoglioGoogle(sheetId) {
             },
           }],
         }),
+      });
+    },
+    // Come copiaFormato, ma da una scheda a un'altra (per i clienti persi).
+    async copiaFormatoTra(tabDa, rigaDa, tabA, rigaA, larghezza) {
+      const da = await idScheda(tabDa);
+      const a = await idScheda(tabA);
+      if (da == null || a == null) return;
+      await chiama(':batchUpdate', {
+        method: 'POST',
+        body: JSON.stringify({
+          requests: [{
+            copyPaste: {
+              source: { sheetId: da, startRowIndex: rigaDa - 1, endRowIndex: rigaDa, startColumnIndex: 0, endColumnIndex: larghezza },
+              destination: { sheetId: a, startRowIndex: rigaA - 1, endRowIndex: rigaA, startColumnIndex: 0, endColumnIndex: larghezza },
+              pasteType: 'PASTE_FORMAT',
+            },
+          }],
+        }),
+      });
+    },
+    // Crea una scheda vuota con la prima riga bloccata (se c'è già, niente).
+    async creaScheda(tab) {
+      await chiama(':batchUpdate', {
+        method: 'POST',
+        body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tab, gridProperties: { frozenRowCount: 1 } } } }] }),
+      }).catch((e) => { if (!/already exists/i.test(e.testo)) throw e; });
+      idSchede = null;
+    },
+    // Elimina UNA riga intera (le righe sotto salgono). Usata solo per
+    // spostare un cliente fra Clienti-Impianti e Clienti-Persi, dopo aver
+    // ricontrollato il codice su quella riga.
+    async eliminaRiga(tab, riga) {
+      const sheetId = await idScheda(tab);
+      if (sheetId == null) throw new Error(`Scheda ${tab} non trovata`);
+      await chiama(':batchUpdate', {
+        method: 'POST',
+        body: JSON.stringify({ requests: [{ deleteDimension: { range: { sheetId, dimension: 'ROWS', startIndex: riga - 1, endIndex: riga } } }] }),
       });
     },
     // Copia l'aspetto (non il contenuto) di una cella su un'altra.

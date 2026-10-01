@@ -23,7 +23,8 @@ const VERO = process.argv.includes('--vero');
 
 process.env.GSC_KEY_JSON = readFileSync(join(QUI, '..', 'seo-report', 'gsc-key-readonly.json'), 'utf8');
 process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
-process.env.GESTIONE_CHIAVE = 'prova:provalocale-0000-0000';
+// "matteo" serve a provare le operazioni riservate a lui (importaPersi).
+process.env.GESTIONE_CHIAVE = 'prova:provalocale-0000-0000,matteo:provalocale-matteo-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
 const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD } =
@@ -93,8 +94,9 @@ async function creaFoglioFinto() {
     async scrivi(data, opzione) {
       for (const { range, values } of data) {
         const { tab, r1, c1 } = leggiRange(range);
-        console.log(`  scrivo ${opzione.padEnd(12)} ${range} = ${JSON.stringify(values[0][0])}`);
-        metti(tab, r1, c1, values[0][0]);
+        console.log(`  scrivo ${opzione.padEnd(12)} ${range} = ${JSON.stringify(values[0].length > 1 ? values[0] : values[0][0])}`);
+        // Una riga intera (es. il cliente spostato fra i persi) parte da c1.
+        values[0].forEach((v, i) => metti(tab, r1, c1 + i, v));
       }
     },
     async svuota(range) {
@@ -104,6 +106,10 @@ async function creaFoglioFinto() {
     },
     async copiaFormato(tab, da, a) { console.log(`  formato riga ${da} → ${a} (${tab})`); },
     async copiaCella(tab, r1, c1, r2, c2) { console.log(`  formato cella ${r1},${c1} → ${r2},${c2} (${tab})`); },
+    async copiaFormatoTra(tabDa, da, tabA, a) { console.log(`  formato riga ${tabDa}:${da} → ${tabA}:${a}`); },
+    async creaScheda(tab) { schede[tab] ||= []; console.log(`  creo la scheda ${tab}`); },
+    // Come Google: la riga sparisce e quelle sotto salgono di una.
+    async eliminaRiga(tab, riga) { (schede[tab] || []).splice(riga - 1, 1); console.log(`  elimino ${tab} riga ${riga}`); },
     // In produzione è appendOrMergeRow (anti-doppioni del sito); qui accoda e basta.
     async accodaLead(riga) {
       const g = schede[TAB_LEAD];

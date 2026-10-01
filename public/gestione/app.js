@@ -168,7 +168,7 @@
   function carica() {
     if (!caricando) {
       caricando = api().then((r) => {
-        dati = { oggi: r.oggi, clienti: r.clienti, lead: r.lead, stati: r.stati };
+        dati = { oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati };
         aggiornatoAlle = Date.now();
         memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
         $('avviso').hidden = true;
@@ -217,7 +217,7 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
@@ -401,7 +401,9 @@
     const posto = [titoloCitta(c.citta), c.zona].filter(Boolean).join(' · ');
     // Urgenti e sospese mostrano il loro motivo al posto della scadenza.
     let riga3 = '';
-    if (c.avviso) {
+    if (c.perso) {
+      riga3 = `<span class="riga3"><span class="etichetta grigio">Cliente perso${c.persoIl ? ' dal ' + esc(c.persoIl) : ''}</span></span>`;
+    } else if (c.avviso) {
       const mo = leggiMotivo(c);
       const etichetta = c.avviso === 'Urgente' ? `<span class="etichetta rosso">Urgente${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>` : `<span class="etichetta grigio">Sospesa${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>`;
       riga3 = `<span class="riga3">${etichetta}</span>${mo.perche ? `<span class="riga2" style="color:var(--testo)">${esc(mo.perche)}</span>` : ''}`;
@@ -514,9 +516,10 @@
   }
 
   function schermoCliente(stato) {
-    const c = dati.clienti.find((x) => x.codice === stato.codice);
+    const c = dati.clienti.find((x) => x.codice === stato.codice) || (dati.persi || []).find((x) => x.codice === stato.codice);
     if (!c) { titolo('Cliente', true); schermo.innerHTML = '<div class="vuoto">Cliente non trovato. Torna indietro e riprova.</div>'; return; }
     titolo('Cliente', true);
+    if (c.perso) return schedaPerso(c);
     const s = scadenza(c);
     const indirizzoCompleto = [c.indirizzo, senzaCap(c.citta) ? c.citta : '', c.provincia].filter(Boolean).join(', ');
     const riga = (etichetta, valore) => (valore ? `<div><dt>${etichetta}</dt><dd>${esc(valore)}</dd></div>` : '');
@@ -559,12 +562,64 @@
         ${riga('Telefono / contatto', c.contatto)}
         ${riga('Zona del giro', c.zona)}
         ${riga('Codice', c.codice)}
-      </dl>`;
+      </dl>
+      <button class="btn leggero" id="perso" style="width:100%;margin-top:14px">Non è più nostro cliente</button>`;
+    $('perso').onclick = () => chiediSposta(c, 'persi');
     $('fatta').onclick = () => chiediFatta(c);
     if ($('rimanda')) $('rimanda').onclick = () => chiediRimanda(c);
     if ($('urgente')) $('urgente').onclick = () => chiediAvviso(c, 'Urgente');
     if ($('togli-avviso')) $('togli-avviso').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
+  }
+
+  // Scheda di un cliente perso: solo i dati e i contatti, più "È tornato cliente".
+  function schedaPerso(c) {
+    const riga = (etichetta, valore) => (valore ? `<div><dt>${etichetta}</dt><dd>${esc(valore)}</dd></div>` : '');
+    const indirizzoCompleto = [c.indirizzo, senzaCap(c.citta) ? c.citta : '', c.provincia].filter(Boolean).join(', ');
+    schermo.innerHTML = `
+      <div class="testa"><h2>${esc(c.nome)}</h2><p>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p></div>
+      <div class="avviso-cliente grigio">
+        <div><b>CLIENTE PERSO</b>${c.persoIl ? `<span>dal ${esc(c.persoIl)}</span>` : ''}<p>Non compare fra le manutenzioni.</p></div>
+      </div>
+      <div class="azioni">${pulsantiContatto(c.contatto, c.indirizzo || c.citta ? indirizzoCompleto : '') || ''}</div>
+      <button class="btn verde grande" id="torna" style="width:100%">${icona('spunta')} È tornato cliente</button>
+      <h3 class="titoletto">Dati del cliente</h3>
+      <dl class="dati">
+        ${riga('Impianto', c.tipo)}
+        ${riga('Installato il', c.installazione)}
+        ${riga('Ultima manutenzione prevista', c.prossima)}
+        ${riga('Note / prezzo', c.note)}
+        ${riga('Telefono / contatto', c.contatto)}
+        ${riga('Codice', c.codice)}
+      </dl>`;
+    $('torna').onclick = () => chiediSposta(c, 'clienti');
+  }
+
+  // Spostare fra clienti e clienti persi (nel foglio: Clienti-Impianti ↔ Clienti-Persi).
+  function chiediSposta(c, verso) {
+    const persi = verso === 'persi';
+    apriFinestra(`
+      <h3>${persi ? 'Non è più nostro cliente?' : 'È tornato cliente?'}</h3>
+      <p><strong>${esc(c.nome)}</strong><br>${persi
+        ? 'Lo sposto fra i <strong>clienti persi</strong>: non comparirà più fra le manutenzioni, ma la sua scheda resta e lo puoi far tornare quando vuoi.'
+        : 'Lo rimetto fra i clienti, con i suoi dati di prima.'}</p>
+      <button class="btn ${persi ? 'pieno' : 'verde'} grande" type="button" id="si">${persi ? 'Sì, spostalo fra i persi' : `${icona('spunta')} Sì, rimettilo fra i clienti`}</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('si').onclick = (e) => conPulsante(e.currentTarget, 'Sposto…', async () => {
+      try {
+        const r = await api('sposta', { codice: c.codice, verso });
+        await carica();
+        chiudiFinestra();
+        disegna(history.state);
+        messaggio(persi ? 'Spostato fra i clienti persi' : 'È di nuovo fra i clienti ✓', {
+          durata: 15000,
+          azione: { testo: 'Annulla', fai: () => api('sposta', r.annulla).then(() => carica()).then(() => { disegna(history.state); messaggio('Annullato.'); }).catch((err) => messaggio(err.message, { errore: true, durata: 8000 })) },
+        });
+      } catch (err) {
+        messaggio(err.message, { errore: true, durata: 8000 });
+      }
+    });
   }
 
   // Sospendere (senza data) o segnare urgente (guasto), con un motivo
@@ -965,11 +1020,15 @@
   // ---------------------------------------------------------------------
   function schermoCerca(stato) {
     titolo('Cerca un cliente', true);
+    const persi = dati.persi || [];
     schermo.innerHTML = `
       <div class="cerca"><input type="search" id="q" placeholder="Nome, città o telefono" autocomplete="off" enterkeyhint="search" value="${esc(stato.q || '')}"></div>
-      <div class="lista" id="risultati"></div>`;
+      <div class="lista" id="risultati"></div>
+      ${persi.length ? `<button class="mostra-altri" id="vai-persi">Clienti persi (${persi.length})</button>` : ''}`;
+    if ($('vai-persi')) $('vai-persi').onclick = () => vai({ s: 'persi' });
     const q = $('q');
-    const indice = dati.clienti.map((c) => ({
+    // Anche i persi: se uno richiama, lo si ritrova (con l'etichetta "Cliente perso").
+    const indice = dati.clienti.concat(persi).map((c) => ({
       c,
       testo: normalizza([c.nome, c.citta, c.indirizzo, c.codice, c.tipo].join(' ')),
       cifre: String(c.contatto).replace(/\D/g, ''),
@@ -989,6 +1048,16 @@
     q.oninput = cerca;
     cerca();
     if (!stato.q) setTimeout(() => q.focus(), 50);
+  }
+
+  // Clienti persi: chi non è più cliente (scheda Clienti-Persi del foglio).
+  function schermoPersi() {
+    titolo('Clienti persi', true);
+    const persi = (dati.persi || []).slice().sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+    schermo.innerHTML = `
+      <p style="margin:0 0 14px;color:var(--grigio)">Non sono più clienti: non compaiono fra le manutenzioni. Se uno torna, aprilo e tocca «È tornato cliente».</p>
+      <div class="lista">${persi.map((c) => voceCliente(c)).join('') || '<div class="vuoto">Nessun cliente perso</div>'}</div>`;
+    collegaVoci();
   }
 
   // ---------------------------------------------------------------------
@@ -1066,8 +1135,10 @@
         });
         if (r.giaPresente) {
           apriFinestra(`
-            <h3>C'è già un cliente con questo nome</h3>
-            <p><strong>${esc(r.nome)}</strong> (${esc(r.codice)}) è già nell'elenco. Non l'ho aggiunto di nuovo.</p>
+            <h3>${r.perso ? 'È fra i clienti persi' : 'C\'è già un cliente con questo nome'}</h3>
+            <p><strong>${esc(r.nome)}</strong> (${esc(r.codice)}) ${r.perso
+              ? 'è fra i clienti persi. Non l\'ho aggiunto di nuovo: apri la sua scheda e tocca «È tornato cliente».'
+              : 'è già nell\'elenco. Non l\'ho aggiunto di nuovo.'}</p>
             <button class="btn pieno grande" type="button" id="apri">Apri la sua scheda</button>
             <button class="btn leggero" type="button" id="no">Torna al modulo</button>`);
           $('no').onclick = chiudiFinestra;
