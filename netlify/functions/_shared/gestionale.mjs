@@ -161,6 +161,27 @@ const chiaveNome = (s) => String(s ?? '').toLowerCase().split(/\s+/).filter(Bool
 
 const testo = (v) => (v == null ? '' : String(v)).trim();
 
+// Nome del lead → "COGNOME NOME" per l'anagrafica (01/10/2026). Fino a ieri
+// si girava sempre, come se il lead fosse "Nome Cognome"; ma i lead in scheda
+// sono quasi tutti già girati a mano e "BORSELLI PAOLO" diventava "PAOLO
+// BORSELLI". Ora si contano i nomi di battesimo dei clienti (in "COGNOME
+// NOME" è l'ultima parola) e si gira solo se la prima parola fa da nome più
+// spesso dell'ultima; nel dubbio resta com'è. Gemella di cognomePrimoLC nel
+// .gs (Codice.gs v13): se cambi una, cambia l'altra.
+export function cognomePrimo(nome, nomiClienti) {
+  const parti = testo(nome).toUpperCase().split(/\s+/).filter(Boolean);
+  if (parti.length < 2) return parti.join(' ');
+  const conta = {};
+  for (const n of nomiClienti) {
+    const p = String(n ?? '').toUpperCase().replace(/\([^)]*\)/g, ' ').split(/\/|\sE\s/)[0]
+      .replace(/[^A-ZÀ-Ü' ]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (p.length >= 2) conta[p[p.length - 1]] = (conta[p[p.length - 1]] || 0) + 1;
+  }
+  const primo = conta[parti[0]] || 0;
+  const ultimo = conta[parti[parti.length - 1]] || 0;
+  return primo > ultimo ? [...parti.slice(1), parti[0]].join(' ') : parti.join(' ');
+}
+
 // Il valore che hanno gli altri clienti della stessa città, se sono almeno 2
 // e d'accordo almeno 3 su 4 (valoreConcordeClienteAMano nel .gs). Nel dubbio
 // resta vuoto: una zona sbagliata manda il giro dalla parte sbagliata.
@@ -654,6 +675,9 @@ async function aggiungiRigaCliente(foglio, campi) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const { col } = mappa;
   const dati = griglia.slice(mappa.riga);
+  // Da un lead il nome arriva com'è scritto in scheda: lo si mette in
+  // "COGNOME NOME" guardando i clienti che ci sono già.
+  if (campi.daLead) campi = { ...campi, nome: cognomePrimo(campi.nome, dati.map((r) => r[col.NOME - 1])) };
 
   const doppio = dati.find((r) => chiaveNome(r[col.NOME - 1]) === chiaveNome(campi.nome));
   if (doppio) {
@@ -852,10 +876,9 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
   let cliente = null;
   if (stato === 'Cliente' && v('STATO') !== 'Cliente') {
     // Come l'onEdit del foglio: il lead diventa una riga di Clienti-Impianti.
-    // Nome "Nome Cognome" → "COGNOME NOME"; zona e provincia dalle note del
-    // modulo ("Zona: Z4 — …"), altrimenti dagli altri clienti della città.
-    const parti = v('NOME').split(/\s+/).filter(Boolean);
-    const nomeAnagrafica = (parti.length < 2 ? v('NOME') : parti.slice(1).join(' ') + ' ' + parti[0]).toUpperCase();
+    // Nome in "COGNOME NOME" (cognomePrimo, dentro aggiungiRigaCliente); zona
+    // e provincia dalle note del modulo ("Zona: Z4 — …"), altrimenti dagli
+    // altri clienti della città.
     const note = v('NOTE');
     let provincia = '';
     if (/prato/i.test(note)) provincia = 'PO';
@@ -864,7 +887,8 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
     const zona = (note.match(/\bZ[1-8X]\b/) || [''])[0];
     const dataLead = v('DATA').split(',')[0].trim();
     cliente = await aggiungiRigaCliente(foglio, {
-      nome: nomeAnagrafica,
+      nome: v('NOME'),
+      daLead: true,
       contatto: v('CONTATTO'),
       indirizzo: '',
       citta: '',
