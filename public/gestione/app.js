@@ -428,15 +428,23 @@
   // come li dice babbo, per i tasti che raggruppano le città piccole.
   const NOMI_ZONE = {
     // Nomi che non si confondono coi tasti delle città grandi lì accanto
-    // (Pistoia, Lastra a Signa, Empoli hanno il loro).
+    // (Pistoia, Lastra a Signa, Empoli hanno il loro). Z5 non c'è: tutta la
+    // zona di Prato sta nel tasto «Prato e dintorni» (CITTA_UNITE).
     Z1: 'Altre di Firenze', Z2: 'Campi e Signa', Z3: 'Chianti e Bagno a Ripoli',
-    Z4: 'Valdelsa', Z5: 'Dintorni di Prato', Z6: 'Valdinievole e Quarrata',
+    Z4: 'Valdelsa', Z6: 'Valdinievole e Quarrata',
     Z7: 'Valdarno e Sieve', Z8: 'Mugello', ZX: 'Fuori zona',
   };
+  // Tasti fissi chiesti da Matteo (1 ott): queste città stanno sempre in un
+  // tasto solo, anche quando ognuna ha tanti clienti. Si guarda prima l'elenco
+  // delle città, poi la zona del giro.
+  const CITTA_UNITE = [
+    { id: 'unite:sesto', nome: 'Sesto e Calenzano', citta: ['sesto fiorentino', 'calenzano'] },
+    { id: 'unite:prato', nome: 'Prato e dintorni', zona: 'Z5' },
+  ];
 
   // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
   // per un guasto) e "Sospese" (senza data, finché non si riattivano). Sotto,
-  // una riga di tasti con le città di quella pagina (le più piene prima): se
+  // in tutte e tre, una riga di tasti con le città (le più piene prima): se
   // ne toccano una o più per il giro, «Tutte» toglie il filtro.
   const VISTE = [['fare', 'Da fare'], ['urgenti', 'Urgenti'], ['sospese', 'Sospese']];
   function schermoScadenze(stato) {
@@ -446,52 +454,61 @@
     const conta = { fare: null, urgenti, sospese };
     let scelte = new Set(Array.isArray(stato.citta) ? stato.citta : []);
 
-    // Chi sta in questa pagina, prima del filtro per città.
-    const tipo = vista === 'urgenti' ? 'Urgente' : 'Sospesa';
-    const inPagina = vista === 'fare'
+    // Chi sta in ciascuna pagina, prima del filtro per città.
+    const diPagina = (v) => (v === 'fare'
       ? dati.clienti.filter((c) => { if (c.avviso) return false; const s = scadenza(c); return s.giorni != null && s.giorni <= 60; })
-      : dati.clienti.filter((c) => c.avviso === tipo);
+      : dati.clienti.filter((c) => c.avviso === (v === 'urgenti' ? 'Urgente' : 'Sospesa')));
+    const inPagina = diPagina(vista);
 
-    // Tasti delle città: quante ce ne sono in questa pagina, dalla più piena.
+    // I tasti delle città sono gli stessi nelle tre pagine (fatti con tutti
+    // i clienti delle Manutenzioni): la zona scelta in «Da fare» resta quella
+    // anche passando a «Urgenti» o «Sospese». Il numero è di questa pagina.
     const perCitta = new Map();
-    inPagina.forEach((c) => {
+    VISTE.flatMap(([v]) => diPagina(v)).forEach((c) => {
       const k = chiaveCitta(c);
       if (!k) return;
-      const x = perCitta.get(k) || { k, nome: titoloCitta(c.citta), n: 0, zone: {} };
-      x.n++;
+      const x = perCitta.get(k) || { k, nome: titoloCitta(c.citta), tot: 0, zone: {} };
+      x.tot++;
       if (c.zona) x.zone[c.zona] = (x.zone[c.zona] || 0) + 1;
       perCitta.set(k, x);
     });
     // Le città con pochi clienti (1 o 2) si uniscono in un tasto per zona del
     // giro, chiamato col nome della zona e non col codice Z: sono vicine, e
     // 45 tasti da uno o due clienti sarebbero solo da scorrere. Se in una zona
-    // la città piccola è una sola, resta col suo nome.
+    // la città piccola è una sola, resta col suo nome. Quelle di CITTA_UNITE
+    // vanno nel loro tasto fisso, grandi o piccole che siano.
+    const tasto = (id, nome, citta, gruppo) => ({ id, nome, chiavi: citta.map((x) => x.k), gruppo: gruppo ? citta.map((x) => x.nome) : null });
+    const metti = (mappa, chiave, x) => { if (!mappa.has(chiave)) mappa.set(chiave, []); mappa.get(chiave).push(x); };
     const tasti = [];
+    const unite = new Map();
     const piccolePerZona = new Map();
     for (const x of perCitta.values()) {
       const zona = Object.keys(x.zone).sort((a, b) => x.zone[b] - x.zone[a])[0];
-      if (x.n <= CITTA_PICCOLA && NOMI_ZONE[zona]) {
-        if (!piccolePerZona.has(zona)) piccolePerZona.set(zona, []);
-        piccolePerZona.get(zona).push(x);
-      } else {
-        tasti.push({ id: x.k, nome: x.nome, chiavi: [x.k], n: x.n });
-      }
+      const fisso = CITTA_UNITE.find((u) => (u.citta ? u.citta.includes(x.k) : u.zona === zona));
+      if (fisso) metti(unite, fisso, x);
+      else if (x.tot <= CITTA_PICCOLA && NOMI_ZONE[zona]) metti(piccolePerZona, zona, x);
+      else tasti.push(tasto(x.k, x.nome, [x]));
     }
+    for (const [u, citta] of unite) tasti.push(tasto(u.id, u.nome, citta, true));
     for (const [zona, citta] of piccolePerZona) {
-      if (citta.length === 1) tasti.push({ id: citta[0].k, nome: citta[0].nome, chiavi: [citta[0].k], n: citta[0].n });
-      else tasti.push({ id: 'zona:' + zona, nome: NOMI_ZONE[zona], chiavi: citta.map((x) => x.k), n: citta.reduce((s, x) => s + x.n, 0), gruppo: citta.map((x) => x.nome) });
+      tasti.push(citta.length === 1 ? tasto(citta[0].k, citta[0].nome, citta) : tasto('zona:' + zona, NOMI_ZONE[zona], citta, true));
     }
-    // Una città scelta prima resta visibile anche se qui non ha clienti.
+    // Una città scelta prima resta visibile anche se non c'è più nessuno.
     const inUnTasto = new Set(tasti.flatMap((t) => t.chiavi));
-    scelte.forEach((k) => { if (!inUnTasto.has(k)) tasti.push({ id: k, nome: titoloCitta(k), chiavi: [k], n: 0 }); });
-    tasti.sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome, 'it'));
-    const perId = new Map(tasti.map((t) => [t.id, t]));
+    scelte.forEach((k) => { if (!inUnTasto.has(k)) tasti.push({ id: k, nome: titoloCitta(k), chiavi: [k], gruppo: null }); });
+    const quantiQui = new Map();
+    inPagina.forEach((c) => { const k = chiaveCitta(c); quantiQui.set(k, (quantiQui.get(k) || 0) + 1); });
+    tasti.forEach((t) => { t.n = t.chiavi.reduce((s, k) => s + (quantiQui.get(k) || 0), 0); });
     const premuto = (t) => t.chiavi.every((k) => scelte.has(k));
-    const tastiCitta = tasti;
+    // In questa pagina: i tasti che hanno qualcuno, più quelli già scelti
+    // (con «(0)», così si vede che nella zona scelta qui non c'è nessuno).
+    const tastiCitta = tasti.filter((t) => t.n || premuto(t))
+      .sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome, 'it'));
+    const perId = new Map(tastiCitta.map((t) => [t.id, t]));
 
     schermo.innerHTML = `
       <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola${v === 'urgenti' && urgenti ? ' pillola-rossa' : ''}" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
-      ${tastiCitta.length > 1 || scelte.size ? `<div class="pillole pillole-citta">
+      ${tastiCitta.length || scelte.size ? `<div class="pillole pillole-citta">
         <button class="pillola" data-citta="" aria-pressed="${!scelte.size}">Tutte</button>
         ${tastiCitta.map((t) => `<button class="pillola${t.gruppo ? ' pillola-gruppo' : ''}" data-citta="${esc(t.id)}" aria-pressed="${premuto(t)}"${t.gruppo ? ` title="${esc(t.gruppo.join(', '))}"` : ''}>${esc(t.nome)} (${t.n})</button>`).join('')}
       </div>` : ''}
