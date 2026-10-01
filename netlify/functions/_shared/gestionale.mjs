@@ -184,10 +184,63 @@ function valoreConcorde(righe, colCitta, colValore, citta, maiuscolo = true) {
 //  Lettura
 // ---------------------------------------------------------------------------
 
+// Colonne "Sospesa / Urgente" e "Motivo" di Clienti-Impianti (dal 1 ott
+// 2026), in fondo alla tabella. "Sospesa" = la manutenzione non si fa finché
+// non si riattiva (non compare più fra le scadute); "Urgente" = ha chiamato
+// per un guasto. Il Motivo comincia con il giorno ("01/10/2026 — perde
+// acqua"). Facoltative: le crea l'app la prima volta che servono. Nomi scelti
+// apposta senza parole che usano le altre automazioni per trovare le loro
+// colonne (manutenzione, note, zona, …): niente scambi di colonna.
+const INTESTAZIONE_AVVISO = 'Sospesa / Urgente';
+const INTESTAZIONE_MOTIVO = 'Motivo';
+const AVVISI = ['Sospesa', 'Urgente'];
+const avvisoDa = (v) => (/urgent/i.test(String(v ?? '')) ? 'Urgente' : /sospes/i.test(String(v ?? '')) ? 'Sospesa' : '');
+
 async function leggiClienti(foglio) {
   const griglia = await foglio.leggi(`'${TAB_CLIENTI}'!A1:Z1500`, 'UNFORMATTED_VALUE');
   const mappa = colonnePerNome(griglia, COLONNE_CLIENTI, 'codice');
+  // Solo corrispondenza esatta, come per "Data stato" dei lead.
+  const intestazioni = (griglia[mappa.riga - 1] || []).map(normalizza);
+  const iA = intestazioni.indexOf(normalizza(INTESTAZIONE_AVVISO));
+  const iM = intestazioni.indexOf(normalizza(INTESTAZIONE_MOTIVO));
+  if (iA !== -1) mappa.col.AVVISO = iA + 1;
+  if (iM !== -1) mappa.col.MOTIVO = iM + 1;
   return { griglia, mappa };
+}
+
+// Crea le due intestazioni se mancano (subito dopo l'ultima colonna, con lo
+// stesso aspetto delle altre) e restituisce le loro colonne.
+async function colonneAvviso(foglio, mappa) {
+  const scritture = [];
+  for (const [campo, titolo] of [['AVVISO', INTESTAZIONE_AVVISO], ['MOTIVO', INTESTAZIONE_MOTIVO]]) {
+    if (mappa.col[campo]) continue;
+    const c = Math.max(mappa.larghezza, mappa.col.AVVISO || 0, mappa.col.MOTIVO || 0) + 1;
+    await foglio.copiaCella(TAB_CLIENTI, mappa.riga, mappa.larghezza, mappa.riga, c).catch(() => {});
+    scritture.push({ range: `'${TAB_CLIENTI}'!${lettera(c)}${mappa.riga}`, values: [[titolo]] });
+    mappa.col[campo] = c;
+  }
+  if (scritture.length) await foglio.scrivi(scritture, 'RAW');
+  return { cA: mappa.col.AVVISO, cM: mappa.col.MOTIVO };
+}
+
+// Scrive avviso e motivo sulla riga (vuoti = toglie). RAW: sono testo.
+async function scriviAvviso(foglio, mappa, riga, avviso, motivo) {
+  const { cA, cM } = await colonneAvviso(foglio, mappa);
+  await foglio.scrivi([
+    { range: `'${TAB_CLIENTI}'!${lettera(cA)}${riga}`, values: [[avviso]] },
+    { range: `'${TAB_CLIENTI}'!${lettera(cM)}${riga}`, values: [[motivo]] },
+  ], 'RAW');
+}
+
+// Se la riga ha uno degli avvisi in `quali`, lo toglie e restituisce cosa
+// c'era (per l'annulla); altrimenti null.
+async function togliAvviso(foglio, mappa, riga, r, quali) {
+  if (!mappa.col.AVVISO) return null;
+  const avviso = avvisoDa(r[mappa.col.AVVISO - 1]);
+  if (!avviso || !quali.includes(avviso)) return null;
+  const motivo = mappa.col.MOTIVO ? testo(r[mappa.col.MOTIVO - 1]) : '';
+  await scriviAvviso(foglio, mappa, riga, '', '');
+  return { avviso, motivo };
 }
 
 // Colonna "Data stato" di Lead-Contatti (dal 30 set 2026): il giorno
@@ -246,6 +299,9 @@ function clienteDaRiga(r, col, numeroRiga) {
     prossima: prossima == null ? '' : testoData(dataDaSeriale(prossima)),
     prossimaSeriale: prossima,
     note: testo(v('NOTE')),
+    // 'Sospesa' | 'Urgente' | '' e il suo motivo ("01/10/2026 — perde acqua").
+    avviso: col.AVVISO ? avvisoDa(v('AVVISO')) : '',
+    motivo: col.MOTIVO ? testo(v('MOTIVO')) : '',
   };
 }
 
@@ -347,12 +403,15 @@ export async function segnaFatta(foglio, { codice, data, frequenza }, { chi = 'a
     console.error('Storico interventi non scritto:', err);
   }
 
+  // Fatta la manutenzione, non è più né sospesa né urgente.
+  const avvisoPrima = await togliAvviso(foglio, mappa, riga, r, AVVISI);
+
   return {
     ok: true,
     nome,
     fatta: testoData(quando),
     prossima: testoData(prossima),
-    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico },
+    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico, avvisoPrima },
   };
 }
 
@@ -385,16 +444,41 @@ export async function rimandaManutenzione(foglio, { codice, mesi, data }) {
   const cellaK = `'${TAB_CLIENTI}'!${lettera(col.MANUTENZIONE)}${riga}`;
   const [[prima = '']] = (await foglio.leggi(cellaK, 'FORMULA')).concat([['']]);
   await foglio.scrivi([{ range: cellaK, values: [[serNuova]] }], 'RAW');
+  // Una data nuova vuol dire che non è più sospesa (l'urgenza invece resta).
+  const avvisoPrima = await togliAvviso(foglio, mappa, riga, r, ['Sospesa']);
 
   return {
     ok: true,
     nome: testo(r[col.NOME - 1]),
     prossima: testoData(nuova),
-    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serNuova, frequenzaScritta: false, storico: null },
+    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serNuova, frequenzaScritta: false, storico: null, avvisoPrima },
   };
 }
 
-export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico }) {
+// Sospende la manutenzione o segna il cliente come urgente (guasto), con il
+// motivo; `avviso: ''` toglie quello che c'è ("Riattiva", "Risolto"). La
+// data va in testa al motivo. `esatto: true` è per l'annulla: rimette il
+// motivo così com'era, senza aggiungere la data.
+export async function impostaAvviso(foglio, { codice, avviso = '', motivo = '', esatto = false }) {
+  if (avviso && !AVVISI.includes(avviso)) throw problema('Scelta non valida.');
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const riga = trovaCliente(griglia, mappa, codice);
+  const r = griglia[riga - 1] || [];
+  const avvisoPrima = mappa.col.AVVISO ? avvisoDa(r[mappa.col.AVVISO - 1]) : '';
+  const motivoPrima = mappa.col.MOTIVO ? testo(r[mappa.col.MOTIVO - 1]) : '';
+  const m = testo(motivo).replace(/\s+/g, ' ').slice(0, 500);
+  const nuovoMotivo = !avviso ? '' : esatto ? m : [testoData(oggi()), m].filter(Boolean).join(' — ');
+  await scriviAvviso(foglio, mappa, riga, avviso, nuovoMotivo);
+  return {
+    ok: true,
+    nome: testo(r[mappa.col.NOME - 1]),
+    avviso,
+    motivo: nuovoMotivo,
+    annulla: { codice: testo(codice).toUpperCase(), avviso: avvisoPrima, motivo: motivoPrima, esatto: true },
+  };
+}
+
+export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima }) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const riga = trovaCliente(griglia, mappa, codice);
   const { col } = mappa;
@@ -422,6 +506,10 @@ export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaSc
   }
   if (storico && /^'?Storico-Interventi'?!A\d+:[A-Z]+\d+$/.test(storico)) {
     await foglio.svuota(storico).catch((err) => console.error('Storico non svuotato:', err));
+  }
+  // Rimette sospesa/urgente se la manutenzione li aveva tolti.
+  if (avvisoPrima && AVVISI.includes(avvisoPrima.avviso)) {
+    await scriviAvviso(foglio, mappa, riga, avvisoPrima.avviso, testo(avvisoPrima.motivo).slice(0, 600));
   }
   return { ok: true };
 }

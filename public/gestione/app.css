@@ -72,6 +72,10 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .tessera b { display: block; font-size: 21px; }
 .tessera small { display: block; color: var(--grigio); font-size: 16px; margin-top: 2px; }
 .tessera small .n-rosso { color: var(--rosso); font-weight: 700; }
+/* Tessera degli urgenti: compare solo se ce n'è almeno uno, in cima. */
+.tessera.urgente { background: var(--rosso-chiaro); box-shadow: inset 0 0 0 2px var(--rosso); }
+.tessera.urgente .ico { background: var(--rosso); color: #fff; }
+.tessera.urgente b { color: var(--rosso); }
 .aggiornato { margin: 20px 0 0; text-align: center; color: var(--grigio); font-size: 15px; }
 .aggiornato button { background: none; border: 0; color: var(--blu); font-weight: 600; text-decoration: underline; padding: 8px; }
 
@@ -83,6 +87,8 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
   background: var(--carta); border: 2px solid var(--linea); border-radius: 999px; font-weight: 600; font-size: 17px;
 }
 .pillola[aria-pressed="true"] { background: var(--blu); border-color: var(--blu); color: #fff; }
+.pillola-rossa { border-color: var(--rosso); color: var(--rosso); }
+.pillola-rossa[aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
 
 /* ---- Liste ---- */
 .gruppo { margin: 18px 0 8px; font-size: 17px; font-weight: 700; color: var(--grigio); text-transform: uppercase; letter-spacing: .03em; }
@@ -123,6 +129,18 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .btn.verde { background: var(--verde); color: #fff; }
 .btn.grande { min-height: 72px; font-size: 21px; }
 .btn.leggero { background: none; box-shadow: none; color: var(--grigio); font-weight: 600; }
+.btn.btn-rosso { color: var(--rosso); box-shadow: inset 0 0 0 2px var(--rosso-chiaro), var(--ombra); }
+.btn.btn-rosso-pieno { background: var(--rosso); color: #fff; }
+
+/* Riquadro "Urgente" / "Manutenzione sospesa" in cima alla scheda cliente. */
+.avviso-cliente { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; padding: 14px 16px; border-radius: 16px; }
+.avviso-cliente > div { flex: 1; min-width: 0; }
+.avviso-cliente b { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.avviso-cliente span { display: block; font-size: 15px; margin-top: 2px; }
+.avviso-cliente p { margin: 6px 0 0; font-size: 18px; color: var(--testo); overflow-wrap: anywhere; }
+.avviso-cliente .btn { flex: none; min-height: 52px; padding: 8px 14px; font-size: 17px; }
+.avviso-cliente.rosso { background: var(--rosso-chiaro); color: var(--rosso); box-shadow: inset 0 0 0 2px var(--rosso); }
+.avviso-cliente.grigio { background: #edf0f3; color: var(--grigio); }
 .btn[disabled] { opacity: .55; }
 
 .dati { margin: 0; padding: 4px 16px; background: var(--carta); border-radius: 16px; box-shadow: var(--ombra); }

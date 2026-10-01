@@ -65,6 +65,8 @@
     posta: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     matita: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
     orologio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    allarme: '<path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+    pausa: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
     personaPiu: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
@@ -287,15 +289,29 @@
   // ---------------------------------------------------------------------
   //  Home
   // ---------------------------------------------------------------------
+  // Sospesi e urgenti stanno nelle loro pagine, non fra le scadute.
   function contaScadenze() {
-    let scadute = 0; let presto = 0;
+    let scadute = 0; let presto = 0; let urgenti = 0; let sospese = 0;
     dati.clienti.forEach((c) => {
+      if (c.avviso === 'Urgente') { urgenti++; return; }
+      if (c.avviso === 'Sospesa') { sospese++; return; }
       const s = scadenza(c);
       if (s.giorni == null) return;
       if (s.giorni < 0 && s.giorni >= -365) scadute++;
       else if (s.giorni >= 0 && s.giorni <= 60) presto++;
     });
-    return { scadute, presto };
+    return { scadute, presto, urgenti, sospese };
+  }
+
+  // "01/10/2026 — perde acqua" → { quando: "01/10/2026", perche: "perde acqua", t: ordinabile }
+  function leggiMotivo(c) {
+    const s = String(c.motivo || '');
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s*—\s*)?/);
+    return {
+      quando: m ? `${due(m[1])}/${due(m[2])}/${m[3]}` : '',
+      perche: m ? s.slice(m[0].length).trim() : s.trim(),
+      t: m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0,
+    };
   }
   const statoLead = (l) => l.stato || 'Da richiamare';
 
@@ -339,12 +355,16 @@
 
   function schermoHome() {
     titolo('Acquadirete', false);
-    const { scadute, presto } = contaScadenze();
+    const { scadute, presto, urgenti } = contaScadenze();
     const daRichiamare = dati.lead.filter((l) => statoLead(l) === 'Da richiamare').length;
     const risentire = daRisentire().length;
     const alle = aggiornatoAlle ? new Date(aggiornatoAlle).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
     schermo.innerHTML = `
       <div class="tessere">
+        ${urgenti ? `<button class="tessera urgente" data-vai="scadenze" data-vista="urgenti">
+          <span class="ico">${icona('allarme')}</span>
+          <span><b>${urgenti === 1 ? '1 cliente urgente' : `${urgenti} clienti urgenti`}</b><small>${urgenti === 1 ? 'Ha' : 'Hanno'} chiamato per un guasto</small></span>
+        </button>` : ''}
         <button class="tessera" data-vai="scadenze">
           <span class="ico">${icona('attrezzi')}</span>
           <span><b>Manutenzioni da fare</b>
@@ -369,7 +389,7 @@
         </button>
       </div>
       <p class="aggiornato">${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button></p>`;
-    schermo.querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai }); });
+    schermo.querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai, vista: b.dataset.vista }); });
     $('ricarica').onclick = (e) => conPulsante(e.target, 'Aggiorno…', () => carica().then(() => disegna(history.state)).catch((err) => messaggio(err.message, { errore: true })));
   }
 
@@ -379,10 +399,19 @@
   function voceCliente(c, conScadenza = true) {
     const s = scadenza(c);
     const posto = [titoloCitta(c.citta), c.zona].filter(Boolean).join(' · ');
+    // Urgenti e sospese mostrano il loro motivo al posto della scadenza.
+    let riga3 = '';
+    if (c.avviso) {
+      const mo = leggiMotivo(c);
+      const etichetta = c.avviso === 'Urgente' ? `<span class="etichetta rosso">Urgente${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>` : `<span class="etichetta grigio">Sospesa${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>`;
+      riga3 = `<span class="riga3">${etichetta}</span>${mo.perche ? `<span class="riga2" style="color:var(--testo)">${esc(mo.perche)}</span>` : ''}`;
+    } else if (conScadenza) {
+      riga3 = `<span class="riga3"><span class="etichetta ${s.classe}">${esc(s.testo)}</span>${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}</span>`;
+    }
     return `<button class="voce" data-codice="${esc(c.codice)}">
       <b>${esc(c.nome)}</b>
       <span class="riga2">${esc(posto || c.indirizzo || '—')}${c.tipo ? ' · ' + esc(c.tipo) : ''}</span>
-      ${conScadenza ? `<span class="riga3"><span class="etichetta ${s.classe}">${esc(s.testo)}</span>${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}</span>` : ''}
+      ${riga3}
     </button>`;
   }
   function collegaVoci() {
@@ -401,13 +430,20 @@
     };
   }
 
+  // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
+  // per un guasto) e "Sospese" (senza data, finché non si riattivano).
+  const VISTE = [['fare', 'Da fare'], ['urgenti', 'Urgenti'], ['sospese', 'Sospese']];
   function schermoScadenze(stato) {
     titolo('Manutenzioni', true);
+    const vista = VISTE.some(([v]) => v === stato.vista) ? stato.vista : 'fare';
+    const { urgenti, sospese } = contaScadenze();
+    const conta = { fare: null, urgenti, sospese };
     const citta = [...new Set(dati.clienti.filter((c) => c.prossimaSeriale != null).map((c) => titoloCitta(c.citta)).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, 'it'));
     // Il campo si disegna una volta sola e a ogni lettera cambia solo l'elenco:
     // ridisegnando tutto, la tastiera del telefono si chiuderebbe.
     schermo.innerHTML = `
+      <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola${v === 'urgenti' && urgenti ? ' pillola-rossa' : ''}" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
       <div class="cerca con-tasto">
         <input type="search" id="citta" list="l-citta-scad" placeholder="Scrivi la città" autocomplete="off" enterkeyhint="search" value="${esc(stato.citta || '')}">
         <button type="button" class="tasto" id="tutte" hidden>Tutte</button>
@@ -418,13 +454,28 @@
 
     function elenco() {
       const v = campo.value;
-      history.replaceState({ s: 'scadenze', citta: v }, '', location.pathname + location.hash);
+      history.replaceState({ s: 'scadenze', citta: v, vista }, '', location.pathname + location.hash);
       $('tutte').hidden = !v.trim();
-      const scelti = dati.clienti.filter(filtroCitta(v));
-      if (!scelti.length) {
+      const inCitta = dati.clienti.filter(filtroCitta(v));
+      if (!inCitta.length) {
         $('elenco').innerHTML = `<div class="vuoto">Nessun cliente a «${esc(v.trim())}».<br>Controlla come è scritta la città.</div>`;
         return;
       }
+      if (vista !== 'fare') {
+        const tipo = vista === 'urgenti' ? 'Urgente' : 'Sospesa';
+        // Gli urgenti dal più vecchio (chi aspetta da più tempo in cima), le sospese per nome.
+        const lista = inCitta.filter((c) => c.avviso === tipo)
+          .sort(vista === 'urgenti' ? (a, b) => leggiMotivo(a).t - leggiMotivo(b).t : (a, b) => a.nome.localeCompare(b.nome, 'it'));
+        $('elenco').innerHTML = lista.length
+          ? `<div class="lista">${lista.map((c) => voceCliente(c)).join('')}</div>`
+          : vista === 'urgenti'
+            ? `<div class="vuoto">Nessun cliente urgente 👍<br><br>Se un cliente chiama per un guasto: cercalo e nella sua scheda tocca «Ha un guasto».<br><br><button class="btn pieno" id="vai-cerca" style="width:100%">${icona('cerca')} Cerca il cliente</button></div>`
+            : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
+        if ($('vai-cerca')) $('vai-cerca').onclick = () => vai({ s: 'cerca' });
+        collegaVoci();
+        return;
+      }
+      const scelti = inCitta.filter((c) => !c.avviso);
       const conGiorni = scelti.map((c) => ({ c, s: scadenza(c) })).filter((x) => x.s.giorni != null);
       const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
       const scadute = conGiorni.filter((x) => x.s.giorni < 0 && x.s.giorni >= -365).sort(perData);
@@ -442,6 +493,9 @@
 
     campo.oninput = elenco;
     $('tutte').onclick = () => { campo.value = ''; elenco(); };
+    schermo.querySelectorAll('[data-vista]').forEach((b) => {
+      b.onclick = () => { history.replaceState({ s: 'scadenze', citta: campo.value, vista: b.dataset.vista }, '', location.pathname + location.hash); disegna(history.state); };
+    });
     elenco();
   }
 
@@ -473,10 +527,19 @@
       // Data e frequenza servono solo se la scadenza non c'è ancora.
       !c.prossima && !c.installazione && 'data di installazione', !c.prossima && !c.frequenza && 'ogni quanti mesi',
     ].filter(Boolean);
-    // "Rimanda" solo quando la manutenzione è da fare: scaduta o entro 2 mesi.
-    const daFare = s.giorni != null && s.giorni <= 60;
+    // "Rimanda" solo quando la manutenzione è da fare: scaduta o entro 2 mesi
+    // (e non già sospesa: lì c'è "Riattiva").
+    const daFare = s.giorni != null && s.giorni <= 60 && c.avviso !== 'Sospesa';
+    const mo = leggiMotivo(c);
+    const riquadroAvviso = !c.avviso ? '' : `
+      <div class="avviso-cliente ${c.avviso === 'Urgente' ? 'rosso' : 'grigio'}">
+        <div><b>${icona(c.avviso === 'Urgente' ? 'allarme' : 'pausa')} ${c.avviso === 'Urgente' ? 'URGENTE' : 'MANUTENZIONE SOSPESA'}</b>
+          ${mo.quando ? `<span>dal ${esc(mo.quando)}</span>` : ''}${mo.perche ? `<p>${esc(mo.perche)}</p>` : ''}</div>
+        <button class="btn" type="button" id="togli-avviso">${c.avviso === 'Urgente' ? `${icona('spunta')} Risolto` : 'Riattiva'}</button>
+      </div>`;
     schermo.innerHTML = `
       <div class="testa"><h2>${esc(c.nome)}</h2><p>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p></div>
+      ${riquadroAvviso}
       <div class="azioni">${azioni || ''}</div>
       <div class="scadenza ${s.classe}">
         <div>Prossima manutenzione<br><span>${esc(c.prossima || 'non segnata')}</span></div>
@@ -484,6 +547,7 @@
       </div>
       <button class="btn verde grande" id="fatta" style="width:100%">${icona('spunta')} Manutenzione fatta</button>
       ${daFare ? `<button class="btn" id="rimanda" style="width:100%;margin-top:10px">${icona('orologio')} Rimanda la manutenzione</button>` : ''}
+      ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Ha un guasto: è urgente</button>` : ''}
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <h3 class="titoletto">Dati del cliente</h3>
@@ -498,7 +562,50 @@
       </dl>`;
     $('fatta').onclick = () => chiediFatta(c);
     if ($('rimanda')) $('rimanda').onclick = () => chiediRimanda(c);
+    if ($('urgente')) $('urgente').onclick = () => chiediAvviso(c, 'Urgente');
+    if ($('togli-avviso')) $('togli-avviso').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
+  }
+
+  // Sospendere (senza data) o segnare urgente (guasto), con un motivo
+  // facoltativo. Il motore mette il giorno davanti al motivo.
+  function chiediAvviso(c, avviso) {
+    const urgente = avviso === 'Urgente';
+    apriFinestra(`
+      <h3>${urgente ? 'Ha un guasto?' : 'Sospendere la manutenzione?'}</h3>
+      <p><strong>${esc(c.nome)}</strong><br>${urgente
+        ? 'Lo metto fra gli <strong>urgenti</strong>, in cima alla schermata iniziale, finché non tocchi «Risolto».'
+        : 'Non comparirà più fra le scadute: lo trovi nella pagina <strong>Sospese</strong> finché non tocchi «Riattiva».'}</p>
+      <label class="campo"><span>${urgente ? 'Cosa è successo?' : 'Perché?'} <em>(facoltativo)</em></span>
+        <textarea id="motivo" placeholder="${urgente ? 'Es. perde acqua sotto il lavello' : 'Es. ha venduto casa, richiama lui'}"></textarea></label>
+      <button class="btn ${urgente ? 'btn-rosso-pieno' : 'pieno'} grande" type="button" id="si">${icona(urgente ? 'allarme' : 'pausa')} ${urgente ? 'Sì, è urgente' : 'Sì, sospendi'}</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+      if (await salvaAvviso(c, avviso, $('motivo').value)) chiudiFinestra();
+    });
+  }
+
+  async function salvaAvviso(c, avviso, motivo) {
+    try {
+      const r = await api('avviso', { codice: c.codice, avviso, motivo });
+      const prima = c.avviso;
+      c.avviso = r.avviso;
+      c.motivo = r.motivo;
+      chiudiFinestra();
+      disegna(history.state);
+      const testo = avviso === 'Urgente' ? 'Segnato urgente' : avviso === 'Sospesa' ? 'Manutenzione sospesa'
+        : prima === 'Urgente' ? 'Risolto ✓' : 'Riattivata ✓';
+      messaggio(testo, {
+        durata: 15000,
+        azione: { testo: 'Annulla', fai: () => api('avviso', r.annulla).then(() => carica()).then(() => { disegna(history.state); messaggio('Annullato.'); }).catch((err) => messaggio(err.message, { errore: true, durata: 8000 })) },
+      });
+      aggiornaInSottofondo();
+      return true;
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+      return false;
+    }
   }
 
   // Il cliente al telefono dice "passate più avanti": un tocco sposta la
@@ -522,7 +629,9 @@
         <button class="btn pieno grande" type="button" id="si-giorno">${icona('orologio')} Rimanda a quel giorno</button>
       </div>
       <button class="btn" type="button" id="altro">Scelgo io il giorno</button>
+      <button class="btn" type="button" id="sospendi">${icona('pausa')} Sospendi, senza data</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('sospendi').onclick = () => chiediAvviso(c, 'Sospesa');
     const rimanda = (btn, dati) => conPulsante(btn, 'Salvo…', async () => {
       try {
         const r = await api('rimanda', { codice: c.codice, ...dati });
@@ -602,6 +711,8 @@
         c.prossima = r.prossima;
         c.prossimaSeriale = serialeDa(+x[2], +x[1], +x[0]);
         if (frequenzaNuova) c.frequenza = frequenzaNuova;
+        // Il motore toglie sospesa/urgente quando la manutenzione è fatta.
+        if (r.annulla && r.annulla.avvisoPrima) { c.avviso = ''; c.motivo = ''; }
         disegna(history.state);
         messaggio(`Segnata ✓ Prossima: ${r.prossima}`, {
           durata: 15000,
