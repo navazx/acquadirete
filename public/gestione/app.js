@@ -297,7 +297,7 @@
       if (c.avviso === 'Sospesa') { sospese++; return; }
       const s = scadenza(c);
       if (s.giorni == null) return;
-      if (s.giorni < 0 && s.giorni >= -365) scadute++;
+      if (s.giorni < 0) scadute++;
       else if (s.giorni >= 0 && s.giorni <= 60) presto++;
     });
     return { scadute, presto, urgenti, sospese };
@@ -524,16 +524,15 @@
       }
       const conGiorni = inCitta.map((c) => ({ c, s: scadenza(c) }));
       const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
-      const scadute = conGiorni.filter((x) => x.s.giorni < 0 && x.s.giorni >= -365).sort(perData);
+      // Tutte le scadute insieme, dalla più vecchia: anche quelle di anni fa,
+      // che babbo sposta fra le sospese o fra i persi (scelta di Matteo, 1 ott).
+      const scadute = conGiorni.filter((x) => x.s.giorni < 0).sort(perData);
       const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
-      const vecchie = conGiorni.filter((x) => x.s.giorni < -365).sort(perData).reverse();
       $('elenco').innerHTML = nota + `
         <h2 class="gruppo">Scadute (${scadute.length})</h2>
         <div class="lista">${scadute.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}</div>
         <h2 class="gruppo">Nei prossimi 2 mesi (${presto.length})</h2>
-        <div class="lista">${presto.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Niente in scadenza</div>'}</div>
-        ${vecchie.length ? `<button class="mostra-altri" id="vecchie">Scadute da più di un anno (${vecchie.length})</button><div class="lista" id="lista-vecchie" hidden style="margin-top:10px">${vecchie.map((x) => voceCliente(x.c)).join('')}</div>` : ''}`;
-      if ($('vecchie')) $('vecchie').onclick = () => { $('vecchie').hidden = true; $('lista-vecchie').hidden = false; };
+        <div class="lista">${presto.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Niente in scadenza</div>'}</div>`;
       collegaVoci();
     }
 
