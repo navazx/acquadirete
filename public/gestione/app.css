@@ -87,6 +87,11 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
   background: var(--carta); border: 2px solid var(--linea); border-radius: 999px; font-weight: 600; font-size: 17px;
 }
 .pillola[aria-pressed="true"] { background: var(--blu); border-color: var(--blu); color: #fff; }
+/* Seconda riga: le città. Più piccole e azzurre da scelte, per non
+   confonderle con le schede Da fare / Urgenti / Sospese di sopra. */
+.pillole-citta { margin-top: -2px; }
+.pillole-citta .pillola { min-height: 40px; padding: 0 14px; font-size: 16px; }
+.pillole-citta .pillola[aria-pressed="true"] { background: var(--blu-chiaro); border-color: var(--blu); color: var(--blu-scuro); }
 .pillola-rossa { border-color: var(--rosso); color: var(--rosso); }
 .pillola-rossa[aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
 

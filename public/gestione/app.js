@@ -420,56 +420,62 @@
     schermo.querySelectorAll('[data-codice]').forEach((b) => { b.onclick = () => vai({ s: 'cliente', codice: b.dataset.codice }); });
   }
 
-  // Filtro delle manutenzioni: si scrive la città invece di scegliere Z1, Z2…
-  // Più città separate da virgola ("Empoli, Vinci") per un giro che ne tocca
-  // diverse; il codice di zona funziona ancora, per chi ci è abituato.
-  function filtroCitta(testo) {
-    const parti = String(testo || '').split(',').map(normalizza).filter(Boolean);
-    if (!parti.length) return () => true;
-    return (c) => {
-      const citta = normalizza(senzaCap(c.citta));
-      return parti.some((p) => citta.includes(p) || normalizza(c.zona) === p);
-    };
-  }
+  // Città di un cliente come chiave di confronto ("59100 PRATO" = "Prato").
+  const chiaveCitta = (c) => normalizza(senzaCap(c.citta));
 
   // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
-  // per un guasto) e "Sospese" (senza data, finché non si riattivano).
+  // per un guasto) e "Sospese" (senza data, finché non si riattivano). Sotto,
+  // una riga di tasti con le città di quella pagina (le più piene prima): se
+  // ne toccano una o più per il giro, «Tutte» toglie il filtro.
   const VISTE = [['fare', 'Da fare'], ['urgenti', 'Urgenti'], ['sospese', 'Sospese']];
   function schermoScadenze(stato) {
     titolo('Manutenzioni', true);
     const vista = VISTE.some(([v]) => v === stato.vista) ? stato.vista : 'fare';
     const { urgenti, sospese } = contaScadenze();
     const conta = { fare: null, urgenti, sospese };
-    const citta = [...new Set(dati.clienti.filter((c) => c.prossimaSeriale != null).map((c) => titoloCitta(c.citta)).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'it'));
-    // Il campo si disegna una volta sola e a ogni lettera cambia solo l'elenco:
-    // ridisegnando tutto, la tastiera del telefono si chiuderebbe.
+    let scelte = new Set(Array.isArray(stato.citta) ? stato.citta : []);
+
+    // Chi sta in questa pagina, prima del filtro per città.
+    const tipo = vista === 'urgenti' ? 'Urgente' : 'Sospesa';
+    const inPagina = vista === 'fare'
+      ? dati.clienti.filter((c) => { if (c.avviso) return false; const s = scadenza(c); return s.giorni != null && s.giorni <= 60; })
+      : dati.clienti.filter((c) => c.avviso === tipo);
+
+    // Tasti delle città: quante ce ne sono in questa pagina, dalla più piena.
+    const perCitta = new Map();
+    inPagina.forEach((c) => {
+      const k = chiaveCitta(c);
+      if (!k) return;
+      const x = perCitta.get(k) || { k, nome: titoloCitta(c.citta), n: 0 };
+      x.n++;
+      perCitta.set(k, x);
+    });
+    // Una città scelta resta visibile anche se qui non ha clienti.
+    scelte.forEach((k) => { if (!perCitta.has(k)) perCitta.set(k, { k, nome: titoloCitta(k), n: 0 }); });
+    const tastiCitta = [...perCitta.values()].sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome, 'it'));
+
     schermo.innerHTML = `
       <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola${v === 'urgenti' && urgenti ? ' pillola-rossa' : ''}" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
-      <div class="cerca con-tasto">
-        <input type="search" id="citta" list="l-citta-scad" placeholder="Scrivi la città" autocomplete="off" enterkeyhint="search" value="${esc(stato.citta || '')}">
-        <button type="button" class="tasto" id="tutte" hidden>Tutte</button>
-      </div>
-      <datalist id="l-citta-scad">${citta.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+      ${tastiCitta.length > 1 || scelte.size ? `<div class="pillole pillole-citta">
+        <button class="pillola" data-citta="" aria-pressed="${!scelte.size}">Tutte</button>
+        ${tastiCitta.map((x) => `<button class="pillola" data-citta="${esc(x.k)}" aria-pressed="${scelte.has(x.k)}">${esc(x.nome)} (${x.n})</button>`).join('')}
+      </div>` : ''}
       <div id="elenco"></div>`;
-    const campo = $('citta');
 
     function elenco() {
-      const v = campo.value;
-      history.replaceState({ s: 'scadenze', citta: v, vista }, '', location.pathname + location.hash);
-      $('tutte').hidden = !v.trim();
-      const inCitta = dati.clienti.filter(filtroCitta(v));
-      if (!inCitta.length) {
-        $('elenco').innerHTML = `<div class="vuoto">Nessun cliente a «${esc(v.trim())}».<br>Controlla come è scritta la città.</div>`;
-        return;
-      }
+      history.replaceState({ s: 'scadenze', citta: [...scelte], vista }, '', location.pathname + location.hash);
+      schermo.querySelectorAll('[data-citta]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.citta ? scelte.has(b.dataset.citta) : !scelte.size));
+      });
+      const inCitta = scelte.size ? inPagina.filter((c) => scelte.has(chiaveCitta(c))) : inPagina;
+
       if (vista !== 'fare') {
-        const tipo = vista === 'urgenti' ? 'Urgente' : 'Sospesa';
         // Gli urgenti dal più vecchio (chi aspetta da più tempo in cima), le sospese per nome.
-        const lista = inCitta.filter((c) => c.avviso === tipo)
+        const lista = inCitta.slice()
           .sort(vista === 'urgenti' ? (a, b) => leggiMotivo(a).t - leggiMotivo(b).t : (a, b) => a.nome.localeCompare(b.nome, 'it'));
         $('elenco').innerHTML = lista.length
           ? `<div class="lista">${lista.map((c) => voceCliente(c)).join('')}</div>`
+          : scelte.size ? '<div class="vuoto">Nessuno in queste città.</div>'
           : vista === 'urgenti'
             ? `<div class="vuoto">Nessun cliente urgente 👍<br><br>Se un cliente chiama per un guasto: cercalo e nella sua scheda tocca «Ha un guasto».<br><br><button class="btn pieno" id="vai-cerca" style="width:100%">${icona('cerca')} Cerca il cliente</button></div>`
             : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
@@ -477,8 +483,7 @@
         collegaVoci();
         return;
       }
-      const scelti = inCitta.filter((c) => !c.avviso);
-      const conGiorni = scelti.map((c) => ({ c, s: scadenza(c) })).filter((x) => x.s.giorni != null);
+      const conGiorni = inCitta.map((c) => ({ c, s: scadenza(c) }));
       const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
       const scadute = conGiorni.filter((x) => x.s.giorni < 0 && x.s.giorni >= -365).sort(perData);
       const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
@@ -493,10 +498,19 @@
       collegaVoci();
     }
 
-    campo.oninput = elenco;
-    $('tutte').onclick = () => { campo.value = ''; elenco(); };
+    // Toccare una città la aggiunge al giro (o la toglie); «Tutte» azzera.
+    // Si ridisegna solo l'elenco: la riga dei tasti resta dov'era scorsa.
+    schermo.querySelectorAll('[data-citta]').forEach((b) => {
+      b.onclick = () => {
+        const k = b.dataset.citta;
+        if (!k) scelte = new Set();
+        else if (scelte.has(k)) scelte.delete(k);
+        else scelte.add(k);
+        elenco();
+      };
+    });
     schermo.querySelectorAll('[data-vista]').forEach((b) => {
-      b.onclick = () => { history.replaceState({ s: 'scadenze', citta: campo.value, vista: b.dataset.vista }, '', location.pathname + location.hash); disegna(history.state); };
+      b.onclick = () => { history.replaceState({ s: 'scadenze', citta: [...scelte], vista: b.dataset.vista }, '', location.pathname + location.hash); disegna(history.state); };
     });
     elenco();
   }
