@@ -422,6 +422,17 @@
 
   // Città di un cliente come chiave di confronto ("59100 PRATO" = "Prato").
   const chiaveCitta = (c) => normalizza(senzaCap(c.citta));
+  // Città "piccola" = al massimo tanti clienti in pagina: va nel tasto della sua zona.
+  const CITTA_PICCOLA = 2;
+  // Nomi delle zone del giro (Z1-ZX, vedi netlify/functions/_shared/zone.mjs)
+  // come li dice babbo, per i tasti che raggruppano le città piccole.
+  const NOMI_ZONE = {
+    // Nomi che non si confondono coi tasti delle città grandi lì accanto
+    // (Pistoia, Lastra a Signa, Empoli hanno il loro).
+    Z1: 'Altre di Firenze', Z2: 'Campi e Signa', Z3: 'Chianti e Bagno a Ripoli',
+    Z4: 'Valdelsa', Z5: 'Dintorni di Prato', Z6: 'Valdinievole e Quarrata',
+    Z7: 'Valdarno e Sieve', Z8: 'Mugello', ZX: 'Fuori zona',
+  };
 
   // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
   // per un guasto) e "Sospese" (senza data, finché non si riattivano). Sotto,
@@ -446,39 +457,67 @@
     inPagina.forEach((c) => {
       const k = chiaveCitta(c);
       if (!k) return;
-      const x = perCitta.get(k) || { k, nome: titoloCitta(c.citta), n: 0 };
+      const x = perCitta.get(k) || { k, nome: titoloCitta(c.citta), n: 0, zone: {} };
       x.n++;
+      if (c.zona) x.zone[c.zona] = (x.zone[c.zona] || 0) + 1;
       perCitta.set(k, x);
     });
-    // Una città scelta resta visibile anche se qui non ha clienti.
-    scelte.forEach((k) => { if (!perCitta.has(k)) perCitta.set(k, { k, nome: titoloCitta(k), n: 0 }); });
-    const tastiCitta = [...perCitta.values()].sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome, 'it'));
+    // Le città con pochi clienti (1 o 2) si uniscono in un tasto per zona del
+    // giro, chiamato col nome della zona e non col codice Z: sono vicine, e
+    // 45 tasti da uno o due clienti sarebbero solo da scorrere. Se in una zona
+    // la città piccola è una sola, resta col suo nome.
+    const tasti = [];
+    const piccolePerZona = new Map();
+    for (const x of perCitta.values()) {
+      const zona = Object.keys(x.zone).sort((a, b) => x.zone[b] - x.zone[a])[0];
+      if (x.n <= CITTA_PICCOLA && NOMI_ZONE[zona]) {
+        if (!piccolePerZona.has(zona)) piccolePerZona.set(zona, []);
+        piccolePerZona.get(zona).push(x);
+      } else {
+        tasti.push({ id: x.k, nome: x.nome, chiavi: [x.k], n: x.n });
+      }
+    }
+    for (const [zona, citta] of piccolePerZona) {
+      if (citta.length === 1) tasti.push({ id: citta[0].k, nome: citta[0].nome, chiavi: [citta[0].k], n: citta[0].n });
+      else tasti.push({ id: 'zona:' + zona, nome: NOMI_ZONE[zona], chiavi: citta.map((x) => x.k), n: citta.reduce((s, x) => s + x.n, 0), gruppo: citta.map((x) => x.nome) });
+    }
+    // Una città scelta prima resta visibile anche se qui non ha clienti.
+    const inUnTasto = new Set(tasti.flatMap((t) => t.chiavi));
+    scelte.forEach((k) => { if (!inUnTasto.has(k)) tasti.push({ id: k, nome: titoloCitta(k), chiavi: [k], n: 0 }); });
+    tasti.sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome, 'it'));
+    const perId = new Map(tasti.map((t) => [t.id, t]));
+    const premuto = (t) => t.chiavi.every((k) => scelte.has(k));
+    const tastiCitta = tasti;
 
     schermo.innerHTML = `
       <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola${v === 'urgenti' && urgenti ? ' pillola-rossa' : ''}" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
       ${tastiCitta.length > 1 || scelte.size ? `<div class="pillole pillole-citta">
         <button class="pillola" data-citta="" aria-pressed="${!scelte.size}">Tutte</button>
-        ${tastiCitta.map((x) => `<button class="pillola" data-citta="${esc(x.k)}" aria-pressed="${scelte.has(x.k)}">${esc(x.nome)} (${x.n})</button>`).join('')}
+        ${tastiCitta.map((t) => `<button class="pillola${t.gruppo ? ' pillola-gruppo' : ''}" data-citta="${esc(t.id)}" aria-pressed="${premuto(t)}"${t.gruppo ? ` title="${esc(t.gruppo.join(', '))}"` : ''}>${esc(t.nome)} (${t.n})</button>`).join('')}
       </div>` : ''}
       <div id="elenco"></div>`;
 
     function elenco() {
       history.replaceState({ s: 'scadenze', citta: [...scelte], vista }, '', location.pathname + location.hash);
       schermo.querySelectorAll('[data-citta]').forEach((b) => {
-        b.setAttribute('aria-pressed', String(b.dataset.citta ? scelte.has(b.dataset.citta) : !scelte.size));
+        const t = perId.get(b.dataset.citta);
+        b.setAttribute('aria-pressed', String(b.dataset.citta ? !!t && premuto(t) : !scelte.size));
       });
+      // Se è scelto un gruppo, sopra l'elenco si legge quali città contiene.
+      const gruppiScelti = tastiCitta.filter((t) => t.gruppo && premuto(t));
+      const nota = gruppiScelti.map((t) => `<p class="gruppo-citta"><b>${esc(t.nome)}:</b> ${esc(t.gruppo.join(', '))}</p>`).join('');
       const inCitta = scelte.size ? inPagina.filter((c) => scelte.has(chiaveCitta(c))) : inPagina;
 
       if (vista !== 'fare') {
         // Gli urgenti dal più vecchio (chi aspetta da più tempo in cima), le sospese per nome.
         const lista = inCitta.slice()
           .sort(vista === 'urgenti' ? (a, b) => leggiMotivo(a).t - leggiMotivo(b).t : (a, b) => a.nome.localeCompare(b.nome, 'it'));
-        $('elenco').innerHTML = lista.length
+        $('elenco').innerHTML = nota + (lista.length
           ? `<div class="lista">${lista.map((c) => voceCliente(c)).join('')}</div>`
           : scelte.size ? '<div class="vuoto">Nessuno in queste città.</div>'
           : vista === 'urgenti'
             ? `<div class="vuoto">Nessun cliente urgente 👍<br><br>Se un cliente chiama per un guasto: cercalo e nella sua scheda tocca «Ha un guasto».<br><br><button class="btn pieno" id="vai-cerca" style="width:100%">${icona('cerca')} Cerca il cliente</button></div>`
-            : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
+            : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>');
         if ($('vai-cerca')) $('vai-cerca').onclick = () => vai({ s: 'cerca' });
         collegaVoci();
         return;
@@ -488,7 +527,7 @@
       const scadute = conGiorni.filter((x) => x.s.giorni < 0 && x.s.giorni >= -365).sort(perData);
       const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
       const vecchie = conGiorni.filter((x) => x.s.giorni < -365).sort(perData).reverse();
-      $('elenco').innerHTML = `
+      $('elenco').innerHTML = nota + `
         <h2 class="gruppo">Scadute (${scadute.length})</h2>
         <div class="lista">${scadute.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}</div>
         <h2 class="gruppo">Nei prossimi 2 mesi (${presto.length})</h2>
@@ -502,10 +541,10 @@
     // Si ridisegna solo l'elenco: la riga dei tasti resta dov'era scorsa.
     schermo.querySelectorAll('[data-citta]').forEach((b) => {
       b.onclick = () => {
-        const k = b.dataset.citta;
-        if (!k) scelte = new Set();
-        else if (scelte.has(k)) scelte.delete(k);
-        else scelte.add(k);
+        const t = perId.get(b.dataset.citta);
+        if (!t) scelte = new Set();
+        else if (premuto(t)) t.chiavi.forEach((k) => scelte.delete(k));
+        else t.chiavi.forEach((k) => scelte.add(k));
         elenco();
       };
     });

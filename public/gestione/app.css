@@ -92,6 +92,9 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .pillole-citta { margin-top: -2px; }
 .pillole-citta .pillola { min-height: 40px; padding: 0 14px; font-size: 16px; }
 .pillole-citta .pillola[aria-pressed="true"] { background: var(--blu-chiaro); border-color: var(--blu); color: var(--blu-scuro); }
+/* Tasto che raggruppa più città piccole della stessa zona. */
+.pillole-citta .pillola-gruppo { border-style: dashed; }
+.gruppo-citta { margin: 0 0 10px; padding: 10px 14px; background: var(--blu-chiaro); border-radius: 12px; font-size: 16px; color: var(--blu-scuro); }
 .pillola-rossa { border-color: var(--rosso); color: var(--rosso); }
 .pillola-rossa[aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
 
