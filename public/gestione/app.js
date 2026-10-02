@@ -433,7 +433,11 @@
     Z1: 'Altre di Firenze', Z2: 'Campi e Signa', Z3: 'Chianti e Bagno a Ripoli',
     Z4: 'Valdelsa', Z6: 'Altre di Pistoia',
     Z7: 'Valdarno e Sieve', Z8: 'Mugello', ZX: 'Fuori zona',
+    // Aree solo dell'app, per i clienti fuori dalle zone del giro (ZONE_VICINE).
+    XP: 'Pisa e Livorno', XV: 'Versilia',
   };
+  // La città ha questa parola (o queste parole di fila) nel nome?
+  const haParola = (k, p) => (' ' + k + ' ').includes(' ' + p + ' ');
   // Tasti fissi chiesti da Matteo (1-2 ott): queste città stanno sempre in un
   // tasto solo, anche quando ognuna ha tanti clienti. Ci va la città che ha
   // una di queste parole nel nome ("Vaggio di Reggello", "Le Valli, Figline"),
@@ -442,7 +446,22 @@
     { id: 'unite:sesto', nome: 'Sesto e Calenzano', parole: ['sesto', 'calenzano'] },
     // Leccio è una frazione di Reggello.
     { id: 'unite:figline', nome: 'Figline, Incisa e Reggello', parole: ['figline', 'incisa', 'reggello', 'leccio'] },
+    // Fuori zona, ma a due passi da Empoli (Vitolini è una frazione di Vinci).
+    { id: 'unite:empoli', nome: 'Empoli, Vinci e Fucecchio', parole: ['empoli', 'vinci', 'vitolini', 'cerreto guidi', 'fucecchio', 'santa croce', 'san miniato', 'montopoli'] },
+    // Baccaiano e Montagnana sono frazioni di Montespertoli.
+    { id: 'unite:montespertoli', nome: 'Montespertoli', parole: ['montespertoli', 'baccaiano'] },
     { id: 'unite:prato', nome: 'Prato e dintorni', parole: ['prato', 'quarrata'], zona: 'Z5' },
+  ];
+  // Le città fuori dalle zone del giro (ZX) o senza zona non vanno tutte nel
+  // tasto «Fuori zona»: lì Cascina stava con Montevarchi e Fucecchio (Matteo,
+  // 2 ott). Si mettono col giro più vicino o in un'area loro.
+  const ZONE_VICINE = [
+    { zona: 'Z3', parole: ['gaiole'] },
+    { zona: 'Z6', parole: ['altopascio'] },
+    // Risalpiano è a Pelago; Montevarchi, Terranuova e Ponticino sono il Valdarno aretino.
+    { zona: 'Z7', parole: ['pelago', 'risalpiano', 'montevarchi', 'terranuova', 'ponticino'] },
+    { zona: 'XP', parole: ['pisa', 'cascina', 'navacchio', 'ponsacco', 'palaia', 'forcoli', 'collesalvetti', 'livorno', 'san vincenzo'] },
+    { zona: 'XV', parole: ['cinquale', 'forte dei marmi', 'ortonovo'] },
   ];
 
   // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
@@ -486,9 +505,9 @@
     const unite = new Map();
     const piccolePerZona = new Map();
     for (const x of perCitta.values()) {
-      const zona = Object.keys(x.zone).sort((a, b) => x.zone[b] - x.zone[a])[0];
-      const parole = x.k.split(' ');
-      const fisso = CITTA_UNITE.find((u) => u.parole.some((p) => parole.includes(p)) || (u.zona && u.zona === zona));
+      let zona = Object.keys(x.zone).sort((a, b) => x.zone[b] - x.zone[a])[0];
+      if (!zona || zona === 'ZX') zona = (ZONE_VICINE.find((v) => v.parole.some((p) => haParola(x.k, p))) || {}).zona || zona;
+      const fisso = CITTA_UNITE.find((u) => u.parole.some((p) => haParola(x.k, p)) || (u.zona && u.zona === zona));
       if (fisso) metti(unite, fisso, x);
       else if (x.tot <= CITTA_PICCOLA && NOMI_ZONE[zona]) metti(piccolePerZona, zona, x);
       else tasti.push(tasto(x.k, x.nome, [x]));
