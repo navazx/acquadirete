@@ -428,10 +428,10 @@
   // come li dice babbo, per i tasti che raggruppano le città piccole.
   const NOMI_ZONE = {
     // Nomi che non si confondono coi tasti delle città grandi lì accanto
-    // (Pistoia, Lastra a Signa, Empoli hanno il loro). Z5 non c'è: tutta la
-    // zona di Prato sta nel tasto «Prato e dintorni» (CITTA_UNITE).
+    // (Lastra a Signa ha il suo). Z5 e Z6 non ci sono: le zone di Prato e di
+    // Pistoia stanno intere nei loro tasti «… e dintorni» (CITTA_UNITE).
     Z1: 'Altre di Firenze', Z2: 'Campi e Signa', Z3: 'Chianti e Bagno a Ripoli',
-    Z4: 'Valdelsa', Z6: 'Altre di Pistoia',
+    Z4: 'Valdelsa',
     Z7: 'Valdarno e Sieve', Z8: 'Mugello', ZX: 'Fuori zona',
     // Aree solo dell'app, per i clienti fuori dalle zone del giro (ZONE_VICINE).
     XP: 'Pisa e Livorno', XV: 'Versilia',
@@ -451,6 +451,8 @@
     // Baccaiano e Montagnana sono frazioni di Montespertoli.
     { id: 'unite:montespertoli', nome: 'Montespertoli', parole: ['montespertoli', 'baccaiano'] },
     { id: 'unite:prato', nome: 'Prato e dintorni', parole: ['prato', 'quarrata'], zona: 'Z5' },
+    // Dopo Prato: Quarrata è in zona Z6, ma va con Prato.
+    { id: 'unite:pistoia', nome: 'Pistoia e dintorni', parole: ['pistoia'], zona: 'Z6' },
   ];
   // Le città fuori dalle zone del giro (ZX) o senza zona non vanno tutte nel
   // tasto «Fuori zona»: lì Cascina stava con Montevarchi e Fucecchio (Matteo,
