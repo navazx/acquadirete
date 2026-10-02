@@ -431,15 +431,18 @@
     // (Pistoia, Lastra a Signa, Empoli hanno il loro). Z5 non c'è: tutta la
     // zona di Prato sta nel tasto «Prato e dintorni» (CITTA_UNITE).
     Z1: 'Altre di Firenze', Z2: 'Campi e Signa', Z3: 'Chianti e Bagno a Ripoli',
-    Z4: 'Valdelsa', Z6: 'Valdinievole e Quarrata',
+    Z4: 'Valdelsa', Z6: 'Altre di Pistoia',
     Z7: 'Valdarno e Sieve', Z8: 'Mugello', ZX: 'Fuori zona',
   };
-  // Tasti fissi chiesti da Matteo (1 ott): queste città stanno sempre in un
-  // tasto solo, anche quando ognuna ha tanti clienti. Si guarda prima l'elenco
-  // delle città, poi la zona del giro.
+  // Tasti fissi chiesti da Matteo (1-2 ott): queste città stanno sempre in un
+  // tasto solo, anche quando ognuna ha tanti clienti. Ci va la città che ha
+  // una di queste parole nel nome ("Vaggio di Reggello", "Le Valli, Figline"),
+  // o che è in quella zona del giro. Conta il primo tasto che la prende.
   const CITTA_UNITE = [
-    { id: 'unite:sesto', nome: 'Sesto e Calenzano', citta: ['sesto fiorentino', 'calenzano'] },
-    { id: 'unite:prato', nome: 'Prato e dintorni', zona: 'Z5' },
+    { id: 'unite:sesto', nome: 'Sesto e Calenzano', parole: ['sesto', 'calenzano'] },
+    // Leccio è una frazione di Reggello.
+    { id: 'unite:figline', nome: 'Figline, Incisa e Reggello', parole: ['figline', 'incisa', 'reggello', 'leccio'] },
+    { id: 'unite:prato', nome: 'Prato e dintorni', parole: ['prato', 'quarrata'], zona: 'Z5' },
   ];
 
   // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
@@ -484,7 +487,8 @@
     const piccolePerZona = new Map();
     for (const x of perCitta.values()) {
       const zona = Object.keys(x.zone).sort((a, b) => x.zone[b] - x.zone[a])[0];
-      const fisso = CITTA_UNITE.find((u) => (u.citta ? u.citta.includes(x.k) : u.zona === zona));
+      const parole = x.k.split(' ');
+      const fisso = CITTA_UNITE.find((u) => u.parole.some((p) => parole.includes(p)) || (u.zona && u.zona === zona));
       if (fisso) metti(unite, fisso, x);
       else if (x.tot <= CITTA_PICCOLA && NOMI_ZONE[zona]) metti(piccolePerZona, zona, x);
       else tasti.push(tasto(x.k, x.nome, [x]));
