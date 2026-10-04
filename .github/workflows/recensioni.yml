@@ -12,8 +12,9 @@ name: Recensioni - guarda se ce ne sono di nuove
 #
 # Serve il secret GOOGLE_PLACES_API_KEY, creato il 12 set 2026 nel progetto
 # Google Cloud acquadirete-seo e limitato alla sola Places API (New).
-# Attenzione: le recensioni che il SITO mostra sono un'altra cosa — stanno a mano
-# in lib/google-reviews.json e questo agente non le tocca.
+# Media e totale del SITO (lib/google-reviews.json) li allinea lui a quelli di
+# Google, dal 4 ott 2026: quando cambiano il sito va ripubblicato. Le recensioni
+# scritte per esteso nello stesso file restano a mano.
 on:
   schedule:
     - cron: '50 6 * * *'
@@ -56,14 +57,25 @@ jobs:
       - name: Ricorda cosa ha visto
         if: ${{ inputs.prova != true }}
         run: |
-          if [ -z "$(git status --porcelain agenti/recensioni/)" ]; then
+          git config user.name  "agente-recensioni"
+          git config user.email "noreply@acquadirete.it"
+          fatto=""
+          if [ -n "$(git status --porcelain agenti/recensioni/)" ]; then
+            git add agenti/recensioni/
+            # [skip netlify]: file di servizio, il sito non va ripubblicato.
+            git commit -m "Recensioni: controllo giornaliero [skip netlify]"
+            fatto=1
+          fi
+          # Media o totale cambiati: questo commit va per ULTIMO e SENZA
+          # [skip netlify], perche' Netlify guarda solo l'ultimo commit del push.
+          if [ -n "$(git status --porcelain lib/google-reviews.json)" ]; then
+            git add lib/google-reviews.json
+            git commit -m "Recensioni: media e totale del sito come su Google"
+            fatto=1
+          fi
+          if [ -z "$fatto" ]; then
             echo "Nessuna novita' da registrare."
             exit 0
           fi
-          git config user.name  "agente-recensioni"
-          git config user.email "noreply@acquadirete.it"
-          git add agenti/recensioni/
-          # [skip netlify]: file di servizio, il sito non va ripubblicato.
-          git commit -m "Recensioni: controllo giornaliero [skip netlify]"
           git pull --rebase origin main
           git push origin HEAD:main

@@ -9,6 +9,7 @@ import InstagramIcon from './InstagramIcon';
 import FacebookIcon from './FacebookIcon';
 import WhatsAppIcon from './WhatsAppIcon';
 import { resetConsent } from '../lib/cookieConsent';
+import { REVIEW_RATING_TESTO } from '../lib/reviews';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -45,7 +46,7 @@ export default function Footer() {
             className="pt-2 flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer w-fit"
           >
             <span className="flex text-amber-400 text-sm">★★★★★</span>
-            <span className="text-xs text-slate-600 font-medium font-mono">130+ Recensioni Google (5.0 Stelle)</span>
+            <span className="text-xs text-slate-600 font-medium font-mono">130+ Recensioni Google ({REVIEW_RATING_TESTO} Stelle)</span>
           </a>
           <div className="flex items-center gap-3 pt-1">
             <a

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Star, Filter, ShieldCheck, User, ExternalLink, PenLine } from 'lucide-react';
 import { Review } from '../lib/types';
-import { REVIEWS, REVIEW_RATING, REVIEW_TOTAL, REVIEWS_ARE_LIVE } from '../lib/reviews';
+import { REVIEWS, REVIEW_RATING_TESTO, REVIEW_TOTAL, REVIEWS_ARE_LIVE } from '../lib/reviews';
 import { GOOGLE_PROFILE_URL, GOOGLE_WRITE_REVIEW_URL } from '../lib/siteConfig';
 import CardCarousel from './CardCarousel';
 import ReviewCard from './ReviewCard';
@@ -32,7 +32,7 @@ export default function ReviewList({ carousel = false }: Props) {
           {/* Main Stat */}
           <div className="text-center md:text-left space-y-2">
             <div className="flex items-center justify-center md:justify-start gap-1">
-              <span className="text-5xl font-black text-slate-900 font-mono">{REVIEW_RATING.toFixed(1)}</span>
+              <span className="text-5xl font-black text-slate-900 font-mono">{REVIEW_RATING_TESTO}</span>
               <span className="text-xl font-bold text-slate-400 mt-2">/5</span>
             </div>
             <div className="flex text-amber-500 justify-center md:justify-start">
@@ -50,7 +50,7 @@ export default function ReviewList({ carousel = false }: Props) {
             <span className="text-3xl font-black text-blue-600 block font-mono">{REVIEW_TOTAL}+</span>
             <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">Valutazioni Certificate</span>
             <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
-              Il 100% degli utenti tra Firenze, Prato e Pistoia ha votato Acquadirete con il massimo punteggio per serietà ed efficienza dei nostri depuratori d'acqua.
+              Le hanno lasciate su Google i nostri clienti tra Firenze, Prato e Pistoia, dopo aver provato i depuratori e l'assistenza.
             </p>
           </div>
 

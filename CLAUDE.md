@@ -27,9 +27,9 @@ Più `/blog` (indice) e i singoli articoli in `app/blog/[slug]/page.tsx` (conten
 Tutto in `lib/siteConfig.ts` — **modificare solo lì** per aggiornare telefono/WhatsApp/email/indirizzo/P.IVA in tutto il sito.
 
 ## Recensioni Google
-Inserimento **manuale** in `lib/google-reviews.json` (7 recensioni per esteso, `total: 135`, `rating: 5`, `source:"google"`), esposte da `lib/reviews.ts` come `REVIEW_TOTAL`/`REVIEW_RATING`. Quando le recensioni sono "live" i filtri per categoria spariscono (Google non fornisce la categoria).
+Le 7 recensioni per esteso in `lib/google-reviews.json` sono inserite **a mano**; `rating` e `total` invece li allinea a Google l'agente recensioni ogni giorno (dal 4 ott 2026: 4,9 su 136), esposte da `lib/reviews.ts` come `REVIEW_TOTAL`/`REVIEW_RATING`. Quando le recensioni sono "live" i filtri per categoria spariscono (Google non fornisce la categoria).
 
-**Attenzione al doppio binario del conteggio.** `REVIEW_TOTAL` (135) è dinamico e alimenta `ReviewList` e il JSON-LD `aggregateRating` (`app/layout.tsx`, `app/recensioni/page.tsx`). Le diciture marketing dicono invece **"130+"/"oltre 130"** e sono testo *hardcoded*: **18 occorrenze in 10 file** fra `components/` e `app/` (Header, Footer, HomeView, più i `title`/`description` di homepage, recensioni e pagine servizio). Per trovarle tutte prima di cambiare il numero:
+**Attenzione al doppio binario del conteggio.** `REVIEW_TOTAL` è dinamico e alimenta `ReviewList` e il JSON-LD `aggregateRating` (`app/layout.tsx`, `app/recensioni/page.tsx`). Le diciture marketing dicono invece **"130+"/"oltre 130"** e sono testo *hardcoded*: **18 occorrenze in 10 file** fra `components/` e `app/` (Header, Footer, HomeView, più i `title`/`description` di homepage, recensioni e pagine servizio). Per trovarle tutte prima di cambiare il numero:
 
 ```bash
 grep -rn "130" sito/components/ sito/app/ --include=*.tsx

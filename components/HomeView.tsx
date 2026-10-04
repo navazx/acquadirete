@@ -19,7 +19,7 @@ import WaterCalc from './WaterCalc';
 import { useModal } from './ModalProvider';
 import { ROUTES } from '../lib/routes';
 import { GOOGLE_PROFILE_URL, CONTACT } from '../lib/siteConfig';
-import { REVIEWS } from '../lib/reviews';
+import { REVIEWS, REVIEW_RATING_TESTO } from '../lib/reviews';
 import { Review } from '../lib/types';
 
 // Le prime recensioni del carosello in home, scelte perché raccontano tre
@@ -104,7 +104,7 @@ export default function HomeView() {
               className="flex items-center gap-2.5 bg-white px-5 py-3.5 rounded-xl border border-slate-200 shadow-md hover:border-blue-400 transition-colors cursor-pointer"
             >
               <span className="text-amber-400 text-lg font-bold leading-none">★★★★★</span>
-              <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">130+ Recensioni Google 5.0</span>
+              <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">130+ Recensioni Google {REVIEW_RATING_TESTO}</span>
             </a>
           </div>
         </div>
@@ -232,7 +232,7 @@ export default function HomeView() {
                 Non crederci sulla parola: leggi la loro.
               </h2>
               <p className="text-sm text-slate-600">
-                Alcune delle oltre 130 recensioni che i nostri clienti hanno lasciato su Google, tutte a 5 stelle. Scorri per leggerle.
+                Alcune delle oltre 130 recensioni che i nostri clienti hanno lasciato su Google. Scorri per leggerle.
               </p>
             </>
           }

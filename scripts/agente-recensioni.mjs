@@ -11,6 +11,9 @@
 //    2. le confronta con quelle che aveva gia' visto (agenti/recensioni/stato.json)
 //    3. le nuove le mette in coda in agenti/recensioni/da-rispondere.json
 //    4. avvisa subito su Telegram SOLO quando serve (vedi sotto)
+//    5. tiene media e totale del sito (lib/google-reviews.json) uguali a quelli
+//       di Google, e avvisa quando le scritte fisse "130+" o "a 5 stelle" vanno
+//       riviste (quelle non le cambia: sono nei titoli che Google mostra)
 //
 //  Le risposte da incollare NON le scrive lui: le scrive l'agente nel cloud,
 //  che legge la coda e prepara una bozza per ognuna. Qui si misura, non si
@@ -78,6 +81,37 @@ const LINK_SCHEDA = 'https://www.google.com/maps?cid=10356560254821251978';
 // Oltre questi giorni una recensione non e' "nuova": e' solo comparsa fra le
 // cinque che Google ci mostra a rotazione.
 const GIORNI_RECENTE = 60;
+
+// Media e totale che il SITO mostra (pagina Recensioni, home, fondo pagina, e i
+// dati strutturati che legge Google). Dal 4 ott 2026 li tiene allineati questo
+// agente: quel giorno la scheda era a 4,9 su 136 e il sito diceva ancora 5,0 su
+// 135. Le recensioni scritte per esteso nello stesso file restano a mano.
+const SITO_JSON = path.join(RADICE, 'lib', 'google-reviews.json');
+// Le scritte "130+" / "oltre 130" sono testo fisso in titoli e pagine (vedi
+// CLAUDE.md): si aggiornano a scaglioni di dieci, e toccano i titoli che Google
+// mostra. Quelle l'agente non le cambia da solo: avvisa quando e' ora.
+const DOVE_SI_LEGGE_LO_SCAGLIONE = path.join(RADICE, 'components', 'Header.tsx');
+// Sotto questa media le frasi "recensioni a 5 stelle" vanno rilette da Matteo.
+const MEDIA_DA_RILEGGERE = 4.8;
+
+const virgola = (n) => Number(n).toFixed(1).replace('.', ',');
+
+/** Allinea media e totale del sito a quelli di Google. Torna i valori di prima, o null. */
+function allineaSito(totale, media) {
+  if (!existsSync(SITO_JSON) || !(totale > 0) || typeof media !== 'number') return null;
+  const sito = JSON.parse(readFileSync(SITO_JSON, 'utf8'));
+  if (sito.total === totale && sito.rating === media) return null;
+  const prima = { totale: sito.total, media: sito.rating };
+  writeFileSync(SITO_JSON, `${JSON.stringify({ ...sito, rating: media, total: totale }, null, 2)}\n`);
+  return prima;
+}
+
+/** Lo scaglione scritto nelle pagine ("130+"), letto dall'intestazione del sito. */
+function scaglioneScritto() {
+  if (!existsSync(DOVE_SI_LEGGE_LO_SCAGLIONE)) return null;
+  const m = readFileSync(DOVE_SI_LEGGE_LO_SCAGLIONE, 'utf8').match(/(\d{2,4})\+\s*Recensioni/);
+  return m ? Number(m[1]) : null;
+}
 
 const leggi = (f, sedefault) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : sedefault);
 const scrivi = (f, dati) => {
@@ -237,6 +271,31 @@ async function main() {
       `Le recensioni su Google sono passate da ${stato.totale} a ${totale}: ` +
       `${-differenza === 1 ? "una e' stata tolta o nascosta" : `${-differenza} sono state tolte o nascoste`}. ` +
       "Non e' una cosa che puoi risolvere tu, ma e' giusto che tu lo sappia.",
+    );
+  }
+
+  // Il sito dice sempre quello che dice la scheda.
+  const prima = allineaSito(totale, media);
+  if (prima && prima.media !== media) {
+    avvisi.push(
+      `La media su Google e' passata da ${virgola(prima.media)} a ${virgola(media)} (${totale} recensioni). ` +
+      "L'ho aggiornata da solo anche sul sito: pagina Recensioni, home e fondo pagina. Va online fra qualche minuto.",
+    );
+  } else if (prima) {
+    console.log(`Sito allineato: totale da ${prima.totale} a ${totale}.`);
+  }
+  const scritto = scaglioneScritto();
+  const scaglione = Math.floor(totale / 10) * 10;
+  if (scritto && scaglione > scritto && Math.floor((stato.totale ?? 0) / 10) * 10 < scaglione) {
+    avvisi.push(
+      `Le recensioni su Google sono ${totale}: sul sito c'e' ancora scritto "${scritto}+" e "oltre ${scritto}". ` +
+      `Si puo' passare a "${scaglione}+". Sono nei titoli che Google mostra, quindi non li cambio da solo: chiedilo a Claude dal PC.`,
+    );
+  }
+  if (typeof media === 'number' && media < MEDIA_DA_RILEGGERE && !(stato.media < MEDIA_DA_RILEGGERE)) {
+    avvisi.push(
+      `La media su Google e' scesa a ${virgola(media)}. Sul sito ci sono frasi come "recensioni a 5 stelle": ` +
+      "con questa media vanno rilette. Chiedilo a Claude dal PC.",
     );
   }
 

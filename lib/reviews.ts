@@ -15,6 +15,9 @@ export const REVIEWS: Review[] = liveReviews;
 export const REVIEW_RATING: number =
   typeof googleData.rating === 'number' && googleData.rating > 0 ? googleData.rating : 5;
 
+/** La media come si scrive in italiano: "4,9". */
+export const REVIEW_RATING_TESTO: string = REVIEW_RATING.toFixed(1).replace('.', ',');
+
 /** Numero totale di recensioni Google. */
 export const REVIEW_TOTAL: number =
   typeof googleData.total === 'number' && googleData.total > 0 ? googleData.total : 120;
