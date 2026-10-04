@@ -372,8 +372,8 @@
         </button>
         <button class="tessera" data-vai="lead">
           <span class="ico">${icona('telefono')}</span>
-          <span><b>Contatti da richiamare</b>
-          <small>${daRichiamare ? `<span class="n-rosso">${daRichiamare} da richiamare</span>` : 'Nessuno da richiamare'}${risentire ? ` · ${risentire} da risentire` : ''}</small></span>
+          <span><b>Contatti da chiamare</b>
+          <small>${daRichiamare ? `<span class="n-rosso">${daRichiamare} da chiamare</span>` : 'Nessuno da chiamare'}${risentire ? ` · ${risentire} da risentire` : ''}</small></span>
         </button>
         <button class="tessera" data-vai="cerca">
           <span class="ico">${icona('cerca')}</span>
@@ -889,7 +889,7 @@
   //  Contatti (lead)
   // ---------------------------------------------------------------------
   const ETICHETTE_STATO = {
-    'Da richiamare': 'Da richiamare',
+    'Da richiamare': 'Da chiamare',
     'Contattato': 'L\'ho sentito',
     'Preventivo inviato': 'Gli ho mandato il preventivo',
     'Cliente': 'È diventato cliente',
@@ -899,7 +899,7 @@
   };
   const RISENTIRE = 'risentire';
   const FILTRI_LEAD = [
-    ['Da richiamare', 'Da richiamare'],
+    ['Da richiamare', 'Da chiamare'],
     [RISENTIRE, 'Da risentire'],
     ['Contattato', 'Sentiti'],
     ['Preventivo inviato', 'Preventivo'],

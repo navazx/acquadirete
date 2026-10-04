@@ -6,7 +6,7 @@
   "scope": "/gestione/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f3f6fa",
+  "background_color": "#ffffff",
   "theme_color": "#0f6cbd",
   "icons": [
     { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
