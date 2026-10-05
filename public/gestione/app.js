@@ -630,20 +630,33 @@
   const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
   const indirizzoCercato = (c) => [c.indirizzo, c.citta].map((s) => String(s == null ? '' : s).trim()).filter(Boolean).join(', ');
   let ultimaRicerca = 0;
-  async function chiediNominatim(parametri) {
+  async function chiediNominatim(parametri, vaBene = () => true) {
     const attesa = ultimaRicerca + 1100 - Date.now();
     if (attesa > 0) await new Promise((ok) => setTimeout(ok, attesa));
     ultimaRicerca = Date.now();
     // Riquadro: Toscana larga, Versilia e Lunigiana. Fuori di qui è un omonimo.
     const q = new URLSearchParams({
-      format: 'jsonv2', limit: '1', countrycodes: 'it', viewbox: '9.6,44.6,12.4,42.3', bounded: '1',
+      format: 'jsonv2', limit: '5', addressdetails: '1', countrycodes: 'it', viewbox: '9.6,44.6,12.4,42.3', bounded: '1',
       'accept-language': 'it', email: 'info@acquadirete.it', ...parametri,
     });
     const res = await fetch(`${NOMINATIM}?${q}`);
     if (!res.ok) throw new Error(`Nominatim ${res.status}`);
-    const [r] = await res.json();
+    const r = (await res.json()).find(vaBene);
     return r ? { lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building', via: r.category === 'highway' } : null;
   }
+  // Il risultato sta davvero in quel paese? «Firenze», «Prato», «Pistoia» sono
+  // anche province: «Via Italia, Firenze» combacerebbe con la Via Italia di
+  // Vinci. Vale se un luogo dell'indirizzo è il paese scritto, o una parte
+  // del nome («Montespertoli» per «Montagnaga Montespertoli»), o comincia
+  // come lui («Tavarnelle Val di Pesa» per «Tavarnelle»).
+  const LUOGHI = ['city', 'town', 'village', 'hamlet', 'suburb', 'quarter', 'neighbourhood', 'city_district', 'municipality', 'isolated_dwelling', 'locality'];
+  const nelPaese = (paese) => {
+    const nomi = [paese, ...paese.split(/\s*[,/]\s*/)].map(normalizza).filter(Boolean);
+    return (r) => LUOGHI.some((k) => {
+      const v = normalizza(r.address && r.address[k]);
+      return v && nomi.some((n) => ` ${n} `.includes(` ${v} `) || ` ${v} `.startsWith(` ${n} `));
+    });
+  };
   async function cercaPosizione(c) {
     // Abbreviazioni sciolte; le iniziali dei nomi si tolgono invece di
     // indovinarle: «Via Balbo» trova anche «Via Cesare Balbo».
@@ -655,19 +668,34 @@
       .replace(/\s+/g, ' ').trim();
     const paese = senzaCap(c.citta).replace(/\b(Loc|Fraz)\.\s*/gi, '').replace(/\s+/g, ' ').trim();
     const cap = (String(c.citta || '').match(/^\s*(\d{5})\s/) || [])[1];
+    // E nella provincia scritta nel foglio, se c'è (la parola «vicino» da sola
+    // porterebbe nel senese un cliente di Prato).
+    const prov = String(c.provincia || '').trim().toUpperCase();
+    const inProvincia = (r) => {
+      const iso = r.address && r.address['ISO3166-2-lvl6'];
+      return !/^[A-Z]{2}$/.test(prov) || !iso || iso === `IT-${prov}`;
+    };
+    const giusto = nelPaese(paese);
     if (via && paese) {
-      const r = await chiediNominatim({ q: `${via}, ${paese}` });
+      const r = await chiediNominatim({ q: `${via}, ${paese}` }, (x) => giusto(x) && inProvincia(x));
       if (r) return { lat: r.lat, lng: r.lng, prec: r.civico ? 'civico' : r.via ? 'via' : 'paese' };
     }
     // Il paese: prima come comune (il centro vero: «Prato» da solo darebbe la
     // provincia), poi come frazione; se sono due nomi («Le Valli, Figline»)
-    // uno alla volta, dal più grande; per ultimo dal CAP.
+    // uno alla volta, dal più grande; poi la prima e l'ultima parola
+    // («Marcialla Barberino Val d'Elsa», «Montagnaga Montespertoli»); per
+    // ultimo dal CAP.
     const pezzi = paese.split(/\s*[,/]\s*/).filter(Boolean);
+    const parole = paese.split(/[\s,/]+/).filter((p) => p.length >= 5);
     const nomi = [paese, ...(pezzi.length > 1 ? pezzi.reverse() : [])].filter(Boolean);
-    const tentativi = [...nomi.flatMap((n) => [{ city: n }, { q: n }]), cap && { postalcode: cap }];
+    const tentativi = [
+      ...nomi.flatMap((n) => [{ city: n }, { q: n }]),
+      parole.length > 1 && { q: parole[0] }, parole.length > 1 && { city: parole[parole.length - 1] },
+      cap && { postalcode: cap },
+    ];
     for (const p of tentativi) {
       if (!p) continue;
-      const r = await chiediNominatim(p);
+      const r = await chiediNominatim(p, inProvincia);
       if (r) return { lat: r.lat, lng: r.lng, prec: 'paese' };
     }
     return { prec: 'nessuna' };
