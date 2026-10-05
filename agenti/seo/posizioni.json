@@ -1,13 +1,7 @@
 {
-  "letto": "2026-09-28T15:19:31.371Z",
-  "periodo": "2026-08-29 → 2026-09-25",
+  "letto": "2026-10-05T15:53:36.957Z",
+  "periodo": "2026-09-05 → 2026-10-02",
   "segnalati": [
-    "prima-pagina|acqua firenze potabile",
-    "prima-pagina|acqua potabile firenze",
-    "prima-pagina|l'acqua di firenze è potabile",
-    "prima-pagina|acqua rubinetto firenze",
-    "prima-pagina|acqua rubinetto firenze potabile",
-    "prima-pagina|firenze acqua potabile",
     "prima-pagina|l'acqua del rubinetto di firenze è potabile",
     "soglia|depuratore acqua casa gratis",
     "concorrenza|depuratore acqua firenze",
@@ -15,41 +9,9 @@
     "soglia|depuratore acqua osmosi inversa gratis",
     "prima-pagina|depuratore d'acqua gratis",
     "concorrenza|depuratori acqua firenze",
-    "prima-pagina|depuratori acqua gratis",
-    "concorrenza|depuratori acqua prato",
-    "scende|verifica apparecchi per acqua calda a firenze"
+    "concorrenza|depuratori acqua prato"
   ],
   "segnali": [
-    {
-      "tipo": "prima-pagina",
-      "ricerca": "acqua firenze potabile",
-      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
-    },
-    {
-      "tipo": "prima-pagina",
-      "ricerca": "acqua potabile firenze",
-      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
-    },
-    {
-      "tipo": "prima-pagina",
-      "ricerca": "l'acqua di firenze è potabile",
-      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
-    },
-    {
-      "tipo": "prima-pagina",
-      "ricerca": "acqua rubinetto firenze",
-      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
-    },
-    {
-      "tipo": "prima-pagina",
-      "ricerca": "acqua rubinetto firenze potabile",
-      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
-    },
-    {
-      "tipo": "prima-pagina",
-      "ricerca": "firenze acqua potabile",
-      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/"
-    },
     {
       "tipo": "prima-pagina",
       "ricerca": "l'acqua del rubinetto di firenze è potabile",
@@ -59,9 +21,9 @@
       "tipo": "soglia",
       "ricerca": "depuratore acqua casa gratis",
       "pagina": "/blog/depuratore-acqua-gratis-contratti/",
-      "viste": 54,
+      "viste": 61,
       "clic": 0,
-      "posizione": 10.5
+      "posizione": 10.2
     },
     {
       "tipo": "concorrenza",
@@ -72,17 +34,17 @@
       "tipo": "soglia",
       "ricerca": "depuratore acqua gratis province",
       "pagina": "/blog/depuratore-acqua-gratis-contratti/",
-      "viste": 39,
+      "viste": 35,
       "clic": 0,
-      "posizione": 9.5
+      "posizione": 9.3
     },
     {
       "tipo": "soglia",
       "ricerca": "depuratore acqua osmosi inversa gratis",
       "pagina": "/blog/depuratore-acqua-gratis-contratti/",
-      "viste": 84,
+      "viste": 77,
       "clic": 0,
-      "posizione": 9.5
+      "posizione": 9.4
     },
     {
       "tipo": "prima-pagina",
@@ -95,19 +57,9 @@
       "pagina": null
     },
     {
-      "tipo": "prima-pagina",
-      "ricerca": "depuratori acqua gratis",
-      "pagina": "/blog/depuratore-acqua-gratis-contratti/"
-    },
-    {
       "tipo": "concorrenza",
       "ricerca": "depuratori acqua prato",
       "pagina": null
-    },
-    {
-      "tipo": "scende",
-      "ricerca": "verifica apparecchi per acqua calda a firenze",
-      "pagina": "/assistenza-depuratore-firenze/"
     }
   ]
 }
