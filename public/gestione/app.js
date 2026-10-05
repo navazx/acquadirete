@@ -668,18 +668,18 @@
       .replace(/\s+/g, ' ').trim();
     const paese = senzaCap(c.citta).replace(/\b(Loc|Fraz)\.\s*/gi, '').replace(/\s+/g, ' ').trim();
     const cap = (String(c.citta || '').match(/^\s*(\d{5})\s/) || [])[1];
-    // E nella provincia scritta nel foglio, se c'è (la parola «vicino» da sola
-    // porterebbe nel senese un cliente di Prato).
+    if (via && paese) {
+      const r = await chiediNominatim({ q: `${via}, ${paese}` }, nelPaese(paese));
+      if (r) return { lat: r.lat, lng: r.lng, prec: r.civico ? 'civico' : r.via ? 'via' : 'paese' };
+    }
+    // Una parola sola è rischiosa («vicino» porterebbe nel senese un cliente
+    // di Prato): allora il risultato deve stare nella provincia del foglio.
+    // Solo lì, perché qualche provincia nel foglio è sbagliata (Montale "PO").
     const prov = String(c.provincia || '').trim().toUpperCase();
     const inProvincia = (r) => {
       const iso = r.address && r.address['ISO3166-2-lvl6'];
       return !/^[A-Z]{2}$/.test(prov) || !iso || iso === `IT-${prov}`;
     };
-    const giusto = nelPaese(paese);
-    if (via && paese) {
-      const r = await chiediNominatim({ q: `${via}, ${paese}` }, (x) => giusto(x) && inProvincia(x));
-      if (r) return { lat: r.lat, lng: r.lng, prec: r.civico ? 'civico' : r.via ? 'via' : 'paese' };
-    }
     // Il paese: prima come comune (il centro vero: «Prato» da solo darebbe la
     // provincia), poi come frazione; se sono due nomi («Le Valli, Figline»)
     // uno alla volta, dal più grande; poi la prima e l'ultima parola
@@ -689,13 +689,14 @@
     const parole = paese.split(/[\s,/]+/).filter((p) => p.length >= 5);
     const nomi = [paese, ...(pezzi.length > 1 ? pezzi.reverse() : [])].filter(Boolean);
     const tentativi = [
-      ...nomi.flatMap((n) => [{ city: n }, { q: n }]),
-      parole.length > 1 && { q: parole[0] }, parole.length > 1 && { city: parole[parole.length - 1] },
-      cap && { postalcode: cap },
+      ...nomi.flatMap((n) => [[{ city: n }], [{ q: n }]]),
+      parole.length > 1 && [{ q: parole[0] }, inProvincia],
+      parole.length > 1 && [{ city: parole[parole.length - 1] }, inProvincia],
+      cap && [{ postalcode: cap }],
     ];
-    for (const p of tentativi) {
-      if (!p) continue;
-      const r = await chiediNominatim(p, inProvincia);
+    for (const t of tentativi) {
+      if (!t) continue;
+      const r = await chiediNominatim(...t);
       if (r) return { lat: r.lat, lng: r.lng, prec: 'paese' };
     }
     return { prec: 'nessuna' };
