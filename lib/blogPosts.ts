@@ -938,11 +938,11 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'truffa-bonus-regione-depuratore',
     title: 'Depuratore gratis col "bonus della Regione"? Quel bonus non esiste',
-    metaTitle: 'Bonus Depuratore Acqua 2026: la Telefonata che Gira',
+    metaTitle: 'Bonus Depuratore Acqua 2026: Telefonate e Pubblicità',
     metaDescription:
-      'Ti chiamano e dicono che col tuo Isee hai diritto a un depuratore gratis col bonus della Regione? Quel bonus non esiste: ecco come funziona e cosa fare.',
+      'Ti chiamano o vedi una pubblicità sul depuratore gratis col bonus della Regione? Quel bonus non esiste: ecco come funziona la proposta e cosa fare.',
     excerpt:
-      'Un call center ti dice che col tuo Isee hai diritto a un depuratore gratis grazie al bonus della Regione. Quel bonus non esiste: ecco com\'è fatta la telefonata e cosa fare se chiamano anche te.',
+      'Una telefonata o una pubblicità su Facebook ti dice che hai diritto a un depuratore gratis grazie al bonus della Regione. Quel bonus non esiste: ecco com\'è fatta la proposta e cosa fare se capita anche a te.',
     publishedAt: '2026-10-05',
     readingMinutes: 4,
     relatedServices: ['depuratore', 'assistenza'],
@@ -950,23 +950,24 @@ export const BLOG_POSTS: BlogPost[] = [
     sections: [
       {
         paragraphs: [
-          'Suona il telefono, dall\'altra parte un call center: "con il suo Isee ha diritto a un depuratore gratis grazie al bonus della Regione". Detta così sembra una bella notizia, e infatti funziona: in tante case qualcuno ha fissato l\'appuntamento.',
-          'Il problema è che quel bonus non c\'è. Qui ti raccontiamo com\'è fatta la telefonata, cosa nasconde quasi sempre la parola "gratis" e cosa fare se chiamano anche te.',
+          'Suona il telefono, dall\'altra parte un call center: "con il suo Isee ha diritto a un depuratore gratis grazie al bonus della Regione". Oppure, scorrendo Facebook o Instagram, compare una pubblicità che ti invita ad aderire al bonus regionale per il depuratore. Detta così sembra una bella notizia, e infatti funziona: in tante case qualcuno ha fissato l\'appuntamento.',
+          'Il problema è che quel bonus non c\'è. Qui ti raccontiamo com\'è fatta la proposta, al telefono e sui social, cosa nasconde quasi sempre la parola "gratis" e cosa fare se capita anche a te.',
         ],
       },
       {
         heading: 'Il bonus della Regione per il depuratore non esiste',
         paragraphs: [
-          'Partiamo dal punto fermo: la Regione Toscana non prevede nessun bonus per installare un depuratore in casa. Lo ha detto lei stessa quando queste telefonate hanno girato nel Grossetano, nel dicembre del 2024: call center che dicevano "con il suo Isee ha diritto a un depuratore gratis grazie al bonus della Regione".',
-          'Anni prima c\'era stato un "bonus acqua potabile" nazionale, ma copriva solo le spese fatte dal 2021 al 2023 e non è stato prorogato. Oltre a questo, di fisco e di contributi non parliamo: non è il nostro mestiere. Quello che possiamo dirti è che oggi, se qualcuno ti telefona offrendoti un depuratore gratis grazie a un bonus, quel bonus non esiste.',
+          'Partiamo dal punto fermo: la Regione Toscana non prevede nessun bonus per installare un depuratore in casa. Non c\'è al telefono e non c\'è nelle pubblicità: chi ti parla di "bonus della Regione" per un depuratore non sta parlando di un contributo vero.',
+          'Anni prima c\'era stato un "bonus acqua potabile" nazionale, ma copriva solo le spese fatte dal 2021 al 2023 e non è stato prorogato. Oltre a questo, di fisco e di contributi non parliamo: non è il nostro mestiere. Quello che possiamo dirti è che oggi, se qualcuno ti offre un depuratore gratis grazie a un bonus, per telefono o con una pubblicità, quel bonus non esiste.',
           'E se davvero esistesse un contributo, lo troveresti scritto sul sito della Regione. È il primo posto dove guardare, e si controlla in due minuti.',
         ],
       },
       {
-        heading: 'Com\'è fatta la telefonata',
+        heading: 'Com\'è fatta la proposta: la telefonata e la pubblicità',
         paragraphs: [
           'Lo schema è sempre simile. Chi chiama non ti vende niente: ti "informa". Dice che hai diritto a qualcosa, e usa le parole che fanno sentire fortunati — ti spetta, è un tuo diritto, è una convenzione. Spesso tira in mezzo l\'Isee o quante persone vivete in casa, perché nominare un dato personale fa sembrare la telefonata ufficiale.',
           'Poi arriva la parte vera: fissare un appuntamento a casa, di solito in fretta, perché "i posti stanno finendo" o "la convenzione scade". E a casa non arriva un funzionario: arriva un venditore, a volte con una valigetta per provare la tua acqua, e si finisce con un foglio da firmare la sera stessa.',
+          'Da qualche tempo non arriva solo per telefono. Su Facebook e Instagram girano pubblicità che parlano di bonus regionale per il depuratore, o di contributi per l\'acqua di casa, e ti chiedono di lasciare nome e numero in un modulo. Poco dopo ti richiama un call center, e da lì lo schema è lo stesso della telefonata. Sembra più sicura perché il primo passo lo hai fatto tu, ma una pubblicità non è un avviso della Regione: un contributo vero lo trovi scritto sul suo sito, non in un\'inserzione.',
         ],
       },
       {
@@ -977,9 +978,9 @@ export const BLOG_POSTS: BlogPost[] = [
         ],
       },
       {
-        heading: 'Cosa fare se ti chiamano',
+        heading: 'Cosa fare se ti chiamano o vedi la pubblicità',
         paragraphs: [
-          'Prima cosa: non dare dati. Isee, codice fiscale, quante persone vivono in casa, indirizzo, conto in banca. Per ricevere un\'informazione non serve niente di tutto questo. Se chi chiama ne ha bisogno subito, è perché sta compilando qualcosa, non perché ti sta informando.',
+          'Prima cosa: non dare dati. Isee, codice fiscale, quante persone vivono in casa, indirizzo, conto in banca. Per ricevere un\'informazione non serve niente di tutto questo, e non va lasciato nemmeno nel modulo di una pubblicità che promette il bonus. Se chi chiama ne ha bisogno subito, è perché sta compilando qualcosa, non perché ti sta informando.',
           'Seconda cosa: chiedi tutto per scritto. Il nome dell\'azienda e la partita IVA, cosa ti stanno proponendo e a quali condizioni, su un\'email o su un foglio che resta a te. Chi ha un\'offerta vera non ha problemi a metterla nero su bianco.',
           'Terza: prenditi tempo. Nessuna firma la sera stessa, nessun acconto, nessuna fretta. Se un\'offerta vale solo oggi, non è un\'offerta: è una pressione. E se hai già firmato qualcosa a casa tua, nel nostro articolo sui contratti del depuratore "gratis" trovi le cose da controllare subito.',
           'Se invece il depuratore ti interessa davvero, chiedi un preventivo a un\'azienda della tua zona, una che puoi andare a trovare e richiamare fra due anni. Senza bonus di mezzo.',
@@ -996,7 +997,11 @@ export const BLOG_POSTS: BlogPost[] = [
     faqs: [
       {
         q: 'Esiste un bonus 2026 per mettere un depuratore in casa?',
-        a: 'La Regione Toscana non prevede nessun bonus per installare un depuratore in casa, e lo ha ribadito lei stessa quando queste telefonate hanno girato nel Grossetano, nel dicembre del 2024. Il "bonus acqua potabile" nazionale copriva solo le spese fatte dal 2021 al 2023 e non è stato prorogato.',
+        a: 'La Regione Toscana non prevede nessun bonus per installare un depuratore in casa. Il "bonus acqua potabile" nazionale copriva solo le spese fatte dal 2021 al 2023 e non è stato prorogato.',
+      },
+      {
+        q: 'Ho visto su Facebook una pubblicità del bonus regionale per il depuratore. È vera?',
+        a: 'Il bonus della Regione per il depuratore non esiste, quindi non lo offre nemmeno quella pubblicità. Non lasciare i tuoi dati nel modulo: di solito servono a farti richiamare da un call center che poi fissa un appuntamento a casa. Se un contributo esistesse davvero, lo troveresti scritto sul sito della Regione.',
       },
       {
         q: 'Mi hanno chiesto l\'Isee al telefono. È normale?',
