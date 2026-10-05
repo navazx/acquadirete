@@ -36,7 +36,12 @@ e il sito cambia solo se Matteo dice di sì.
    - `APPROVA ARTICOLO` / `APPROVA SEO` → il ramo si unisce a `main` e va online
    - `RIFIUTA ARTICOLO` / `RIFIUTA SEO` e il motivo → il ramo si cancella. Il motivo,
      per gli articoli, finisce in `agenti/contenuti/lezioni.md`
-   - con una sola proposta aperta basta `APPROVA` o `RIFIUTA`
+   - `CORREGGI ARTICOLO` / `CORREGGI SEO` e cosa cambiare → il ramo resta, parte
+     *Proposta - correggila* (`correggi-proposta.yml`, istruzioni in
+     `.claude/skills/correggi-proposta/`) che applica le note e lo rispinge, e la
+     proposta torna a Matteo corretta. Anche un `RIFIUTA` il cui motivo chiede di
+     correggere o riproporre vale come `CORREGGI` (dal 5 ott 2026)
+   - con una sola proposta aperta basta `APPROVA`, `CORREGGI` o `RIFIUTA`
 
 Una proposta per tipo alla volta: finché ce n'è una in attesa, l'agente non ne
 prepara un'altra dello stesso tipo.

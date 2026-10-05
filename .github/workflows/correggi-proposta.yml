@@ -1,0 +1,64 @@
+name: Proposta - correggila
+
+# Parte quando Matteo risponde su Telegram CORREGGI ARTICOLO (o SEO) e le sue
+# note: lo fa partire "Risposte su Telegram" (scripts/risposte.mjs). Prima, un
+# articolo da sistemare si poteva solo rifiutare, e finiva nel cestino: il 5 ott
+# 2026 e' successo con quello sul bonus della Regione.
+#
+# Riprende il ramo della proposta, lo corregge con le note (istruzioni in
+# .claude/skills/correggi-proposta/SKILL.md) e lo rispinge. Il push fa ripartire
+# "Proposta - presentala a Matteo", che la rimette in attesa e gliela rimanda.
+on:
+  workflow_dispatch:
+    inputs:
+      ramo:
+        description: 'Il ramo della proposta, es. proposta/articolo-<slug>'
+        required: true
+      note:
+        description: 'Le correzioni chieste da Matteo'
+        required: true
+
+# Una correzione per volta sullo stesso ramo.
+concurrency:
+  group: correggi-${{ inputs.ramo }}
+  cancel-in-progress: false
+
+jobs:
+  correggi:
+    # Solo rami di proposta: niente main, niente altro.
+    if: startsWith(inputs.ramo, 'proposta/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      # Serve all'azione per autenticarsi come app GitHub di Claude.
+      id-token: write
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del ramo da correggere
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.ramo }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      # Le note passano dal file, non dalla riga di comando: sono testo libero.
+      - name: Le note di Matteo
+        env:
+          NOTE: ${{ inputs.note }}
+        run: printf '%s\n' "$NOTE" > /tmp/note-di-matteo.txt
+
+      # NON passare github_token: un push fatto con quel token non fa partire
+      # altri workflow, e qui serve che il push del ramo svegli "Proposta -
+      # presentala a Matteo". Vedi il job "correzioni" in agente-seo.yml.
+      - name: Correggi la proposta
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/correggi-proposta'
+          claude_args: |
+            --model claude-opus-5

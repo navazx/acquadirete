@@ -9,6 +9,8 @@
 //  Ordini riconosciuti:
 //    post social   PUBBLICA [1|2|3] · RIMANDA (o SALTA) · SCARTA
 //    proposte      APPROVA [ARTICOLO|SEO] · RIFIUTA [ARTICOLO|SEO] [motivo]
+//                  CORREGGI [ARTICOLO|SEO] <cosa cambiare> — la riscrive e la
+//                  ripropone (anche un RIFIUTA che chiede di correggere vale cosi')
 //    foto          una foto (o un'immagine mandata come file) finisce fra quelle
 //                  per i post, in public/assets/social/. Il workflow poi la mette
 //                  in riga per Instagram e la manda online col sito.
@@ -43,7 +45,7 @@ const AIUTO =
   'Non ho capito, e non ho fatto niente.\n' +
   'Gli ordini che riconosco sono questi:\n\n' +
   'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · RIMANDA · SCARTA\n' +
-  'Per le proposte: APPROVA ARTICOLO · RIFIUTA ARTICOLO e il motivo\n' +
+  'Per le proposte: APPROVA ARTICOLO · CORREGGI ARTICOLO e cosa cambiare · RIFIUTA ARTICOLO e il motivo\n' +
   'Per i post: mandami una foto e la metto fra quelle da usare';
 
 const leggiJson = (f, vuoto) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : vuoto);
@@ -61,14 +63,18 @@ export function ordine(testo) {
   const p = t.match(/^PUBBLICA(?: ([123]))?$/);
   if (p) return { argomento: 'social', azione: 'pubblica', variante: Number(p[1] || 1) };
 
-  const a = pulito.match(/^(approva|rifiuta)(?: (articolo|seo))?(?: (.+))?$/i);
+  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (articolo|seo))?\b[\s:,.-]*(.*)$/i);
   if (a) {
-    const azione = a[1].toLowerCase();
+    let azione = a[1].toLowerCase();
     const tipo = a[2] ? a[2].toUpperCase() : null;
     const motivo = (a[3] || '').trim();
     // "approva domani" o "approva l'articolo" non sono ordini: meglio chiedere
     // che approvare per sbaglio.
     if (azione === 'approva' && motivo) return null;
+    // Un RIFIUTA che chiede di correggere e' un CORREGGI: il 5 ott 2026 Matteo ha
+    // scritto "RIFIUTA ... correggi l'articolo e riproponimelo in giornata", e
+    // l'articolo e' finito nel cestino.
+    if (azione === 'rifiuta' && /\b(corregg|riscriv|ripropon|rifall|sistemal)/i.test(motivo)) azione = 'correggi';
     return { argomento: 'proposta', azione, tipo, motivo };
   }
   return null;
@@ -213,14 +219,50 @@ async function eseguiProposta(o, aperte) {
     return;
   }
   if (o.azione === 'approva') await approva(candidate[0]);
+  else if (o.azione === 'correggi') await correggi(candidate[0], o.motivo);
   else await rifiuta(candidate[0], o.motivo);
+}
+
+/**
+ * CORREGGI: il ramo resta, e parte "Proposta - correggila" (correggi-proposta.yml),
+ * che lo riscrive con le note di Matteo e lo rispinge. Il push fa ripartire
+ * "Proposta - presentala a Matteo", che lo rimette in attesa e glielo rimanda.
+ */
+async function correggi(p, note) {
+  if (!note) {
+    await messaggio(`Cosa devo cambiare? Scrivi CORREGGI ${p.tipo} e subito dopo le correzioni, nello stesso messaggio.`);
+    return;
+  }
+  aggiorna(p.ramo, { stato: 'da correggere', correzioni: [...(p.correzioni || []), { note, chiesta: oggi() }] });
+  if (p.tipo === 'ARTICOLO') {
+    appendFileSync(LEZIONI, `\n- ${oggi().slice(0, 10)} — «${p.titolo}» da correggere: ${note}\n`);
+  }
+  const res = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY || 'navazx/acquadirete'}/actions/workflows/correggi-proposta.yml/dispatches`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: JSON.stringify({ ref: 'main', inputs: { ramo: p.ramo, note: note.slice(0, 2000) } }),
+  });
+  if (res.status !== 204) {
+    console.log(`Avvio della correzione rifiutato: HTTP ${res.status} ${await res.text()}`);
+    aggiorna(p.ramo, { stato: 'in attesa' });
+    await messaggio(`Non sono riuscito a far partire la correzione di «${p.titolo}». Resta in attesa com'era: chiedi a Claude dal PC.`);
+    return;
+  }
+  await messaggio(
+    `Ricevuto: correggo «${p.titolo}» con le tue note e te lo ripropongo appena è pronto, di solito entro mezz'ora.\n` +
+    'Non è andato online niente.',
+  );
 }
 
 // ---------------------------------------------------------------------------
 //  Foto per i post
 // ---------------------------------------------------------------------------
 
-const TENTATIVO = /^\s*(pubblica|scarta|rimanda|salta|approva|rifiuta)/i;
+const TENTATIVO = /^\s*(pubblica|scarta|rimanda|salta|approva|rifiuta|correggi)/i;
 
 /**
  * Nome della foto senza estensione: data e numero del messaggio, cosi' due foto

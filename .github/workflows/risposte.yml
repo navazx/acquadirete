@@ -27,6 +27,9 @@ concurrency:
 # Per unire a main le proposte approvate e registrare cosa e' stato fatto.
 permissions:
   contents: write
+  # Per CORREGGI: fa partire "Proposta - correggila" (correggi-proposta.yml).
+  # Un avvio a mano (workflow_dispatch) col token di GitHub parte comunque.
+  actions: write
 
 jobs:
   risposte:
@@ -53,6 +56,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
           META_PUBLISH_TOKEN: ${{ secrets.META_PUBLISH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/risposte.mjs
 
       # Le foto mandate al bot sono appena finite in public/assets/social/. Vanno

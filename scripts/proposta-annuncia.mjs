@@ -121,6 +121,7 @@ async function main() {
     anteprima ? 'Il dettaglio è nel file qui sotto.' : cambiamentiInChiaro(cambiati),
     '',
     `APPROVA ${tipo} — va online`,
+    `CORREGGI ${tipo} e cosa cambiare — la sistemo e te la ripropongo`,
     `RIFIUTA ${tipo} e il motivo — non va online, e il motivo resta come lezione`,
   ].join('\n');
 
