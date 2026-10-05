@@ -60,5 +60,14 @@
     "url": null,
     "decisa": "2026-09-19",
     "note": "approvata da Matteo in chat, al PC"
+  },
+  {
+    "ramo": "proposta/articolo-truffa-bonus-regione-depuratore",
+    "tipo": "ARTICOLO",
+    "titolo": "Depuratore gratis col \"bonus della Regione\"? Quel bonus non esiste",
+    "creata": "2026-10-05T06:15:01.979Z",
+    "stato": "in attesa",
+    "sha": "dc2d2a1b9c25700f2621fa043804fd04d98ea493",
+    "url": "https://www.acquadirete.it/blog/truffa-bonus-regione-depuratore/"
   }
 ]
