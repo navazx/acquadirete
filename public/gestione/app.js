@@ -68,6 +68,7 @@
     allarme: '<path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5M12 17.5v.01"/>',
     pausa: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
     personaPiu: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
+    mirino: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -168,6 +169,13 @@
   function carica() {
     if (!caricando) {
       caricando = api().then((r) => {
+        // Le posizioni trovate dalla mappa mentre il foglio si rileggeva non
+        // sono ancora nei dati nuovi: si portano dietro (stesso indirizzo).
+        const vecchi = new Map((dati?.clienti || []).map((c) => [c.codice, c]));
+        r.clienti.forEach((c) => {
+          const v = vecchi.get(c.codice);
+          if (!c.prec && v && v.prec && indirizzoCercato(v) === indirizzoCercato(c)) Object.assign(c, { prec: v.prec, lat: v.lat, lng: v.lng });
+        });
         dati = { oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati };
         aggiornatoAlle = Date.now();
         memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
@@ -206,6 +214,13 @@
 
   function disegna(stato) {
     stato = stato || { s: 'home' };
+    // Si lascia la mappa (o la si ridisegna): si ricorda dove si guardava.
+    if (mappaAttiva) {
+      vistaMappa = { centro: mappaAttiva.getCenter(), zoom: mappaAttiva.getZoom() };
+      mappaAttiva.remove();
+      mappaAttiva = null;
+    }
+    window.onresize = null;
     if (!chiave) return schermoAttiva();
     if (!dati) {
       titolo('Acquadirete', false);
@@ -217,7 +232,7 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
@@ -537,6 +552,7 @@
         <button class="pillola" data-citta="" aria-pressed="${!scelte.size}">Tutte</button>
         ${tastiCitta.map((t) => `<button class="pillola${t.gruppo ? ' pillola-gruppo' : ''}" data-citta="${esc(t.id)}" aria-pressed="${premuto(t)}"${t.gruppo ? ` title="${esc(t.gruppo.join(', '))}"` : ''}>${esc(t.nome)} (${t.n})</button>`).join('')}
       </div>` : ''}
+      <button class="btn vai-mappa" id="vai-mappa" type="button">${icona('mappa')} Vedi sulla mappa</button>
       <div id="elenco"></div>`;
 
     function elenco() {
@@ -592,7 +608,454 @@
     schermo.querySelectorAll('[data-vista]').forEach((b) => {
       b.onclick = () => { history.replaceState({ s: 'scadenze', citta: [...scelte], vista: b.dataset.vista }, '', location.pathname + location.hash); disegna(history.state); };
     });
+    // La mappa dei giri: si apre sulle città scelte, se ce ne sono.
+    $('vai-mappa').onclick = () => vai({
+      s: 'mappa',
+      citta: [...scelte],
+      cat: vista === 'sospese' ? [...CATEGORIE_DI_BASE, 'sospese'] : CATEGORIE_DI_BASE,
+    });
     elenco();
+  }
+
+  // ---------------------------------------------------------------------
+  //  Posizioni dei clienti (per la mappa)
+  // ---------------------------------------------------------------------
+  // Le cerca il telefono su OpenStreetMap (Nominatim: gratis, al massimo una
+  // richiesta al secondo) e le salva nella scheda "Coordinate" del foglio,
+  // così ogni indirizzo si cerca una volta sola. Prima l'indirizzo intero; se
+  // non si trova (abbreviazioni, errori di battitura, frazioni) il centro del
+  // paese, cioè una posizione approssimativa ("paese").
+  // Lo script che le ha cercate tutte la prima volta (5 ott 2026) usa questa
+  // stessa funzione: se cambi le regole, le posizioni vecchie restano come sono.
+  const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
+  const indirizzoCercato = (c) => [c.indirizzo, c.citta].map((s) => String(s == null ? '' : s).trim()).filter(Boolean).join(', ');
+  let ultimaRicerca = 0;
+  async function chiediNominatim(parametri) {
+    const attesa = ultimaRicerca + 1100 - Date.now();
+    if (attesa > 0) await new Promise((ok) => setTimeout(ok, attesa));
+    ultimaRicerca = Date.now();
+    // Riquadro: Toscana larga, Versilia e Lunigiana. Fuori di qui è un omonimo.
+    const q = new URLSearchParams({
+      format: 'jsonv2', limit: '1', countrycodes: 'it', viewbox: '9.6,44.6,12.4,42.3', bounded: '1',
+      'accept-language': 'it', email: 'info@acquadirete.it', ...parametri,
+    });
+    const res = await fetch(`${NOMINATIM}?${q}`);
+    if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+    const [r] = await res.json();
+    return r ? { lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building', via: r.category === 'highway' } : null;
+  }
+  async function cercaPosizione(c) {
+    // Abbreviazioni sciolte; le iniziali dei nomi si tolgono invece di
+    // indovinarle: «Via Balbo» trova anche «Via Cesare Balbo».
+    const via = String(c.indirizzo || '')
+      .replace(/\(.*?\)/g, ' ')
+      .replace(/\bL\.go\b/gi, 'Largo').replace(/\bV\.le\b/gi, 'Viale').replace(/\bP\.?zz?a\b/gi, 'Piazza').replace(/\bC\.so\b/gi, 'Corso')
+      .replace(/\b(Loc|Fraz)\.\s*/gi, '')
+      .replace(/(^|\s)[A-Za-z]\.\s*/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+    const paese = senzaCap(c.citta).replace(/\b(Loc|Fraz)\.\s*/gi, '').replace(/\s+/g, ' ').trim();
+    const cap = (String(c.citta || '').match(/^\s*(\d{5})\s/) || [])[1];
+    if (via && paese) {
+      const r = await chiediNominatim({ q: `${via}, ${paese}` });
+      if (r) return { lat: r.lat, lng: r.lng, prec: r.civico ? 'civico' : r.via ? 'via' : 'paese' };
+    }
+    // Il paese: prima come comune (il centro vero: «Prato» da solo darebbe la
+    // provincia), poi come frazione; se sono due nomi («Le Valli, Figline»)
+    // uno alla volta, dal più grande; per ultimo dal CAP.
+    const pezzi = paese.split(/\s*[,/]\s*/).filter(Boolean);
+    const nomi = [paese, ...(pezzi.length > 1 ? pezzi.reverse() : [])].filter(Boolean);
+    const tentativi = [...nomi.flatMap((n) => [{ city: n }, { q: n }]), cap && { postalcode: cap }];
+    for (const p of tentativi) {
+      if (!p) continue;
+      const r = await chiediNominatim(p);
+      if (r) return { lat: r.lat, lng: r.lng, prec: 'paese' };
+    }
+    return { prec: 'nessuna' };
+  }
+
+  // Cerca, una alla volta, le posizioni che mancano e le salva a gruppi.
+  // Si ferma se si esce dalla mappa o se OpenStreetMap non risponde: le
+  // altre si cercano la prossima volta.
+  let cercaInCorso = false;
+  // Cosa fare a ogni posizione trovata (c) e alla fine (null): lo decide la
+  // mappa aperta in quel momento, che può non essere quella che ha iniziato.
+  let quandoTrovata = () => {};
+  async function cercaPosizioniMancanti(clienti) {
+    const dopoOgnuna = (c) => quandoTrovata(c);
+    if (cercaInCorso) return;
+    cercaInCorso = true;
+    const daSalvare = [];
+    const salva = async () => {
+      const pezzo = daSalvare.splice(0);
+      if (pezzo.length) await api('posizioni', { posizioni: pezzo }).catch(() => { /* si ricercano la prossima volta */ });
+    };
+    try {
+      for (const c of clienti) {
+        if (!mappaAttiva) break;
+        const cercato = indirizzoCercato(c);
+        let p;
+        try { p = await cercaPosizione(c); } catch { break; }
+        Object.assign(c, p);
+        // Se intanto i dati si sono ricaricati, anche il cliente "nuovo".
+        const ora = dati && clienteDa(c.codice);
+        if (ora && ora !== c && indirizzoCercato(ora) === cercato) Object.assign(ora, p);
+        daSalvare.push({ codice: c.codice, cercato, ...p });
+        dopoOgnuna(c);
+        if (daSalvare.length >= 10) await salva();
+      }
+    } finally {
+      await salva();
+      cercaInCorso = false;
+      if (dati) memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
+      dopoOgnuna(null);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  //  Mappa dei giri
+  // ---------------------------------------------------------------------
+  // Un puntino per ogni manutenzione da fare, colorato come nelle liste: si
+  // vede dove sono ammassate, si toccano quelle da mettere nel giro e il
+  // giro si apre in Google Maps. La libreria della mappa (Leaflet, con le
+  // cartine di OpenStreetMap) si scarica solo quando si apre questa pagina.
+  const LEAFLET = {
+    js: ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js', 'sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=='],
+    css: ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css', 'sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=='],
+  };
+  let leafletInArrivo = null;
+  function caricaLeaflet() {
+    if (window.L) return Promise.resolve(window.L);
+    if (!leafletInArrivo) {
+      leafletInArrivo = new Promise((ok, ko) => {
+        if (!document.querySelector('link[data-leaflet]')) {
+          const css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: LEAFLET.css[0], integrity: LEAFLET.css[1], crossOrigin: 'anonymous' });
+          css.dataset.leaflet = '1';
+          document.head.append(css);
+        }
+        const js = Object.assign(document.createElement('script'), { src: LEAFLET.js[0], integrity: LEAFLET.js[1], crossOrigin: 'anonymous' });
+        js.onload = () => ok(window.L);
+        js.onerror = () => { leafletInArrivo = null; js.remove(); ko(new Error('Mappa non scaricata')); };
+        document.head.append(js);
+      });
+    }
+    return leafletInArrivo;
+  }
+
+  const CATEGORIE_MAPPA = [
+    { id: 'urgenti', nome: 'Urgenti' },
+    { id: 'scadute', nome: 'Scadute' },
+    { id: 'mese', nome: 'Entro 30 giorni' },
+    { id: 'due', nome: 'Fra 30 e 60 giorni' },
+    { id: 'sospese', nome: 'Sospese' },
+  ];
+  const CATEGORIE_DI_BASE = ['urgenti', 'scadute', 'mese'];
+  function categoriaMappa(c) {
+    if (c.avviso === 'Urgente') return 'urgenti';
+    if (c.avviso === 'Sospesa') return 'sospese';
+    const s = scadenza(c);
+    if (s.giorni == null || s.giorni > 60) return null;
+    return s.giorni < 0 ? 'scadute' : s.giorni <= 30 ? 'mese' : 'due';
+  }
+
+  // Il giro: i codici dei clienti scelti, nell'ordine in cui farli. Resta
+  // nel telefono, così si prepara la sera e si parte la mattina.
+  const K_GIRO = 'gestione-giro';
+  const MAX_TAPPE = 10; // Google Maps apre al massimo 10 tappe
+  // Da dove parte babbo (sede, Via 1° Maggio a Montespertoli): serve solo a
+  // mettere le tappe in un ordine sensato.
+  const SEDE = { lat: 43.6436, lng: 11.0756 };
+  let giro = (() => {
+    try { const g = JSON.parse(memoria.leggi(K_GIRO) || '[]'); return Array.isArray(g) ? g.filter((k) => typeof k === 'string').slice(0, MAX_TAPPE) : []; } catch { return []; }
+  })();
+  let elencoGiroAperto = false;
+  let mappaAttiva = null;   // la mappa Leaflet mostrata adesso
+  let vistaMappa = null;    // centro e zoom, per ritrovarla uguale tornando indietro
+
+  const clienteDa = (codice) => dati.clienti.find((c) => c.codice === codice);
+  // Distanza "a volo d'uccello" in gradi corretti: basta per confrontare.
+  const distanza = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((a.lat + b.lat) * Math.PI / 360), b.lat - a.lat);
+
+  // Ordina le tappe come un giro che parte dalla sede e ci torna: prima la
+  // più vicina ogni volta, poi si sciolgono gli incroci (2-opt). Le tappe
+  // senza posizione restano in fondo.
+  function ordinaGiro(codici) {
+    const conPosto = codici.map(clienteDa).filter((c) => c && c.lat != null);
+    const senza = codici.filter((k) => !conPosto.some((c) => c.codice === k));
+    const resto = conPosto.slice();
+    const percorso = [SEDE];
+    while (resto.length) {
+      const qui = percorso[percorso.length - 1];
+      let i = 0;
+      resto.forEach((t, j) => { if (distanza(qui, t) < distanza(qui, resto[i])) i = j; });
+      percorso.push(resto.splice(i, 1)[0]);
+    }
+    percorso.push(SEDE);
+    for (let meglio = true, giri = 0; meglio && giri < 50; giri++) {
+      meglio = false;
+      for (let i = 1; i < percorso.length - 2; i++) {
+        for (let j = i + 1; j < percorso.length - 1; j++) {
+          const prima = distanza(percorso[i - 1], percorso[i]) + distanza(percorso[j], percorso[j + 1]);
+          const dopo = distanza(percorso[i - 1], percorso[j]) + distanza(percorso[i], percorso[j + 1]);
+          if (dopo < prima - 1e-9) { percorso.splice(i, j - i + 1, ...percorso.slice(i, j + 1).reverse()); meglio = true; }
+        }
+      }
+    }
+    // L'anello è lungo uguale nei due versi: si parte dalla tappa più vicina a casa.
+    const tappe = percorso.slice(1, -1);
+    if (tappe.length > 1 && distanza(SEDE, tappe[0]) > distanza(SEDE, tappe[tappe.length - 1])) tappe.reverse();
+    return [...tappe.map((c) => c.codice), ...senza];
+  }
+  function salvaGiro() { memoria.scrivi(K_GIRO, JSON.stringify(giro)); }
+
+  // Il link che apre Google Maps col percorso: si parte da dove si è, l'ultima
+  // tappa è l'arrivo. Indirizzi scritti (Google li trova meglio delle
+  // coordinate); le coordinate solo se l'indirizzo manca.
+  function linkGiro(tappe) {
+    const dove = (c) => (c.indirizzo
+      ? [c.indirizzo, senzaCap(c.citta) ? c.citta : '', c.provincia].filter(Boolean).join(', ')
+      : `${c.lat},${c.lng}`);
+    const q = new URLSearchParams({ api: '1', travelmode: 'driving', destination: dove(tappe[tappe.length - 1]) });
+    if (tappe.length > 1) q.set('waypoints', tappe.slice(0, -1).map(dove).join('|'));
+    return `https://www.google.com/maps/dir/?${q}`;
+  }
+
+  // Più clienti nello stesso punto (stesso palazzo, o "centro del paese")
+  // si aprono a girasole, così si tocca ognuno.
+  function sparpaglia(lista) {
+    const gruppi = new Map();
+    lista.forEach((x) => {
+      const k = `${x.c.lat.toFixed(4)},${x.c.lng.toFixed(4)}`;
+      if (!gruppi.has(k)) gruppi.set(k, []);
+      gruppi.get(k).push(x);
+    });
+    for (const g of gruppi.values()) {
+      g.forEach((x, i) => {
+        if (g.length === 1) { x.lat = x.c.lat; x.lng = x.c.lng; return; }
+        const metri = (x.c.prec === 'paese' ? 140 : 14) * Math.sqrt(i + 0.5);
+        const angolo = i * 2.39996; // angolo d'oro
+        x.lat = x.c.lat + (metri / 111320) * Math.cos(angolo);
+        x.lng = x.c.lng + (metri / (111320 * Math.cos(x.c.lat * Math.PI / 180))) * Math.sin(angolo);
+      });
+    }
+    return lista;
+  }
+
+  function schermoMappa(stato) {
+    titolo('Mappa dei giri', true);
+    const scelte = new Set(Array.isArray(stato.cat) ? stato.cat : CATEGORIE_DI_BASE);
+    giro = giro.filter((k) => clienteDa(k));
+    const tutti = dati.clienti.map((c) => ({ c, cat: categoriaMappa(c) })).filter((x) => x.cat);
+    const conta = {};
+    tutti.forEach((x) => { conta[x.cat] = (conta[x.cat] || 0) + 1; });
+
+    schermo.innerHTML = `
+      <div class="pillole pillole-mappa">${CATEGORIE_MAPPA.map((k) => `<button class="pillola" data-cat="${k.id}" aria-pressed="${scelte.has(k.id)}"><span class="pallino-mappa ${k.id}"></span>${k.nome} (${conta[k.id] || 0})</button>`).join('')}</div>
+      <p class="stato-mappa" id="stato-mappa" hidden></p>
+      <div class="mappa" id="mappa"><div class="carica">Carico la mappa…</div></div>
+      <div class="giro" id="giro"></div>`;
+
+    let L = null;
+    let strato = null;
+    const nelGiro = (c) => giro.includes(c.codice);
+
+    function dimensiona() {
+      const el = $('mappa');
+      if (!el) return;
+      const sotto = $('giro').offsetHeight + 34;
+      el.style.height = `${Math.max(300, window.innerHeight - el.getBoundingClientRect().top - window.scrollY - sotto)}px`;
+      if (mappaAttiva) mappaAttiva.invalidateSize();
+    }
+
+    // Riga sopra la mappa: quante posizioni si stanno cercando, o quanti
+    // clienti scelti non ci sono (indirizzo che manca o non trovato).
+    function disegnaStato(cercando) {
+      const el = $('stato-mappa');
+      if (!el) return;
+      const mostrati = tutti.filter((x) => scelte.has(x.cat));
+      const daCercare = mostrati.filter((x) => !x.c.prec && x.c.citta).length;
+      const fuori = mostrati.filter((x) => x.c.lat == null && !(cercando && !x.c.prec && x.c.citta));
+      if (cercando && daCercare) {
+        el.innerHTML = `Cerco dove stanno ${daCercare} ${daCercare === 1 ? 'cliente' : 'clienti'}: i puntini compaiono man mano.`;
+      } else if (fuori.length) {
+        el.innerHTML = `${fuori.length} ${fuori.length === 1 ? 'cliente non è' : 'clienti non sono'} sulla mappa (indirizzo che manca). <button class="link" id="vedi-fuori">Vedi chi</button>`;
+        $('vedi-fuori').onclick = () => {
+          const f = apriFinestra(`<h3>Non sono sulla mappa</h3><p>Manca la città o l'indirizzo non si trova. Si sistemano da «Modifica i dati» nella scheda.</p>
+            <div class="lista">${fuori.map((x) => voceCliente(x.c)).join('')}</div>
+            <button class="btn leggero" id="chiudi-fuori">Chiudi</button>`);
+          f.querySelectorAll('[data-codice]').forEach((b) => { b.onclick = () => vai({ s: 'cliente', codice: b.dataset.codice }); });
+          $('chiudi-fuori').onclick = chiudiFinestra;
+        };
+      } else {
+        el.innerHTML = '';
+      }
+      el.hidden = !el.innerHTML;
+      dimensiona();
+    }
+
+    // L'elenco delle tappe sta chiuso (l'ordine si legge dai numeri sui
+    // puntini): aperto ruberebbe mezza mappa.
+    function disegnaGiro() {
+      const tappe = giro.map(clienteDa).filter(Boolean);
+      const nome = (c) => c.nome.split('/')[0].replace(/\(.*?\)/g, '').trim();
+      $('giro').innerHTML = tappe.length
+        ? `<div class="giro-testa"><b>Giro: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
+            <span><button class="link" id="elenco-giro">${elencoGiroAperto ? 'Chiudi elenco' : 'Elenco'}</button><button class="link" id="svuota-giro">Svuota</button></span></div>
+          ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((c, i) => `<span><b>${i + 1}</b>${esc(nome(c))} <i>${esc(titoloCitta(c.citta))}</i></span>`).join('')}</p>` : ''}
+          <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro in Google Maps</a>`
+        : '<p class="giro-vuoto">Tocca un puntino e poi «Aggiungi al giro». Le tappe si mettono in ordine da sole, partendo da Montespertoli.</p>';
+      if ($('svuota-giro')) $('svuota-giro').onclick = () => { giro = []; salvaGiro(); disegnaGiro(); disegnaPuntini(); };
+      if ($('elenco-giro')) $('elenco-giro').onclick = () => { elencoGiroAperto = !elencoGiroAperto; disegnaGiro(); };
+      dimensiona();
+    }
+
+    function popup(c) {
+      const s = scadenza(c);
+      const etichetta = c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>'
+        : c.avviso === 'Sospesa' ? '<span class="etichetta grigio">Sospesa</span>'
+        : `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>`;
+      return `<div class="popup-cliente">
+        <b>${esc(c.nome)}</b>
+        <span>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', '))}</span>
+        <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}</span>
+        ${c.tipo ? `<span class="tipo">${esc(c.tipo)}</span>` : ''}
+        ${c.prec === 'paese' ? '<small>Posizione approssimativa: centro del paese.</small>' : ''}
+        <div class="popup-azioni">
+          <button class="btn ${nelGiro(c) ? '' : 'pieno'}" data-azione="giro">${nelGiro(c) ? 'Togli dal giro' : 'Aggiungi al giro'}</button>
+          <button class="btn" data-azione="scheda">Apri la scheda</button>
+        </div>
+      </div>`;
+    }
+
+    function cambiaGiro(c) {
+      if (nelGiro(c)) {
+        giro = giro.filter((k) => k !== c.codice);
+      } else {
+        if (giro.length >= MAX_TAPPE) { messaggio(`In un giro ci stanno al massimo ${MAX_TAPPE} tappe.`, { errore: true }); return; }
+        giro = ordinaGiro([...giro, c.codice]);
+      }
+      salvaGiro();
+      mappaAttiva.closePopup();
+      disegnaGiro();
+      disegnaPuntini();
+    }
+
+    function disegnaPuntini() {
+      if (!strato) return;
+      strato.clearLayers();
+      // Le tappe del giro si vedono sempre, anche se la loro categoria è spenta.
+      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || nelGiro(x.c))));
+      visibili.forEach((x) => {
+        const n = giro.indexOf(x.c.codice);
+        const classi = ['pin', x.cat, x.c.prec === 'paese' ? 'circa' : '', n >= 0 ? 'nel-giro' : ''].filter(Boolean).join(' ');
+        const testo = n >= 0 ? String(n + 1) : x.cat === 'urgenti' ? '!' : '';
+        const grande = x.cat === 'urgenti' || n >= 0;
+        const lato = grande ? 32 : 26;
+        const segno = L.marker([x.lat, x.lng], {
+          icon: L.divIcon({ className: 'pin-mappa', html: `<span class="${classi}">${testo}</span>`, iconSize: [lato, lato], iconAnchor: [lato / 2, lato / 2], popupAnchor: [0, -lato / 2] }),
+          keyboard: false,
+          // Urgenti e tappe del giro sopra gli altri puntini.
+          zIndexOffset: n >= 0 ? 2000 : x.cat === 'urgenti' ? 1000 : x.cat === 'scadute' ? 500 : 0,
+        });
+        segno.bindPopup(() => popup(x.c), { maxWidth: 280, minWidth: 220, autoPanPaddingTopLeft: [16, 64], autoPanPaddingBottomRight: [16, 16] });
+        segno.on('popupopen', (e) => {
+          const el = e.popup.getElement();
+          el.querySelector('[data-azione="giro"]').onclick = () => cambiaGiro(x.c);
+          el.querySelector('[data-azione="scheda"]').onclick = () => vai({ s: 'cliente', codice: x.c.codice });
+        });
+        segno.addTo(strato);
+      });
+    }
+
+    schermo.querySelectorAll('[data-cat]').forEach((b) => {
+      b.onclick = () => {
+        if (scelte.has(b.dataset.cat)) scelte.delete(b.dataset.cat); else scelte.add(b.dataset.cat);
+        b.setAttribute('aria-pressed', String(scelte.has(b.dataset.cat)));
+        history.replaceState({ ...(history.state || {}), s: 'mappa', cat: [...scelte] }, '', location.pathname + location.hash);
+        disegnaPuntini();
+        disegnaStato(cercaInCorso);
+      };
+    });
+
+    disegnaGiro();
+    caricaLeaflet().then((libreria) => {
+      const el = $('mappa');
+      if (!el || history.state?.s !== 'mappa') return; // nel frattempo si è cambiata pagina
+      L = libreria;
+      el.innerHTML = '';
+      dimensiona();
+      const m = L.map(el, { zoomControl: true, attributionControl: true });
+      m.attributionControl.setPrefix(false);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+      }).addTo(m);
+      mappaAttiva = m;
+      strato = L.layerGroup().addTo(m);
+      disegnaPuntini();
+
+      // «Dove sono»: il puntino blu della posizione del telefono.
+      const DoveSono = L.Control.extend({
+        onAdd() {
+          const b = L.DomUtil.create('button', 'dove-sono');
+          b.type = 'button';
+          b.innerHTML = `${icona('mirino')}<span>Dove sono</span>`;
+          L.DomEvent.disableClickPropagation(b);
+          b.onclick = () => {
+            if (!navigator.geolocation) { messaggio('Questo telefono non sa dove si trova.', { errore: true }); return; }
+            b.disabled = true;
+            navigator.geolocation.getCurrentPosition((p) => {
+              b.disabled = false;
+              const qui = [p.coords.latitude, p.coords.longitude];
+              if (m._qui) m._qui.setLatLng(qui); else m._qui = L.circleMarker(qui, { radius: 9, color: '#fff', weight: 3, fillColor: '#1a73e8', fillOpacity: 1 }).addTo(m);
+              m.setView(qui, Math.max(m.getZoom(), 12));
+            }, () => {
+              b.disabled = false;
+              messaggio('Non riesco a sapere dove sei. Controlla che la posizione del telefono sia accesa.', { errore: true });
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+          };
+          return b;
+        },
+      });
+      new DoveSono({ position: 'topright' }).addTo(m);
+
+      // Aperta dalla lista con delle città scelte: si guarda quella zona (una
+      // volta sola: tornando indietro dalla scheda vale la vista di prima).
+      const zona = Array.isArray(stato.citta) && stato.citta.length
+        ? tutti.filter((x) => x.c.lat != null && stato.citta.includes(chiaveCitta(x.c))).map((x) => [x.c.lat, x.c.lng]) : [];
+      if (zona.length) {
+        m.fitBounds(zona, { padding: [32, 32], maxZoom: 14 });
+        history.replaceState({ ...history.state, citta: [] }, '', location.pathname + location.hash);
+      } else if (vistaMappa) {
+        m.setView(vistaMappa.centro, vistaMappa.zoom);
+      } else {
+        // Si apre sulla zona dove sta il grosso dei clienti: i pochi lontani
+        // (Livorno, Versilia) si vedono allontanando la mappa.
+        const punti = tutti.filter((x) => x.c.lat != null && scelte.has(x.cat)).map((x) => x.c);
+        if (punti.length) {
+          const mediana = (v) => v.slice().sort((a, b) => a - b)[Math.floor(v.length / 2)];
+          const centro = { lat: mediana(punti.map((p) => p.lat)), lng: mediana(punti.map((p) => p.lng)) };
+          const vicini = punti.sort((a, b) => distanza(centro, a) - distanza(centro, b)).slice(0, Math.max(1, Math.ceil(punti.length * 0.85)));
+          m.fitBounds(vicini.map((p) => [p.lat, p.lng]), { padding: [24, 24], maxZoom: 13 });
+        } else {
+          m.setView([SEDE.lat, SEDE.lng], 10);
+        }
+      }
+
+      // Le posizioni che mancano: prima quelle che si vedono, le urgenti in testa.
+      const ordineCat = Object.fromEntries(CATEGORIE_MAPPA.map((k, i) => [k.id, scelte.has(k.id) ? i : i + 10]));
+      const mancano = tutti.filter((x) => !x.c.prec && x.c.citta).sort((a, b) => ordineCat[a.cat] - ordineCat[b.cat]).map((x) => x.c);
+      quandoTrovata = (c) => {
+        if (mappaAttiva !== m) return;
+        if (c) { if (c.lat != null) disegnaPuntini(); disegnaStato(true); } else disegnaStato(false);
+      };
+      disegnaStato(mancano.length > 0 || cercaInCorso);
+      if (mancano.length) cercaPosizioniMancanti(mancano);
+    }).catch(() => {
+      const el = $('mappa');
+      if (el) el.innerHTML = '<div class="vuoto">La mappa non si carica: serve internet.<br><br><button class="btn pieno" id="riprova-mappa">Riprova</button></div>';
+      if ($('riprova-mappa')) $('riprova-mappa').onclick = () => disegna(history.state);
+    });
+    window.onresize = dimensiona;
   }
 
   // ---------------------------------------------------------------------

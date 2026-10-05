@@ -327,6 +327,11 @@ function clienteDaRiga(r, col, numeroRiga) {
 }
 
 export async function leggiTutto(foglio) {
+  // Le posizioni per la mappa: se la scheda non si legge, l'app va lo stesso.
+  const posizioni = leggiCoordinate(foglio).catch((err) => {
+    console.error('Coordinate non lette:', err);
+    return new Map();
+  });
   const [{ griglia: gc, mappa: mc }, { griglia: gl, mappa: ml }] = await Promise.all([
     leggiClienti(foglio),
     leggiLead(foglio),
@@ -336,6 +341,15 @@ export async function leggiTutto(foglio) {
   for (let i = mc.riga; i < gc.length; i++) {
     const c = clienteDaRiga(gc[i] || [], mc.col, i + 1);
     if (c.nome || c.codice) clienti.push(c);
+  }
+  // Una posizione vale solo se l'indirizzo è ancora quello cercato; se no
+  // il cliente risulta "da cercare" e il telefono la ricerca.
+  const pos = await posizioni;
+  for (const c of clienti) {
+    const p = pos.get(c.codice.toUpperCase());
+    if (!p || normalizza(p.cercato) !== normalizza(indirizzoCercato(c.indirizzo, c.citta))) continue;
+    c.prec = p.prec;
+    if (p.lat != null) { c.lat = p.lat; c.lng = p.lng; }
   }
 
   const lead = [];
@@ -975,6 +989,93 @@ export async function notaLead(foglio, { riga, data, nome, nota }) {
 }
 
 // ---------------------------------------------------------------------------
+//  Posizioni dei clienti (mappa delle manutenzioni)
+// ---------------------------------------------------------------------------
+
+// Scheda "Coordinate" (dal 5 ott 2026): dove sta ogni cliente, per la mappa
+// dell'app. Le coordinate le cerca il telefono su OpenStreetMap (Nominatim)
+// e le manda qui, così ogni indirizzo si cerca una volta sola. "Indirizzo
+// cercato" è l'indirizzo com'era quando si è cercato: se poi nel foglio
+// cambia, la posizione non vale più e il telefono la ricerca. Precisione:
+// "civico", "via", "paese" (centro del paese: posizione approssimativa) o
+// "nessuna" (cercato e non trovato: non si riprova finché l'indirizzo non
+// cambia). Nessuna automazione del foglio legge questa scheda.
+export const TAB_COORDINATE = 'Coordinate';
+const INTESTAZIONI_COORDINATE = ['Codice', 'Lat', 'Lng', 'Precisione', 'Indirizzo cercato', 'Aggiornato il'];
+const PRECISIONI = ['civico', 'via', 'paese', 'nessuna'];
+export const indirizzoCercato = (indirizzo, citta) => [testo(indirizzo), testo(citta)].filter(Boolean).join(', ');
+
+// Codice → { riga, lat, lng, prec, cercato }. Se un codice compare due
+// volte (due telefoni insieme), vale l'ultima riga.
+async function leggiCoordinate(foglio) {
+  let griglia;
+  try {
+    griglia = await foglio.leggi(`'${TAB_COORDINATE}'!A1:F3000`, 'UNFORMATTED_VALUE');
+  } catch (err) {
+    if (err.status === 400) return new Map(); // scheda non ancora creata
+    throw err;
+  }
+  const posizioni = new Map();
+  for (let i = 1; i < griglia.length; i++) {
+    const r = griglia[i] || [];
+    const codice = testo(r[0]).toUpperCase();
+    const prec = testo(r[3]);
+    if (!/^C\d+$/.test(codice) || !PRECISIONI.includes(prec)) continue;
+    const lat = r[1] === '' || r[1] == null ? NaN : Number(r[1]);
+    const lng = r[2] === '' || r[2] == null ? NaN : Number(r[2]);
+    const trovata = prec !== 'nessuna' && isFinite(lat) && isFinite(lng);
+    posizioni.set(codice, { riga: i + 1, lat: trovata ? lat : null, lng: trovata ? lng : null, prec: trovata ? prec : 'nessuna', cercato: testo(r[4]) });
+  }
+  return posizioni;
+}
+
+// Salva le posizioni trovate dal telefono (al massimo 50 per volta). Ognuna
+// vale solo se l'indirizzo del cliente è ancora quello che è stato cercato;
+// se no si salta, e il telefono la ricercherà con l'indirizzo nuovo.
+export async function salvaPosizioni(foglio, { posizioni = [] }) {
+  if (!Array.isArray(posizioni) || !posizioni.length) throw problema('Nessuna posizione da salvare.');
+  if (posizioni.length > 50) throw problema('Troppe posizioni in una volta.');
+  const [{ griglia, mappa }, esistenti] = await Promise.all([leggiClienti(foglio), leggiCoordinate(foglio)]);
+  const cercatoOra = new Map();
+  for (let i = mappa.riga; i < griglia.length; i++) {
+    const r = griglia[i] || [];
+    const codice = testo(r[mappa.col.CODICE - 1]).toUpperCase();
+    if (codice) cercatoOra.set(codice, indirizzoCercato(r[mappa.col.INDIRIZZO - 1], r[mappa.col.CITTA - 1]));
+  }
+
+  const quando = testoData(oggi());
+  const aggiorna = [];
+  const nuove = [];
+  const visti = new Set();
+  let saltate = 0;
+  for (const p of posizioni) {
+    const codice = testo(p?.codice).toUpperCase();
+    const cercato = cercatoOra.get(codice);
+    const prec = PRECISIONI.includes(p?.prec) ? p.prec : null;
+    if (!cercato || !prec || visti.has(codice) || normalizza(p?.cercato) !== normalizza(cercato)) { saltate++; continue; }
+    visti.add(codice);
+    let lat = '';
+    let lng = '';
+    if (prec !== 'nessuna') {
+      lat = Number(p.lat);
+      lng = Number(p.lng);
+      // Fuori dall'Italia (con margine) è un omonimo sbagliato, non un cliente.
+      if (!(lat > 35 && lat < 48 && lng > 6 && lng < 19)) { saltate++; continue; }
+      lat = Math.round(lat * 1e6) / 1e6;
+      lng = Math.round(lng * 1e6) / 1e6;
+    }
+    const riga = [codice, lat, lng, prec, cercato, quando];
+    const e = esistenti.get(codice);
+    if (e) aggiorna.push({ range: `'${TAB_COORDINATE}'!A${e.riga}:F${e.riga}`, values: [riga] });
+    else nuove.push(riga);
+  }
+  // RAW: le coordinate restano numeri, la data è solo un promemoria.
+  if (aggiorna.length) await foglio.scrivi(aggiorna, 'RAW');
+  if (nuove.length) await foglio.accodaRighe(TAB_COORDINATE, INTESTAZIONI_COORDINATE, nuove);
+  return { ok: true, salvate: aggiorna.length + nuove.length, saltate };
+}
+
+// ---------------------------------------------------------------------------
 //  Adattatore verso Google Sheets
 // ---------------------------------------------------------------------------
 
@@ -1093,9 +1194,14 @@ export function creaFoglioGoogle(sheetId) {
     // Accoda una riga alla scheda (creandola con le intestazioni se non c'è).
     // Restituisce il range scritto, che serve per annullare.
     async accoda(tab, intestazioni, riga) {
+      return this.accodaRighe(tab, intestazioni, [riga]);
+    },
+    // Come accoda, con più righe in una chiamata sola: un "append" di Google
+    // non si accavalla con quello di un altro telefono nello stesso momento.
+    async accodaRighe(tab, intestazioni, righe) {
       const append = () => chiama(
         `/values/${encodeURIComponent(`'${tab}'!A1`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-        { method: 'POST', body: JSON.stringify({ values: [riga] }) }
+        { method: 'POST', body: JSON.stringify({ values: righe }) }
       );
       try {
         return (await append()).updates?.updatedRange ?? null;

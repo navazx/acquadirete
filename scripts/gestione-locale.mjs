@@ -27,7 +27,7 @@ process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 process.env.GESTIONE_CHIAVE = 'prova:provalocale-0000-0000,matteo:provalocale-matteo-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
-const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD } =
+const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE } =
   await import('../netlify/functions/_shared/gestionale.mjs');
 
 // ---------------------------------------------------------------------------
@@ -52,7 +52,12 @@ async function creaFoglioFinto() {
     // I lead si leggono sempre formattati: basta il testo.
     [TAB_LEAD]: await vero.leggi(`'${TAB_LEAD}'!A1:Z2000`, 'FORMATTED_VALUE'),
   };
-  console.log(`Copia in memoria: ${schede[TAB_CLIENTI].length} righe clienti, ${schede[TAB_LEAD].length} righe lead`);
+  // Le posizioni già trovate, così la mappa non le ricerca tutte a ogni avvio.
+  try {
+    const coordinate = await vero.leggi(`'${TAB_COORDINATE}'!A1:F3000`, 'UNFORMATTED_VALUE');
+    if (coordinate.length) schede[TAB_COORDINATE] = coordinate;
+  } catch { /* scheda non ancora creata */ }
+  console.log(`Copia in memoria: ${schede[TAB_CLIENTI].length} righe clienti, ${schede[TAB_LEAD].length} righe lead, ${Math.max((schede[TAB_COORDINATE] || []).length - 1, 0)} posizioni`);
 
   const cella = (tab, r, c) => ((schede[tab] || [])[r - 1] || [])[c - 1];
   const metti = (tab, r, c, v) => {
@@ -123,6 +128,11 @@ async function creaFoglioFinto() {
       const range = `'${tab}'!A${g.length}:${String.fromCharCode(64 + riga.length)}${g.length}`;
       console.log(`  accodo ${range} = ${JSON.stringify(riga)}`);
       return range;
+    },
+    async accodaRighe(tab, intestazioni, righe) {
+      const g = (schede[tab] ||= [intestazioni]);
+      g.push(...righe);
+      console.log(`  accodo ${righe.length} righe in ${tab} (fino alla ${g.length}), la prima = ${JSON.stringify(righe[0])}`);
     },
   };
   return finto;

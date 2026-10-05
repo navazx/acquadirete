@@ -231,3 +231,62 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation: none !important; transition: none !important; }
 }
+
+/* ---- «Vedi sulla mappa» sopra la lista delle manutenzioni ---- */
+.vai-mappa { width: 100%; min-height: 50px; margin: 0 0 12px; color: var(--blu); font-size: 18px; }
+.link { background: none; border: 0; padding: 6px 4px; color: var(--blu); font-weight: 700; text-decoration: underline; }
+
+/* ---- Mappa dei giri ---- */
+/* Colori dei puntini: gli stessi rosso/arancio delle liste, più accesi
+   perché stanno sopra una cartina colorata. */
+.pillole-mappa .pillola { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; font-size: 16px; }
+.pillole-mappa .pillola[aria-pressed="false"] { color: var(--grigio); }
+.pallino-mappa { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 0 2px #fff; }
+.pallino-mappa.urgenti, .pin.urgenti { background: #a50e0e; }
+.pallino-mappa.scadute, .pin.scadute { background: #e53935; }
+.pallino-mappa.mese, .pin.mese { background: #f29900; }
+.pallino-mappa.due, .pin.due { background: #f7c32e; }
+.pallino-mappa.sospese, .pin.sospese { background: #8a97a5; }
+.stato-mappa { margin: -4px 0 10px; font-size: 16px; color: var(--grigio); }
+/* z-index 0: i livelli di Leaflet restano sotto la barra blu e le finestre. */
+.mappa { position: relative; z-index: 0; height: 60vh; margin: 0 -16px; background: #e5ebf1; }
+.mappa .leaflet-container, .mappa.leaflet-container { font: inherit; }
+.pin-mappa { background: none; border: 0; }
+.pin {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  border: 3px solid #fff; border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .5);
+  color: #fff; font: 800 15px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.pin.due { color: var(--testo); }
+.pin.urgenti { font-size: 19px; }
+/* Posizione approssimativa (centro del paese): bordo tratteggiato. */
+.pin.circa { border-style: dashed; }
+/* Tappa del giro: anello blu e numero. */
+.pin.nel-giro { border-color: var(--blu); border-width: 4px; box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, .5); }
+.popup-cliente { display: grid; gap: 4px; font: 16px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--testo); }
+.popup-cliente b { font-size: 18px; line-height: 1.25; }
+.popup-cliente .riga3 { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.popup-cliente .tipo { color: var(--grigio); font-size: 15px; }
+.popup-cliente small { color: var(--arancio); font-size: 14px; }
+.popup-azioni { display: grid; gap: 8px; margin-top: 8px; }
+.popup-azioni .btn { min-height: 46px; font-size: 16px; padding: 6px 10px; }
+.leaflet-popup-content { margin: 14px 16px; }
+.dove-sono {
+  display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+  background: #fff; border: 2px solid rgba(0, 0, 0, .25); border-radius: 10px;
+  color: var(--blu-scuro); font: 700 16px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.dove-sono svg { font-size: 22px; }
+.dove-sono[disabled] { opacity: .6; }
+.giro { margin: 12px 0 0; padding: 12px 14px; background: var(--carta); border-radius: 16px; box-shadow: var(--ombra); }
+.giro-testa { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.giro-testa b { font-size: 19px; }
+.giro-tappe { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 12px; font-size: 15px; line-height: 1.3; }
+.giro-tappe span { display: inline-flex; align-items: center; gap: 5px; }
+.giro-tappe b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border-radius: 50%; background: var(--blu); color: #fff; font-size: 12px; }
+.giro-tappe i { font-style: normal; color: var(--grigio); }
+.giro .btn { width: 100%; }
+.giro-vuoto { margin: 0; color: var(--grigio); font-size: 16px; }
+.giro-testa > span { display: flex; gap: 10px; }
+.giro-testa b, .giro-testa .link { white-space: nowrap; }

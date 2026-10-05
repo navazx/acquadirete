@@ -17,7 +17,7 @@ import { timingSafeEqual, createHash } from 'node:crypto';
 import {
   leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
-  nuovoLead, cambiaStatoLead, notaLead, creaFoglioGoogle,
+  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -71,6 +71,7 @@ const AZIONI = {
   nuovoLead,
   stato: cambiaStatoLead,
   nota: notaLead,
+  posizioni: salvaPosizioni,
 };
 
 // creaFoglio è un parametro solo per il server di prova in locale
