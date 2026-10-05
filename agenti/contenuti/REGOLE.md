@@ -60,29 +60,10 @@ _nessuna per ora_
 
 ## Coda
 
-- **`truffa-bonus-regione-depuratore`** — la telefonata "hai diritto a un depuratore
-  gratis col bonus della Regione". **Deciso da Matteo il 19 set 2026: è il PROSSIMO
-  articolo, prima di tutto il resto** (anche prima di arricchire un articolo in
-  soglia, che slitta al mese dopo). Taglio stretto, **articolo sulla truffa, non guida
-  ai bonus**. Eccezione limitata alla regola sulle normative: si possono dire SOLO
-  questi due fatti, verificati il 19 set 2026:
-  1. la Regione Toscana non prevede nessun bonus per installare un depuratore in casa:
-     lo ha detto lei stessa quando la truffa è girata nel Grossetano (dicembre 2024,
-     telefonate da call center: "con il suo Isee ha diritto a un depuratore gratis
-     grazie al bonus della Regione");
-  2. il vecchio "bonus acqua potabile" nazionale copriva solo le spese dal 2021 al 2023
-     e non è stato prorogato.
-  Niente altro sul fisco: niente detrazioni, niente "bonus ristrutturazione", niente
-  come recuperare le spese, niente cosa dichiarare. Il resto dell'articolo: come
-  funziona la telefonata, perché "gratis grazie al bonus" nasconde quasi sempre un
-  contratto pluriennale, cosa fare se ti chiamano (non dare dati, chiedere tutto per
-  scritto, prendersi tempo). Parole che la gente cerca: "bonus depuratore acqua 2026",
-  "depuratore gratis bonus regione". Collegare `depuratore-acqua-gratis-contratti` e
-  `domande-prima-contratto-depuratore` (in tutti e due i sensi). Nella proposta
-  elencare i due fatti come "da verificare col titolare".
 - **`depuratore-fai-da-te-o-installato`** — "Depuratore fai da te o installato: cosa
   cambia davvero". **Deciso da Matteo il 21 set 2026: viene subito dopo l'articolo sul
-  bonus della Regione** (quindi a novembre, prima degli argomenti sotto). Risponde a chi
+  bonus della Regione**, scritto il 5 ott 2026: è quindi il prossimo della coda,
+  prima degli argomenti sotto. Risponde a chi
   vede impianti molto più economici nei negozi di bricolage o online e si chiede perché
   pagarne di più. Nessuna cifra per quegli impianti ("costano molto meno"). Tono onesto
   ma chiaro: il fai da te all'inizio costa meno, ma saper fare un po' di idraulica non

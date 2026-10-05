@@ -94,7 +94,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-06-22',
     readingMinutes: 5,
     relatedServices: ['depuratore', 'assistenza'],
-    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'installatore-depuratore-scomparso-cosa-fare', 'domande-prima-contratto-depuratore'],
+    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'installatore-depuratore-scomparso-cosa-fare', 'domande-prima-contratto-depuratore', 'truffa-bonus-regione-depuratore'],
     sections: [
       {
         paragraphs: [
@@ -869,7 +869,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: '2026-09-18',
     readingMinutes: 4,
     relatedServices: ['depuratore', 'assistenza', 'osmosi'],
-    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'truffa-bonus-regione-depuratore'],
     sections: [
       {
         paragraphs: [
@@ -932,6 +932,79 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Cosa devo farmi scrivere sul preventivo?',
         a: 'Il costo totale per tutta la durata del contratto, cosa comprende la manutenzione e quanto costa ogni anno, la durata e le penali per uscire prima, di chi è l\'impianto alla fine e chi interviene in caso di guasto.',
+      },
+    ],
+  },
+  {
+    slug: 'truffa-bonus-regione-depuratore',
+    title: 'Depuratore gratis col "bonus della Regione"? Quel bonus non esiste',
+    metaTitle: 'Bonus Depuratore Acqua 2026: la Telefonata che Gira',
+    metaDescription:
+      'Ti chiamano e dicono che col tuo Isee hai diritto a un depuratore gratis col bonus della Regione? Quel bonus non esiste: ecco come funziona e cosa fare.',
+    excerpt:
+      'Un call center ti dice che col tuo Isee hai diritto a un depuratore gratis grazie al bonus della Regione. Quel bonus non esiste: ecco com\'è fatta la telefonata e cosa fare se chiamano anche te.',
+    publishedAt: '2026-10-05',
+    readingMinutes: 4,
+    relatedServices: ['depuratore', 'assistenza'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'domande-prima-contratto-depuratore'],
+    sections: [
+      {
+        paragraphs: [
+          'Suona il telefono, dall\'altra parte un call center: "con il suo Isee ha diritto a un depuratore gratis grazie al bonus della Regione". Detta così sembra una bella notizia, e infatti funziona: in tante case qualcuno ha fissato l\'appuntamento.',
+          'Il problema è che quel bonus non c\'è. Qui ti raccontiamo com\'è fatta la telefonata, cosa nasconde quasi sempre la parola "gratis" e cosa fare se chiamano anche te.',
+        ],
+      },
+      {
+        heading: 'Il bonus della Regione per il depuratore non esiste',
+        paragraphs: [
+          'Partiamo dal punto fermo: la Regione Toscana non prevede nessun bonus per installare un depuratore in casa. Lo ha detto lei stessa quando queste telefonate hanno girato nel Grossetano, nel dicembre del 2024: call center che dicevano "con il suo Isee ha diritto a un depuratore gratis grazie al bonus della Regione".',
+          'Anni prima c\'era stato un "bonus acqua potabile" nazionale, ma copriva solo le spese fatte dal 2021 al 2023 e non è stato prorogato. Oltre a questo, di fisco e di contributi non parliamo: non è il nostro mestiere. Quello che possiamo dirti è che oggi, se qualcuno ti telefona offrendoti un depuratore gratis grazie a un bonus, quel bonus non esiste.',
+          'E se davvero esistesse un contributo, lo troveresti scritto sul sito della Regione. È il primo posto dove guardare, e si controlla in due minuti.',
+        ],
+      },
+      {
+        heading: 'Com\'è fatta la telefonata',
+        paragraphs: [
+          'Lo schema è sempre simile. Chi chiama non ti vende niente: ti "informa". Dice che hai diritto a qualcosa, e usa le parole che fanno sentire fortunati — ti spetta, è un tuo diritto, è una convenzione. Spesso tira in mezzo l\'Isee o quante persone vivete in casa, perché nominare un dato personale fa sembrare la telefonata ufficiale.',
+          'Poi arriva la parte vera: fissare un appuntamento a casa, di solito in fretta, perché "i posti stanno finendo" o "la convenzione scade". E a casa non arriva un funzionario: arriva un venditore, a volte con una valigetta per provare la tua acqua, e si finisce con un foglio da firmare la sera stessa.',
+        ],
+      },
+      {
+        heading: 'Perché "gratis grazie al bonus" quasi sempre è un contratto di anni',
+        paragraphs: [
+          'Quando si arriva al foglio, la parola "gratis" cambia significato. Nella maggior parte dei casi vuol dire che l\'impianto non si paga tutto all\'inizio, ma con un canone mensile e un contratto che dura anni: cinque, a volte più. Al mese sembra poco. Sommato per tutta la durata, quasi sempre viene più di quanto costerebbe comprare lo stesso impianto.',
+          'Se il bonus non esiste, i soldi li mette qualcuno, e quel qualcuno sei tu, un po\' per volta. Dentro al contratto ci sono poi le cose che contano davvero: quanto dura, cosa si paga per uscire prima, di chi è l\'impianto alla fine, chi viene quando si rompe. Le abbiamo messe in fila nel nostro articolo sul depuratore "gratis" e su come funzionano quei contratti.',
+        ],
+      },
+      {
+        heading: 'Cosa fare se ti chiamano',
+        paragraphs: [
+          'Prima cosa: non dare dati. Isee, codice fiscale, quante persone vivono in casa, indirizzo, conto in banca. Per ricevere un\'informazione non serve niente di tutto questo. Se chi chiama ne ha bisogno subito, è perché sta compilando qualcosa, non perché ti sta informando.',
+          'Seconda cosa: chiedi tutto per scritto. Il nome dell\'azienda e la partita IVA, cosa ti stanno proponendo e a quali condizioni, su un\'email o su un foglio che resta a te. Chi ha un\'offerta vera non ha problemi a metterla nero su bianco.',
+          'Terza: prenditi tempo. Nessuna firma la sera stessa, nessun acconto, nessuna fretta. Se un\'offerta vale solo oggi, non è un\'offerta: è una pressione. E se hai già firmato qualcosa a casa tua, nel nostro articolo sui contratti del depuratore "gratis" trovi le cose da controllare subito.',
+          'Se invece il depuratore ti interessa davvero, chiedi un preventivo a un\'azienda della tua zona, una che puoi andare a trovare e richiamare fra due anni. Senza bonus di mezzo.',
+        ],
+      },
+      {
+        heading: 'Come lavoriamo noi, senza bonus',
+        paragraphs: [
+          'Noi lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e non abbiamo nessun bonus da offrirti, perché non esiste. Quello che facciamo è venire a casa tua, guardare la tua acqua al tuo rubinetto e il tuo lavello, e lasciarti un preventivo. Il sopralluogo è gratuito, e quello sì è gratis davvero.',
+          'Le voci principali le trovi scritte sul preventivo, e poi decidi tu, con calma. Se stai confrontando più offerte, nell\'articolo sulle domande da fare prima di firmare trovi l\'elenco delle cose da chiedere: valgono per chiunque, anche per noi.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Esiste un bonus 2026 per mettere un depuratore in casa?',
+        a: 'La Regione Toscana non prevede nessun bonus per installare un depuratore in casa, e lo ha ribadito lei stessa quando queste telefonate hanno girato nel Grossetano, nel dicembre del 2024. Il "bonus acqua potabile" nazionale copriva solo le spese fatte dal 2021 al 2023 e non è stato prorogato.',
+      },
+      {
+        q: 'Mi hanno chiesto l\'Isee al telefono. È normale?',
+        a: 'No. Per ricevere un\'informazione non serve nessun dato personale: né Isee, né codice fiscale, né quante persone vivono in casa. Se te li chiedono subito, puoi chiudere la telefonata; se il depuratore ti interessa, chiedi un preventivo a un\'azienda della tua zona.',
+      },
+      {
+        q: 'Ho già fissato l\'appuntamento a casa. Cosa faccio?',
+        a: 'Puoi anche riceverli, ma senza firmare niente la sera stessa: fatti lasciare tutto per scritto, nome dell\'azienda compreso, e prenditi qualche giorno per leggerlo e confrontarlo. Se hai già firmato, nel nostro articolo sui contratti del depuratore "gratis" trovi cosa controllare.',
       },
     ],
   },
