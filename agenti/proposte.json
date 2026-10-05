@@ -66,10 +66,11 @@
     "tipo": "ARTICOLO",
     "titolo": "Depuratore gratis col \"bonus della Regione\"? Quel bonus non esiste",
     "creata": "2026-10-05T06:15:01.979Z",
-    "stato": "rifiutata",
+    "stato": "approvata",
     "sha": "dc2d2a1b9c25700f2621fa043804fd04d98ea493",
     "url": "https://www.acquadirete.it/blog/truffa-bonus-regione-depuratore/",
-    "decisa": "2026-10-05T07:30:49.335Z",
-    "motivo": "1 stai più generico non specificare la truffa nel Grossetano 2 ci sono anche pubblicità di meta che ti chiedono di aderire al bonus regionale oltre alle telefonate . (Correggi l'articolo e riproponimelo in giornata)"
+    "decisa": "2026-10-05",
+    "motivo": "1 stai più generico non specificare la truffa nel Grossetano 2 ci sono anche pubblicità di meta che ti chiedono di aderire al bonus regionale oltre alle telefonate . (Correggi l'articolo e riproponimelo in giornata)",
+    "note": "rifiutata con correzioni su Telegram; corretta da Claude al PC e approvata da Matteo in chat"
   }
 ]
