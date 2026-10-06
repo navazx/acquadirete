@@ -220,6 +220,7 @@
       mappaAttiva.remove();
       mappaAttiva = null;
     }
+    fermaPosizione();
     window.onresize = null;
     if (!chiave) return schermoAttiva();
     if (!dati) {
@@ -610,6 +611,33 @@
   }
 
   // ---------------------------------------------------------------------
+  //  Dove si trova il telefono
+  // ---------------------------------------------------------------------
+  // Il permesso lo chiede il telefono la prima volta. Se è stato negato,
+  // l'app non può richiederlo: va riacceso nelle impostazioni.
+  const SU_IPHONE = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  function erroreGps(err) {
+    if (err && err.code === 1) {
+      return SU_IPHONE
+        ? 'La posizione è bloccata. Sull\'iPhone: Impostazioni › Privacy e sicurezza › Localizzazione › Siti web di Safari › «Mentre usi l\'app». Poi riprova.'
+        : 'La posizione è bloccata. In Chrome: tocca il lucchetto accanto all\'indirizzo (o Impostazioni › Impostazioni sito › Posizione) e permettila per acquadirete.it. Poi riprova.';
+    }
+    return 'Il telefono non riesce a sapere dove sei. Controlla che la posizione (GPS) sia accesa e riprova.';
+  }
+  // fresca: niente posizione vecchia tenuta in memoria dal telefono (serve
+  // per «Sono qui», dove conta il punto di adesso).
+  function doveSono({ fresca = false } = {}) {
+    return new Promise((ok, ko) => {
+      if (!navigator.geolocation) { ko(new Error('Questo telefono non sa dove si trova.')); return; }
+      navigator.geolocation.getCurrentPosition(
+        (p) => ok({ lat: p.coords.latitude, lng: p.coords.longitude, margine: Math.round(p.coords.accuracy) }),
+        (err) => ko(new Error(erroreGps(err))),
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: fresca ? 0 : 60000 },
+      );
+    });
+  }
+
+  // ---------------------------------------------------------------------
   //  Mappa dei giri
   // ---------------------------------------------------------------------
   // Un puntino per ogni manutenzione da fare, colorato come nelle liste: si
@@ -668,6 +696,7 @@
   let elencoGiroAperto = false;
   let mappaAttiva = null;   // la mappa Leaflet mostrata adesso
   let vistaMappa = null;    // centro e zoom, per ritrovarla uguale tornando indietro
+  let fermaPosizione = () => {}; // smette di seguire il telefono quando si lascia la mappa
 
   const clienteDa = (codice) => dati.clienti.find((c) => c.codice === codice);
   // Distanza "a volo d'uccello" in gradi corretti: basta per confrontare.
@@ -816,7 +845,7 @@
         <span>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', '))}</span>
         <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}</span>
         ${c.tipo ? `<span class="tipo">${esc(c.tipo)}</span>` : ''}
-        ${c.prec === 'paese' ? '<small>Posizione approssimativa: centro del paese.</small>' : ''}
+        ${c.prec === 'paese' ? '<small>Posizione approssimativa: centro del paese. Quando sei lì, «Sono qui» nella scheda la sistema.</small>' : ''}
         <div class="popup-azioni">
           <button class="btn ${nelGiro(c) ? '' : 'pieno'}" data-azione="giro">${nelGiro(c) ? 'Togli dal giro' : 'Aggiungi al giro'}</button>
           <button class="btn" data-azione="scheda">Apri la scheda</button>
@@ -891,30 +920,64 @@
       strato = L.layerGroup().addTo(m);
       disegnaPuntini();
 
-      // «Dove sono»: il puntino blu della posizione del telefono.
+      // «Dove sono»: il puntino blu del telefono (col cerchio del margine),
+      // che si sposta mentre si va. Se il permesso c'è già si accende da
+      // solo; il pulsante poi riporta la mappa sul puntino.
+      let segui = null;
+      let qui = null;
+      let puntino = null;
+      let cerchio = null;
+      let bottone = null;
+      let daCentrare = false; // pulsante toccato, posizione non ancora arrivata
+      const testoBottone = (t) => { bottone.querySelector('span').textContent = t; };
+      fermaPosizione = () => {
+        if (segui != null) navigator.geolocation.clearWatch(segui);
+        segui = null;
+      };
+      function seguiTelefono(toccato) {
+        if (!navigator.geolocation) { messaggio('Questo telefono non sa dove si trova.', { errore: true }); return; }
+        if (toccato && qui) m.setView(qui, Math.max(m.getZoom(), 13));
+        if (toccato && !qui) { daCentrare = true; testoBottone('Cerco…'); }
+        if (segui != null) return;
+        segui = navigator.geolocation.watchPosition((p) => {
+          if (mappaAttiva !== m) return;
+          qui = [p.coords.latitude, p.coords.longitude];
+          if (!cerchio) {
+            cerchio = L.circle(qui, { radius: p.coords.accuracy, color: '#1a73e8', weight: 1, fillColor: '#1a73e8', fillOpacity: 0.12, interactive: false }).addTo(m);
+            // Sopra i puntini dei clienti (che stanno nel markerPane, 600)
+            // e sotto i fumetti (700): se no in città sparisce fra gli altri.
+            if (!m.getPane('qui')) Object.assign(m.createPane('qui').style, { zIndex: 650, pointerEvents: 'none' });
+            puntino = L.circleMarker(qui, { pane: 'qui', radius: 9, color: '#fff', weight: 3, fillColor: '#1a73e8', fillOpacity: 1, interactive: false }).addTo(m);
+          } else {
+            cerchio.setLatLng(qui).setRadius(p.coords.accuracy);
+            puntino.setLatLng(qui);
+          }
+          if (daCentrare) { daCentrare = false; testoBottone('Dove sono'); m.setView(qui, Math.max(m.getZoom(), 13)); }
+        }, (err) => {
+          fermaPosizione();
+          if (mappaAttiva !== m) return;
+          testoBottone('Dove sono');
+          // Accesa da sola e non riuscita: si tace, c'è sempre il pulsante.
+          if (daCentrare) messaggio(erroreGps(err), { errore: true, durata: 15000 });
+          daCentrare = false;
+        }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
+      }
       const DoveSono = L.Control.extend({
         onAdd() {
-          const b = L.DomUtil.create('button', 'dove-sono');
-          b.type = 'button';
-          b.innerHTML = `${icona('mirino')}<span>Dove sono</span>`;
-          L.DomEvent.disableClickPropagation(b);
-          b.onclick = () => {
-            if (!navigator.geolocation) { messaggio('Questo telefono non sa dove si trova.', { errore: true }); return; }
-            b.disabled = true;
-            navigator.geolocation.getCurrentPosition((p) => {
-              b.disabled = false;
-              const qui = [p.coords.latitude, p.coords.longitude];
-              if (m._qui) m._qui.setLatLng(qui); else m._qui = L.circleMarker(qui, { radius: 9, color: '#fff', weight: 3, fillColor: '#1a73e8', fillOpacity: 1 }).addTo(m);
-              m.setView(qui, Math.max(m.getZoom(), 12));
-            }, () => {
-              b.disabled = false;
-              messaggio('Non riesco a sapere dove sei. Controlla che la posizione del telefono sia accesa.', { errore: true });
-            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
-          };
-          return b;
+          bottone = L.DomUtil.create('button', 'dove-sono');
+          bottone.type = 'button';
+          bottone.innerHTML = `${icona('mirino')}<span>Dove sono</span>`;
+          L.DomEvent.disableClickPropagation(bottone);
+          bottone.onclick = () => seguiTelefono(true);
+          return bottone;
         },
       });
       new DoveSono({ position: 'topright' }).addTo(m);
+      if (navigator.permissions && navigator.geolocation) {
+        navigator.permissions.query({ name: 'geolocation' })
+          .then((s) => { if (s.state === 'granted' && mappaAttiva === m) seguiTelefono(false); })
+          .catch(() => { /* telefono che non lo dice: si aspetta il pulsante */ });
+      }
 
       if (vistaMappa) {
         m.setView(vistaMappa.centro, vistaMappa.zoom);
@@ -1001,6 +1064,8 @@
       ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Ha un guasto: è urgente</button>` : ''}
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
+      <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
+      <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}</p>
       <h3 class="titoletto">Dati del cliente</h3>
       <dl class="dati">
         ${riga('Impianto', c.tipo)}
@@ -1018,6 +1083,57 @@
     if ($('urgente')) $('urgente').onclick = () => chiediAvviso(c, 'Urgente');
     if ($('togli-avviso')) $('togli-avviso').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
+    $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
+  }
+
+  // «Sono qui»: dal cliente, il punto dove sta il telefono diventa la sua
+  // posizione sulla mappa (precisione "gps"), più giusta di quella trovata
+  // dall'indirizzo. Si chiede sempre conferma, col margine del GPS e un
+  // avviso se si è lontani da dove la mappa lo metteva (scheda sbagliata).
+  const POSIZIONE_IN_MAPPA = {
+    gps: 'Sulla mappa: segnata sul posto ✓',
+    civico: 'Sulla mappa: dal numero civico.',
+    via: 'Sulla mappa: dalla via, senza il numero.',
+    paese: 'Sulla mappa: centro del paese, approssimativa.',
+    nessuna: 'Non è sulla mappa: indirizzo non trovato.',
+  };
+  function chiediSonoQui(c, btn) {
+    conPulsante(btn, 'Cerco dove sei…', async () => {
+      let qui;
+      try { qui = await doveSono({ fresca: true }); } catch (err) { messaggio(err.message, { errore: true, durata: 15000 }); return; }
+      if (qui.margine > 100) {
+        messaggio(`Il telefono sa dove sei solo con un margine di ${qui.margine} metri: troppo. Esci all'aperto, aspetta qualche secondo e riprova.`, { errore: true, durata: 12000 });
+        return;
+      }
+      const km = c.lat != null ? distanza(c, qui) * 111.32 : 0;
+      const lontano = km > (c.prec === 'paese' ? 10 : 2);
+      apriFinestra(`
+        <h3>Segno la posizione?</h3>
+        <p><strong>${esc(c.nome)}</strong><br>Il punto dove sei adesso diventa la sua posizione sulla mappa (margine ${qui.margine} metri).</p>
+        ${lontano ? `<div class="scadenza arancio" style="margin:0 0 14px">Sei a ${km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km)} km da dove la mappa lo metteva. Sei proprio da lui?</div>` : ''}
+        <button class="btn verde grande" type="button" id="si">${icona('spunta')} Sì, è qui</button>
+        <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+      $('no').onclick = chiudiFinestra;
+      $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+        const prima = c.prec && c.prec !== 'nessuna' ? { lat: c.lat, lng: c.lng, prec: c.prec } : null;
+        const salva = (p) => api('posizioni', { posizioni: [{ codice: c.codice, cercato: indirizzoCercato(c), ...p }] }).then((r) => {
+          if (!r.salvate) throw new Error("Non salvata: l'indirizzo del cliente è appena cambiato. Torna indietro e riprova.");
+          Object.assign(c, p);
+          memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
+        });
+        try {
+          await salva({ lat: qui.lat, lng: qui.lng, prec: 'gps' });
+          chiudiFinestra();
+          disegna(history.state);
+          messaggio('Posizione salvata ✓', prima ? {
+            durata: 15000,
+            azione: { testo: 'Annulla', fai: () => salva(prima).then(() => { disegna(history.state); messaggio('Annullato.'); }).catch((err) => messaggio(err.message, { errore: true, durata: 8000 })) },
+          } : {});
+        } catch (err) {
+          messaggio(err.message, { errore: true, durata: 8000 });
+        }
+      });
+    });
   }
 
   // Scheda di un cliente perso: solo i dati e i contatti, più "È tornato cliente".

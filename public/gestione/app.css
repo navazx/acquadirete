@@ -167,6 +167,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .stato[aria-pressed="true"] .pallino { border-color: var(--blu); background: var(--blu); color: #fff; }
 .stato[aria-pressed="true"] .pallino svg { font-size: 16px; }
 .titoletto { margin: 22px 0 8px; font-size: 18px; font-weight: 700; }
+.nota-posizione { margin: 6px 4px 0; color: var(--grigio); font-size: 16px; text-align: center; }
 
 /* ---- Moduli ---- */
 .campo { display: block; margin-bottom: 14px; }
@@ -243,6 +244,10 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 /* z-index 0: i livelli di Leaflet restano sotto la barra blu e le finestre. */
 .mappa { position: relative; z-index: 0; height: 60vh; margin: 0 -16px; background: #e5ebf1; }
 .mappa .leaflet-container, .mappa.leaflet-container { font: inherit; }
+/* La regola delle icone (svg grandi 1em) schiacciava anche il disegno della
+   mappa: il puntino blu di «Dove sono» finiva largo mezzo pixel in un angolo.
+   Lì valgono le misure che dà Leaflet. */
+.leaflet-pane > svg { width: auto; height: auto; }
 .pin-mappa { background: none; border: 0; }
 .pin {
   display: grid; place-items: center; width: 100%; height: 100%;

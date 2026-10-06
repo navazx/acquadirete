@@ -11,8 +11,15 @@
 #                         invece di provare a indovinarlo dal contenuto.
 #  Referrer-Policy        verso i siti esterni esce solo il dominio, non
 #                         l'indirizzo esatto della pagina di partenza.
-#  Permissions-Policy     il sito non usa posizione, microfono o fotocamera:
-#                         le neghiamo in partenza.
+#  Permissions-Policy     microfono e fotocamera negati a tutti. La posizione
+#                         solo alle pagine del sito stesso (self), mai a
+#                         quello che vi si incorpora: serve all'app /gestione/
+#                         («Dove sono» sulla mappa, «Sono qui» nella scheda).
+#                         Dal 4 set al 6 ott 2026 era negata anche a lei, e
+#                         sul telefono la posizione non arrivava mai. Non
+#                         farne una regola a parte per /gestione/*: quando due
+#                         regole danno la stessa intestazione Netlify non
+#                         dice quale vince.
 #
 #  La CSP e' in prova (Report-Only): segnala le violazioni nella console del
 #  browser senza bloccare niente. Va lasciata cosi' finche' non si e' certi
@@ -28,7 +35,7 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Permissions-Policy: geolocation=(self), microphone=(), camera=()
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.facebook.com https://www.google.com https://www.google.it https://googleads.g.doubleclick.net https://stats.g.doubleclick.net; font-src 'self'; connect-src 'self' https://www.facebook.com https://graph.facebook.com https://www.google-analytics.com https://region1.google-analytics.com https://googleads.g.doubleclick.net; frame-src https://www.facebook.com https://td.doubleclick.net; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'
 
 /_next/static/*

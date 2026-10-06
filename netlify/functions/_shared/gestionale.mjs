@@ -814,6 +814,7 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
   const cella = (c) => `'${TAB_CLIENTI}'!${lettera(c)}${riga}`;
   const testi = [];
   const numeri = [];
+  const scritti = {};
 
   for (const [nome, campo] of Object.entries(CAMPI_MODIFICABILI)) {
     if (!(nome in campi)) continue;
@@ -835,6 +836,7 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
     }
     if (nome === 'citta' && v) v = cittaComeNelFoglio(dati, col, v);
     testi.push({ range: cella(col[campo]), values: [[v.slice(0, 300)]] });
+    scritti[nome] = v.slice(0, 300);
   }
 
   if ('citta' in campi && testo(campi.citta)) {
@@ -862,7 +864,27 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
       values: [[`=IF(OR($${cInst}${riga}="";$${cFreq}${riga}="");"";EDATE($${cInst}${riga};$${cFreq}${riga}))`]],
     }], 'USER_ENTERED');
   }
+
+  if ('indirizzo' in scritti || 'citta' in scritti) {
+    await tieniPosizioneSulPosto(foglio, testo(codice).toUpperCase(),
+      { indirizzo: r[col.INDIRIZZO - 1], citta: r[col.CITTA - 1] },
+      { indirizzo: scritti.indirizzo ?? r[col.INDIRIZZO - 1], citta: scritti.citta ?? r[col.CITTA - 1] },
+    ).catch((err) => console.error('Posizione sul posto non aggiornata:', err));
+  }
   return { ok: true, codice: testo(codice).toUpperCase() };
+}
+
+// Una posizione segnata sul posto («Sono qui») è più giusta di qualunque
+// ricerca: se si corregge l'indirizzo restando nello stesso paese (la via
+// scritta meglio, il civico, la città aggiunta a chi non l'aveva) resta
+// buona, e qui si aggiorna l'indirizzo a cui è legata. Se cambia il paese
+// il cliente ha traslocato: la posizione decade e il telefono la ricerca.
+// Vale per le modifiche fatte dall'app; a mano nel foglio la posizione decade.
+async function tieniPosizioneSulPosto(foglio, codice, prima, dopo) {
+  if (chiaveCitta(prima.citta) && chiaveCitta(prima.citta) !== chiaveCitta(dopo.citta)) return;
+  const p = (await leggiCoordinate(foglio)).get(codice);
+  if (!p || p.prec !== 'gps' || normalizza(p.cercato) !== normalizza(indirizzoCercato(prima.indirizzo, prima.citta))) return;
+  await foglio.scrivi([{ range: `'${TAB_COORDINATE}'!E${p.riga}`, values: [[indirizzoCercato(dopo.indirizzo, dopo.citta)]] }], 'RAW');
 }
 
 // ---------------------------------------------------------------------------
@@ -997,12 +1019,14 @@ export async function notaLead(foglio, { riga, data, nome, nota }) {
 // e le manda qui, così ogni indirizzo si cerca una volta sola. "Indirizzo
 // cercato" è l'indirizzo com'era quando si è cercato: se poi nel foglio
 // cambia, la posizione non vale più e il telefono la ricerca. Precisione:
-// "civico", "via", "paese" (centro del paese: posizione approssimativa) o
-// "nessuna" (cercato e non trovato: non si riprova finché l'indirizzo non
-// cambia). Nessuna automazione del foglio legge questa scheda.
+// "gps" (segnata sul posto col pulsante «Sono qui», dal 6 ott 2026: la più
+// giusta, non si ricerca mai), "civico", "via", "paese" (centro del paese:
+// posizione approssimativa) o "nessuna" (cercato e non trovato: non si
+// riprova finché l'indirizzo non cambia). Nessuna automazione del foglio
+// legge questa scheda.
 export const TAB_COORDINATE = 'Coordinate';
 const INTESTAZIONI_COORDINATE = ['Codice', 'Lat', 'Lng', 'Precisione', 'Indirizzo cercato', 'Aggiornato il'];
-const PRECISIONI = ['civico', 'via', 'paese', 'nessuna'];
+const PRECISIONI = ['gps', 'civico', 'via', 'paese', 'nessuna'];
 export const indirizzoCercato = (indirizzo, citta) => [testo(indirizzo), testo(citta)].filter(Boolean).join(', ');
 
 // Codice → { riga, lat, lng, prec, cercato }. Se un codice compare due
@@ -1031,7 +1055,8 @@ async function leggiCoordinate(foglio) {
 
 // Salva le posizioni trovate dal telefono (al massimo 50 per volta). Ognuna
 // vale solo se l'indirizzo del cliente è ancora quello che è stato cercato;
-// se no si salta, e il telefono la ricercherà con l'indirizzo nuovo.
+// se no si salta, e il telefono la ricercherà con l'indirizzo nuovo. Quella
+// segnata sul posto ("gps") va bene anche per chi non ha ancora l'indirizzo.
 export async function salvaPosizioni(foglio, { posizioni = [] }) {
   if (!Array.isArray(posizioni) || !posizioni.length) throw problema('Nessuna posizione da salvare.');
   if (posizioni.length > 50) throw problema('Troppe posizioni in una volta.');
@@ -1052,7 +1077,7 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
     const codice = testo(p?.codice).toUpperCase();
     const cercato = cercatoOra.get(codice);
     const prec = PRECISIONI.includes(p?.prec) ? p.prec : null;
-    if (!cercato || !prec || visti.has(codice) || normalizza(p?.cercato) !== normalizza(cercato)) { saltate++; continue; }
+    if (cercato == null || (!cercato && prec !== 'gps') || !prec || visti.has(codice) || normalizza(p?.cercato) !== normalizza(cercato)) { saltate++; continue; }
     visti.add(codice);
     let lat = '';
     let lng = '';
