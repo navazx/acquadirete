@@ -3,6 +3,21 @@
 Qui dentro sta lo stato di lavoro degli agenti. Non sono pagine del sito: non
 finiscono online, servono a far parlare fra loro i pezzi che girano su GitHub.
 
+## Gli ordini del mese: leggili per primi
+
+`ordini.md` sono le **3 priorità del mese**, scelte dal Direttore e approvate da
+Matteo. Ogni agente le legge prima di lavorare: se una lo riguarda, quel lavoro
+viene prima del suo solito. Se in cima c'è scritto "in attesa di Matteo" non sono
+ancora approvate.
+
+Il Direttore (`direttore.yml`, istruzioni in `.claude/skills/direttore/`) gira il
+1° del mese: `scripts/direttore-dati.mjs` raccoglie i numeri del mese finito in un
+file temporaneo (mai nel repo: dentro c'è la spesa), il Direttore scrive gli ordini
+sul ramo `proposta/ordini-AAAA-MM`, e la proposta arriva a Matteo come le altre,
+con `APPROVA ORDINI` / `CORREGGI ORDINI` / `RIFIUTA ORDINI`. I numeri in euro gli
+arrivano a parte, in un messaggio Telegram che non passa dal repo.
+**Negli ordini e nei commit non si scrivono mai cifre in euro**: il repo è pubblico.
+
 ## Come funziona il post social
 
 1. **Chi compone** scrive `social-bozza.json` e lo committa su `main`.
@@ -21,7 +36,8 @@ Se Matteo non risponde non succede niente: nessun sollecito, nessuna pubblicazio
 Gli agenti che cambiano il sito non toccano mai `main`. Lavorano su un ramo a parte,
 e il sito cambia solo se Matteo dice di sì.
 
-1. L'agente spinge un ramo `proposta/articolo-<slug>` oppure `proposta/seo-<data>`.
+1. L'agente spinge un ramo `proposta/articolo-<slug>`, `proposta/seo-<data>` oppure
+   (il Direttore) `proposta/ordini-<AAAA-MM>`.
    Nel messaggio di commit: prima riga il titolo, sotto le note per Matteo.
 2. Il push fa partire *Proposta - presentala a Matteo*, che **prova a costruire il
    sito** con quelle modifiche. Se non si costruisce, a Matteo arriva solo l'errore.

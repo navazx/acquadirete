@@ -63,7 +63,7 @@ export function ordine(testo) {
   const p = t.match(/^PUBBLICA(?: ([123]))?$/);
   if (p) return { argomento: 'social', azione: 'pubblica', variante: Number(p[1] || 1) };
 
-  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (articolo|seo))?\b[\s:,.-]*(.*)$/i);
+  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (articolo|seo|ordini))?\b[\s:,.-]*(.*)$/i);
   if (a) {
     let azione = a[1].toLowerCase();
     const tipo = a[2] ? a[2].toUpperCase() : null;
@@ -215,7 +215,8 @@ async function eseguiProposta(o, aperte) {
     return;
   }
   if (candidate.length > 1) {
-    await messaggio(`Ci sono ${candidate.length} proposte in attesa: scrivi ${verbo} ARTICOLO oppure ${verbo} SEO.`);
+    const tipi = [...new Set(candidate.map((p) => p.tipo))];
+    await messaggio(`Ci sono ${candidate.length} proposte in attesa: scrivi ${tipi.map((t) => `${verbo} ${t}`).join(' oppure ')}.`);
     return;
   }
   if (o.azione === 'approva') await approva(candidate[0]);

@@ -28,6 +28,8 @@ Leggi per intero, in quest'ordine:
 - `agenti/seo/posizioni.json` — le posizioni su Google.
 - `agenti/seo/posizioni-lavorate.md` — le pagine già lavorate.
 - `agenti/LEGGIMI.md`, la sezione "Le proposte".
+- `agenti/ordini.md` — le priorità del mese approvate da Matteo: se una tocca la
+  SEO, guarda prima quella.
 - `CLAUDE.md`.
 
 ## PASSO 2 — C'è già una proposta in attesa?

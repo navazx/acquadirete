@@ -28,7 +28,11 @@ const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['
 const gitMain = (...args) => git('-C', CARTELLA_MAIN, ...args);
 
 const ramo = process.env.GITHUB_REF_NAME || git('rev-parse', '--abbrev-ref', 'HEAD');
-const tipo = ramo.startsWith('proposta/articolo-') ? 'ARTICOLO' : ramo.startsWith('proposta/seo-') ? 'SEO' : null;
+// ORDINI: le priorita' del mese scritte dal Direttore (direttore.yml), dall'8 ott 2026.
+const tipo = ramo.startsWith('proposta/articolo-') ? 'ARTICOLO'
+  : ramo.startsWith('proposta/seo-') ? 'SEO'
+  : ramo.startsWith('proposta/ordini-') ? 'ORDINI'
+  : null;
 
 /**
  * Quando manca l'anteprima: le righe di testo cambiate, in chiaro. Un "prima e
@@ -86,7 +90,7 @@ async function main() {
     .join('\n')
     .trim()
     .slice(0, 2500);
-  const titolo = oggetto.replace(/^(articolo|seo)\s*:\s*/i, '');
+  const titolo = oggetto.replace(/^(articolo|seo|ordini)\s*:\s*/i, '');
   const cambiati = git('diff', '--name-only', 'origin/main...HEAD').split('\n').filter(Boolean);
 
   if (process.env.BUILD_ESITO !== 'success') {
@@ -111,7 +115,9 @@ async function main() {
 
   const testa = tipo === 'ARTICOLO'
     ? `Articolo proposto: «${titolo}»`
-    : `Correzioni SEO proposte: ${titolo}`;
+    : tipo === 'ORDINI'
+      ? `Il Direttore propone le priorità di ${titolo}`
+      : `Correzioni SEO proposte: ${titolo}`;
 
   const testo = [
     testa,

@@ -1,0 +1,83 @@
+name: Direttore - le priorita' del mese
+
+# Il 1° del mese, alle 06:00 UTC (08:00 d'estate, 07:00 d'inverno; GitHub puo'
+# partire con ore di ritardo, non importa). Il Direttore legge i numeri del mese
+# finito e propone le 3 priorita' del mese che comincia:
+#   1. scripts/direttore-dati.mjs raccoglie i numeri in /tmp (mai nel repo:
+#      dentro c'e' la spesa, e il repo e' pubblico)
+#   2. la skill .claude/skills/direttore scrive agenti/ordini.md su un ramo
+#      proposta/ordini-AAAA-MM e lo spinge: "Proposta - presentala a Matteo"
+#      gliela manda con APPROVA / CORREGGI / RIFIUTA
+#   3. qui sotto parte a parte, su Telegram, la pagina coi numeri in euro
+#
+# Costruito l'8 ott 2026; primo giro vero il 1° novembre, su ottobre.
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+    inputs:
+      mese:
+        description: 'Mese da giudicare, AAAA-MM (vuoto = quello appena finito)'
+        required: false
+        default: ''
+      solo_dati:
+        description: 'Prova: raccoglie i numeri e si ferma (niente proposta, niente Telegram)'
+        type: boolean
+        default: false
+
+jobs:
+  direttore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      # Serve all'azione per autenticarsi come app GitHub di Claude.
+      id-token: write
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      # Niente "set -x" e nessuna stampa dei dati: nei log di un repo pubblico la
+      # spesa non deve comparire. Lo script stampa solo i conteggi.
+      - name: Raccogli i numeri del mese
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          MESE: ${{ inputs.mese }}
+        run: node scripts/direttore-dati.mjs /tmp/direttore-dati.json $MESE
+
+      # NON passare github_token: un push fatto con quel token non fa partire
+      # altri workflow, e il ramo proposta/ordini-* deve svegliare "Proposta -
+      # presentala a Matteo". Vedi il job "correzioni" in agente-seo.yml.
+      - name: Il Direttore sceglie le priorita'
+        if: ${{ inputs.solo_dati != true }}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/direttore'
+          claude_args: |
+            --model claude-opus-5
+
+      - name: Manda a Matteo la pagina coi numeri
+        if: ${{ always() && inputs.solo_dati != true }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: |
+          if [ ! -s /tmp/direttore-numeri.txt ]; then
+            echo "Nessuna pagina coi numeri da mandare."
+            exit 0
+          fi
+          node -e "import('./scripts/lib/telegram.mjs').then(async (t) => { const fs = await import('node:fs'); await t.messaggio('I numeri del mese, solo per te\n\n' + fs.readFileSync('/tmp/direttore-numeri.txt', 'utf8')); console.log('Pagina mandata.'); })"
+
+      - name: Butta i file coi numeri
+        if: always()
+        run: rm -f /tmp/direttore-dati.json /tmp/direttore-numeri.txt

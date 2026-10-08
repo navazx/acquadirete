@@ -4,6 +4,11 @@ L'agente le rilegge ogni volta, prima di scrivere. Non sono gusti: sono le cose 
 Matteo ha già fatto togliere dagli articoli veri, e i fatti che ha confermato lui.
 Se una regola va cambiata, si cambia qui.
 
+**Prima di tutto leggi `agenti/ordini.md`**: le priorità del mese scelte dal
+Direttore e approvate da Matteo. Se una riguarda i contenuti, quel lavoro viene
+prima dell'elenco qui sotto. Se in cima c'è scritto "in attesa di Matteo", non
+sono ancora approvate: tienine conto, ma non sono un ordine.
+
 ## Cosa scrivere, in ordine di preferenza
 
 1. **Una domanda vera di un cliente**, se ce n'è una nella sezione qui sotto. Vale

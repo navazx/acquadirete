@@ -22,7 +22,10 @@ già quello su cui sei: controllalo con `git branch --show-current`. Non clonare
   `git diff origin/main...HEAD --stat`.
 - L'anteprima che Matteo ha letto, in `agenti/anteprime/`.
 - Le regole: `agenti/contenuti/REGOLE.md` per un articolo, `agenti/seo/REGOLE.md`
-  per le correzioni SEO. E `CLAUDE.md`.
+  per le correzioni SEO, `.claude/skills/direttore/SKILL.md` per gli ordini del
+  mese (ramo `proposta/ordini-`: lì gli euro non vanno mai nel repo, e i numeri
+  per rifare il ragionamento non li hai, quindi cambia solo quello che Matteo
+  chiede). E `CLAUDE.md`.
 
 ## PASSO 2 — Correggi
 
