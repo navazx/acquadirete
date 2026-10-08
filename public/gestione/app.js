@@ -48,7 +48,24 @@
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-  const normalizza = (s) => String(s == null ? '' : s).toLowerCase()
+  // Un telefono italiano ha fra 8 e 11 cifre, prefisso compreso: un cellulare 10,
+  // un fisso di solito 9 o 10. L'8 ott 2026 un "222" scritto di fretta non e'
+  // stato riconosciuto dall'anti-doppioni, e Angelo Gallo e' finito due volte fra
+  // i contatti. Torna il messaggio da mostrare, o '' se va bene. Piu' numeri nello
+  // stesso campo ("333… / 055…") si controllano uno per uno; i numeri esteri
+  // (+ seguito da un prefisso che non e' 39) non si controllano.
+  const problemaTelefono = (t) => {
+    for (const pezzo of String(t || '').split(/[\/,;]| - | e /i)) {
+      const p = pezzo.replace(/\s/g, '');
+      if (!/\d/.test(p) || /^(\+|00)(?!39)/.test(p)) continue;
+      const n = p.replace(/^(\+39|0039)/, '').replace(/\D/g, '').length;
+      if (n < 8) return `Il numero sembra incompleto: ha solo ${n} ${n === 1 ? 'cifra' : 'cifre'}. Un cellulare ne ha 10, un fisso di solito 9 o 10 col prefisso.`;
+      if (n > 11) return `Il numero sembra troppo lungo: ha ${n} cifre. Se sono due numeri, separali con una barra: 333 1234567 / 055 123456.`;
+    }
+    return '';
+  };
+
+  const normalizza =(s) => String(s == null ? '' : s).toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -1439,6 +1456,7 @@
         <label class="campo"><span>Telefono</span><input name="telefono" type="tel" inputmode="tel" autocomplete="off"></label>
         <label class="campo"><span>Email <em>(facoltativo)</em></span><input name="email" type="email" inputmode="email" autocomplete="off" autocapitalize="none"></label>
         <p class="errore-campo" id="err-tel" hidden>Scrivi il telefono (o l'email), se no non lo puoi richiamare.</p>
+        <p class="errore-campo" id="err-tel-cifre" hidden></p>
         <label class="campo"><span>Città</span><input name="citta" list="l-citta-lead" autocomplete="off"></label>
         <datalist id="l-citta-lead">${citta.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
         <div class="campo"><span>Come ci ha conosciuto?</span>
@@ -1462,6 +1480,10 @@
       $('err-tel').hidden = !!(v('telefono') || v('email'));
       if (!v('nome')) { f.elements.nome.focus(); return; }
       if (!v('telefono') && !v('email')) { f.elements.telefono.focus(); return; }
+      const sbagliato = problemaTelefono(v('telefono'));
+      $('err-tel-cifre').textContent = sbagliato;
+      $('err-tel-cifre').hidden = !sbagliato;
+      if (sbagliato) { f.elements.telefono.focus(); return; }
       conPulsante(f.querySelector('button.verde'), 'Salvo…', async () => {
         try {
           const r = await api('nuovoLead', {

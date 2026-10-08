@@ -967,6 +967,14 @@ export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
   const email = testo(dati.email).slice(0, 200);
   if (!nome) throw problema('Scrivi almeno il nome.');
   if (!telefono && !email) throw problema('Scrivi il telefono (o l\'email), se no non lo puoi richiamare.');
+  // Gemello di problemaTelefono in public/gestione/app.js: fra 8 e 11 cifre per
+  // numero, esteri esclusi. Un numero incompleto sfugge all'anti-doppioni (8 ott 2026).
+  for (const pezzo of telefono.split(/[/,;]| - | e /i)) {
+    const p = pezzo.replace(/\s/g, '');
+    if (!/\d/.test(p) || /^(\+|00)(?!39)/.test(p)) continue;
+    const n = p.replace(/^(\+39|0039)/, '').replace(/\D/g, '').length;
+    if (n < 8 || n > 11) throw problema(`Il telefono sembra sbagliato: ha ${n} cifre. Un cellulare ne ha 10, un fisso di solito 9 o 10 col prefisso.`);
+  }
 
   const citta = testo(dati.citta).slice(0, 80);
   let zona = '';
