@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const CARTELLA = process.env.BACHECA_DIR || '/tmp/bacheca';
-export const AGENTI = ['direttore', 'contenuti', 'seo', 'social', 'recensioni', 'lead', 'matteo'];
+export const AGENTI = ['direttore', 'contenuti', 'seo', 'social', 'recensioni', 'scheda', 'lead', 'matteo'];
 export const MAX_TESTO = 600;
 
 /** L'id del documento sulla bacheca: l'ora (senza ":" e ".") più l'agente. */

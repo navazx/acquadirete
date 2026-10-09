@@ -17,7 +17,7 @@ import { normalizza } from './lib/bacheca.mjs';
 const GIORNI = 30;
 const NOMI = {
   direttore: 'Direttore', contenuti: 'Contenuti', seo: 'SEO', social: 'Social',
-  recensioni: 'Recensioni', lead: 'Lead e clienti', matteo: 'MATTEO', tutti: 'tutti',
+  recensioni: 'Recensioni', scheda: 'Scheda Google', lead: 'Lead e clienti', matteo: 'MATTEO', tutti: 'tutti',
 };
 
 function fileJson(dir) {
