@@ -410,7 +410,7 @@
         </button>
         <button class="tessera" data-vai="cerca">
           <span class="ico">${icona('cerca')}</span>
-          <span><b>Cerca un cliente</b><small>Per nome, città o telefono</small></span>
+          <span><b>Cerca clienti e contatti</b><small>Per nome, città o telefono</small></span>
         </button>
         <button class="tessera" data-vai="nuovo">
           <span class="ico">${icona('piu')}</span>
@@ -1604,32 +1604,64 @@
   // ---------------------------------------------------------------------
   //  Cerca
   // ---------------------------------------------------------------------
+  // Cerca fra i clienti e fra i contatti (lead), e dice sempre quale dei due
+  // è ciascuno: due gruppi coi loro titoli, e sui contatti il loro stato
+  // (9 ott 2026, richiesta di Matteo).
   function schermoCerca(stato) {
-    titolo('Cerca un cliente', true);
+    titolo('Cerca', true);
     const persi = dati.persi || [];
     schermo.innerHTML = `
       <div class="cerca"><input type="search" id="q" placeholder="Nome, città o telefono" autocomplete="off" enterkeyhint="search" value="${esc(stato.q || '')}"></div>
-      <div class="lista" id="risultati"></div>
+      <div id="risultati"></div>
       ${persi.length ? `<button class="mostra-altri" id="vai-persi">Clienti persi (${persi.length})</button>` : ''}`;
     if ($('vai-persi')) $('vai-persi').onclick = () => vai({ s: 'persi' });
     const q = $('q');
+    const nove = (testo) => (String(testo).match(/\d[\d\s./-]{7,}\d/g) || []).map((n) => n.replace(/\D/g, '').slice(-9)).filter((n) => n.length === 9);
+    const nomeUguale = (nome) => normalizza(nome).split(' ').filter(Boolean).sort().join(' ');
     // Anche i persi: se uno richiama, lo si ritrova (con l'etichetta "Cliente perso").
-    const indice = dati.clienti.concat(persi).map((c) => ({
+    const tuttiClienti = dati.clienti.concat(persi);
+    const indice = tuttiClienti.map((c) => ({
       c,
       testo: normalizza([c.nome, c.citta, c.indirizzo, c.codice, c.tipo].join(' ')),
       cifre: String(c.contatto).replace(/\D/g, ''),
     }));
+    // Un contatto diventato cliente sta già fra i clienti: non si ripete. Si
+    // tiene solo se fra i clienti non lo si ritrova né per telefono né per nome.
+    const telClienti = new Set(tuttiClienti.flatMap((c) => nove(c.contatto)));
+    const nomiClienti = new Set(tuttiClienti.map((c) => nomeUguale(c.nome)));
+    const indiceLead = dati.lead
+      .filter((l) => statoLead(l) !== 'Cliente' || !(nove(l.contatto).some((n) => telClienti.has(n)) || nomiClienti.has(nomeUguale(l.nome))))
+      .map((l) => ({
+        l,
+        // Nelle note c'è anche la zona e la città ("Zona: Z1 — Firenze città").
+        testo: normalizza([l.nome, l.note, l.interesse].join(' ')),
+        cifre: String(l.contatto).replace(/\D/g, ''),
+      }));
+    const voceLead = (l) => `<button class="voce" data-lead="${esc(idLead(l))}">
+        <b>${esc(l.nome || 'Senza nome')}</b>
+        <span class="riga2">Arrivato il ${esc(String(l.data).split(',')[0] || '—')}${l.provenienza ? ' · ' + esc(l.provenienza) : ''}</span>
+        <span class="riga3"><span class="etichetta">Contatto · ${esc(ETICHETTE_STATO[statoLead(l)] || statoLead(l))}</span></span>
+      </button>`;
     function cerca() {
       const v = q.value;
       history.replaceState({ s: 'cerca', q: v }, '', location.pathname + location.hash);
       const parole = normalizza(v).split(' ').filter(Boolean);
       const cifre = v.replace(/\D/g, '');
-      if (!parole.length) { $('risultati').innerHTML = '<div class="vuoto">Scrivi un pezzo del nome, la città o il numero di telefono.</div>'; return; }
-      const trovati = indice.filter((x) =>
-        (cifre.length >= 4 && x.cifre.includes(cifre)) || parole.every((p) => x.testo.includes(p))
-      ).slice(0, 60);
-      $('risultati').innerHTML = trovati.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessun cliente trovato</div>';
+      if (!parole.length) { $('risultati').innerHTML = '<div class="vuoto">Scrivi un pezzo del nome, la città o il numero di telefono: lo cerco fra i clienti e fra i contatti.</div>'; return; }
+      const combacia = (x) => (cifre.length >= 4 && x.cifre.includes(cifre)) || parole.every((p) => x.testo.includes(p));
+      const clienti = indice.filter(combacia).slice(0, 40);
+      const contatti = indiceLead.filter(combacia).sort((a, b) => quandoArrivato(b.l) - quandoArrivato(a.l)).slice(0, 20);
+      // Se ci sono tutti e due, in cima quanti sono: i contatti stanno sotto
+      // e con tanti clienti (una città) non si vedrebbero.
+      const n = (k, uno, tanti) => `${k} ${k === 1 ? uno : tanti}`;
+      $('risultati').innerHTML = (clienti.length || contatti.length)
+        ? (clienti.length && contatti.length ? `<p class="sommario-cerca">Trovati ${n(clienti.length, 'cliente', 'clienti')} e ${n(contatti.length, 'contatto', 'contatti')}. <button class="link" type="button" id="vai-contatti">Vai ai contatti</button></p>` : '')
+          + (clienti.length ? `<h3 class="titoletto gruppo-cerca">Clienti (${clienti.length})</h3><div class="lista">${clienti.map((x) => voceCliente(x.c)).join('')}</div>` : '')
+          + (contatti.length ? `<h3 class="titoletto gruppo-cerca" id="gruppo-contatti">Contatti (${contatti.length})</h3><div class="lista">${contatti.map((x) => voceLead(x.l)).join('')}</div>` : '')
+        : '<div class="vuoto">Nessuno trovato, né fra i clienti né fra i contatti.</div>';
+      if ($('vai-contatti')) $('vai-contatti').onclick = () => $('gruppo-contatti').scrollIntoView({ behavior: 'smooth', block: 'start' });
       collegaVoci();
+      schermo.querySelectorAll('[data-lead]').forEach((b) => { b.onclick = () => vai({ s: 'schedaLead', id: b.dataset.lead }); });
     }
     q.oninput = cerca;
     cerca();

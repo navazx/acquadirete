@@ -167,6 +167,8 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .stato[aria-pressed="true"] .pallino { border-color: var(--blu); background: var(--blu); color: #fff; }
 .stato[aria-pressed="true"] .pallino svg { font-size: 16px; }
 .titoletto { margin: 22px 0 8px; font-size: 18px; font-weight: 700; }
+.sommario-cerca { margin: 14px 2px 0; color: var(--grigio); font-size: 17px; }
+.gruppo-cerca { scroll-margin-top: 70px; }
 .nota-posizione { margin: 6px 4px 0; color: var(--grigio); font-size: 16px; text-align: center; }
 
 /* ---- Moduli ---- */
