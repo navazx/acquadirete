@@ -18,6 +18,14 @@ con `APPROVA ORDINI` / `CORREGGI ORDINI` / `RIFIUTA ORDINI`. I numeri in euro gl
 arrivano a parte, in un messaggio Telegram che non passa dal repo.
 **Negli ordini e nei commit non si scrivono mai cifre in euro**: il repo è pubblico.
 
+## La bacheca: leggila subito dopo gli ordini
+
+`bacheca.md` sono le note che gli agenti si sono lasciati negli ultimi 30 giorni,
+più quelle di Matteo: cosa hanno visto, cosa può servire agli altri. Ogni agente la
+legge prima di lavorare e, finito il giro, lascia da 1 a 3 note. La bacheca vera è
+un artifact su claude.ai che Matteo legge dal telefono; come si scrive, e come ci
+arrivano gli agenti che girano su GitHub, sta in `bacheca/LEGGIMI.md`.
+
 ## Come funziona il post social
 
 1. **Chi compone** scrive `social-bozza.json` e lo committa su `main`.

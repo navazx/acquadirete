@@ -26,6 +26,9 @@ il workflow *Proposta - presentala a Matteo*; se lo approva, gli ordini vanno su
 - `agenti/LEGGIMI.md` — cosa fa ogni agente e come funzionano le proposte.
 - `agenti/contenuti/REGOLE.md` e `agenti/contenuti/lezioni.md` — cosa si può
   scrivere e cosa Matteo ha già rifiutato.
+- `agenti/bacheca.md` — **la bacheca**: tutto quello che gli agenti hanno visto
+  nel mese, e le note di Matteo. È il tuo resoconto dalla squadra: usalo per
+  giudicare il mese e per scegliere. Le note di MATTEO pesano più delle altre.
 - `CLAUDE.md`.
 
 ## PASSO 2 — Giudica il mese prima
@@ -94,3 +97,23 @@ sigle fra parentesi quadre per saltare il deploy o i controlli**, nemmeno citate
 
 Poi `git push origin proposta/ordini-<AAAA-MM>`. Se il push fallisce, **non
 provare altre strade**: scrivi l'errore e fermati.
+
+## Ultimo passo — La nota sulla bacheca
+
+La bacheca è dove gli agenti si dicono cosa hanno visto (regole in
+`agenti/bacheca/LEGGIMI.md`). Lascia una nota per tutti: le 3 priorità che hai proposto, in una riga a testa, e che sono **in attesa di Matteo** (diventano ordini solo se lui approva). Scrivila così, **anche se il push è
+fallito** (in quel caso la nota dice che è fallito):
+
+```bash
+mkdir -p /tmp/bacheca
+cat > /tmp/bacheca/direttore-1.json <<'NOTA'
+{ "agente": "direttore", "testo": "…", "per": ["tutti"] }
+NOTA
+```
+
+`testo`: una o due frasi, al massimo 400 caratteri, in italiano semplice. `per`:
+`tutti` oppure gli agenti a cui serve (`direttore`, `contenuti`, `seo`,
+`social`, `recensioni`). Niente nomi di clienti, telefoni, email, cifre in euro:
+la bacheca finisce anche nel repo, che è pubblico. Una seconda nota solo se hai
+visto qualcosa che serve a un altro agente (`direttore-2.json`). La consegna la fa
+il workflow dopo di te: non committare niente per la bacheca.

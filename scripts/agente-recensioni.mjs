@@ -56,6 +56,8 @@
 // ============================================================================
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { lasciaNota } from './lib/bacheca.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -191,6 +193,20 @@ function riga(r) {
   return `${stelle} ${r.stelle}/5 — ${r.autore}${quando ? ` (${quando})` : ''}\n«${r.testo}»`;
 }
 
+export function notaPerLaBacheca({ differenza, totale, media, brutte, prima }) {
+  const parti = [];
+  if (differenza > 0) {
+    parti.push(`Su Google ${differenza === 1 ? "e' arrivata una recensione nuova" : `sono arrivate ${differenza} recensioni nuove`}: ora sono ${totale}${typeof media === 'number' ? `, media ${virgola(media)}` : ''}.`);
+  }
+  if (differenza < 0) parti.push(`Le recensioni su Google sono scese a ${totale}: una o piu' sono state tolte o nascoste.`);
+  if (brutte.length === 1) parti.push(`Una e' da ${brutte[0].stelle} stelle.`);
+  if (brutte.length > 1) parti.push(`${brutte.length} sono da ${Math.max(...brutte.map((r) => r.stelle))} stelle o meno.`);
+  if (prima && prima.media !== media) parti.push(`La media e' passata da ${virgola(prima.media)} a ${virgola(media)}: sul sito e' gia' aggiornata.`);
+  if (!parti.length) return null;
+  const buone = differenza > 0 && !brutte.length;
+  return { testo: parti.join(' '), per: buone ? ['social', 'contenuti'] : ['tutti'] };
+}
+
 async function main() {
   const dati = await chiediAGoogle();
   const recensioni = normalizza(dati);
@@ -299,6 +315,16 @@ async function main() {
     );
   }
 
+  // La nota per la bacheca degli agenti (lib/bacheca.mjs): solo quando qualcosa
+  // si muove, e senza nomi né testi delle recensioni, perché il repo è pubblico.
+  const nota = notaPerLaBacheca({ differenza, totale, media, brutte, prima });
+  if (nota && process.env.PROVA === 'true') console.log(`--- nota per la bacheca ---
+${nota.testo}`);
+  else if (nota) {
+    // La bacheca non deve mai fermare gli avvisi a Matteo.
+    try { lasciaNota('recensioni', nota.testo, nota.per); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
+  }
+
   if (avvisi.length && process.env.PROVA === 'true') {
     // Come in promemoria.mjs: si vede cosa partirebbe senza mandarlo.
     console.log(avvisi.map((t) => `--- messaggio ---\n${t}`).join('\n'));
@@ -315,7 +341,11 @@ async function main() {
   });
 }
 
-main().catch((e) => {
-  console.log(`Errore: ${e.message}`);
-  process.exitCode = 1;
-});
+// Parte da solo solo se lanciato da terminale: cosi' le prove possono importarlo.
+const lanciatoDaTerminale = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (lanciatoDaTerminale) {
+  main().catch((e) => {
+    console.log(`Errore: ${e.message}`);
+    process.exitCode = 1;
+  });
+}

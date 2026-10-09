@@ -79,3 +79,10 @@ jobs:
           fi
           git pull --rebase origin main
           git push origin HEAD:main
+
+      # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/);
+      # il postino, una routine su claude.ai, la porta sulla bacheca ogni mattina.
+      # Se la consegna non riesce lo dice nel log, ma non fa fallire il giro.
+      - name: Consegna le note alla bacheca
+        if: ${{ inputs.prova != true }}
+        run: node scripts/bacheca-consegna.mjs

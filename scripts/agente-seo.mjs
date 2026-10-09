@@ -35,6 +35,8 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { lasciaNota } from './lib/bacheca.mjs';
+import { blog } from './lib/posizioni.mjs';
 
 const SITO = (process.env.SITO_URL || 'https://www.acquadirete.it').replace(/\/+$/, '');
 const HOST_NOSTRI = new Set([new URL(SITO).host, 'acquadirete.it', 'www.acquadirete.it']);
@@ -289,7 +291,9 @@ async function posizioni() {
       segnalati: segnali.map((s) => s.chiave),
       segnali: segnali.map(({ chiave, testo, ...resto }) => resto),
     };
-    return { testo, stato, avviso: `${segnali.length} segnali sulle posizioni.` };
+    const giaVisti = new Set(prima.segnalati || []);
+    const nuovi = segnali.filter((s) => !giaVisti.has(s.chiave));
+    return { testo, stato, nuovi, avviso: `${segnali.length} segnali sulle posizioni.` };
   } catch (e) {
     return { testo: `POSIZIONI SU GOOGLE: lettura fallita (${e.message}). Il controllo del sito qui sopra è comunque valido.`, stato: null, avviso: e.message };
   }
@@ -322,6 +326,9 @@ async function main() {
   writeFileSync(STATO, `${JSON.stringify(stato, null, 2)}\n`);
   if (pos.stato) writeFileSync(STATO_POSIZIONI, `${JSON.stringify(pos.stato, null, 2)}\n`);
 
+  // La bacheca non deve mai fermare il messaggio a Matteo.
+  try { lasciaNoteSullaBacheca(esito, nuovi, risolti, pos.nuovi || []); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
+
   if (testo) {
     const { messaggio } = await import('./lib/telegram.mjs');
     await messaggio(testo);
@@ -329,6 +336,39 @@ async function main() {
   } else {
     console.log('Niente di nuovo e niente di rotto: nessun messaggio.');
   }
+}
+
+/**
+ * Le note per la bacheca degli agenti (vedi lib/bacheca.mjs): una sul sito, ogni
+ * settimana, e una sulle posizioni quando Google ha qualcosa di nuovo da dire.
+ * Sono per gli altri agenti: a Matteo il dettaglio arriva già su Telegram.
+ */
+const NOMI_SEGNALI = {
+  'prima-pagina': 'entrata in prima pagina', sale: 'sale', vetrina: 'si vede ma nessuno clicca',
+  soglia: 'a un passo dalla prima pagina', concorrenza: 'più pagine sulla stessa ricerca',
+  fuori: 'uscita dalla prima pagina', scende: 'scende',
+};
+export function lasciaNoteSullaBacheca(esito, nuovi, risolti, segnali) {
+  const rotti = esito.problemi.filter((p) => p.gravita === 'rotto').length;
+  const parti = [`Controllo del sito: ${esito.pagine} pagine e ${esito.link} link.`];
+  if (rotti) parti.push(rotti === 1 ? 'Una cosa rotta da sistemare.' : `${rotti} cose rotte da sistemare.`);
+  if (nuovi.length) parti.push(`${nuovi.length === 1 ? 'Un problema nuovo' : `${nuovi.length} problemi nuovi`} (${[...new Set(nuovi.map((p) => p.pagina))].slice(0, 3).join(', ')}).`);
+  if (risolti.length) parti.push(risolti.length === 1 ? 'Uno risolto dalla volta scorsa.' : `${risolti.length} risolti dalla volta scorsa.`);
+  if (!rotti && !nuovi.length) parti.push('Niente di nuovo da sistemare.');
+  lasciaNota('seo', parti.join(' '), ['tutti']);
+
+  if (!segnali.length) return;
+  const per = new Set();
+  const righe = segnali.slice(0, 5).map((s) => {
+    if (s.tipo === 'vetrina') per.add('seo');
+    if (s.tipo === 'soglia' && blog(s.pagina)) per.add('contenuti');
+    if (s.tipo === 'prima-pagina' || s.tipo === 'sale') per.add('social');
+    const dove = s.pagina ? ` (${s.pagina})` : '';
+    return `"${s.ricerca}"${dove}: ${NOMI_SEGNALI[s.tipo] || s.tipo}`;
+  });
+  const altri = segnali.length > 5 ? ` E altri ${segnali.length - 5}.` : '';
+  per.add('direttore');
+  lasciaNota('seo', `Novità su Google questa settimana. ${righe.join('; ')}.${altri}`, [...per]);
 }
 
 const lanciatoDaTerminale = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;

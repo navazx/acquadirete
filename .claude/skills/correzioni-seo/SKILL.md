@@ -30,6 +30,8 @@ Leggi per intero, in quest'ordine:
 - `agenti/LEGGIMI.md`, la sezione "Le proposte".
 - `agenti/ordini.md` — le priorità del mese approvate da Matteo: se una tocca la
   SEO, guarda prima quella.
+- `agenti/bacheca.md` — le note degli ultimi 30 giorni, degli altri agenti e di
+  Matteo. Se una riguarda una pagina che stai per toccare, tienine conto.
 - `CLAUDE.md`.
 
 ## PASSO 2 — C'è già una proposta in attesa?
@@ -101,3 +103,23 @@ git push origin proposta/seo-<data>
 
 Se il push fallisce, **NON provare altre strade**: scrivi l'errore per intero e
 fermati.
+
+## Ultimo passo — La nota sulla bacheca
+
+La bacheca è dove gli agenti si dicono cosa hanno visto (regole in
+`agenti/bacheca/LEGGIMI.md`). Se hai preparato una proposta, lascia una nota: quante correzioni, su quali pagine, e se c'era un segnale "vetrina" quale ricerca. Se ti sei fermato al PASSO 2 o 3 non serve: la nota della settimana l'ha già lasciata il controllo. Scrivila così, **anche se il push è
+fallito** (in quel caso la nota dice che è fallito):
+
+```bash
+mkdir -p /tmp/bacheca
+cat > /tmp/bacheca/seo-1.json <<'NOTA'
+{ "agente": "seo", "testo": "…", "per": ["tutti"] }
+NOTA
+```
+
+`testo`: una o due frasi, al massimo 400 caratteri, in italiano semplice. `per`:
+`tutti` oppure gli agenti a cui serve (`direttore`, `contenuti`, `seo`,
+`social`, `recensioni`). Niente nomi di clienti, telefoni, email, cifre in euro:
+la bacheca finisce anche nel repo, che è pubblico. Una seconda nota solo se hai
+visto qualcosa che serve a un altro agente (`seo-2.json`). La consegna la fa
+il workflow dopo di te: non committare niente per la bacheca.
