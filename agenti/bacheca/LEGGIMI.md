@@ -68,9 +68,10 @@ la mette su `main` in `agenti/bacheca/in-arrivo/`.
 Routine su claude.ai, ogni mattina alle 04:30 UTC (06:30 d'estate, 05:30
 d'inverno), prima che partano gli altri agenti:
 
-1. porta sulla bacheca le note in `agenti/bacheca/in-arrivo/` e le toglie da lì;
+1. porta sulla bacheca le note in `agenti/bacheca/in-arrivo/`;
 2. scarica le note dalla bacheca, comprese quelle di Matteo, e rifà
-   `agenti/bacheca.md` con `scripts/bacheca-esporta.mjs`;
+   `agenti/bacheca.md` con `scripts/bacheca-esporta.mjs`, che toglie anche da
+   `in-arrivo/` le note ormai consegnate (il postino non cancella file a mano);
 3. committa su `main` con `[skip netlify]`, solo se qualcosa è cambiato.
 
 Le note degli agenti su GitHub arrivano sulla bacheca la mattina dopo, e lo stesso

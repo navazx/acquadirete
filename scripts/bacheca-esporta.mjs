@@ -8,9 +8,14 @@
 //  quelli su GitHub non arrivano alla bacheca vera.
 //
 //    node scripts/bacheca-esporta.mjs <cartella con le note> [file di uscita]
+//
+//  Poi toglie da agenti/bacheca/in-arrivo/ le note che ora stanno sulla
+//  bacheca (cioè nello scarico): così il postino non deve cancellare file a
+//  mano, e una nota non ancora arrivata resta lì per il giro dopo.
 // ============================================================================
 
-import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, statSync, rmSync, existsSync } from 'node:fs';
+import { basename } from 'node:path';
 import { join } from 'node:path';
 import { normalizza } from './lib/bacheca.mjs';
 
@@ -36,11 +41,15 @@ if (!dir) {
   process.exit(1);
 }
 
+const IN_ARRIVO = 'agenti/bacheca/in-arrivo';
+const sullaBacheca = new Set();
+
 const limite = Date.now() - GIORNI * 24 * 60 * 60 * 1000;
 const note = [];
 for (const p of fileJson(dir)) {
   try {
     const grezzo = JSON.parse(readFileSync(p, 'utf8'));
+    sullaBacheca.add(basename(p, '.json'));
     // Lo scarico può dare il documento nudo o avvolto in { id, data, version }.
     const corpo = grezzo && typeof grezzo.data === 'object' && grezzo.data ? grezzo.data : grezzo;
     if (!corpo.quando) continue;
@@ -72,4 +81,15 @@ ${righe.length ? righe.join('\n') : '_Nessuna nota negli ultimi 30 giorni._'}
 `;
 
 writeFileSync(uscita, testo);
+
+let ritirate = 0;
+if (existsSync(IN_ARRIVO)) {
+  for (const nome of readdirSync(IN_ARRIVO)) {
+    if (nome.endsWith('.json') && sullaBacheca.has(basename(nome, '.json'))) {
+      rmSync(join(IN_ARRIVO, nome));
+      ritirate += 1;
+    }
+  }
+}
+if (ritirate) console.log(`Tolte da ${IN_ARRIVO} ${ritirate === 1 ? "una nota" : `${ritirate} note`} già sulla bacheca.`);
 console.log(`${note.length === 1 ? "Scritta 1 nota" : `Scritte ${note.length} note`} in ${uscita}.`);
