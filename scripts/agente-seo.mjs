@@ -43,6 +43,7 @@ const HOST_NOSTRI = new Set([new URL(SITO).host, 'acquadirete.it', 'www.acquadir
 const STATO = 'agenti/seo/controllo.json';
 // Separato di proposito: controllo.json lo legge l'agente delle correzioni, e le
 // posizioni non sono roba che si corregge a macchina.
+const RICERCHE = 'agenti/seo/ricerche.json';
 const STATO_POSIZIONI = 'agenti/seo/posizioni.json';
 
 const MAX_TITOLO = 60;
@@ -277,11 +278,13 @@ async function posizioni() {
   if (!process.env.GSC_KEY_JSON && !process.env.GSC_KEY_FILE) {
     return { testo: null, stato: null, avviso: 'Posizioni saltate: manca GSC_KEY_JSON.' };
   }
+  let ricerche = null;
   try {
     const { leggiPosizioni, trovaSegnali, componiPosizioni } = await import('./lib/posizioni.mjs');
     const prima = existsSync(STATO_POSIZIONI) ? JSON.parse(readFileSync(STATO_POSIZIONI, 'utf8')) : { segnalati: [] };
     const dati = await leggiPosizioni();
     const segnali = trovaSegnali(dati);
+    ricerche = elencoRicerche(dati);
     const testo = componiPosizioni(dati, segnali, prima.segnalati || []);
     // Si ricordano solo i segnali ancora veri: se una ricerca esce e poi rientra, si torna a dirlo.
     // `segnali` per intero serve agli agenti che ci lavorano sopra (correzioni SEO, Contenuti).
@@ -293,10 +296,44 @@ async function posizioni() {
     };
     const giaVisti = new Set(prima.segnalati || []);
     const nuovi = segnali.filter((s) => !giaVisti.has(s.chiave));
-    return { testo, stato, nuovi, avviso: `${segnali.length} segnali sulle posizioni.` };
+    return { testo, stato, nuovi, ricerche, avviso: `${segnali.length} segnali sulle posizioni.` };
   } catch (e) {
     return { testo: `POSIZIONI SU GOOGLE: lettura fallita (${e.message}). Il controllo del sito qui sopra è comunque valido.`, stato: null, avviso: e.message };
   }
+}
+
+/**
+ * Tutte le ricerche per cui Google ha mostrato il sito, pagina per pagina, con le
+ * viste e la posizione di adesso e dei 28 giorni prima. I "segnali" sono solo
+ * quelle che passano una soglia: chi deve fare un'analisi vera (l'agente SEO,
+ * Contenuti, Social, scheda Google, il Direttore) ha bisogno di vederle tutte.
+ * Niente marchio e niente numeri di telefono: lib/posizioni.mjs li toglie gia'.
+ */
+export function elencoRicerche(dati, minimo = 2, massimo = 500) {
+  const tonda = (n) => Math.round(n * 10) / 10;
+  const righe = [];
+  for (const [ricerca, pagine] of dati.ora.ricerche) {
+    const viste = pagine.reduce((s, p) => s + p.viste, 0);
+    if (viste < minimo) continue;
+    const prima = dati.prima.ricerche.get(ricerca) || [];
+    righe.push({
+      ricerca,
+      viste,
+      clic: pagine.reduce((s, p) => s + p.clic, 0),
+      pagine: pagine.map((p) => {
+        const q = prima.find((x) => x.pagina === p.pagina);
+        return { pagina: p.pagina, viste: p.viste, clic: p.clic, posizione: tonda(p.pos), ...(q && { vistePrima: q.viste, posizionePrima: tonda(q.pos) }) };
+      }),
+    });
+  }
+  righe.sort((a, b) => b.viste - a.viste);
+  return {
+    letto: new Date().toISOString(),
+    periodo: dati.periodo,
+    come_si_legge: 'Per ogni ricerca: quante volte Google ha mostrato il sito (viste), i clic, e per ogni pagina la posizione media adesso e nei 28 giorni prima. Senza le ricerche del marchio.',
+    totale: { clic: dati.ora.clic, viste: dati.ora.viste, clicPrima: dati.prima.clic, vistePrima: dati.prima.viste },
+    ricerche: righe.slice(0, massimo),
+  };
 }
 
 async function main() {
@@ -325,6 +362,7 @@ async function main() {
   mkdirSync('agenti/seo', { recursive: true });
   writeFileSync(STATO, `${JSON.stringify(stato, null, 2)}\n`);
   if (pos.stato) writeFileSync(STATO_POSIZIONI, `${JSON.stringify(pos.stato, null, 2)}\n`);
+  if (pos.ricerche) writeFileSync(RICERCHE, `${JSON.stringify(pos.ricerche, null, 1)}\n`);
 
   // La bacheca non deve mai fermare il messaggio a Matteo.
   try {

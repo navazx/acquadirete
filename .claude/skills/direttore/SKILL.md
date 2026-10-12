@@ -19,6 +19,13 @@ il workflow *Proposta - presentala a Matteo*; se lo approva, gli ordini vanno su
 
 ## PASSO 1 — Leggi
 
+**Prima di tutto `agenti/METODO.md`, per intero**: dice come si lavora (le prove,
+le alternative, la rilettura da critico). Non c'è fretta e non c'è un limite di
+lavoro: le tre priorità devono reggere a chi le mette in dubbio.
+
+- `agenti/seo/ricerche.json` — tutte le ricerche per cui Google ha mostrato il
+  sito, con le posizioni di adesso e dei 28 giorni prima: servono per capire
+  dove il sito sta salendo davvero e dove no.
 - `/tmp/direttore-dati.json` — i numeri del mese, preparati da
   `scripts/direttore-dati.mjs`. Leggilo tutto, comprese le `avvertenze`.
 - `agenti/ordini.md` — gli ordini del mese prima (c'è anche dentro i dati, alla

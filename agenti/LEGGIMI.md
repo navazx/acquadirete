@@ -147,6 +147,31 @@ la rispinge. La bozza torna a Matteo con scritto "Corretto con le tue note". Anc
 uno `SCARTA` che chiede di sistemare ("scarta, cambia la foto") vale come CORREGGI.
 Se in attesa ci sono sia il post sia una proposta, serve dire quale: `CORREGGI POST`.
 
+## Come si lavora: `agenti/METODO.md`
+
+Ogni agente, prima di tutto, legge `agenti/METODO.md`: prove per ogni
+affermazione, almeno due strade prima di scegliere, il risultato guardato come lo
+vedrà chi lo riceve, una rilettura da critico prima di consegnare. Matteo ha
+chiesto analisi approfondite e la stessa qualità di quando si lavora al PC: tempo
+e token non sono un limite. Gli agenti con l'intelligenza artificiale usano lo
+stesso modello del PC (`claude-opus-5-5`) con lo sforzo alto.
+
+Le istruzioni di ognuno stanno in una skill del repository, non più nei prompt
+delle routine:
+
+| Agente | Skill |
+|---|---|
+| contenuti (articoli) | `.claude/skills/agente-contenuti/` |
+| social (post) | `.claude/skills/agente-social/` |
+| scheda Google | `.claude/skills/agente-scheda-google/` |
+| correzioni SEO | `.claude/skills/correzioni-seo/` |
+| Direttore (priorità del mese) | `.claude/skills/direttore/` |
+| correzioni chieste da Matteo | `.claude/skills/correggi-proposta/`, `correggi-post/` |
+
+`agenti/seo/ricerche.json`, riscritto ogni lunedì dal controllo SEO, contiene tutte
+le ricerche per cui Google ha mostrato il sito, pagina per pagina: è la base
+comune delle analisi.
+
 ## Due regole per ogni agente (Matteo, 12 ott 2026)
 
 1. **Ogni messaggio su Telegram comincia col nome di chi parla** ("🤖 AGENTE SEO").

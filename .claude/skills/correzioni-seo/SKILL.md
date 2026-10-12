@@ -1,7 +1,7 @@
 ---
 name: correzioni-seo
 description: Prepara come proposta le correzioni SEO del sito Acquadirete, leggendo il controllo del sito e le posizioni su Google appena scritti dal controllo del lunedi'. Gira in coda a agente-seo.yml.
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
 ---
 
 # Agente delle correzioni SEO
@@ -20,12 +20,19 @@ dati che leggi sono di oggi.
 
 ## PASSO 1 — Leggi
 
-Leggi per intero, in quest'ordine:
+**Prima di tutto `agenti/METODO.md`, per intero**: dice come si lavora (le prove,
+le alternative, la rilettura da critico). Non c'è fretta e non c'è un limite di
+lavoro: conta che la proposta sia giusta.
+
+Poi leggi per intero, in quest'ordine:
 
 - `agenti/seo/REGOLE.md` — cosa puoi correggere e cosa no, e come si scrive la
   proposta: vale più di qualsiasi tua idea.
 - `agenti/seo/controllo.json` — i problemi del sito.
 - `agenti/seo/posizioni.json` — le posizioni su Google.
+- `agenti/seo/ricerche.json` — **tutte** le ricerche per cui Google ha mostrato il
+  sito, pagina per pagina, con le posizioni di adesso e dei 28 giorni prima. I
+  segnali di `posizioni.json` sono solo la punta: l'analisi si fa qui.
 - `agenti/seo/posizioni-lavorate.md` — le pagine già lavorate.
 - `agenti/seo/lezioni.md` — le proposte che Matteo ha rifiutato o fatto correggere,
   col suo motivo: valgono come regole.
@@ -64,6 +71,30 @@ Prendi solo quello che `REGOLE.md` ti permette di correggere:
 `soglia` non è tuo. **Se non c'è niente, fermati senza creare niente**: è il caso
 normale, non un errore.
 
+## PASSO 3 bis — L'analisi, prima di toccare qualcosa
+
+Per ogni pagina che stai per toccare, e per ogni scelta fra pagine in concorrenza:
+
+1. **Tutte le sue ricerche.** In `ricerche.json` prendi ogni ricerca in cui compare
+   quella pagina: non solo quella del segnale. Una pagina può essere forte per una
+   ricerca e debole per un'altra, e un titolo cambiato per la seconda può rovinare
+   la prima. Scrivi per te l'elenco con viste, clic e posizione.
+2. **Com'è online adesso.** Con curl leggi titolo, description, H1 e i collegamenti
+   interni della pagina vera. Confrontali con le parole delle ricerche.
+3. **Com'è andata prima.** `git log -p` sui file di quella pagina: se un titolo è
+   già stato cambiato, guarda `posizionePrima` e chiediti se ha funzionato. Non si
+   corregge una correzione che non ha avuto il tempo di funzionare.
+4. **Due strade.** Per ogni modifica scrivi almeno due versioni possibili, e
+   scegli. Nell'anteprima spieghi la scelta in due righe e citi quella scartata.
+5. **Cosa può andare storto.** Per ogni modifica chiediti cosa peggiora se sbagli:
+   se la pagina è forte per una ricerca, quella ricerca resta nel titolo.
+
+**Quello che vedi e non puoi correggere non si butta.** Durante l'analisi troverai
+cose fuori dal tuo lavoro: una ricerca con tante viste e nessuna pagina che le
+risponde, un articolo che scende da due mesi, una pagina che non riceve
+collegamenti. Scrivile in una seconda nota per la bacheca (`seo-2.json`, vedi
+l'ultimo passo), per il Direttore e per Contenuti, con i numeri veri.
+
 ## PASSO 4 — Le correzioni
 
 Crea da `main` il ramo `proposta/seo-<data di oggi, AAAA-MM-GG>`. Per ogni correzione:
@@ -92,6 +123,15 @@ cambia.
 È il file che Matteo legge sul telefono: scrivilo in italiano semplice, **senza codice
 e senza nomi di file del progetto**. Senza questo file la proposta arriva
 incomprensibile.
+
+## PASSO 5 bis — La rilettura da critico
+
+Come dice `agenti/METODO.md`, punto 4: rileggi l'anteprima e le modifiche fingendo
+di essere Matteo che cerca il difetto, e rileggi `agenti/seo/lezioni.md` riga per
+riga contro quello che hai fatto. Ogni numero dell'anteprima deve stare in
+`ricerche.json` o in `controllo.json`: ricontrollali uno per uno. Correggi e
+ripeti finché non trovi più niente. In fondo all'anteprima aggiungi la riga "Di
+cosa non sono sicuro", anche solo per scrivere "niente".
 
 ## PASSO 6 — Il build
 

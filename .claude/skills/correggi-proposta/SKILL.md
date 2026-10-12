@@ -15,6 +15,8 @@ già quello su cui sei: controllalo con `git branch --show-current`. Non clonare
 
 ## PASSO 1 — Leggi
 
+- `agenti/METODO.md`, per intero: come si lavora. Una correzione fatta in fretta
+  che torna sbagliata è peggio di una che arriva mezz'ora dopo.
 - `/tmp/note-di-matteo.txt` — le correzioni. Valgono più di qualsiasi tua idea.
 - Il ramo: `git branch --show-current`. Se comincia con `proposta/articolo-` è un
   articolo, se comincia con `proposta/seo-` sono correzioni SEO.

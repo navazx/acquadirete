@@ -87,7 +87,8 @@ jobs:
     needs: seo
     runs-on: ubuntu-latest
     # Il job prima ha appena spinto i file su main: il checkout qui sotto li prende.
-    timeout-minutes: 30
+    # Tempo largo: Matteo ha chiesto qualita', non velocita' (agenti/METODO.md).
+    timeout-minutes: 90
     permissions:
       contents: write
       # Serve all'azione per autenticarsi come app GitHub di Claude.
@@ -118,8 +119,9 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: '/correzioni-seo'
           claude_args: |
-            --model claude-opus-5
-            --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
+            --model claude-opus-5-5
+            --effort xhigh
+            --allowedTools "Bash,Read,Write,Edit,Grep,Glob,WebSearch,WebFetch"
 
       # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/);
       # il postino, una routine su claude.ai, la porta sulla bacheca ogni mattina.

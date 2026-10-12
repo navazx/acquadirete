@@ -16,6 +16,8 @@ PUBBLICA di Matteo. Il repository è già nella cartella di lavoro: non clonarlo
 
 ## PASSO 1 — Leggi
 
+- `agenti/METODO.md`, per intero: come si lavora, e la rilettura da critico prima
+  di rimandare la bozza.
 - `/tmp/note-di-matteo.txt` — le correzioni. Valgono più di qualsiasi tua idea.
 - `agenti/social-bozza.json` — la bozza che ha visto.
 - `agenti/LEGGIMI.md`, per intero: il formato della bozza, le foto e le note di

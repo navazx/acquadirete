@@ -24,7 +24,8 @@ concurrency:
 jobs:
   correggi:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Tempo largo: Matteo ha chiesto qualita', non velocita' (agenti/METODO.md).
+    timeout-minutes: 90
     permissions:
       contents: write
       # Serve all'azione per autenticarsi come app GitHub di Claude.
@@ -57,4 +58,5 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: '/correggi-post'
           claude_args: |
-            --model claude-opus-5
+            --model claude-opus-5-5
+            --effort xhigh
