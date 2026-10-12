@@ -105,6 +105,9 @@ export function trovaSegnali({ ora, prima }) {
     if (contendenti.length >= 2) {
       const elenco = [...contendenti].sort((x, y) => x.pos - y.pos).map((x) => `${x.pagina} a ${pos(x.pos)}`).join(', ');
       aggiungi('concorrenza', q, null, `"${q}" — ${contendenti.length} pagine: ${elenco}`);
+      // Le pagine in gara restano nello stato: servono all'agente SEO per scegliere.
+      segnali[segnali.length - 1].pagine = [...contendenti].sort((x, y) => x.pos - y.pos)
+        .map((x) => ({ pagina: x.pagina, posizione: Math.round(x.pos * 10) / 10, viste: x.viste, clic: x.clic }));
     }
   }
   return segnali;
@@ -131,7 +134,7 @@ function chiCiPensa(tipo, pagine) {
     if (articoli) return '→ Gli articoli li arricchisce l\'agente Contenuti il 5 del mese. Le pagine dei servizi no: portano i contatti, e si decidono insieme a Claude dal PC.';
     return '→ Sono pagine dei servizi: portano i contatti, quindi nessun agente le riscrive da solo. Si decidono insieme a Claude dal PC.';
   }
-  if (tipo === 'concorrenza') return '→ Qui va scelto quale pagina deve vincere, e tocca le pagine che portano i contatti: nessun agente lo fa da solo. Si decide insieme a Claude dal PC.';
+  if (tipo === 'concorrenza') return '→ Ci pensa l\'agente SEO: sceglie la pagina da far vincere e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA, CORREGGI o RIFIUTA.';
   return null;
 }
 

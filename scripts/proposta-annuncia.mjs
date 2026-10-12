@@ -18,7 +18,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { messaggio, documento } from './lib/telegram.mjs';
+import { messaggio, documento, firma, CHI_PROPONE } from './lib/telegram.mjs';
 
 const SITO = 'https://www.acquadirete.it';
 const REPO = 'https://github.com/navazx/acquadirete';
@@ -92,6 +92,9 @@ async function main() {
     .slice(0, 2500);
   const titolo = oggetto.replace(/^(articolo|seo|ordini)\s*:\s*/i, '');
   const cambiati = git('diff', '--name-only', 'origin/main...HEAD').split('\n').filter(Boolean);
+
+  // La proposta arriva a nome di chi l'ha preparata, non di chi la consegna.
+  firma(CHI_PROPONE[tipo]);
 
   if (process.env.BUILD_ESITO !== 'success') {
     const log = existsSync('/tmp/build.log')

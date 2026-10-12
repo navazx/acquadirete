@@ -4,7 +4,10 @@
 // Env: TELEGRAM_BOT_TOKEN (obbligatoria per inviare), TELEGRAM_CHAT_ID
 // (facoltativa, default la chat dell'utente).
 
-export async function notifyTelegram(text) {
+// `chi`: il nome di chi parla, in cima al messaggio (lo usano gli avvisi degli
+// agenti; gli avvisi dei contatti dicono gia' nella prima riga da dove arrivano).
+export async function notifyTelegram(text, chi) {
+  if (chi) text = `🤖 ${chi}\n\n${text}`;
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID || '6369351410';
   if (!token) return;

@@ -88,7 +88,7 @@ jobs:
             echo "Nessuna pagina coi numeri da mandare."
             exit 0
           fi
-          node -e "import('./scripts/lib/telegram.mjs').then(async (t) => { const fs = await import('node:fs'); await t.messaggio('I numeri del mese, solo per te\n\n' + fs.readFileSync('/tmp/direttore-numeri.txt', 'utf8')); console.log('Pagina mandata.'); })"
+          node -e "import('./scripts/lib/telegram.mjs').then(async (t) => { const fs = await import('node:fs'); await t.messaggio('I numeri del mese, solo per te\n\n' + fs.readFileSync('/tmp/direttore-numeri.txt', 'utf8'), { chi: 'DIRETTORE' }); console.log('Pagina mandata.'); })"
 
       - name: Butta i file coi numeri
         if: always()

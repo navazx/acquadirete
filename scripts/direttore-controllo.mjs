@@ -191,8 +191,14 @@ export async function controlla(adesso = new Date()) {
   const segnali = leggi('agenti/seo/posizioni.json', {}).segnali || [];
   const fatte = decise(existsSync('agenti/seo/posizioni-lavorate.md') ? readFileSync('agenti/seo/posizioni-lavorate.md', 'utf8') : '', adesso);
   const scelte = segnali.filter((s) => s.tipo === 'concorrenza' && !fatte.has(s.ricerca.toLowerCase()));
-  if (scelte.length) {
-    attese.push({ giorni: null, testo: `${scelte.length === 1 ? 'Una scelta' : `${scelte.length} scelte`} sulle pagine che si fanno concorrenza su Google (${scelte.map((s) => `"${s.ricerca}"`).join(', ')}): si decidono con Claude dal PC.` });
+  // Le scelte le propone l'agente SEO in coda al controllo del lunedi'. Se dopo il
+  // suo giro ci sono ancora pagine in concorrenza e nessuna proposta in attesa, non
+  // ha fatto il suo lavoro.
+  const seo = AGENTI.find((a) => a.workflow === 'agente-seo.yml');
+  const giroSeo = seo && ultimoAppuntamento(seo.cron, adesso, INDIETRO);
+  const proposta = proposte.some((p) => p.tipo === 'SEO' && (p.stato === 'in attesa' || p.stato === 'da correggere'));
+  if (scelte.length && !proposta && giroSeo && adesso - giroSeo > 3 * ORA && adesso - giroSeo <= DA_DIRE) {
+    problemi.push(`Agente SEO: ci sono ${scelte.length === 1 ? 'una ricerca' : `${scelte.length} ricerche`} con più pagine in concorrenza (${scelte.map((s) => `"${s.ricerca}"`).join(', ')}) ma NON HA MANDATO LA PROPOSTA.`);
   }
 
   return { problemi, attese, regolari, vecchi };
@@ -203,7 +209,7 @@ const daRicordare = (a) => a.giorni !== null && (a.giorni === 2 || a.giorni === 
 const daQuanto = (a) => (a.giorni === null ? '' : a.giorni === 0 ? ' (da oggi)' : a.giorni === 1 ? ' (da ieri)' : ` (da ${a.giorni} giorni)`);
 
 export function componi({ problemi, attese }, adesso, soloPromemoria = false) {
-  const blocchi = [`IL DIRETTORE — controllo degli agenti del ${giornoIt(adesso)}`];
+  const blocchi = [`Controllo degli agenti del ${giornoIt(adesso)}`];
   if (problemi.length) blocchi.push(`NON HA FUNZIONATO (${problemi.length})\n${problemi.map((p) => `• ${p}`).join('\n')}\n→ Chiedi a Claude dal PC di guardarci.`);
   const lista = soloPromemoria ? attese.filter(daRicordare) : attese;
   if (lista.length) blocchi.push(`ASPETTANO TE (${lista.length})\n${lista.map((a) => `• ${a.testo}${daQuanto(a)}`).join('\n')}`);

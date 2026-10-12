@@ -379,9 +379,11 @@ export function lasciaNoteSullaBacheca(esito, nuovi, risolti, segnali) {
  * si fanno concorrenza) vanno scritte anche sulla bacheca, per Matteo. Su
  * Telegram il segnale passa una volta sola, la settimana in cui nasce: il 12 ott
  * 2026 ce n'erano tre in sospeso, due da una settimana, e sulla bacheca nessuna.
- * La nota torna ogni lunedi' finche' la scelta non e' fatta: fatta la scelta, chi
- * la applica aggiunge una riga in agenti/seo/posizioni-lavorate.md con tipo
- * "concorrenza" e quella ricerca, e per 60 giorni non si chiede piu'.
+ * Dal 12 ott (sera) la scelta la propone l'agente delle correzioni SEO, e Matteo
+ * conferma su Telegram: aveva chiesto che le cose semplici non aspettassero lui
+ * al PC. La nota torna ogni lunedi' finche' la proposta non e' approvata: la
+ * proposta porta con se' la riga in agenti/seo/posizioni-lavorate.md (tipo
+ * "concorrenza" e quella ricerca), e per 60 giorni non se ne parla piu'.
  */
 const LAVORATE = 'agenti/seo/posizioni-lavorate.md';
 
@@ -402,10 +404,9 @@ export function lasciaNotaDaDecidere(tutti, nuovi, lavorate = '') {
   const nuove = new Set(nuovi.filter((s) => s.tipo === 'concorrenza').map((s) => s.ricerca));
   const elenco = aperte.map((s) => `"${s.ricerca}"${nuove.has(s.ricerca) ? ' (nuova)' : ''}`).join(', ');
   const testo =
-    `Per MATTEO, da decidere con Claude dal PC: ${aperte.length === 1 ? 'su una ricerca' : `su ${aperte.length} ricerche`} ` +
-    `più pagine del sito si fanno concorrenza e nessuna sale: ${elenco}. ` +
-    'Va scelta la pagina che deve vincere. Nessun agente lo fa da solo, e questa nota torna ogni lunedì finché non è deciso.';
-  lasciaNota('seo', testo, ['matteo', 'direttore']);
+    `${aperte.length === 1 ? 'Su una ricerca' : `Su ${aperte.length} ricerche`} più pagine del sito si fanno concorrenza e nessuna sale: ${elenco}. ` +
+    'Scelgo io la pagina da far vincere e mando la proposta a Matteo su Telegram: a lui basta APPROVA. Finché non è approvata, questa nota torna ogni lunedì.';
+  lasciaNota('seo', testo, ['direttore']);
   return testo;
 }
 

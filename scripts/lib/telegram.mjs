@@ -8,6 +8,7 @@
 // ============================================================================
 
 import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 
 const TOKEN = () => {
   const t = process.env.TELEGRAM_BOT_TOKEN;
@@ -27,8 +28,44 @@ async function chiama(metodo, params) {
   return dati.result;
 }
 
-export const messaggio = (text) =>
-  chiama('sendMessage', { chat_id: CHAT(), text: String(text).slice(0, 4096), disable_web_page_preview: true });
+// ---------------------------------------------------------------------------
+//  Chi parla. A Matteo scrivono una decina di agenti, tutti dallo stesso bot: se
+//  il messaggio non dice chi e', non si capisce chi ha fatto cosa (sua richiesta
+//  del 12 ott 2026). La prima riga di OGNI messaggio e' il nome dell'agente.
+//
+//  Il nome si ricava da solo dallo script che sta girando. Uno script nuovo va
+//  aggiunto qui; chi parla per conto di altri (le proposte, le risposte agli
+//  ordini) lo dice con firma() o con { chi } al singolo messaggio.
+// ---------------------------------------------------------------------------
+const CHI = {
+  'agente-seo.mjs': 'AGENTE SEO',
+  'seo-report.mjs': 'AGENTE SEO (report del mese)',
+  'agente-ads.mjs': 'AGENTE ADS',
+  'agente-recensioni.mjs': 'AGENTE RECENSIONI',
+  'recensioni-bozza.mjs': 'AGENTE RECENSIONI',
+  'social-bozza.mjs': 'AGENTE SOCIAL',
+  'promemoria.mjs': 'AGENTE SCHEDA GOOGLE',
+  'direttore-controllo.mjs': 'DIRETTORE',
+  'sentinella.mjs': 'SENTINELLA DEL SITO',
+  'agente-lead.mjs': 'AGENTE LEAD',
+  'risposte.mjs': 'SEGRETERIA',
+  'proposta-annuncia.mjs': 'SEGRETERIA',
+};
+// Chi ha preparato una proposta, dal suo tipo.
+export const CHI_PROPONE = { ARTICOLO: 'AGENTE CONTENUTI', SEO: 'AGENTE SEO', ORDINI: 'DIRETTORE', POST: 'AGENTE SOCIAL' };
+
+let firmaScelta = null;
+/** Da qui in avanti i messaggi partono a nome di `nome`. */
+export const firma = (nome) => { firmaScelta = nome || null; };
+const chiSono = () => firmaScelta || CHI[basename(process.argv[1] || '')] || null;
+
+/** Il testo con in cima chi parla. Senza nome (uno script sconosciuto) resta com'e'. */
+export function firmato(text, chi = chiSono()) {
+  return chi ? `🤖 ${chi}\n\n${text}` : String(text);
+}
+
+export const messaggio = (text, { chi } = {}) =>
+  chiama('sendMessage', { chat_id: CHAT(), text: firmato(text, chi || chiSono()).slice(0, 4096), disable_web_page_preview: true });
 
 /** La foto si passa come indirizzo pubblico: Telegram se la scarica da solo. */
 export const foto = (urlFoto, caption) =>

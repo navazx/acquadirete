@@ -147,6 +147,17 @@ la rispinge. La bozza torna a Matteo con scritto "Corretto con le tue note". Anc
 uno `SCARTA` che chiede di sistemare ("scarta, cambia la foto") vale come CORREGGI.
 Se in attesa ci sono sia il post sia una proposta, serve dire quale: `CORREGGI POST`.
 
+## Due regole per ogni agente (Matteo, 12 ott 2026)
+
+1. **Ogni messaggio su Telegram comincia col nome di chi parla** ("🤖 AGENTE SEO").
+   Lo mette da solo `scripts/lib/telegram.mjs`, che lo ricava dallo script che sta
+   girando: uno script nuovo va aggiunto alla sua tabella `CHI`.
+2. **Le cose semplici si propongono già pronte e si chiede solo la conferma su
+   Telegram.** Niente "si decide con Claude dal PC": l'agente sceglie, spiega
+   perché in due righe, prepara la modifica come proposta, e Matteo risponde
+   APPROVA, CORREGGI o RIFIUTA. Restano fuori solo le cose che il semaforo vieta
+   (spendere soldi, contattare clienti, cancellare dati) e i guasti veri.
+
 ## Chi controlla che gli agenti lavorino: il Direttore, ogni mattina
 
 Un sistema che deve girare da solo ha bisogno di qualcuno che guardi se gira. Dal

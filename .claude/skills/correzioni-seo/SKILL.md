@@ -52,12 +52,17 @@ ancora risposto alla proposta precedente.
 Prendi solo quello che `REGOLE.md` ti permette di correggere:
 
 - dal controllo, i problemi della tabella "Cosa correggi";
-- dalle posizioni, **solo** i segnali con `tipo: "vetrina"`, saltando le pagine
-  lavorate negli ultimi 60 giorni (sezione "Dalle posizioni su Google" di
-  `REGOLE.md`).
+- dalle posizioni, i segnali con `tipo: "vetrina"`, saltando le pagine lavorate
+  negli ultimi 60 giorni (sezione "Dalle posizioni su Google: titoli che non
+  convincono" di `REGOLE.md`);
+- dalle posizioni, i segnali con `tipo: "concorrenza"` la cui ricerca non è già
+  in `agenti/seo/posizioni-lavorate.md` negli ultimi 60 giorni: **scegli tu la
+  pagina che deve vincere e prepara la modifica**, come dice la sezione "più
+  pagine sulla stessa ricerca" di `REGOLE.md`. Matteo conferma su Telegram: non
+  gli si chiede di scegliere, gli si porta la scelta fatta.
 
-`soglia` e `concorrenza` non sono tuoi. **Se non c'è niente, fermati senza creare
-niente**: è il caso normale, non un errore.
+`soglia` non è tuo. **Se non c'è niente, fermati senza creare niente**: è il caso
+normale, non un errore.
 
 ## PASSO 4 — Le correzioni
 
@@ -72,14 +77,17 @@ Crea da `main` il ramo `proposta/seo-<data di oggi, AAAA-MM-GG>`. Per ogni corre
   ti sembrano fuori misura titoli che stanno dentro.
 
 Per ogni correzione nata dalle posizioni aggiungi la riga in
-`agenti/seo/posizioni-lavorate.md`.
+`agenti/seo/posizioni-lavorate.md` (per la concorrenza: una riga per ogni ricerca
+del segnale, anche quando la scelta è di non cambiare niente).
 
 ## PASSO 5 — L'anteprima
 
 Scrivi l'anteprima in `agenti/anteprime/seo-<data>.md`, nel formato che trovi in
 `REGOLE.md`: per ogni correzione la pagina, cosa si legge oggi su Google, cosa diventa
 e perché conta (per quelle dalle posizioni: la ricerca, le viste, la posizione, zero
-clic), e in fondo una riga su cosa non cambia.
+clic; per una scelta fra pagine in concorrenza: la ricerca, le pagine e le
+posizioni, quale vince, perché e cosa cambia), e in fondo una riga su cosa non
+cambia.
 
 È il file che Matteo legge sul telefono: scrivilo in italiano semplice, **senza codice
 e senza nomi di file del progetto**. Senza questo file la proposta arriva

@@ -80,11 +80,14 @@ export async function query(token, body) {
   return res.json();
 }
 
+import { firmato } from './telegram.mjs';
+
 export async function sendTelegram(text) {
   const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: CHAT_ID, text, disable_web_page_preview: true }),
+    // In cima a ogni messaggio c'e' il nome di chi parla: vedi lib/telegram.mjs.
+    body: JSON.stringify({ chat_id: CHAT_ID, text: firmato(text).slice(0, 4096), disable_web_page_preview: true }),
   });
   if (!res.ok) throw new Error(`Invio Telegram fallito (${res.status}): ${await res.text()}`);
 }

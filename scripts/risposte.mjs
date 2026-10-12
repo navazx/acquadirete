@@ -39,7 +39,7 @@
 import { readFileSync, writeFileSync, existsSync, appendFileSync, readdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { messaggio, risposte, conferma, scaricaFile } from './lib/telegram.mjs';
+import { messaggio, risposte, conferma, scaricaFile, firma, CHI_PROPONE } from './lib/telegram.mjs';
 import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
@@ -123,6 +123,7 @@ function togliGrafica(bozza) {
 }
 
 async function eseguiSocial(o) {
+  firma(CHI_PROPONE.POST);
   const bozza = existsSync(BOZZA) ? leggiJson(BOZZA) : null;
   if (!bozza || bozza.pubblicato || bozza.scartato) {
     await messaggio('Non c\'è nessun post in attesa: non ho fatto niente.');
@@ -278,6 +279,7 @@ function aggiorna(ramo, campi) {
 }
 
 async function approva(p) {
+  firma(CHI_PROPONE[p.tipo]);
   try {
     git('pull', '--ff-only', 'origin', 'main');
     git('fetch', 'origin', p.ramo);
@@ -304,6 +306,7 @@ async function approva(p) {
 }
 
 async function rifiuta(p, motivo) {
+  firma(CHI_PROPONE[p.tipo]);
   try { git('push', 'origin', '--delete', p.ramo); } catch { /* gia' cancellato */ }
   aggiorna(p.ramo, { stato: 'rifiutata', decisa: oggi(), motivo: motivo || undefined });
 
@@ -341,6 +344,7 @@ async function eseguiProposta(o, aperte) {
  * "Proposta - presentala a Matteo", che lo rimette in attesa e glielo rimanda.
  */
 async function correggi(p, note) {
+  firma(CHI_PROPONE[p.tipo]);
   if (!note) {
     await messaggio(`Cosa devo cambiare? Scrivi CORREGGI ${p.tipo} e subito dopo le correzioni, nello stesso messaggio.`);
     return;
@@ -395,6 +399,7 @@ export function attaccaNote(foto, messaggi, eOrdine = ordine) {
 }
 
 async function salvaFoto(elenco) {
+  firma(CHI_PROPONE.POST);
   // Le note stanno qui e non accanto alla foto: la cartella delle foto va online
   // col sito, e in una nota puo' esserci il nome del cliente o la via.
   // La chiave e' il nome senza estensione, perche' un HEIC diventa .jpg.
@@ -462,6 +467,7 @@ async function main() {
   if (aMano) testi.push(aMano);
 
   if (foto.length) await salvaFoto(foto);
+  firma(null);
   if (precedente[0]?.nota) {
     const note = leggiJson(NOTE_FOTO, {});
     note[precedente[0].chiave] = { nota: precedente[0].nota, arrivata: oggi() };
@@ -505,6 +511,7 @@ async function main() {
   }
 
   for (const o of ordini.values()) {
+    firma(null);   // ogni ordine riparte dalla Segreteria; chi lo esegue mette il suo nome
     if (o.argomento === 'social') await eseguiSocial(o);
     else await eseguiProposta(o, aperte);
   }
