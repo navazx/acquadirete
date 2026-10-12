@@ -89,7 +89,7 @@ export default function HomeView() {
           <p className="text-sm text-slate-600">
             <Link href={ROUTES.depuratore} className="font-semibold text-blue-700 hover:underline">Depuratore acqua a Firenze</Link>
             <span className="mx-2 text-slate-400">·</span>
-            <Link href={ROUTES.prato} className="font-semibold text-blue-700 hover:underline">a Prato</Link>
+            <Link href={ROUTES.prato} className="font-semibold text-blue-700 hover:underline">Depuratore acqua a Prato</Link>
             <span className="mx-2 text-slate-400">·</span>
             <Link href={ROUTES.pistoia} className="font-semibold text-blue-700 hover:underline">a Pistoia</Link>
           </p>
