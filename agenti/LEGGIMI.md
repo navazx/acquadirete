@@ -166,6 +166,7 @@ delle routine:
 | scheda Google | `.claude/skills/agente-scheda-google/` |
 | correzioni SEO | `.claude/skills/correzioni-seo/` |
 | Direttore (priorità del mese) | `.claude/skills/direttore/` |
+| revisione della pubblicità (Ads) | `.claude/skills/revisione-ads/`, decisioni già prese in `agenti/ads/LEGGIMI.md` |
 | correzioni chieste da Matteo | `.claude/skills/correggi-proposta/`, `correggi-post/` |
 
 `agenti/seo/ricerche.json`, riscritto ogni lunedì dal controllo SEO, contiene tutte

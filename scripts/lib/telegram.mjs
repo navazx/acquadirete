@@ -41,6 +41,7 @@ const CHI = {
   'agente-seo.mjs': 'AGENTE SEO',
   'seo-report.mjs': 'AGENTE SEO (report del mese)',
   'agente-ads.mjs': 'AGENTE ADS',
+  'ads-manda.mjs': 'AGENTE ADS',
   'agente-recensioni.mjs': 'AGENTE RECENSIONI',
   'recensioni-bozza.mjs': 'AGENTE RECENSIONI',
   'social-bozza.mjs': 'AGENTE SOCIAL',

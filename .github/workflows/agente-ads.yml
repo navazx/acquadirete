@@ -1,8 +1,14 @@
 name: Agente Ads - revisione mensile
 
-# Il 18 di ogni mese alle 07:00 UTC legge Google Ads e Meta Ads, piu' i lead veri del Gestionale, (ultimi 30 giorni contro i
-# 30 prima) e manda su Telegram la revisione fatta: numeri, parte nascosta dei
-# termini, marchi rientrati dalla porta laterale, parole sconosciute da valutare.
+# Il 18 di ogni mese alle 07:00 UTC fa la revisione della pubblicita': Google Ads
+# e Meta contro i contatti e i clienti veri del Gestionale (ultimi 30 giorni e i
+# 30 prima). In tre tempi, dal 12 ott 2026:
+#   1. scripts/agente-ads.mjs raccoglie i dati in /tmp (mai nel repo: dentro c'e'
+#      la spesa) e prepara la revisione di base, coi soli conti;
+#   2. l'agente con l'intelligenza artificiale (.claude/skills/revisione-ads) li
+#      studia e scrive la revisione vera: dove vanno i soldi, cosa fare, cosa no;
+#   3. scripts/ads-manda.mjs la manda a Matteo. Se l'analisi non e' riuscita
+#      manda quella di base, cosi' il 18 non resta mai muto.
 #
 # Ha preso il posto di "Promemoria Google Ads", che diceva a Matteo di aprire il
 # report a mano.
@@ -19,17 +25,21 @@ on:
   workflow_dispatch:
     inputs:
       prova:
-        description: 'Solo prova: stampa la revisione senza mandarla'
+        description: 'Solo prova: raccoglie i dati e li studia, ma non manda niente'
         type: boolean
         default: true
 
-# Per consegnare la nota alla bacheca (un file su main).
+# contents: per consegnare la nota alla bacheca (un file su main).
+# id-token: serve all'azione per autenticarsi come app GitHub di Claude.
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   ads:
     runs-on: ubuntu-latest
+    # Tempo largo: Matteo ha chiesto qualita', non velocita' (agenti/METODO.md).
+    timeout-minutes: 90
     steps:
       # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
       - name: Checkout del repository
@@ -40,17 +50,48 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Leggi Google Ads e manda la revisione
+      # Niente "set -x" e nessuna stampa dei dati: nei log di un repo pubblico la
+      # spesa non deve comparire. Lo script stampa solo i conteggi.
+      - name: Raccogli i dati di Google Ads, Meta e Gestionale
         env:
           GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           # Meta: utente di sistema con ads_read e ruolo 'Visualizza le prestazioni'.
           # Token separato da quello dei lead (su Netlify): se salta, i lead arrivano lo stesso.
           META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
+          ADS_DATI: /tmp/ads-dati.json
+          ADS_BASE: /tmp/ads-base.txt
+          ADS_NOTA_BASE: /tmp/ads-nota-base.json
+        run: node scripts/agente-ads.mjs
+
+      # L'analisi. Non deve scrivere nel repository ne' usare git: i dati hanno la
+      # spesa dentro. Lo dice la skill, e qui git e gh sono proprio tolti.
+      # Se fallisce il giro va avanti: parte la revisione di base.
+      - name: Studia i dati e scrivi la revisione
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/revisione-ads'
+          claude_args: |
+            --model claude-opus-5-5
+            --effort xhigh
+            --disallowedTools "Bash(git *)" "Bash(gh *)" "Bash(curl *)" "Bash(wget *)"
+
+      - name: Manda la revisione a Matteo
+        if: ${{ inputs.prova != true }}
+        env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
-          # Nel giro programmato inputs e' vuoto, quindi PROVA non e' "true" e il messaggio parte.
-          PROVA: ${{ inputs.prova }}
-        run: node scripts/agente-ads.mjs
+        run: node scripts/ads-manda.mjs
+
+      # In prova si dice solo se i file ci sono e quanto sono lunghi.
+      - name: In prova - cosa sarebbe partito
+        if: ${{ inputs.prova == true }}
+        run: |
+          for f in /tmp/ads-revisione.txt /tmp/ads-dettaglio.txt /tmp/ads-base.txt; do
+            if [ -s "$f" ]; then echo "$f: $(wc -m < "$f") caratteri"; else echo "$f: non c'e'"; fi
+          done
+          rm -rf /tmp/bacheca
 
       # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/),
       # e chi la consegna sveglia il postino. Se non riesce lo dice nel log, ma non
@@ -60,3 +101,7 @@ jobs:
         env:
           POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
         run: node scripts/bacheca-consegna.mjs
+
+      - name: Butta i file coi dati
+        if: ${{ always() }}
+        run: rm -f /tmp/ads-dati.json /tmp/ads-base.txt /tmp/ads-nota-base.json /tmp/ads-revisione.txt /tmp/ads-dettaglio.txt

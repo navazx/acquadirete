@@ -33,12 +33,22 @@
 //    - escludere "gratis": bloccherebbe "preventivo gratis"
 //    - escludere un termine perche' ha zero conversioni visibili: vedi punto 2
 //
+//  DAL 12 OTT 2026 LA REVISIONE E' IN DUE TEMPI (Matteo: "analisi piu'
+//  approfondite, non approssimative"). Questo script raccoglie i dati e prepara
+//  la revisione di base; poi l'agente con l'intelligenza artificiale
+//  (.claude/skills/revisione-ads) li studia e scrive la revisione vera. Su GitHub
+//  lo script gira con ADS_DATI, ADS_BASE e ADS_NOTA_BASE: scrive tre file in /tmp
+//  e NON manda niente. Se l'analisi non riesce, il workflow manda la revisione
+//  di base, cosi' il 18 non resta mai muto. I dati hanno la spesa dentro: stanno
+//  solo in /tmp, mai nel repo e mai nel log.
+//
 //  Prova dal PC (niente Telegram, stampa il messaggio):
 //    GSC_KEY_FILE=../seo-report/gsc-key-readonly.json PROVA=true node scripts/agente-ads.mjs
 // ============================================================================
 
 import { query, euro } from './lib/ads.mjs';
 import { sheetsToken, leggiLead } from './lib/gestionale.mjs';
+import { writeFileSync } from 'node:fs';
 import { lasciaNota } from './lib/bacheca.mjs';
 
 // --- META ADS ----------------------------------------------------------------
@@ -82,7 +92,31 @@ async function leggiMeta(ora, prima) {
     fields: 'campaign_name,spend,actions',
     time_range: { since: ora.da, until: ora.a },
   })).data ?? [];
+  // Il dettaglio serve all'analisi: quale annuncio e quale posizionamento portano
+  // i contatti. Due chiamate in piu' al mese, non di piu' (vedi sopra l'antifrode).
+  let dettaglio;
+  try {
+    const riga = (r) => ({
+      spesa: Number(r.spend || 0), viste: Number(r.impressions || 0), clic: Number(r.clicks || 0),
+      frequenza: r.frequency ? Math.round(Number(r.frequency) * 100) / 100 : undefined, lead: leadDaAzioni(r.actions),
+    });
+    const annunci = (await graph(`act_${account.account_id}/insights`, {
+      level: 'ad', fields: 'campaign_name,adset_name,ad_name,spend,impressions,clicks,frequency,actions',
+      time_range: { since: ora.da, until: ora.a }, limit: '100',
+    })).data ?? [];
+    const posti = (await graph(`act_${account.account_id}/insights`, {
+      breakdowns: 'publisher_platform,platform_position', fields: 'spend,impressions,clicks,actions',
+      time_range: { since: ora.da, until: ora.a }, limit: '100',
+    })).data ?? [];
+    dettaglio = {
+      annunci: annunci.map((r) => ({ campagna: r.campaign_name, gruppo: r.adset_name, annuncio: r.ad_name, ...riga(r) })),
+      posizionamenti: posti.map((r) => ({ dove: `${r.publisher_platform} / ${r.platform_position}`, ...riga(r) })),
+    };
+  } catch (e) {
+    dettaglio = { errore: e.message };
+  }
   return {
+    dettaglio,
     account,
     ora: await totale(ora),
     prima: await totale(prima),
@@ -99,12 +133,37 @@ async function leggiMeta(ora, prima) {
 async function leggiFoglio(p) {
   const da = new Date(`${p.da}T00:00:00`);
   const a = new Date(`${p.a}T23:59:59`);
-  const lead = (await leggiLead(await sheetsToken())).filter((l) => l.data && l.data >= da && l.data <= a);
+  const tutti = (await leggiLead(await sheetsToken())).filter((l) => l.data);
+  const lead = tutti.filter((l) => l.data >= da && l.data <= a);
+  // Mese per mese, da dove arrivano i contatti e quanti sono diventati clienti: il
+  // cliente firma settimane dopo il contatto, quindi il mese in corso sembra
+  // sempre peggio di com'e'. Serve all'analisi per non giudicare troppo presto.
+  const fonte = (l) => (/meta|facebook|instagram/i.test(l.provenienza) ? 'meta' : /sito/i.test(l.provenienza) ? 'sito' : 'altro');
+  const storico = {};
+  for (const l of tutti) {
+    const mese = giorno(l.data).slice(0, 7);
+    const s = ((storico[mese] ??= {})[fonte(l)] ??= { contatti: 0, clienti: 0 });
+    s.contatti += 1;
+    if (l.stato === 'Cliente') s.clienti += 1;
+  }
   const conta = (filtro) => {
     const scelti = lead.filter(filtro);
     return { lead: scelti.length, clienti: scelti.filter((l) => l.stato === 'Cliente').length };
   };
+  // Per l'analisi bastano il giorno, da dove arriva, com'e' finita e la zona:
+  // nome, telefono e testo delle note NON escono mai dal foglio.
+  const righe = lead.map((l) => ({
+    giorno: giorno(l.data),
+    provenienza: l.provenienza,
+    stato: l.stato,
+    interesse: l.interesse.slice(0, 60),
+    zona: (`${l.note} ${l.interesse}`.match(/\bZ[1-6X]\b/) || [null])[0],
+    daAnnuncioGoogle: /annuncio google/i.test(l.note),
+    pagina: (l.note.match(/dalla pagina (\/[^\s,)]*)/i) || [null, null])[1],
+  }));
   return {
+    righe,
+    mesePerMese: storico,
     meta: conta((l) => /meta|facebook|instagram/i.test(l.provenienza)),
     sito: conta((l) => /sito/i.test(l.provenienza)),
     totale: lead.length,
@@ -348,25 +407,126 @@ async function main() {
   r.push(`Esclusioni attive: ${escluse.length}. Dove si mettono: Google Ads → Parole chiave → Parole chiave escluse → livello Campagna.`);
 
   const testo = r.join('\n');
+
+  // La nota per la bacheca: niente spesa e niente numeri (il repo e' pubblico).
+  // Dice al Direttore com'e' andata e a Matteo se c'e' qualcosa da decidere.
+  const parti = ['Revisione Ads del mese fatta e mandata a Matteo su Telegram.'];
+  if (!foglio.errore) {
+    parti.push(foglio.meta.clienti ? 'Nel periodo Meta ha portato anche clienti.' : foglio.meta.lead ? 'Nel periodo Meta ha portato contatti ma nessun cliente.' : 'Nel periodo da Meta non sono arrivati contatti.');
+    parti.push(foglio.sito.clienti ? 'Dal sito sono arrivati clienti.' : 'Dal sito nel periodo nessun cliente.');
+  }
+  const daFare = daGuardare.length + laterali.length;
+  if (daFare) parti.push(`Per MATTEO: ${daFare === 1 ? 'una parola di ricerca è' : `${daFare} parole di ricerca sono`} da guardare e forse escludere su Google Ads (l'elenco è nel messaggio).`);
+  const notaBase = { agente: 'ads', testo: parti.join(' '), per: daFare ? ['matteo', 'direttore'] : ['direttore'] };
+
+  // --- Su GitHub: i dati per l'analisi, e basta. Chi manda e' il workflow.
+  if (process.env.ADS_DATI) {
+    const m = (x) => ({
+      viste: Number(x.metrics.impressions || 0), clic: Number(x.metrics.clicks || 0),
+      spesa: euro(x.metrics.costMicros), conversioni: Number(x.metrics.conversions || 0),
+    });
+    // Ogni lettura in piu' e' a se': se Google ne rifiuta una, le altre restano.
+    const google = {};
+    const tenta = async (nome, fn) => {
+      try { google[nome] = await fn(); } catch (e) { google[nome] = { errore: String(e.message).slice(0, 300) }; }
+    };
+    await tenta('campagne', async () => (await query(
+      `SELECT campaign.name, campaign.status, campaign.bidding_strategy_type, campaign_budget.amount_micros,
+              metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+       FROM campaign WHERE ${ora.gaql}`,
+    )).map((x) => ({ campagna: x.campaign.name, stato: x.campaign.status, offerta: x.campaign.biddingStrategyType, budgetAlGiorno: euro(x.campaignBudget?.amountMicros), ...m(x) })));
+    for (const [nome, p] of [['gruppi', ora], ['gruppiIlMesePrima', prima]]) {
+      await tenta(nome, async () => (await query(
+        `SELECT campaign.name, ad_group.name, ad_group.status,
+                metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+         FROM ad_group WHERE ${p.gaql}`,
+      )).map((x) => ({ campagna: x.campaign.name, gruppo: x.adGroup.name, stato: x.adGroup.status, ...m(x) })));
+    }
+    await tenta('paroleChiave', async () => (await query(
+      `SELECT ad_group.name, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type,
+              ad_group_criterion.quality_info.quality_score,
+              metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+       FROM keyword_view WHERE ${ora.gaql} AND ad_group_criterion.status = 'ENABLED'`,
+    )).map((x) => ({
+      gruppo: x.adGroup.name, parola: x.adGroupCriterion.keyword.text, corrispondenza: x.adGroupCriterion.keyword.matchType,
+      punteggioQualita: x.adGroupCriterion.qualityInfo?.qualityScore, ...m(x),
+    })));
+    await tenta('terminiPerGruppo', async () => (await query(
+      `SELECT ad_group.name, search_term_view.search_term, search_term_view.status,
+              metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+       FROM search_term_view WHERE ${ora.gaql}`,
+    )).map((x) => ({ gruppo: x.adGroup.name, termine: x.searchTermView.searchTerm, stato: x.searchTermView.status, ...m(x) })));
+    await tenta('annunci', async () => (await query(
+      `SELECT ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, ad_group_ad.ad_strength,
+              ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions,
+              metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+       FROM ad_group_ad WHERE ${ora.gaql} AND ad_group_ad.status = 'ENABLED'`,
+    )).map((x) => ({
+      gruppo: x.adGroup.name, forza: x.adGroupAd.adStrength, pagina: x.adGroupAd.ad.finalUrls?.[0],
+      titoli: (x.adGroupAd.ad.responsiveSearchAd?.headlines || []).map((h) => h.text),
+      descrizioni: (x.adGroupAd.ad.responsiveSearchAd?.descriptions || []).map((h) => h.text), ...m(x),
+    })));
+    await tenta('pagineDiArrivo', async () => (await query(
+      `SELECT landing_page_view.unexpanded_final_url, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+       FROM landing_page_view WHERE ${ora.gaql}`,
+    )).map((x) => ({ pagina: x.landingPageView.unexpandedFinalUrl, ...m(x) })));
+    for (const [nome, campo, chiaveRisposta] of [['perDispositivo', 'segments.device', 'device'], ['perGiornoDellaSettimana', 'segments.day_of_week', 'dayOfWeek'], ['perOra', 'segments.hour', 'hour']]) {
+      await tenta(nome, async () => {
+        const somme = new Map();
+        for (const x of await query(`SELECT ${campo}, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM campaign WHERE ${ora.gaql}`)) {
+          const k = String(x.segments[chiaveRisposta]);
+          const s = somme.get(k) || { viste: 0, clic: 0, spesa: 0, conversioni: 0 };
+          const v = m(x);
+          somme.set(k, { viste: s.viste + v.viste, clic: s.clic + v.clic, spesa: Math.round((s.spesa + v.spesa) * 100) / 100, conversioni: s.conversioni + v.conversioni });
+        }
+        return [...somme].map(([quando, v]) => ({ quando, ...v }));
+      });
+    }
+    await tenta('conversioniPerTipo', async () => (await query(
+      `SELECT segments.conversion_action_name, metrics.conversions FROM campaign WHERE ${ora.gaql}`,
+    )).map((x) => ({ tipo: x.segments.conversionActionName, conversioni: Number(x.metrics.conversions || 0) })).filter((x) => x.conversioni > 0));
+    await tenta('escluseNeiGruppi', async () => (await query(
+      `SELECT ad_group.name, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type
+       FROM ad_group_criterion WHERE ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD'`,
+    )).map((x) => ({ gruppo: x.adGroup.name, parola: x.adGroupCriterion.keyword.text, corrispondenza: x.adGroupCriterion.keyword.matchType })));
+
+    const dati = {
+      creato: new Date().toISOString(),
+      attenzione: 'Dati riservati: dentro c\'è la spesa. Non vanno copiati nel repository, in un commit o in una nota della bacheca.',
+      periodi: { ora: { da: ora.da, a: ora.a }, ilMesePrima: { da: prima.da, a: prima.a } },
+      google: {
+        totali: { ora: tOra, ilMesePrima: tPrima },
+        nonAttribuitoANessunTermine: nascosto,
+        termini,
+        esclusePerTuttaLaCampagna: escluse,
+        paroleChiaveAttive: chiave.map((x) => x.adGroupCriterion.keyword.text),
+        rientratiDallaPortaLaterale: laterali,
+        paroleSconosciute: daGuardare,
+        ...google,
+      },
+      meta,
+      gestionale: foglio,
+      revisioneDiBase: testo,
+    };
+    writeFileSync(process.env.ADS_DATI, JSON.stringify(dati, null, 1));
+    if (process.env.ADS_BASE) writeFileSync(process.env.ADS_BASE, testo);
+    if (process.env.ADS_NOTA_BASE) writeFileSync(process.env.ADS_NOTA_BASE, JSON.stringify(notaBase));
+    // Nel log solo i conteggi: mai la spesa.
+    const rotte = Object.entries(google).filter(([, v]) => v && v.errore).map(([k]) => k);
+    console.log(`Dati per l'analisi scritti: ${termini.length} termini, ${Object.keys(google).length} letture in più${rotte.length ? ` (non riuscite: ${rotte.join(', ')})` : ''}, Meta ${meta.assente ? 'assente' : meta.errore ? 'in errore' : meta.dettaglio?.errore ? 'senza dettaglio' : 'completo'}, Gestionale ${foglio.errore ? 'in errore' : `${foglio.righe.length} contatti`}.`);
+    return;
+  }
+
   if (process.env.PROVA === 'true') {
-    console.log(`(prova: niente Telegram, ${testo.length} caratteri)\n\n${testo}`);
+    // Su GitHub il log e' pubblico: della prova si dice solo quanto e' lunga.
+    console.log(process.env.GITHUB_ACTIONS ? `(prova: niente Telegram, ${testo.length} caratteri)` : `(prova: niente Telegram, ${testo.length} caratteri)\n\n${testo}`);
     return;
   }
   const { messaggio } = await import('./lib/telegram.mjs');
   await messaggio(testo);
   console.log(`Revisione mandata (${testo.length} caratteri).`);
-
-  // La nota per la bacheca: niente spesa e niente numeri (il repo e' pubblico).
-  // Dice al Direttore com'e' andata e a Matteo se c'e' qualcosa da decidere.
   try {
-    const parti = ['Revisione Ads del mese fatta e mandata a Matteo su Telegram.'];
-    if (!foglio.errore) {
-      parti.push(foglio.meta.clienti ? 'Nel periodo Meta ha portato anche clienti.' : foglio.meta.lead ? 'Nel periodo Meta ha portato contatti ma nessun cliente.' : 'Nel periodo da Meta non sono arrivati contatti.');
-      parti.push(foglio.sito.clienti ? 'Dal sito sono arrivati clienti.' : 'Dal sito nel periodo nessun cliente.');
-    }
-    const daFare = daGuardare.length + laterali.length;
-    if (daFare) parti.push(`Per MATTEO: ${daFare === 1 ? 'una parola di ricerca è' : `${daFare} parole di ricerca sono`} da guardare e forse escludere su Google Ads (l'elenco è nel messaggio).`);
-    lasciaNota('ads', parti.join(' '), daFare ? ['matteo', 'direttore'] : ['direttore']);
+    lasciaNota(notaBase.agente, notaBase.testo, notaBase.per);
   } catch (e) {
     console.log(`Nota per la bacheca non lasciata: ${e.message}`);
   }
