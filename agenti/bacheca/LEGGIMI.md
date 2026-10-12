@@ -65,8 +65,12 @@ la mette su `main` in `agenti/bacheca/in-arrivo/`.
 
 ## Il postino
 
-Routine su claude.ai, ogni mattina alle 04:30 UTC (06:30 d'estate, 05:30
-d'inverno), prima che partano gli altri agenti:
+Routine su claude.ai. Passa **ogni 3 ore**, dalle 04:30 alle 19:30 UTC (dal 12 ott
+2026: prima passava solo la mattina, e la nota del controllo SEO del lunedì è
+rimasta ferma fino al giorno dopo). In più `scripts/bacheca-consegna.mjs` lo
+**sveglia subito** ogni volta che un agente su GitHub consegna una nota, se fra i
+secret del repo c'è `POSTINO_TOKEN` (il token dell'avvio via API della routine: lo
+genera Matteo, non è mai scritto nel repo). A ogni giro:
 
 1. porta sulla bacheca le note in `agenti/bacheca/in-arrivo/`;
 2. scarica le note dalla bacheca, comprese quelle di Matteo, e rifà
@@ -74,6 +78,6 @@ d'inverno), prima che partano gli altri agenti:
    `in-arrivo/` le note ormai consegnate (il postino non cancella file a mano);
 3. committa su `main` con `[skip netlify]`, solo se qualcosa è cambiato.
 
-Le note degli agenti su GitHub arrivano sulla bacheca la mattina dopo, e lo stesso
-per le note di Matteo verso gli agenti su GitHub. Per agenti che girano una volta a
-settimana o al mese, un giorno di ritardo non cambia niente.
+Le note degli agenti su GitHub arrivano sulla bacheca in un paio di minuti se il
+postino viene svegliato, altrimenti entro 3 ore. Le note di Matteo verso gli
+agenti su GitHub arrivano al giro dopo del postino, quindi anche quelle entro 3 ore.

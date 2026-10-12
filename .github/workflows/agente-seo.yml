@@ -69,6 +69,8 @@ jobs:
       # il postino, una routine su claude.ai, la porta sulla bacheca ogni mattina.
       # Se la consegna non riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
         run: node scripts/bacheca-consegna.mjs
 
   # L'agente delle correzioni gira QUI, in coda al controllo, e non piu' a un orario
@@ -121,4 +123,6 @@ jobs:
       # Se la consegna non riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
         if: ${{ always() }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
         run: node scripts/bacheca-consegna.mjs

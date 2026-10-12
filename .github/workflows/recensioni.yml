@@ -85,4 +85,6 @@ jobs:
       # Se la consegna non riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
         if: ${{ inputs.prova != true }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
         run: node scripts/bacheca-consegna.mjs

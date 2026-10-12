@@ -71,6 +71,8 @@ jobs:
       # Se la consegna non riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
         if: ${{ always() && inputs.solo_dati != true }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
         run: node scripts/bacheca-consegna.mjs
 
       - name: Manda a Matteo la pagina coi numeri
