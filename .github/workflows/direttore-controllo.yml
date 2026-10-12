@@ -1,0 +1,48 @@
+name: Direttore - controllo degli agenti
+
+# Ogni mattina alle 08:00 UTC (~10:00 ora italiana d'estate, le 09:00 d'inverno)
+# il Direttore guarda se gli agenti hanno lavorato: sono partiti in orario, hanno
+# lasciato la loro nota sulla bacheca, il postino consegna, e cosa aspetta una
+# risposta di Matteo. Su Telegram parla solo se qualcosa non ha funzionato o se
+# una cosa lo aspetta da giorni; il lunedi' lascia sulla bacheca il riepilogo.
+# Istruzioni e soglie: scripts/direttore-controllo.mjs.
+#
+# Lo fa partire la sveglia su Netlify (netlify/functions/sveglia-agenti.mjs). Il
+# giro programmato qui sotto, sei ore dopo, e' di riserva: se parte lui e la
+# sveglia oggi non ha fatto partire niente, vuol dire che la sveglia e' ferma, e
+# lo dice. Se il controllo di oggi c'e' gia' stato, esce senza fare niente.
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+# contents: per consegnare la nota alla bacheca. actions: per leggere i giri.
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  controllo:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Guarda se gli agenti hanno lavorato
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/direttore-controllo.mjs
+
+      - name: Consegna le note alla bacheca
+        if: ${{ always() }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+        run: node scripts/bacheca-consegna.mjs

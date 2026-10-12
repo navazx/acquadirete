@@ -13,37 +13,28 @@
 //   sveglia, da GitHub o a mano) non lo rifa' partire.
 // - Se GitHub rifiuta, avvisa Matteo su Telegram una volta sola per appuntamento.
 //
-// Gli orari stanno QUI. I workflow che mandano messaggi o preparano proposte
+// Gli orari stanno in _shared/orari.mjs. I workflow che mandano messaggi o preparano proposte
 // (controllo SEO, Direttore, report SEO, revisione Ads) non hanno piu' il loro
 // "schedule": con due orologi, quello in ritardo di GitHub li avrebbe fatti
 // girare una seconda volta. Quelli che si possono rilanciare senza danni
 // (recensioni, cruscotto, bozza social) lo tengono come rete di sicurezza.
-// La Sentinella del sito resta solo su GitHub, apposta: sorveglia Netlify, e non
-// puo' dipendere da Netlify per partire.
+// La Sentinella del sito tiene il suo orario su GitHub, apposta: sorveglia
+// Netlify, e non puo' dipendere solo da Netlify per partire. La sveglia la fa
+// partire in piu', perche' GitHub ne salta meta'.
 //
 // Variabili su Netlify (ci sono gia', le usa sveglia-risposte.mjs):
 //   GITHUB_DISPATCH_TOKEN — token a grana fine, solo "Actions" su questo repo
 //   TELEGRAM_BOT_TOKEN    — per l'avviso se qualcosa non parte
 
 import { sveglia } from './_shared/sveglia.mjs';
+import { AGENTI } from './_shared/orari.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const REPO = 'navazx/acquadirete';
 
-// Orari in UTC, come nei cron di GitHub. D'estate in Italia sono due ore dopo,
-// d'inverno una.
-//
-// ATTENZIONE a "prova": recensioni e revisione Ads, avviati a mano, partono in
-// prova (stampano e non mandano). Qui va detto esplicitamente che e' un giro vero.
-const AGENTI = [
-  { nome: 'Recensioni', workflow: 'recensioni.yml', cron: '50 6 * * *', inputs: { prova: 'false' } },
-  { nome: 'Cruscotto settimanale', workflow: 'cruscotto.yml', cron: '40 6 * * 1' },
-  { nome: 'Controllo SEO del lunedì', workflow: 'agente-seo.yml', cron: '5 7 * * 1' },
-  { nome: 'Bozza del post social', workflow: 'social-bozza.yml', cron: '30 7 * * 6' },
-  { nome: 'Direttore', workflow: 'direttore.yml', cron: '0 6 1 * *' },
-  { nome: 'Report SEO del mese', workflow: 'seo-report.yml', cron: '10 7 1 * *' },
-  { nome: 'Revisione Ads', workflow: 'agente-ads.yml', cron: '0 7 18 * *', inputs: { prova: 'false' } },
-];
+// Gli orari stanno in _shared/orari.mjs, insieme a quello che serve al controllo
+// del Direttore: un posto solo, cosi' chi fa partire e chi controlla guardano la
+// stessa tabella.
 
 export default async () => {
   const token = process.env.GITHUB_DISPATCH_TOKEN;

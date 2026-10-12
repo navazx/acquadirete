@@ -16,6 +16,10 @@ name: Report SEO mensile
 on:
   workflow_dispatch:
 
+# Per consegnare la nota alla bacheca (un file su main).
+permissions:
+  contents: write
+
 jobs:
   report:
     runs-on: ubuntu-latest
@@ -37,3 +41,12 @@ jobs:
           # chat_id non è segreto (inutile senza il token): valore diretto.
           TELEGRAM_CHAT_ID: '6369351410'
         run: node scripts/seo-report.mjs
+
+      # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/),
+      # e chi la consegna sveglia il postino. Se non riesce lo dice nel log, ma non
+      # fa fallire il giro.
+      - name: Consegna le note alla bacheca
+        if: ${{ always() }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+        run: node scripts/bacheca-consegna.mjs

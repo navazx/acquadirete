@@ -147,6 +147,27 @@ la rispinge. La bozza torna a Matteo con scritto "Corretto con le tue note". Anc
 uno `SCARTA` che chiede di sistemare ("scarta, cambia la foto") vale come CORREGGI.
 Se in attesa ci sono sia il post sia una proposta, serve dire quale: `CORREGGI POST`.
 
+## Chi controlla che gli agenti lavorino: il Direttore, ogni mattina
+
+Un sistema che deve girare da solo ha bisogno di qualcuno che guardi se gira. Dal
+12 ott 2026 lo fa il Direttore, tutti i giorni alle 08:00 UTC
+(`scripts/direttore-controllo.mjs`, workflow *Direttore - controllo degli agenti*).
+Sono conti, non opinioni:
+
+- ogni agente è partito al suo appuntamento, in orario, senza fallire?
+- chi doveva lasciare una nota sulla bacheca l'ha lasciata? Il postino consegna?
+- cosa aspetta una risposta di Matteo, e da quanti giorni?
+
+Se è tutto a posto tace. Se qualcosa non ha funzionato lo scrive a Matteo su
+Telegram e sulla bacheca; se una cosa lo aspetta da 2, 5, 7, 14… giorni glielo
+ricorda. Il lunedì lascia sulla bacheca il riepilogo della settimana.
+
+**Gli orari di tutti stanno in un posto solo**,
+`netlify/functions/_shared/orari.mjs`: da lì li legge la sveglia, che fa partire
+gli agenti su GitHub all'ora giusta (il cron di GitHub arriva con ore di ritardo),
+e da lì li legge il controllo. **Un agente nuovo va aggiunto a quella tabella**,
+se no nessuno lo fa partire e nessuno si accorge se manca.
+
 ## Le lezioni: quello che Matteo corregge resta scritto
 
 Ogni CORREGGI, e ogni RIFIUTA o SCARTA col suo perché, finisce da solo in un file

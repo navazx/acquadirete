@@ -23,6 +23,10 @@ on:
         type: boolean
         default: true
 
+# Per consegnare la nota alla bacheca (un file su main).
+permissions:
+  contents: write
+
 jobs:
   ads:
     runs-on: ubuntu-latest
@@ -47,3 +51,12 @@ jobs:
           # Nel giro programmato inputs e' vuoto, quindi PROVA non e' "true" e il messaggio parte.
           PROVA: ${{ inputs.prova }}
         run: node scripts/agente-ads.mjs
+
+      # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/),
+      # e chi la consegna sveglia il postino. Se non riesce lo dice nel log, ma non
+      # fa fallire il giro.
+      - name: Consegna le note alla bacheca
+        if: ${{ always() && inputs.prova != true }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+        run: node scripts/bacheca-consegna.mjs

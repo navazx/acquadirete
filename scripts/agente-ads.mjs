@@ -39,6 +39,7 @@
 
 import { query, euro } from './lib/ads.mjs';
 import { sheetsToken, leggiLead } from './lib/gestionale.mjs';
+import { lasciaNota } from './lib/bacheca.mjs';
 
 // --- META ADS ----------------------------------------------------------------
 // Token dell'utente di sistema "Acquadirete Automazioni" con ads_read, e ruolo
@@ -354,6 +355,21 @@ async function main() {
   const { messaggio } = await import('./lib/telegram.mjs');
   await messaggio(testo);
   console.log(`Revisione mandata (${testo.length} caratteri).`);
+
+  // La nota per la bacheca: niente spesa e niente numeri (il repo e' pubblico).
+  // Dice al Direttore com'e' andata e a Matteo se c'e' qualcosa da decidere.
+  try {
+    const parti = ['Revisione Ads del mese fatta e mandata a Matteo su Telegram.'];
+    if (!foglio.errore) {
+      parti.push(foglio.meta.clienti ? 'Nel periodo Meta ha portato anche clienti.' : foglio.meta.lead ? 'Nel periodo Meta ha portato contatti ma nessun cliente.' : 'Nel periodo da Meta non sono arrivati contatti.');
+      parti.push(foglio.sito.clienti ? 'Dal sito sono arrivati clienti.' : 'Dal sito nel periodo nessun cliente.');
+    }
+    const daFare = daGuardare.length + laterali.length;
+    if (daFare) parti.push(`Per MATTEO: ${daFare === 1 ? 'una parola di ricerca è' : `${daFare} parole di ricerca sono`} da guardare e forse escludere su Google Ads (l'elenco è nel messaggio).`);
+    lasciaNota('ads', parti.join(' '), daFare ? ['matteo', 'direttore'] : ['direttore']);
+  } catch (e) {
+    console.log(`Nota per la bacheca non lasciata: ${e.message}`);
+  }
 }
 
 main().catch((e) => {

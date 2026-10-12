@@ -62,6 +62,17 @@ async function main() {
   });
   if (!(topP.rows || []).length) msg += '• (nessun dato)\n';
 
+  // La nota per la bacheca: le percentuali, non i contatti. Non deve fermare il report.
+  if (TELEGRAM_READY) {
+    try {
+      const { lasciaNota } = await import('./lib/bacheca.mjs');
+      const prima = byClicks[0] ? ` La ricerca che porta più clic è «${byClicks[0].keys[0]}».` : '';
+      lasciaNota('seo', `Report SEO del mese mandato a Matteo: clic ${pct(c.clicks, p.clicks)} e viste ${pct(c.impressions, p.impressions)} rispetto ai 28 giorni prima.${prima}`, ['direttore', 'contenuti']);
+    } catch (e) {
+      console.log(`Nota per la bacheca non lasciata: ${e.message}`);
+    }
+  }
+
   if (TELEGRAM_READY) {
     await sendTelegram(msg);
     console.log('✅ Report inviato su Telegram.\n');

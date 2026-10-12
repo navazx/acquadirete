@@ -27,6 +27,7 @@ import { readFileSync } from 'node:fs';
 import { getAccessToken, query, SITE_URL, ymd } from './lib/gsc.mjs';
 import { query as queryAds, euro } from './lib/ads.mjs';
 import { sheetsToken, leggi, scrivi, creaSchedaSeManca, dataItaliana } from './lib/gestionale.mjs';
+import { lasciaNota } from './lib/bacheca.mjs';
 
 const SCHEDA = 'Cruscotto';
 // Colonne A-R, in quest'ordine: le formule della scheda (colonne S-W) le
@@ -213,6 +214,21 @@ async function main() {
   await scrivi(token, `${SCHEDA}!A${numeroRiga}:R${numeroRiga}`, [riga]);
   // Niente spesa nel log: il repository e' pubblico, e i log di Actions pure.
   console.log(`Scritta la riga ${riga[0]} (riga ${numeroRiga} del foglio).`);
+
+  // La nota per la bacheca: senza numeri (i contatti e la spesa restano sul
+  // Gestionale, il repo e' pubblico), ma dice agli altri agenti da dove arriva
+  // il lavoro. Non deve mai far fallire la riga appena scritta.
+  try {
+    const [sito, social, altri] = [riga[3], riga[4], riga[5]];
+    const nuovi = sito + social + altri;
+    const prima = new Date(lunedi); prima.setDate(prima.getDate() - 7);
+    const scorsa = lead.filter((l) => l.data && l.data >= prima && l.data < lunedi).length;
+    const andamento = nuovi > scorsa ? 'più della settimana prima' : nuovi < scorsa ? 'meno della settimana prima' : 'come la settimana prima';
+    const fonte = !nuovi ? '' : sito > social && sito > altri ? ' La maggior parte dal sito.' : social > sito && social > altri ? ' La maggior parte da Meta e dai social.' : ' Divisi fra sito, social e passaparola.';
+    lasciaNota('lead', `Cruscotto della settimana ${it(lunedi)}-${it(domenica)} scritto sul Gestionale. Contatti nuovi: ${nuovi ? andamento : 'nessuno'}.${fonte}`, ['direttore', 'social', 'contenuti']);
+  } catch (e) {
+    console.log(`Nota per la bacheca non lasciata: ${e.message}`);
+  }
 }
 
 main().catch((e) => {
