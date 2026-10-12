@@ -1,5 +1,5 @@
 {
-  "letto": "2026-10-12T16:40:28.490Z",
+  "letto": "2026-10-12T17:55:31.868Z",
   "periodo": "2026-09-12 → 2026-10-09",
   "segnalati": [
     "soglia|depuratore acqua casa gratis",
@@ -45,7 +45,21 @@
     {
       "tipo": "concorrenza",
       "ricerca": "depuratore acqua prato",
-      "pagina": null
+      "pagina": null,
+      "pagine": [
+        {
+          "pagina": "/",
+          "posizione": 13.4,
+          "viste": 5,
+          "clic": 0
+        },
+        {
+          "pagina": "/depuratore-acqua-prato/",
+          "posizione": 14.3,
+          "viste": 6,
+          "clic": 0
+        }
+      ]
     },
     {
       "tipo": "prima-pagina",
@@ -60,12 +74,46 @@
     {
       "tipo": "concorrenza",
       "ricerca": "depuratori acqua firenze",
-      "pagina": null
+      "pagina": null,
+      "pagine": [
+        {
+          "pagina": "/",
+          "posizione": 14.4,
+          "viste": 20,
+          "clic": 0
+        },
+        {
+          "pagina": "/depuratore-acqua-firenze/",
+          "posizione": 31.8,
+          "viste": 6,
+          "clic": 0
+        },
+        {
+          "pagina": "/osmosi-inversa-firenze/",
+          "posizione": 73.5,
+          "viste": 6,
+          "clic": 0
+        }
+      ]
     },
     {
       "tipo": "concorrenza",
       "ricerca": "depuratori acqua prato",
-      "pagina": null
+      "pagina": null,
+      "pagine": [
+        {
+          "pagina": "/",
+          "posizione": 17.8,
+          "viste": 9,
+          "clic": 0
+        },
+        {
+          "pagina": "/depuratore-acqua-prato/",
+          "posizione": 23,
+          "viste": 7,
+          "clic": 0
+        }
+      ]
     }
   ]
 }
