@@ -40,13 +40,13 @@ import { dirname, join } from 'node:path';
 import sharp from 'sharp';
 
 const QUI = dirname(fileURLToPath(import.meta.url));
-const BASE = join(QUI, 'grafica', 'base-curiosita.jpg');
-const FONT = join(QUI, 'grafica', 'font', 'Montserrat-variabile.ttf');
+export const BASE = join(QUI, 'grafica', 'base-curiosita.jpg');
+export const FONT = join(QUI, 'grafica', 'font', 'Montserrat-variabile.ttf');
 
 // Colori presi dalle immagini originali.
-const NOTTE = '#062a60';     // titolo, cerchi delle icone
-const AZZURRO = '#2574d9';   // parola chiave, titoletti
-const TESTO = '#1c2434';     // testo corrente
+export const NOTTE = '#062a60';     // titolo, cerchi delle icone
+export const AZZURRO = '#2574d9';   // parola chiave, titoletti
+export const TESTO = '#1c2434';     // testo corrente
 
 // Misure dell'originale (1254x1254).
 const LATO = 1254;
@@ -81,17 +81,17 @@ const ICONE = {
 };
 
 // L'apostrofo dritto diventa quello tipografico, come nelle immagini di Matteo.
-const escape = (s) => String(s).replace(/'/g, '’').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+export const escape = (s) => String(s).replace(/'/g, '’').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** Un blocco di testo Pango: torna immagine e misure. */
-async function blocco(markup, larghezza, allinea = 'left') {
+export async function blocco(markup, larghezza, allinea = 'left') {
   const { data, info } = await sharp({
     text: { text: markup, font: 'Montserrat', fontfile: FONT, width: larghezza, dpi: 72, rgba: true, align: allinea, wrap: 'word' },
   }).png().toBuffer({ resolveWithObject: true });
   return { data, w: info.width, h: info.height };
 }
 
-const span = (testo, { px, peso, colore, riga }) =>
+export const span = (testo, { px, peso, colore, riga }) =>
   `<span size="${Math.round(px * 1024)}" weight="${peso}" foreground="${colore}"${riga ? ` line_height="${riga}"` : ''}>${testo}</span>`;
 
 function markupTitolo(titolo, px) {

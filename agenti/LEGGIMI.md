@@ -147,7 +147,7 @@ in attesa, quindi il sabato dopo l'agente ne compone una nuova.
 - `tema` — installazione, curiosità, contesto diverso, recensione (ruotano)
 - `foto` — percorso dentro `public/assets/social/`, oppure `null`
 - `varianti` — due o tre didascalie fra cui scegliere, ognuna coi suoi hashtag
-- `grafica` — solo per le curiosità: i testi dell'immagine (vedi sotto)
+- `grafica` — per le curiosità e per le recensioni: i testi dell'immagine (vedi sotto)
 
 ## La grafica delle curiosità
 
@@ -188,6 +188,46 @@ Instagram la scarica dal sito.
 
 Già uscite, da non ripetere: impianti di depurazione e osmosi, acqua frizzante,
 i 700 kg di bottiglie all'anno, il calcare minerale naturale, il cloro, i nitrati.
+
+## La grafica delle recensioni
+
+**Sotto una recensione non va la foto di un impianto.** Il 10 ott 2026 l'agente ha
+messo sotto tre frasi di clienti la foto di un sottolavello qualsiasi, con guanti e
+stracci in vista, e una delle frasi diceva "ha lasciato tutto pulito": Matteo l'ha
+scartata. Chi scorre deve capire subito che sta parlando un cliente. Quindi anche
+qui l'immagine si fa con uno stampo, `scripts/grafica-recensione.mjs`, sorella di
+quella delle curiosità: etichetta RECENSIONE con le cinque stelle, la frase fra
+virgolette, chi l'ha scritta, la media su Google, e a destra la stessa cucina.
+
+Chi compone scrive nella bozza, oltre alle varianti:
+
+```json
+"grafica": {
+  "frase": "L'unica cosa di cui mi pento è di non averlo acquistato prima.",
+  "autore": "Simone Biagiotti"
+}
+```
+
+- **La frase è un pezzo vero** di una recensione di `lib/google-reviews.json`,
+  copiato com'è. Si può tagliare (in mezzo, coi puntini), non riscrivere: lo script
+  la cerca nelle recensioni e se non la trova si ferma.
+- Al massimo 230 caratteri; meglio una frase sola, quella che resta in testa.
+- Del cognome resta l'iniziale, lo fa lo script. Media e numero di recensioni li
+  legge da solo.
+- **Una frase sola nell'immagine, tre didascalie attorno**: le tre varianti
+  raccontano quella stessa recensione da tre angoli, non tre recensioni diverse,
+  perché l'immagine è una.
+
+Poi `npm ci` e `node scripts/grafica-recensione.mjs agenti/social-bozza.json`: lo
+script scrive `public/assets/social/recensione-<data>.jpg` e lo mette nel campo
+`foto`. Va aperta e guardata, e il commit la porta con sé senza `[skip netlify]`,
+come per le curiosità. Non riusare una recensione già uscita
+(`git log -p -- agenti/social-bozza.json`).
+
+**La cucina dello stampo** (`scripts/grafica/base-curiosita.jpg`) è un disegno, non
+una foto. Il 12 ott 2026 è stata ritoccata perché i tubi sembravano attaccati alla
+vasca del lavello: negli impianti veri escono da dietro, salgono lungo il muro e
+spariscono dietro il lavello verso il miscelatore, e dove si collegano non si vede.
 
 **Senza foto si pubblica lo stesso, ma solo su Facebook**: Instagram l'immagine
 la pretende, e deve stare a un indirizzo pubblico (per questo le foto vivono
