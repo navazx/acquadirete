@@ -13,6 +13,8 @@ on:
     branches: [main]
     paths:
       - 'agenti/social-bozza.json'
+  # Il sabato lo fa partire anche la sveglia su Netlify
+  # (netlify/functions/sveglia-agenti.mjs): questo resta come rete di sicurezza.
   schedule:
     - cron: '30 7 * * 6'
   workflow_dispatch:

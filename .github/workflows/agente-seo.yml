@@ -17,9 +17,12 @@ name: Agente SEO tecnico
 #
 # Ha preso il posto della routine cloud "guardiano-404-redirect", che aveva il
 # token del bot scritto nel prompt.
+# L'orario non sta piu' qui: lo tiene la sveglia su Netlify
+# (netlify/functions/sveglia-agenti.mjs, lunedi' 07:05 UTC), che fa partire
+# questo workflow a mano. Il giro programmato di GitHub arrivava con ore di
+# ritardo (il 12 ott 2026 nove ore e mezza), e tenendoli tutti e due il lavoro
+# sarebbe partito due volte. Era: cron '5 7 * * 1'.
 on:
-  schedule:
-    - cron: '5 7 * * 1'
   workflow_dispatch:
 
 # Per registrare lo stato del controllo.

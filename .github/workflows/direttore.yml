@@ -11,9 +11,12 @@ name: Direttore - le priorita' del mese
 #   3. qui sotto parte a parte, su Telegram, la pagina coi numeri in euro
 #
 # Costruito l'8 ott 2026; primo giro vero il 1° novembre, su ottobre.
+# L'orario non sta piu' qui: lo tiene la sveglia su Netlify
+# (netlify/functions/sveglia-agenti.mjs, il 1° del mese 06:00 UTC), che fa partire
+# questo workflow a mano. Il giro programmato di GitHub arrivava con ore di
+# ritardo (il 12 ott 2026 nove ore e mezza), e tenendoli tutti e due il lavoro
+# sarebbe partito due volte. Era: cron '0 6 1 * *'.
 on:
-  schedule:
-    - cron: '0 6 1 * *'
   workflow_dispatch:
     inputs:
       mese:

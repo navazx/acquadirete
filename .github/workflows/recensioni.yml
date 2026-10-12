@@ -15,6 +15,10 @@ name: Recensioni - guarda se ce ne sono di nuove
 # Media e totale del SITO (lib/google-reviews.json) li allinea lui a quelli di
 # Google, dal 4 ott 2026: quando cambiano il sito va ripubblicato. Le recensioni
 # scritte per esteso nello stesso file restano a mano.
+# All'ora giusta lo fa partire la sveglia su Netlify
+# (netlify/functions/sveglia-agenti.mjs): il giro programmato qui sotto resta come
+# rete di sicurezza, perche' GitHub lo fa partire con ore di ritardo. Rilanciarlo
+# non fa danni. Se cambi l'orario, cambialo anche la'.
 on:
   schedule:
     - cron: '50 6 * * *'

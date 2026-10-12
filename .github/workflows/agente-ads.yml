@@ -10,9 +10,12 @@ name: Agente Ads - revisione mensile
 # NON scrive niente nel repo, di proposito: il repository e' pubblico, e spesa e
 # termini di ricerca non devono finirci. E non tocca Google Ads: il service
 # account (seo-report-bot, chiave in GSC_KEY_JSON) ha ruolo "Solo lettura".
+# L'orario non sta piu' qui: lo tiene la sveglia su Netlify
+# (netlify/functions/sveglia-agenti.mjs, il 18 del mese 07:00 UTC), che fa partire
+# questo workflow a mano. Il giro programmato di GitHub arrivava con ore di
+# ritardo (il 12 ott 2026 nove ore e mezza), e tenendoli tutti e due il lavoro
+# sarebbe partito due volte. Era: cron '0 7 18 * *'.
 on:
-  schedule:
-    - cron: '0 7 18 * *'
   workflow_dispatch:
     inputs:
       prova:
