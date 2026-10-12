@@ -111,6 +111,13 @@ conto, "te lo diciamo col sopralluogo gratuito". Nessuna cifra.
   consulenti). Matteo ha fatto togliere una sezione intera così, FAQ compresa: se un
   tema tocca la burocrazia del cliente, non si apre proprio.
 - **Acquadirete non vende addolcitori**: non si nominano.
+- **Mai dire "non lasciare i tuoi dati nei moduli" in generale.** Acquadirete fa
+  pubblicità su Facebook e Instagram proprio con un modulo per lasciare il numero:
+  un avviso contro le truffe scritto largo ("non dare dati nei moduli", "non
+  compilare moduli online") è un avviso contro i nostri annunci. Si scrive
+  stretto: "nel modulo di una pubblicità che promette quel bonus". Vale per
+  articoli, post social e post della scheda Google (corretto due volte: 5 e 12
+  ott 2026).
 - `metaTitle` al massimo **60 caratteri**, `metaDescription` al massimo **160**.
   Si contano, non si stimano.
 

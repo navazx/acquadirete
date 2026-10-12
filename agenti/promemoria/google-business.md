@@ -3,7 +3,7 @@ Promemoria mensile - post sulla scheda Google
 Perché conta: i post sulla scheda aiutano a comparire su Google Maps e nelle ricerche come "depuratore acqua firenze".
 
 Idea 1 - Il "bonus della Regione" per il depuratore non esiste
-Testo: Ti hanno chiamato, o hai visto una pubblicità su Facebook o Instagram, che ti offre un depuratore gratis col bonus della Regione? Quel bonus non esiste: la Regione Toscana non prevede contributi per mettere un depuratore in casa. Non dare dati al telefono o nei moduli, chiedi tutto per scritto e non firmare la sera stessa. Nel nostro articolo ti spieghiamo com'è fatta la proposta e cosa fare.
+Testo: Ti hanno chiamato, o hai visto una pubblicità su Facebook o Instagram, che ti offre un depuratore gratis col bonus della Regione? Quel bonus non esiste: la Regione Toscana non prevede contributi per mettere un depuratore in casa. Non dare i tuoi dati al telefono né nel modulo di una pubblicità che promette quel bonus, chiedi tutto per scritto e non firmare la sera stessa. Nel nostro articolo ti spieghiamo com'è fatta la proposta e cosa fare.
 Pulsante: "Scopri di più" con il link https://www.acquadirete.it/blog/truffa-bonus-regione-depuratore/
 Foto: un telefono appoggiato sul tavolo della cucina, schermo spento. Niente schermate di pubblicità vere e niente marchi.
 
