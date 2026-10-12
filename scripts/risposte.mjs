@@ -7,10 +7,15 @@
 //  ruberebbero gli ordini a vicenda.
 //
 //  Ordini riconosciuti:
-//    post social   PUBBLICA [1|2|3] · RIMANDA (o SALTA) · SCARTA
+//    post social   PUBBLICA [1|2|3] · RIMANDA (o SALTA) · SCARTA [motivo]
+//                  CORREGGI [POST] <cosa cambiare> — lo sistema e lo rimanda
+//                  (anche uno SCARTA che chiede di correggere vale cosi')
 //    proposte      APPROVA [ARTICOLO|SEO] · RIFIUTA [ARTICOLO|SEO] [motivo]
 //                  CORREGGI [ARTICOLO|SEO] <cosa cambiare> — la riscrive e la
 //                  ripropone (anche un RIFIUTA che chiede di correggere vale cosi')
+//
+//  Quello che Matteo corregge o rifiuta, col suo perche', finisce nel file delle
+//  lezioni di quell'agente (vedi LEZIONI piu' sotto): lo rilegge ogni volta.
 //    foto          una foto (o un'immagine mandata come file) finisce fra quelle
 //                  per i post, in public/assets/social/. Il workflow poi la mette
 //                  in riga per Instagram e la manda online col sito.
@@ -40,7 +45,6 @@ import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
 const BOZZA = 'agenti/social-bozza.json';
 const STATO = 'agenti/telegram-stato.json';
 const PROPOSTE = 'agenti/proposte.json';
-const LEZIONI = 'agenti/contenuti/lezioni.md';
 const SITO = 'https://www.acquadirete.it';
 const CARTELLA_FOTO = 'public/assets/social';
 const NOTE_FOTO = 'agenti/social-foto-note.json';
@@ -48,7 +52,7 @@ const NOTE_FOTO = 'agenti/social-foto-note.json';
 const AIUTO =
   'Non ho capito, e non ho fatto niente.\n' +
   'Gli ordini che riconosco sono questi:\n\n' +
-  'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · RIMANDA · SCARTA\n' +
+  'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · CORREGGI e cosa cambiare · RIMANDA · SCARTA\n' +
   'Per le proposte: APPROVA ARTICOLO · CORREGGI ARTICOLO e cosa cambiare · RIFIUTA ARTICOLO e il motivo\n' +
   'Per i post: mandami una foto e la metto fra quelle da usare';
 
@@ -57,28 +61,43 @@ const salva = (f, o) => writeFileSync(f, `${JSON.stringify(o, null, 2)}\n`);
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const oggi = () => new Date().toISOString();
 
+const CHIEDE_DI_CORREGGERE = /\b(corregg|riscriv|ripropon|rifall|sistemal)/i;
+// Per un post si e' piu' larghi: "scarta, cambia la foto" vuol dire sistemalo.
+const CHIEDE_DI_CORREGGERE_IL_POST = /\b(corregg|riscriv|ripropon|rifall|rifai|sistema|cambia)/i;
+
 /** Traduce un messaggio in un ordine. Null se non lo e'. */
 export function ordine(testo) {
   const pulito = String(testo).replace(/\s+/g, ' ').trim();
   const t = pulito.toUpperCase();
 
-  if (t === 'SCARTA') return { argomento: 'social', azione: 'scarta' };
   if (t === 'RIMANDA' || t === 'SALTA') return { argomento: 'social', azione: 'rimanda' };
   const p = t.match(/^PUBBLICA(?: ([123]))?$/);
   if (p) return { argomento: 'social', azione: 'pubblica', variante: Number(p[1] || 1) };
 
-  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (articolo|seo|ordini))?\b[\s:,.-]*(.*)$/i);
+  // SCARTA puo' portarsi dietro il perche': finisce fra le lezioni dell'agente
+  // social. E uno SCARTA che chiede di correggere e' un CORREGGI: il 10 ott 2026
+  // Matteo ha scartato un post solo perche' non c'era modo di farlo sistemare.
+  const s = pulito.match(/^scarta(?: (?:il )?post)?\b[\s:,.-]*(.*)$/i);
+  if (s) {
+    const motivo = (s[1] || '').trim();
+    return { argomento: 'social', azione: CHIEDE_DI_CORREGGERE_IL_POST.test(motivo) ? 'correggi' : 'scarta', motivo };
+  }
+
+  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (?:il |l')?(articolo|seo|ordini|post))?\b[\s:,.-]*(.*)$/i);
   if (a) {
     let azione = a[1].toLowerCase();
     const tipo = a[2] ? a[2].toUpperCase() : null;
     const motivo = (a[3] || '').trim();
+    // CORREGGI POST e' per il post social. Un CORREGGI senza dire cosa lo decide
+    // main(), guardando che cosa c'e' in attesa.
+    if (tipo === 'POST') return azione === 'correggi' ? { argomento: 'social', azione, motivo } : null;
     // "approva domani" o "approva l'articolo" non sono ordini: meglio chiedere
     // che approvare per sbaglio.
     if (azione === 'approva' && motivo) return null;
     // Un RIFIUTA che chiede di correggere e' un CORREGGI: il 5 ott 2026 Matteo ha
     // scritto "RIFIUTA ... correggi l'articolo e riproponimelo in giornata", e
     // l'articolo e' finito nel cestino.
-    if (azione === 'rifiuta' && /\b(corregg|riscriv|ripropon|rifall|sistemal)/i.test(motivo)) azione = 'correggi';
+    if (azione === 'rifiuta' && CHIEDE_DI_CORREGGERE.test(motivo)) azione = 'correggi';
     return { argomento: 'proposta', azione, tipo, motivo };
   }
   return null;
@@ -96,8 +115,19 @@ async function eseguiSocial(o) {
   }
 
   if (o.azione === 'scarta') {
-    salva(BOZZA, { ...bozza, scartato: oggi() });
-    await messaggio('Bozza scartata, non ho pubblicato niente. Sabato te ne preparo una nuova.');
+    salva(BOZZA, { ...bozza, scartato: oggi(), motivoScarto: o.motivo || undefined });
+    if (o.motivo) lezione('POST', `post «${bozza.tema}» scartato: ${o.motivo}`);
+    await messaggio(
+      'Bozza scartata, non ho pubblicato niente. Sabato te ne preparo una nuova.' +
+      (o.motivo
+        ? '\nIl motivo l\'ho segnato: l\'agente lo rilegge prima di ogni post.'
+        : '\nSe invece vuoi che la sistemi, la prossima volta scrivi CORREGGI e cosa cambiare.'),
+    );
+    return;
+  }
+
+  if (o.azione === 'correggi') {
+    await correggiPost(bozza, o.motivo);
     return;
   }
 
@@ -157,6 +187,65 @@ async function eseguiSocial(o) {
   await messaggio(righe.join('\n'));
 }
 
+/**
+ * CORREGGI per il post: parte "Social - correggi la bozza" (correggi-post.yml),
+ * che riscrive agenti/social-bozza.json con le note di Matteo e la rispinge su
+ * main. Quel push fa ripartire "Social - manda la bozza", che gliela rimanda.
+ * La bozza qui NON si tocca: la riscrive l'altro workflow, e due mani sullo
+ * stesso file nello stesso momento si pesterebbero.
+ */
+async function correggiPost(bozza, note) {
+  if (!note) {
+    await messaggio('Cosa devo cambiare nel post? Scrivi CORREGGI e subito dopo le correzioni, nello stesso messaggio.');
+    return;
+  }
+  lezione('POST', `post «${bozza.tema}» da correggere: ${note}`);
+  if (!(await avvia('correggi-post.yml', { note: note.slice(0, 2000) }))) {
+    await messaggio('Non sono riuscito a far partire la correzione del post. Resta in attesa com\'era: chiedi a Claude dal PC.');
+    return;
+  }
+  await messaggio(
+    'Ricevuto: sistemo il post con le tue note e te lo rimando appena è pronto, di solito entro un quarto d\'ora.\n' +
+    'Non ho pubblicato niente.',
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Le lezioni: quello che Matteo corregge resta scritto
+// ---------------------------------------------------------------------------
+
+// Ogni agente rilegge il suo file prima di lavorare, cosi' una correzione fatta
+// una volta vale anche per le volte dopo.
+const LEZIONI = {
+  ARTICOLO: 'agenti/contenuti/lezioni.md',
+  SEO: 'agenti/seo/lezioni.md',
+  ORDINI: 'agenti/ordini-lezioni.md',
+  POST: 'agenti/social-lezioni.md',
+};
+
+function lezione(tipo, testo) {
+  const file = LEZIONI[tipo];
+  if (!file) return false;
+  appendFileSync(file, `\n- ${oggi().slice(0, 10)} — ${testo}\n`);
+  return true;
+}
+
+/** Fa partire un altro workflow. Col token di GitHub un avvio a mano parte comunque. */
+async function avvia(workflow, inputs) {
+  const res = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY || 'navazx/acquadirete'}/actions/workflows/${workflow}/dispatches`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: JSON.stringify({ ref: 'main', inputs }),
+  });
+  if (res.status === 204) return true;
+  console.log(`Avvio di ${workflow} rifiutato: HTTP ${res.status} ${await res.text()}`);
+  return false;
+}
+
 // ---------------------------------------------------------------------------
 //  Proposte (rami proposta/...)
 // ---------------------------------------------------------------------------
@@ -198,15 +287,13 @@ async function rifiuta(p, motivo) {
   try { git('push', 'origin', '--delete', p.ramo); } catch { /* gia' cancellato */ }
   aggiorna(p.ramo, { stato: 'rifiutata', decisa: oggi(), motivo: motivo || undefined });
 
-  if (motivo && p.tipo === 'ARTICOLO') {
-    appendFileSync(LEZIONI, `\n- ${oggi().slice(0, 10)} — «${p.titolo}» rifiutato: ${motivo}\n`);
-  }
+  const segnata = motivo ? lezione(p.tipo, `«${p.titolo}» rifiutato: ${motivo}`) : false;
 
   await messaggio(
     `Rifiutato: «${p.titolo}» non va online.` +
-    (motivo
-      ? '\nIl motivo l\'ho segnato: l\'agente lo rilegge prima di scrivere il prossimo.'
-      : '\nLa prossima volta scrivi anche il perché (RIFIUTA ARTICOLO e il motivo): l\'agente lo terrà a mente.'),
+    (segnata
+      ? '\nIl motivo l\'ho segnato: l\'agente lo rilegge prima di preparare la prossima.'
+      : `\nLa prossima volta scrivi anche il perché (RIFIUTA ${p.tipo} e il motivo): l'agente lo terrà a mente.`),
   );
 }
 
@@ -239,20 +326,8 @@ async function correggi(p, note) {
     return;
   }
   aggiorna(p.ramo, { stato: 'da correggere', correzioni: [...(p.correzioni || []), { note, chiesta: oggi() }] });
-  if (p.tipo === 'ARTICOLO') {
-    appendFileSync(LEZIONI, `\n- ${oggi().slice(0, 10)} — «${p.titolo}» da correggere: ${note}\n`);
-  }
-  const res = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY || 'navazx/acquadirete'}/actions/workflows/correggi-proposta.yml/dispatches`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    body: JSON.stringify({ ref: 'main', inputs: { ramo: p.ramo, note: note.slice(0, 2000) } }),
-  });
-  if (res.status !== 204) {
-    console.log(`Avvio della correzione rifiutato: HTTP ${res.status} ${await res.text()}`);
+  lezione(p.tipo, `«${p.titolo}» da correggere: ${note}`);
+  if (!(await avvia('correggi-proposta.yml', { ramo: p.ramo, note: note.slice(0, 2000) }))) {
     aggiorna(p.ramo, { stato: 'in attesa' });
     await messaggio(`Non sono riuscito a far partire la correzione di «${p.titolo}». Resta in attesa com'era: chiedi a Claude dal PC.`);
     return;
@@ -374,6 +449,9 @@ async function main() {
     await messaggio(`Ho attaccato la descrizione alla foto di prima: «${precedente[0].nota}»`);
   }
 
+  const bozzaOra = leggiJson(BOZZA, null);
+  const postInAttesa = Boolean(bozzaOra && !bozzaOra.pubblicato && !bozzaOra.scartato);
+
   // Vale l'ultimo ordine per ciascun argomento: un PUBBLICA dopo un RIMANDA vince.
   const ordini = new Map();
   let tentativiAVuoto = false;
@@ -381,6 +459,19 @@ async function main() {
     const o = ordine(testo);
     if (!o) {
       if (TENTATIVO.test(testo)) tentativiAVuoto = true;
+      continue;
+    }
+    // Un CORREGGI senza dire cosa: se in attesa c'e' solo il post, e' per il post.
+    // Se ci sono sia il post sia una proposta, si chiede invece di tirare a caso.
+    if (o.argomento === 'proposta' && o.azione === 'correggi' && !o.tipo && postInAttesa) {
+      if (!aperte.length) {
+        ordini.set('social', { argomento: 'social', azione: 'correggi', motivo: o.motivo });
+        continue;
+      }
+      await messaggio(
+        `In attesa ci sono il post e ${aperte.length === 1 ? 'una proposta' : `${aperte.length} proposte`}: ` +
+        `scrivi CORREGGI POST oppure ${[...new Set(aperte.map((p) => `CORREGGI ${p.tipo}`))].join(' oppure ')}, e poi le correzioni.`,
+      );
       continue;
     }
     // Un APPROVA senza tipo, con una sola proposta aperta, e' per quella.

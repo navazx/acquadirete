@@ -1,0 +1,60 @@
+name: Social - correggi la bozza
+
+# Parte quando Matteo risponde su Telegram CORREGGI (o CORREGGI POST) e le sue
+# note: lo fa partire "Risposte su Telegram" (scripts/risposte.mjs). Prima, un
+# post da sistemare si poteva solo scartare: il 10 ott 2026 Matteo ha scartato
+# quello sulla recensione solo perche' la foto non c'entrava.
+#
+# Riscrive agenti/social-bozza.json con le note (istruzioni in
+# .claude/skills/correggi-post/SKILL.md) e la rispinge su main. Il push fa
+# ripartire "Social - manda la bozza", che la rimanda a Matteo.
+# Non pubblica niente: pubblicare resta un PUBBLICA di Matteo.
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Le correzioni chieste da Matteo'
+        required: true
+
+# Una correzione per volta: due insieme riscriverebbero la stessa bozza.
+concurrency:
+  group: correggi-post
+  cancel-in-progress: false
+
+jobs:
+  correggi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      # Serve all'azione per autenticarsi come app GitHub di Claude.
+      id-token: write
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      # Le note passano dal file, non dalla riga di comando: sono testo libero.
+      - name: Le note di Matteo
+        env:
+          NOTE: ${{ inputs.note }}
+        run: printf '%s\n' "$NOTE" > /tmp/note-di-matteo.txt
+
+      # NON passare github_token: un push fatto con quel token non fa partire
+      # altri workflow, e qui serve che il push svegli "Social - manda la bozza".
+      # Vedi il job "correzioni" in agente-seo.yml.
+      - name: Correggi la bozza del post
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/correggi-post'
+          claude_args: |
+            --model claude-opus-5

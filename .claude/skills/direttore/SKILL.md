@@ -26,6 +26,9 @@ il workflow *Proposta - presentala a Matteo*; se lo approva, gli ordini vanno su
 - `agenti/LEGGIMI.md` — cosa fa ogni agente e come funzionano le proposte.
 - `agenti/contenuti/REGOLE.md` e `agenti/contenuti/lezioni.md` — cosa si può
   scrivere e cosa Matteo ha già rifiutato.
+- `agenti/ordini-lezioni.md` — gli ordini del mese che Matteo ha rifiutato o fatto
+  correggere, col suo motivo: valgono come regole per te. E `agenti/seo/lezioni.md`
+  e `agenti/social-lezioni.md`: cosa ha corretto agli altri agenti.
 - `agenti/bacheca.md` — **la bacheca**: tutto quello che gli agenti hanno visto
   nel mese, e le note di Matteo. È il tuo resoconto dalla squadra: usalo per
   giudicare il mese e per scegliere. Le note di MATTEO pesano più delle altre.

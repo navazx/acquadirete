@@ -48,7 +48,10 @@ async function main() {
   // Instagram no. Meglio mezzo post che nessun post.
   const urlFoto = b.foto ? `${SITO}/${b.foto.replace(/^\/+/, '')}` : null;
 
+  const corretta = Array.isArray(b.correzioni) && b.correzioni.length > 0;
+
   const testo = [
+    corretta ? 'Corretto con le tue note:' : undefined,
     rimandi
       ? `Post social — tema: ${b.tema} (rimandato ${rimandi === 1 ? 'una volta' : `${rimandi} volte`})`
       : `Post social — tema: ${b.tema}`,
@@ -61,6 +64,7 @@ async function main() {
     ]),
     'Rispondi:',
     'PUBBLICA 1 (oppure 2, 3) — va su Facebook e Instagram',
+    'CORREGGI e cosa cambiare — lo sistemo e te lo rimando',
     'RIMANDA — salti la settimana, le idee te le ripropongo sabato prossimo',
     'SCARTA — non se ne fa nulla e la prossima e\' nuova',
     '',

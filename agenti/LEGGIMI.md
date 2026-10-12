@@ -140,6 +140,36 @@ la decisione resta di Matteo.
 `SCARTA` invece chiude la partita: la bozza prende il campo `scartato` e non è più
 in attesa, quindi il sabato dopo l'agente ne compone una nuova.
 
+`CORREGGI` seguito da cosa cambiare (dal 12 ott 2026) non butta e non pubblica: fa
+partire *Social - correggi la bozza* (`correggi-post.yml`, istruzioni in
+`.claude/skills/correggi-post/SKILL.md`), che riscrive la bozza con quelle note e
+la rispinge. La bozza torna a Matteo con scritto "Corretto con le tue note". Anche
+uno `SCARTA` che chiede di sistemare ("scarta, cambia la foto") vale come CORREGGI.
+Se in attesa ci sono sia il post sia una proposta, serve dire quale: `CORREGGI POST`.
+
+## Le lezioni: quello che Matteo corregge resta scritto
+
+Ogni CORREGGI, e ogni RIFIUTA o SCARTA col suo perché, finisce da solo in un file
+che l'agente rilegge **prima di ogni lavoro**, così la stessa correzione non va
+ripetuta la volta dopo:
+
+| Chi | File |
+|---|---|
+| post social | `agenti/social-lezioni.md` |
+| articoli del blog | `agenti/contenuti/lezioni.md` |
+| correzioni SEO | `agenti/seo/lezioni.md` |
+| ordini del mese (Direttore) | `agenti/ordini-lezioni.md` |
+
+**Chi compone il post del sabato legge `agenti/social-lezioni.md` per intero prima
+di scegliere tema, foto e parole: sono regole, non suggerimenti.** Le correzioni
+che Matteo dà a Claude dal PC le aggiunge Claude a mano negli stessi file.
+
+## Gli ordini dati dal PC
+
+Quando Matteo decide in chat con Claude invece che su Telegram, *Risposte su
+Telegram* si avvia a mano con l'ordine nel campo `ordine` (per esempio
+`PUBBLICA 2`). Vale come un suo messaggio; la ricevuta arriva su Telegram.
+
 ## Il formato della bozza
 
 `social-bozza.esempio.json` è lì come modello. In breve:
