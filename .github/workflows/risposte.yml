@@ -70,7 +70,9 @@ jobs:
       # non scatterebbe.
       - name: Metti in riga le foto arrivate su Telegram
         run: |
-          if [ -z "$(git status --porcelain public/assets/social/)" ]; then
+          # Solo se e' arrivato qualcosa: una grafica tolta dopo la pubblicazione
+          # (riga che comincia con " D") non e' una foto da mettere in riga.
+          if [ -z "$(git status --porcelain public/assets/social/ | grep -v '^ D')" ]; then
             echo "Nessuna foto nuova."
             exit 0
           fi
@@ -90,9 +92,11 @@ jobs:
           # Le foto per ULTIME e SENZA [skip netlify]: Netlify guarda solo l'ultimo
           # commit del push, e le foto devono andare online, perche' Instagram le
           # scarica dal sito.
+          # Stessa regola per le grafiche tolte dopo la pubblicazione: il sito va
+          # ripubblicato perche' spariscano anche da li'.
           if [ -n "$(git status --porcelain public/assets/social/)" ]; then
-            git add public/assets/social/
-            git commit -m "Social: foto nuove arrivate su Telegram"
+            git add -A public/assets/social/
+            git commit -m "Social: foto arrivate su Telegram e grafiche tolte dopo la pubblicazione"
             fatto=1
           fi
           if [ -z "$fatto" ]; then

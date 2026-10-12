@@ -259,6 +259,14 @@ una foto. Il 12 ott 2026 è stata ritoccata perché i tubi sembravano attaccati 
 vasca del lavello: negli impianti veri escono da dietro, salgono lungo il muro e
 spariscono dietro il lavello verso il miscelatore, e dove si collegano non si vede.
 
+**Le grafiche si tolgono dal sito dopo l'uso** (scelta di Matteo, 12 ott 2026):
+pubblicato o scartato il post, `scripts/risposte.mjs` cancella l'immagine fatta con
+lo stampo (`curiosita-*.jpg`, `recensione-*.jpg`) e il sito viene ripubblicato
+senza. Facebook e Instagram ne tengono una copia loro. Se la pubblicazione dà un
+errore la grafica resta, per riprovare. Le foto vere mandate da Matteo non si
+toccano. Per sapere cosa è già uscito si guarda la storia della bozza, non la
+cartella.
+
 **Senza foto si pubblica lo stesso, ma solo su Facebook**: Instagram l'immagine
 la pretende, e deve stare a un indirizzo pubblico (per questo le foto vivono
 nel sito e vanno online col deploy).

@@ -36,7 +36,7 @@
 //  settimane dopo su una bozza che Matteo non ha mai visto.
 // ============================================================================
 
-import { readFileSync, writeFileSync, existsSync, appendFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, appendFileSync, readdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { messaggio, risposte, conferma, scaricaFile } from './lib/telegram.mjs';
@@ -107,6 +107,21 @@ export function ordine(testo) {
 //  Post social
 // ---------------------------------------------------------------------------
 
+/**
+ * Le grafiche fatte con lo stampo (curiosita' e recensioni) servono una volta
+ * sola: pubblicato il post, Facebook e Instagram ne tengono una copia loro, e sul
+ * sito non devono restare (scelta di Matteo, 12 ott 2026). Le foto vere mandate
+ * da Matteo invece restano dove sono. Torna true se ha tolto il file.
+ */
+const GRAFICA = /^assets\/social\/(curiosita|recensione)-[\w-]+\.jpg$/;
+
+function togliGrafica(bozza) {
+  const foto = String(bozza.foto || '').replace(/^\/+/, '');
+  if (!GRAFICA.test(foto) || !existsSync(`public/${foto}`)) return false;
+  rmSync(`public/${foto}`);
+  return true;
+}
+
 async function eseguiSocial(o) {
   const bozza = existsSync(BOZZA) ? leggiJson(BOZZA) : null;
   if (!bozza || bozza.pubblicato || bozza.scartato) {
@@ -115,7 +130,8 @@ async function eseguiSocial(o) {
   }
 
   if (o.azione === 'scarta') {
-    salva(BOZZA, { ...bozza, scartato: oggi(), motivoScarto: o.motivo || undefined });
+    const tolta = togliGrafica(bozza);
+    salva(BOZZA, { ...bozza, scartato: oggi(), motivoScarto: o.motivo || undefined, graficaTolta: tolta || undefined });
     if (o.motivo) lezione('POST', `post «${bozza.tema}» scartato: ${o.motivo}`);
     await messaggio(
       'Bozza scartata, non ho pubblicato niente. Sabato te ne preparo una nuova.' +
@@ -171,12 +187,16 @@ async function eseguiSocial(o) {
     esiti.instagram = { saltato: 'nessuna foto: Instagram le pretende' };
   }
 
+  // Se qualcosa e' andato storto la grafica resta: serve per riprovare.
+  const tolta = errori.length ? false : togliGrafica(bozza);
+
   salva(BOZZA, {
     ...bozza,
     pubblicato: oggi(),
     variantePubblicata: o.variante,
     esiti,
     errori: errori.length ? errori : undefined,
+    graficaTolta: tolta || undefined,
   });
 
   const righe = [`Pubblicata la variante ${o.variante}.`, ''];
