@@ -20,7 +20,7 @@ export const AGENTI = [
   { nome: 'Bozza del post social', workflow: 'social-bozza.yml', cron: '30 7 * * 6' },
   { nome: 'Direttore (priorità del mese)', workflow: 'direttore.yml', cron: '0 6 1 * *', nota: 'direttore' },
   { nome: 'Report SEO del mese', workflow: 'seo-report.yml', cron: '10 7 1 * *' },
-  { nome: 'Revisione Ads', workflow: 'agente-ads.yml', cron: '0 7 18 * *', inputs: { prova: 'false' } },
+  { nome: 'Revisione Ads', workflow: 'agente-ads.yml', cron: '0 7 18 * *', inputs: { prova: 'false' }, nota: 'ads' },
   // La sentinella sorveglia il sito, quindi anche Netlify: il suo orario su GitHub
   // RESTA (se Netlify e' giu' parte lo stesso). Ma GitHub di cinque giri ne fa due
   // o tre, e allora la sveglia la fa partire anche lei. Rilanciarla non fa danni.

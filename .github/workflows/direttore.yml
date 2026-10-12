@@ -78,6 +78,8 @@ jobs:
         if: ${{ always() && inputs.solo_dati != true }}
         env:
           POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/bacheca-consegna.mjs
 
       - name: Manda a Matteo la pagina coi numeri

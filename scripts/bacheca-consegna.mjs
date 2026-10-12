@@ -27,6 +27,16 @@ import { execFileSync } from 'node:child_process';
 import { CARTELLA, normalizza, idNota } from './lib/bacheca.mjs';
 
 const DESTINAZIONE = 'agenti/bacheca/in-arrivo';
+
+// Dove si spinge. Dopo un passo fatto dall'azione di Claude le credenziali git
+// del checkout non valgono piu' (l'azione mette le sue e alla fine le ritira): il
+// 12 ott 2026 le note dell'agente SEO e dell'agente Ads sono andate perse cosi',
+// in silenzio. Quindi, quando c'e', si usa il token del workflow, scritto per
+// esteso, e si azzera l'intestazione lasciata dal checkout.
+const TOKEN = process.env.GITHUB_TOKEN;
+const REMOTO = TOKEN ? `https://x-access-token:${TOKEN}@github.com/${process.env.GITHUB_REPOSITORY || 'navazx/acquadirete'}.git` : 'origin';
+const CON_TOKEN = TOKEN ? ['-c', 'http.https://github.com/.extraheader='] : [];
+const senzaToken = (testo) => (TOKEN ? String(testo).split(TOKEN).join('***') : String(testo));
 const git = (args, cwd) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
 
 function leggiNote() {
@@ -51,9 +61,9 @@ function main() {
     return 0;
   }
 
-  git(['fetch', '--quiet', 'origin', 'main']);
+  git([...CON_TOKEN, 'fetch', '--quiet', REMOTO, 'main']);
   const dir = mkdtempSync(join(tmpdir(), 'bacheca-'));
-  git(['worktree', 'add', '--detach', dir, 'origin/main']);
+  git(['worktree', 'add', '--detach', dir, 'FETCH_HEAD']);
   try {
     mkdirSync(join(dir, DESTINAZIONE), { recursive: true });
     const usati = new Set();
@@ -71,11 +81,11 @@ function main() {
     // Qualcun altro può aver spinto su main nel frattempo: si riprova dopo il rebase.
     for (let tentativo = 1; ; tentativo += 1) {
       try {
-        git(['push', '--quiet', 'origin', 'HEAD:main'], dir);
+        git([...CON_TOKEN, 'push', '--quiet', REMOTO, 'HEAD:main'], dir);
         break;
       } catch (e) {
         if (tentativo >= 3) throw e;
-        git(['pull', '--quiet', '--rebase', 'origin', 'main'], dir);
+        git([...CON_TOKEN, 'pull', '--quiet', '--rebase', REMOTO, 'main'], dir);
       }
     }
     for (const { file } of note) rmSync(join(CARTELLA, file), { force: true });
@@ -117,5 +127,8 @@ try {
 } catch (e) {
   // Le note restano in /tmp e si perdono col runner: lo si dice, ma il lavoro
   // dell'agente è già fatto e non va segnato come fallito.
-  console.log(`Consegna alla bacheca non riuscita: ${e.message}`);
+  console.log(`Consegna alla bacheca non riuscita: ${senzaToken(e.message)}`);
+  // Una nota persa non ferma il lavoro dell'agente, ma il giro deve risultare
+  // fallito: se no nessuno se ne accorge, e il Direttore non lo puo' segnalare.
+  process.exitCode = 1;
 }
