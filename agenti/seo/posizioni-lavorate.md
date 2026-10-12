@@ -9,5 +9,11 @@ stesso motivo: Google ci mette settimane a rileggerla, e i numeri di Search Cons
 guardano gli ultimi 28 giorni. Rifarla subito vorrebbe dire correggere una
 correzione che non ha ancora avuto il tempo di funzionare.
 
-Formato: `AAAA-MM-GG | pagina | tipo (vetrina o soglia) | ricerca | chi`
+Formato: `AAAA-MM-GG | pagina | tipo (vetrina, soglia o concorrenza) | ricerca | chi`
+
+**Le scelte di Matteo sulla concorrenza fra pagine** (tipo `concorrenza`) si
+scrivono qui quando vengono applicate, con la pagina scelta per vincere e la
+ricerca scritta com'è nel segnale. Finché la riga non c'è, il controllo del lunedì
+lascia ogni settimana sulla bacheca la nota "Per MATTEO, da decidere"; con la
+riga, per 60 giorni non lo chiede più.
 

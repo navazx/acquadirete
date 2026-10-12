@@ -327,7 +327,10 @@ async function main() {
   if (pos.stato) writeFileSync(STATO_POSIZIONI, `${JSON.stringify(pos.stato, null, 2)}\n`);
 
   // La bacheca non deve mai fermare il messaggio a Matteo.
-  try { lasciaNoteSullaBacheca(esito, nuovi, risolti, pos.nuovi || []); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
+  try {
+    lasciaNoteSullaBacheca(esito, nuovi, risolti, pos.nuovi || []);
+    lasciaNotaDaDecidere(pos.stato?.segnali || [], pos.nuovi || [], existsSync(LAVORATE) ? readFileSync(LAVORATE, 'utf8') : '');
+  } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
 
   if (testo) {
     const { messaggio } = await import('./lib/telegram.mjs');
@@ -369,6 +372,41 @@ export function lasciaNoteSullaBacheca(esito, nuovi, risolti, segnali) {
   const altri = segnali.length > 5 ? ` E altri ${segnali.length - 5}.` : '';
   per.add('direttore');
   lasciaNota('seo', `Novità su Google questa settimana. ${righe.join('; ')}.${altri}`, [...per]);
+}
+
+/**
+ * Le scelte che nessun agente fa da solo (quale pagina deve vincere quando due
+ * si fanno concorrenza) vanno scritte anche sulla bacheca, per Matteo. Su
+ * Telegram il segnale passa una volta sola, la settimana in cui nasce: il 12 ott
+ * 2026 ce n'erano tre in sospeso, due da una settimana, e sulla bacheca nessuna.
+ * La nota torna ogni lunedi' finche' la scelta non e' fatta: fatta la scelta, chi
+ * la applica aggiunge una riga in agenti/seo/posizioni-lavorate.md con tipo
+ * "concorrenza" e quella ricerca, e per 60 giorni non si chiede piu'.
+ */
+const LAVORATE = 'agenti/seo/posizioni-lavorate.md';
+
+export function decise(testo, oggi = new Date()) {
+  const fatte = new Set();
+  for (const riga of String(testo).split('\n')) {
+    const [data, , tipo, ricerca] = riga.split('|').map((c) => c.trim());
+    if (tipo !== 'concorrenza' || !ricerca || Number.isNaN(Date.parse(data))) continue;
+    if ((oggi - new Date(data)) / 86400000 <= 60) fatte.add(ricerca.replace(/^"|"$/g, '').toLowerCase());
+  }
+  return fatte;
+}
+
+export function lasciaNotaDaDecidere(tutti, nuovi, lavorate = '') {
+  const fatte = decise(lavorate);
+  const aperte = tutti.filter((s) => s.tipo === 'concorrenza' && !fatte.has(s.ricerca.toLowerCase()));
+  if (!aperte.length) return null;
+  const nuove = new Set(nuovi.filter((s) => s.tipo === 'concorrenza').map((s) => s.ricerca));
+  const elenco = aperte.map((s) => `"${s.ricerca}"${nuove.has(s.ricerca) ? ' (nuova)' : ''}`).join(', ');
+  const testo =
+    `Per MATTEO, da decidere con Claude dal PC: ${aperte.length === 1 ? 'su una ricerca' : `su ${aperte.length} ricerche`} ` +
+    `più pagine del sito si fanno concorrenza e nessuna sale: ${elenco}. ` +
+    'Va scelta la pagina che deve vincere. Nessun agente lo fa da solo, e questa nota torna ogni lunedì finché non è deciso.';
+  lasciaNota('seo', testo, ['matteo', 'direttore']);
+  return testo;
 }
 
 const lanciatoDaTerminale = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
