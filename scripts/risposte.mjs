@@ -21,6 +21,10 @@
 //  contenuti rilegge prima del prossimo articolo.
 //
 //  Qualsiasi altra cosa non fa nulla: nel dubbio si sta fermi.
+//
+//  Ordine dato dal PC: quando Matteo decide in chat con Claude invece che su
+//  Telegram, il workflow si avvia a mano con l'ordine scritto nel campo "ordine"
+//  (ORDINE_A_MANO). Vale come un suo messaggio, e la ricevuta arriva su Telegram.
 //  Legge sempre, anche senza niente in sospeso: una foto puo' arrivare quando
 //  vuole. Un ordine arrivato quando non c'e' niente da decidere riceve risposta
 //  ("non c'e' nessun post in attesa") invece di restare in coda e scattare
@@ -339,8 +343,9 @@ async function main() {
   const aperte = leggiJson(PROPOSTE, []).filter((p) => p.stato === 'in attesa');
 
   const { ultimoUpdate = 0, ultimaFoto } = leggiJson(STATO, {});
+  const aMano = (process.env.ORDINE_A_MANO || '').trim();
   const { messaggi, foto, ultimo } = await risposte(ultimoUpdate);
-  if (ultimo === ultimoUpdate) return;
+  if (ultimo === ultimoUpdate && !aMano) return;
   for (const f of foto) f.chiave = chiaveFoto(f);
 
   // La foto puo' essere gia' stata salvata al giro prima, e la descrizione
@@ -352,11 +357,14 @@ async function main() {
   // Si consuma SEMPRE quello che si e' letto, e PRIMA di agire: se qualcosa si
   // rompe a meta', l'ordine e' comunque sparito dalla coda di Telegram. Meglio un
   // ordine perso che un post doppio.
-  await conferma(ultimo);
-  salva(STATO, {
-    ultimoUpdate: ultimo,
-    ...(ultimaOra && { ultimaFoto: { chiave: ultimaOra.chiave, data: ultimaOra.data, nota: ultimaOra.nota } }),
-  });
+  if (ultimo !== ultimoUpdate) {
+    await conferma(ultimo);
+    salva(STATO, {
+      ultimoUpdate: ultimo,
+      ...(ultimaOra && { ultimaFoto: { chiave: ultimaOra.chiave, data: ultimaOra.data, nota: ultimaOra.nota } }),
+    });
+  }
+  if (aMano) testi.push(aMano);
 
   if (foto.length) await salvaFoto(foto);
   if (precedente[0]?.nota) {

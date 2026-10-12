@@ -16,6 +16,10 @@ on:
   schedule:
     - cron: '*/30 6-20 * * *'
   workflow_dispatch:
+    inputs:
+      ordine:
+        description: 'Un ordine dato dal PC invece che da Telegram, es. PUBBLICA 2 (vuoto = legge solo Telegram)'
+        required: false
 
 # Mai due giri insieme: leggerebbero gli stessi messaggi prima che uno dei due li
 # segni come letti, ed eseguirebbero due volte lo stesso ordine (un post doppio,
@@ -57,6 +61,7 @@ jobs:
           TELEGRAM_CHAT_ID: '6369351410'
           META_PUBLISH_TOKEN: ${{ secrets.META_PUBLISH_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
+          ORDINE_A_MANO: ${{ inputs.ordine }}
         run: node scripts/risposte.mjs
 
       # Le foto mandate al bot sono appena finite in public/assets/social/. Vanno
