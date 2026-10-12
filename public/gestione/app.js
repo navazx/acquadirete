@@ -517,20 +517,23 @@
   const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
   const indirizzoCercato = (c) => [c.indirizzo, c.citta].map((s) => String(s == null ? '' : s).trim()).filter(Boolean).join(', ');
   let ultimaRicerca = 0;
-  async function chiediNominatim(parametri, vaBene = () => true) {
+  // Tutti i risultati (al massimo 10): quale vale lo decide chi chiama.
+  async function chiediNominatim(parametri) {
     const attesa = ultimaRicerca + 1100 - Date.now();
     if (attesa > 0) await new Promise((ok) => setTimeout(ok, attesa));
     ultimaRicerca = Date.now();
     // Riquadro: Toscana larga, Versilia e Lunigiana. Fuori di qui è un omonimo.
     const q = new URLSearchParams({
-      format: 'jsonv2', limit: '5', addressdetails: '1', countrycodes: 'it', viewbox: '9.6,44.6,12.4,42.3', bounded: '1',
+      format: 'jsonv2', limit: '10', addressdetails: '1', countrycodes: 'it', viewbox: '9.6,44.6,12.4,42.3', bounded: '1',
       'accept-language': 'it', email: 'info@acquadirete.it', ...parametri,
     });
     const res = await fetch(`${NOMINATIM}?${q}`);
     if (!res.ok) throw new Error(`Nominatim ${res.status}`);
-    const r = (await res.json()).find(vaBene);
-    return r ? { lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building', via: r.category === 'highway' } : null;
+    return (await res.json()).map((r) => ({
+      lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building', via: r.category === 'highway', address: r.address || {},
+    }));
   }
+  const kmFra = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((a.lat + b.lat) * Math.PI / 360), b.lat - a.lat) * 111.32;
   // Il risultato sta davvero in quel paese? «Firenze», «Prato», «Pistoia» sono
   // anche province: «Via Italia, Firenze» combacerebbe con la Via Italia di
   // Vinci. Vale se un luogo dell'indirizzo è il paese scritto, o una parte
@@ -555,18 +558,25 @@
       .replace(/\s+/g, ' ').trim();
     const paese = senzaCap(c.citta).replace(/\b(Loc|Fraz)\.\s*/gi, '').replace(/\s+/g, ' ').trim();
     const cap = (String(c.citta || '').match(/^\s*(\d{5})\s/) || [])[1];
-    if (via && paese) {
-      const r = await chiediNominatim({ q: `${via}, ${paese}` }, nelPaese(paese));
-      if (r) return { lat: r.lat, lng: r.lng, prec: r.civico ? 'civico' : r.via ? 'via' : 'paese' };
-    }
-    // Una parola sola è rischiosa («vicino» porterebbe nel senese un cliente
-    // di Prato): allora il risultato deve stare nella provincia del foglio.
-    // Solo lì, perché qualche provincia nel foglio è sbagliata (Montale "PO").
+    // Fra più risultati buoni vince quello nella provincia del foglio: «San
+    // Donnino» sta a Campi Bisenzio, ma anche in Garfagnana e a Certaldo, e
+    // il primo della lista era quello sbagliato (12 ott 2026). È solo una
+    // preferenza: se la provincia del foglio è sbagliata si prende il primo.
     const prov = String(c.provincia || '').trim().toUpperCase();
     const inProvincia = (r) => {
-      const iso = r.address && r.address['ISO3166-2-lvl6'];
+      const iso = r.address['ISO3166-2-lvl6'];
       return !/^[A-Z]{2}$/.test(prov) || !iso || iso === `IT-${prov}`;
     };
+    const scegli = (lista, vaBene = () => true) => lista.find((r) => vaBene(r) && inProvincia(r)) || lista.find(vaBene);
+    const precisione = (r) => (r.civico ? 'civico' : r.via ? 'via' : 'paese');
+    let strade = [];
+    if (via && paese) {
+      strade = await chiediNominatim({ q: `${via}, ${paese}` });
+      const r = scegli(strade, nelPaese(paese));
+      if (r) return { lat: r.lat, lng: r.lng, prec: precisione(r) };
+    }
+    // Una parola sola è rischiosa («vicino» porterebbe nel senese un cliente
+    // di Prato): lì il risultato DEVE stare nella provincia del foglio.
     // Il paese: prima come comune (il centro vero: «Prato» da solo darebbe la
     // provincia), poi come frazione; se sono due nomi («Le Valli, Figline»)
     // uno alla volta, dal più grande; poi la prima e l'ultima parola
@@ -583,8 +593,16 @@
     ];
     for (const t of tentativi) {
       if (!t) continue;
-      const r = await chiediNominatim(...t);
-      if (r) return { lat: r.lat, lng: r.lng, prec: 'paese' };
+      const lista = await chiediNominatim(t[0]);
+      const r = t[1] ? lista.find(t[1]) : scegli(lista);
+      if (!r) continue;
+      // La via esiste, ma OpenStreetMap la mette nella frazione accanto (Via
+      // del Castagno «a San Donnino» per lui è a San Piero a Ponti, a 900
+      // metri): vale se sta entro 4 km dal centro del paese. Più lontano è
+      // la via omonima di un altro comune.
+      const vicina = strade.filter((s) => s.civico || s.via).map((s) => ({ s, km: kmFra(r, s) })).filter((x) => x.km <= 4).sort((a, b) => a.km - b.km)[0];
+      if (vicina) return { lat: vicina.s.lat, lng: vicina.s.lng, prec: precisione(vicina.s) };
+      return { lat: r.lat, lng: r.lng, prec: 'paese' };
     }
     return { prec: 'nessuna' };
   }
@@ -784,7 +802,9 @@
     return lista;
   }
 
+  let turnoMappa = 0; // quale schermoMappa è l'ultimo: gli altri non devono più disegnare
   function schermoMappa(stato) {
+    const questa = ++turnoMappa;
     titolo('Mappa dei giri', true);
     const scelte = new Set(Array.isArray(stato.cat) ? stato.cat : CATEGORIE_DI_BASE);
     giro = giro.filter((k) => clienteDa(k));
@@ -923,7 +943,11 @@
     disegnaGiro();
     caricaLeaflet().then((libreria) => {
       const el = $('mappa');
-      if (!el || history.state?.s !== 'mappa') return; // nel frattempo si è cambiata pagina
+      // Nel frattempo si è cambiata pagina, o la mappa è stata ridisegnata
+      // (l'app riaperta sulla mappa si disegna due volte: coi dati salvati e
+      // poi con quelli appena riletti). Due mappe nello stesso riquadro
+      // davano «La mappa non si carica» con internet che andava.
+      if (!el || history.state?.s !== 'mappa' || questa !== turnoMappa) return;
       L = libreria;
       el.innerHTML = '';
       dimensiona();
@@ -1021,8 +1045,10 @@
       };
       disegnaStato(mancano.length > 0 || cercaInCorso);
       if (mancano.length) cercaPosizioniMancanti(mancano);
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('Mappa:', err);
       const el = $('mappa');
+      if (questa !== turnoMappa) return;
       if (el) el.innerHTML = '<div class="vuoto">La mappa non si carica: serve internet.<br><br><button class="btn pieno" id="riprova-mappa">Riprova</button></div>';
       if ($('riprova-mappa')) $('riprova-mappa').onclick = () => disegna(history.state);
     });
