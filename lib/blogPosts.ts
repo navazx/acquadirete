@@ -713,7 +713,9 @@ export const BLOG_POSTS: BlogPost[] = [
       'Vivi in affitto e hai messo da parte l\'idea del depuratore pensando sia impossibile? Quasi sempre si installa, e quando cambi casa lo porti con te.',
     publishedAt: '2026-08-05',
     readingMinutes: 5,
-    relatedServices: ['depuratore', 'carboni', 'assistenza'],
+    // 'prato' aggiunto il 12/10/2026: l'articolo nomina Firenze e Prato, e la pagina
+    // di Prato deve vincere la ricerca "depuratore acqua prato".
+    relatedServices: ['depuratore', 'prato', 'carboni', 'assistenza'],
     relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'depuratore-acqua-gratis-contratti'],
     sections: [
       {
