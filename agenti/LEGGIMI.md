@@ -196,6 +196,14 @@ comune delle analisi.
    APPROVA, CORREGGI o RIFIUTA. Restano fuori solo le cose che il semaforo vieta
    (spendere soldi, contattare clienti, cancellare dati) e i guasti veri.
 
+   Vale anche per la pubblicità (dal 13 ott 2026): le modifiche semplici a Google
+   Ads (escludere una ricerca, mettere in pausa una parola chiave o un annuncio)
+   l'agente Ads le porta numerate e Matteo risponde `APPROVA ADS`, `APPROVA ADS 1 3`,
+   `RIFIUTA ADS` e il motivo; `ANNULLA ADS` le rimette com'erano. Non è un ramo: è
+   un elenco cifrato in `agenti/ads/proposte.json`. Budget, offerte e campagne
+   restano a Matteo, e il codice non ha proprio la strada per toccarli. Tutto in
+   `agenti/ads/LEGGIMI.md`.
+
 ## Chi controlla che gli agenti lavorino: il Direttore, ogni mattina
 
 Un sistema che deve girare da solo ha bisogno di qualcuno che guardi se gira. Dal
