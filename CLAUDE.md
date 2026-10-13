@@ -32,10 +32,12 @@ Le 7 recensioni per esteso in `lib/google-reviews.json` sono inserite **a mano**
 **Attenzione al doppio binario del conteggio.** `REVIEW_TOTAL` è dinamico e alimenta `ReviewList` e il JSON-LD `aggregateRating` (`app/layout.tsx`, `app/recensioni/page.tsx`). Le diciture marketing dicono invece **"130+"/"oltre 130"** e sono testo *hardcoded*: **18 occorrenze in 10 file** fra `components/` e `app/` (Header, Footer, HomeView, più i `title`/`description` di homepage, recensioni e pagine servizio). Per trovarle tutte prima di cambiare il numero:
 
 ```bash
-grep -rn "130" sito/components/ sito/app/ --include=*.tsx
+grep -rn "130" sito/components/ sito/app/ sito/lib/ --include=*.tsx --include=*.ts
 ```
 
-L'arrotondamento per difetto è voluto: "130+" resta veritiero finché `total` ≥ 130, quindi non va rincorso a ogni recensione nuova — si aggiorna a scaglioni di dieci.
+(Ci sono anche in `lib/data.ts`. Occhio ai falsi amici come `130px`.)
+
+L'arrotondamento per difetto è voluto: "130+" resta veritiero finché `total` ≥ 130, quindi non va rincorso a ogni recensione nuova — si aggiorna a scaglioni di dieci. **Dal 13 ott 2026 lo fa l'agente Recensioni da solo**: quando il totale arriva alla decina dopo (o la media scende sotto 4,8 e le frasi "a 5 stelle" vanno rilette) prepara la modifica sul ramo `proposta/recensioni-<data>` e Matteo risponde `APPROVA RECENSIONI` su Telegram (`recensioni-testi.yml`, skill `testi-recensioni`).
 
 C'è anche un metodo automatico predisposto ma non attivo: `scripts/fetch-google-reviews.mjs` (girato in `prebuild`) sovrascriverebbe il JSON se in `.env.local` fosse impostata `GOOGLE_PLACES_API_KEY` (+ opz. `GOOGLE_PLACE_ID`). Senza chiave non fa nulla.
 

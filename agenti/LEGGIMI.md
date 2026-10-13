@@ -112,6 +112,18 @@ c'è scritto. La routine che scrive le bozze è **spenta** finché non cambia qu
 Per avere il testo — e per rispondere senza uscire da qui — serve la **Google
 Business Profile API**: è gratis, ma va chiesta a Google e approvata.
 
+### Le scritte del sito che parlano delle recensioni
+
+Il sito dice "130+" e "oltre 130 recensioni" in titoli e pagine: è testo fisso,
+arrotondato per difetto alla decina. Quando il totale su Google arriva alla decina
+dopo, o quando la media scende sotto 4,8 e le frasi "a 5 stelle" vanno rilette, il
+sensore non scrive più "chiedilo a Claude dal PC" (dal 13 ott 2026): lascia il
+lavoro all'agente delle scritte (*Recensioni - aggiorna le scritte del sito*,
+`recensioni-testi.yml`, istruzioni in `.claude/skills/testi-recensioni/`), che
+prepara la modifica sul ramo `proposta/recensioni-<data>`. A Matteo arriva come le
+altre proposte: `APPROVA RECENSIONI`, `CORREGGI RECENSIONI`, `RIFIUTA RECENSIONI`.
+Se non c'è niente da cambiare glielo dice in due righe, senza proposta.
+
 Altre due cose che sembrano difetti e non lo sono:
 
 - **Anche quando Google manda le recensioni, ne manda cinque**, le "più rilevanti", e
@@ -210,7 +222,8 @@ istruzioni in `.claude/skills/meccanico/`, guasti già visti in
 `agenti/meccanico/LEGGIMI.md`) non ha un orario: lo chiama chi trova un guasto,
 con `chiamaMeccanico()` di `scripts/lib/meccanico.mjs`. Oggi lo chiamano il
 controllo del Direttore, la segreteria (una proposta che non si costruisce o non
-si unisce, una correzione che non parte) e l'agente Ads (l'analisi non riuscita).
+si unisce, una correzione che non parte), l'agente Ads (l'analisi non riuscita) e
+l'agente Recensioni (la modifica alle scritte del sito che non parte o si ferma).
 
 Legge i log, trova la causa con la prova, e poi:
 
@@ -245,6 +258,7 @@ ripetuta la volta dopo:
 | correzioni SEO | `agenti/seo/lezioni.md` |
 | ordini del mese (Direttore) | `agenti/ordini-lezioni.md` |
 | riparazioni (Meccanico) | `agenti/meccanico/lezioni.md` |
+| scritte del sito sulle recensioni | `agenti/recensioni/lezioni.md` |
 
 **Chi compone il post del sabato legge `agenti/social-lezioni.md` per intero prima
 di scegliere tema, foto e parole: sono regole, non suggerimenti.** Le correzioni

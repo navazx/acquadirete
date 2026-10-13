@@ -91,10 +91,15 @@ const GIORNI_RECENTE = 60;
 const SITO_JSON = path.join(RADICE, 'lib', 'google-reviews.json');
 // Le scritte "130+" / "oltre 130" sono testo fisso in titoli e pagine (vedi
 // CLAUDE.md): si aggiornano a scaglioni di dieci, e toccano i titoli che Google
-// mostra. Quelle l'agente non le cambia da solo: avvisa quando e' ora.
+// mostra. Qui non le si cambia: quando e' ora si lascia il lavoro in
+// LAVORI_TESTI, e recensioni-testi.yml le porta a Matteo come proposta da
+// approvare (dal 13 ott 2026: prima gli si scriveva "chiedilo a Claude dal PC").
 const DOVE_SI_LEGGE_LO_SCAGLIONE = path.join(RADICE, 'components', 'Header.tsx');
-// Sotto questa media le frasi "recensioni a 5 stelle" vanno rilette da Matteo.
+// Sotto questa media le frasi "recensioni a 5 stelle" vanno rilette: lo fa
+// l'agente delle scritte, e porta a Matteo solo quelle da cambiare.
 const MEDIA_DA_RILEGGERE = 4.8;
+// I lavori per l'agente delle scritte (scripts/recensioni-testi.mjs avvia).
+const LAVORI_TESTI = process.env.RECENSIONI_LAVORI || '/tmp/recensioni-lavori.json';
 
 const virgola = (n) => Number(n).toFixed(1).replace('.', ',');
 
@@ -302,18 +307,25 @@ async function main() {
   }
   const scritto = scaglioneScritto();
   const scaglione = Math.floor(totale / 10) * 10;
+  const lavori = [];
   if (scritto && scaglione > scritto && Math.floor((stato.totale ?? 0) / 10) * 10 < scaglione) {
+    lavori.push({ lavoro: 'scaglione', totale, media, scritto, scaglione });
     avvisi.push(
       `Le recensioni su Google sono ${totale}: sul sito c'e' ancora scritto "${scritto}+" e "oltre ${scritto}". ` +
-      `Si puo' passare a "${scaglione}+". Sono nei titoli che Google mostra, quindi non li cambio da solo: chiedilo a Claude dal PC.`,
+      `Preparo io il passaggio a "${scaglione}+" in tutte le pagine e te lo mando da approvare, di solito entro mezz'ora.`,
     );
   }
   if (typeof media === 'number' && media < MEDIA_DA_RILEGGERE && !(stato.media < MEDIA_DA_RILEGGERE)) {
+    lavori.push({ lavoro: 'media', totale, media, soglia: MEDIA_DA_RILEGGERE });
     avvisi.push(
-      `La media su Google e' scesa a ${virgola(media)}. Sul sito ci sono frasi come "recensioni a 5 stelle": ` +
-      "con questa media vanno rilette. Chiedilo a Claude dal PC.",
+      `La media su Google e' scesa a ${virgola(media)}. Sul sito ci sono frasi come "recensioni a 5 stelle" che con questa media possono non essere piu' vere: ` +
+      "le rileggo tutte io e ti mando da approvare solo quelle da cambiare.",
     );
   }
+  // In prova si dice e basta: il lavoro parte solo in un giro vero, dal passo
+  // del workflow che viene dopo il push di media e totale.
+  if (lavori.length && process.env.PROVA === 'true') console.log(`--- lavori per l'agente delle scritte ---\n${JSON.stringify(lavori)}`);
+  else if (lavori.length) writeFileSync(LAVORI_TESTI, `${JSON.stringify(lavori)}\n`);
 
   // La nota per la bacheca degli agenti (lib/bacheca.mjs): solo quando qualcosa
   // si muove, e senza nomi né testi delle recensioni, perché il repo è pubblico.

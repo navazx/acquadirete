@@ -29,9 +29,11 @@ on:
         type: boolean
         default: true
 
-# Per ricordarsi quali recensioni ha gia' visto.
+# contents: per ricordarsi quali recensioni ha gia' visto. actions: per far
+# partire l'agente che aggiorna le scritte del sito (recensioni-testi.yml).
 permissions:
   contents: write
+  actions: write
 
 jobs:
   recensioni:
@@ -83,6 +85,18 @@ jobs:
           fi
           git pull --rebase origin main
           git push origin HEAD:main
+
+      # Quando il totale arriva alla decina dopo ("130+" deve diventare "140+") o la
+      # media scende sotto 4,8, parte l'agente che prepara la modifica alle scritte
+      # del sito come proposta. Sta DOPO il push qui sopra: l'agente deve trovare
+      # su main la media e il totale di oggi.
+      - name: Fai preparare le modifiche al sito
+        if: ${{ inputs.prova != true }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+        run: node scripts/recensioni-testi.mjs avvia
 
       # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/);
       # il postino, una routine su claude.ai, la porta sulla bacheca ogni mattina.

@@ -15,6 +15,7 @@
 //
 //  Nomi dei rami:  proposta/articolo-<slug>   proposta/seo-<data>
 //                  proposta/ordini-<mese>     proposta/riparazione-<data>
+//                  proposta/recensioni-<data>
 // ============================================================================
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -36,6 +37,8 @@ const tipo = ramo.startsWith('proposta/articolo-') ? 'ARTICOLO'
   : ramo.startsWith('proposta/ordini-') ? 'ORDINI'
   // RIPARAZIONE: un guasto sistemato dal Meccanico (meccanico.yml), dal 13 ott 2026.
   : ramo.startsWith('proposta/riparazione-') ? 'RIPARAZIONE'
+  // RECENSIONI: le scritte del sito che parlano delle recensioni (recensioni-testi.yml).
+  : ramo.startsWith('proposta/recensioni-') ? 'RECENSIONI'
   : null;
 
 /**
@@ -94,7 +97,7 @@ async function main() {
     .join('\n')
     .trim()
     .slice(0, 2500);
-  const titolo = oggetto.replace(/^(articolo|seo|ordini|riparazione)\s*:\s*/i, '');
+  const titolo = oggetto.replace(/^(articolo|seo|ordini|riparazione|recensioni)\s*:\s*/i, '');
   const cambiati = git('diff', '--name-only', 'origin/main...HEAD').split('\n').filter(Boolean);
 
   // La proposta arriva a nome di chi l'ha preparata, non di chi la consegna.
@@ -135,6 +138,8 @@ async function main() {
       ? `Il Direttore propone le priorità di ${titolo}`
       : tipo === 'RIPARAZIONE'
         ? `Riparazione proposta: ${titolo}`
+        : tipo === 'RECENSIONI'
+          ? `Scritte del sito sulle recensioni: ${titolo}`
         : `Correzioni SEO proposte: ${titolo}`;
 
   const testo = [

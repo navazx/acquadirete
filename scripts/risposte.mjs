@@ -10,7 +10,7 @@
 //    post social   PUBBLICA [1|2|3] · RIMANDA (o SALTA) · SCARTA [motivo]
 //                  CORREGGI [POST] <cosa cambiare> — lo sistema e lo rimanda
 //                  (anche uno SCARTA che chiede di correggere vale cosi')
-//    proposte      APPROVA [ARTICOLO|SEO|ORDINI|RIPARAZIONE] · RIFIUTA [...] [motivo]
+//    proposte      APPROVA [ARTICOLO|SEO|ORDINI|RIPARAZIONE|RECENSIONI] · RIFIUTA [...] [motivo]
 //                  CORREGGI [ARTICOLO|SEO] <cosa cambiare> — la riscrive e la
 //                  ripropone (anche un RIFIUTA che chiede di correggere vale cosi')
 //
@@ -84,7 +84,7 @@ export function ordine(testo) {
     return { argomento: 'social', azione: CHIEDE_DI_CORREGGERE_IL_POST.test(motivo) ? 'correggi' : 'scarta', motivo };
   }
 
-  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (?:il |l'|la )?(articolo|seo|ordini|riparazione|post))?\b[\s:,.-]*(.*)$/i);
+  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (?:il |l'|la )?(articolo|seo|ordini|riparazione|recensioni|post))?\b[\s:,.-]*(.*)$/i);
   if (a) {
     let azione = a[1].toLowerCase();
     const tipo = a[2] ? a[2].toUpperCase() : null;
@@ -243,6 +243,7 @@ const LEZIONI = {
   SEO: 'agenti/seo/lezioni.md',
   ORDINI: 'agenti/ordini-lezioni.md',
   RIPARAZIONE: 'agenti/meccanico/lezioni.md',
+  RECENSIONI: 'agenti/recensioni/lezioni.md',
   POST: 'agenti/social-lezioni.md',
 };
 

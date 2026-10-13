@@ -1,0 +1,95 @@
+name: Recensioni - aggiorna le scritte del sito
+
+# Non ha un orario: lo avvia il controllo giornaliero delle recensioni
+# (recensioni.yml, passo "Fai preparare le modifiche al sito") quando:
+#   - il totale su Google raggiunge la decina dopo ("130+" deve diventare "140+");
+#   - la media scende sotto 4,8 (le frasi "a 5 stelle" vanno rilette).
+#
+# Fino al 13 ott 2026 in questi due casi a Matteo arrivava "chiedilo a Claude dal
+# PC". Ora l'agente prepara la modifica sul ramo proposta/recensioni-<data> e
+# Matteo risponde APPROVA RECENSIONI su Telegram, come per articoli e SEO.
+# Istruzioni: .claude/skills/testi-recensioni/SKILL.md.
+on:
+  workflow_dispatch:
+    inputs:
+      lavori:
+        description: 'Cosa fare, in JSON: [{ "lavoro": "scaglione" | "media", ... }]'
+        required: true
+      prova:
+        description: 'Prova: lavora davvero, ma non spinge la proposta e stampa il messaggio invece di mandarlo'
+        type: boolean
+        default: false
+
+# Una proposta per volta.
+concurrency:
+  group: recensioni-testi
+  cancel-in-progress: false
+
+jobs:
+  testi:
+    runs-on: ubuntu-latest
+    # Tempo largo: Matteo ha chiesto qualita', non velocita' (agenti/METODO.md).
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      # Serve all'azione per autenticarsi come app GitHub di Claude.
+      id-token: write
+      # Per chiamare il Meccanico se il lavoro non riesce.
+      actions: write
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      # I lavori passano dal file, non dalla riga di comando.
+      - name: Cosa c'e' da fare
+        env:
+          LAVORI: ${{ inputs.lavori }}
+        run: printf '%s\n' "$LAVORI" > /tmp/recensioni-lavori.json
+
+      - name: Segna che e' una prova
+        if: ${{ inputs.prova == true }}
+        run: touch /tmp/recensioni-prova
+
+      # NON passare github_token: il push del ramo proposta/recensioni-* deve
+      # svegliare "Proposta - presentala a Matteo". Vedi agente-seo.yml.
+      - name: Prepara la proposta
+        id: agente
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/testi-recensioni'
+          claude_args: |
+            --model claude-opus-5-5
+            --effort xhigh
+
+      # Se la proposta e' partita, a Matteo arriva quella. Se no gli arriva l'esito
+      # scritto dall'agente; e se non c'e' nemmeno quello, il guasto va al Meccanico.
+      - name: Di' a Matteo com'e' andata
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          PROVA: ${{ inputs.prova }}
+        run: node scripts/recensioni-testi.mjs manda
+
+      - name: In prova - butta le note
+        if: ${{ always() && inputs.prova == true }}
+        run: rm -rf /tmp/bacheca
+
+      - name: Consegna le note alla bacheca
+        if: ${{ always() && inputs.prova != true }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/bacheca-consegna.mjs

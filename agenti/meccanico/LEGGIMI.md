@@ -12,7 +12,9 @@ Chi lo chiama (con `scripts/lib/meccanico.mjs`):
   sistemare da solo (lui da solo fa ripartire un agente che non è partito);
 - la **segreteria**, quando una proposta non si costruisce, non si unisce a `main`,
   o una correzione non parte;
-- l'**agente Ads**, quando l'analisi del mese non riesce.
+- l'**agente Ads**, quando l'analisi del mese non riesce;
+- l'**agente Recensioni**, quando la modifica alle scritte del sito ("130+" →
+  "140+", frasi "a 5 stelle") non parte o si ferma a metà.
 
 ## Come stanno insieme i pezzi (per orientarsi)
 
