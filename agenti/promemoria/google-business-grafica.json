@@ -1,0 +1,27 @@
+{
+  "immagini": [
+    {
+      "idea": 1,
+      "etichetta": "ATTENZIONE",
+      "titolo": "Depuratore gratis col\nbonus della Regione?\n*Quel bonus non esiste*",
+      "intro": "Te lo propongono al telefono o con una pubblicità su Facebook e Instagram. La Regione Toscana, però, non prevede contributi per mettere un depuratore in casa.",
+      "punti": [
+        {
+          "icona": "scudo",
+          "titolo": "Non dare i tuoi dati a chi promette il bonus",
+          "testo": "Né al telefono, né nel modulo\ndi una pubblicità che lo promette."
+        },
+        {
+          "icona": "foglio",
+          "titolo": "Chiedi tutto per scritto",
+          "testo": "Nome dell'azienda, proposta e condizioni,\nsu un foglio che resta a te."
+        },
+        {
+          "icona": "orologio",
+          "titolo": "Non firmare la sera stessa",
+          "testo": "Prenditi tempo: un'offerta che vale\nsolo oggi è una pressione."
+        }
+      ]
+    }
+  ]
+}

@@ -9,9 +9,14 @@
 //  nuovi, cosi' lo stile resta lo stesso anche quando il post lo scrive l'agente.
 //
 //  Lo sfondo (scripts/grafica/base-curiosita.jpg) e' la sua curiosita' sul cloro
-//  con titolo, testo e riquadro cancellati: etichetta, foto, schizzo, logo e onda
-//  in fondo sono quelli originali. Il carattere e' il Montserrat (Google Fonts,
-//  licenza OFL in scripts/grafica/font/).
+//  con titolo, testo e riquadro cancellati: etichetta, foto, schizzo e onda in
+//  fondo sono quelli originali. Il logo in basso no: quello dell'immagine era
+//  disegnato a occhio e non sembrava il logo vero, quindi dal 12 ott 2026 c'e'
+//  quello ufficiale, preso dai vettoriali (marchio e scritta affiancati, motto
+//  sotto). Rifatto anche il frontale del depuratore, che aveva scritte e simboli
+//  inventati: logo ufficiale, schermo e tasti come sull'impianto vero (vedi
+//  agenti/LEGGIMI.md). Il carattere e' il Montserrat (Google Fonts, licenza OFL
+//  in scripts/grafica/font/).
 //
 //  Uso:
 //    node scripts/grafica-curiosita.mjs agenti/social-bozza.json
@@ -29,6 +34,7 @@
 //    }
 //  Fra asterischi la parte in azzurro. Il titolo va in maiuscolo da se'.
 //  Icone: vedi ICONE qui sotto, oppure "testo:Ca Mg" per scrivere dentro il cerchio.
+//  Le stesse icone le usa lo stampo della scheda Google (grafica-scheda.mjs).
 //
 //  Se i testi non ci stanno nemmeno col carattere piu' piccolo, si ferma con un
 //  errore che dice cosa accorciare: meglio un errore che un'immagine tagliata.
@@ -56,10 +62,10 @@ const LARGO_TITOLO = 530;    // il titolo va a capo prima, come nell'originale
 const CIMA = 150;            // sotto l'etichetta CURIOSITA'
 const FONDO = 1062;          // fine del riquadro, sopra lo schizzo
 const RIQ = { x: 45, w: 552 };
-const CERCHIO = 58;          // raggio
+export const CERCHIO = 58;   // raggio
 
 // Icone disegnate in un quadrato 100x100, tratto bianco.
-const ICONE = {
+export const ICONE = {
   goccia: '<path d="M50 12 C50 12 22 46 22 64 a28 28 0 0 0 56 0 C78 46 50 12 50 12 Z"/><path d="M36 66 a14 14 0 0 0 14 14"/>',
   scudo: '<path d="M50 10 L82 22 V48 C82 70 68 84 50 92 C32 84 18 70 18 48 V22 Z"/><path d="M35 50 L46 61 L66 40"/>',
   rubinetto: '<path d="M18 40 H56 a14 14 0 0 1 14 14 V62"/><path d="M18 30 V50"/><path d="M40 40 V26 M30 26 H50"/><path d="M70 72 c0 0 -6 8 -6 12 a6 6 0 0 0 12 0 c0 -4 -6 -12 -6 -12 Z"/>',
@@ -78,6 +84,8 @@ const ICONE = {
   freddo: '<path d="M50 12 V88 M17 31 L83 69 M17 69 L83 31"/><path d="M42 18 L50 26 L58 18 M42 82 L50 74 L58 82"/>',
   attrezzi: '<path d="M62 14 a18 18 0 0 0 -16 26 L16 70 a8 8 0 0 0 14 14 L60 54 a18 18 0 0 0 26 -16 L74 48 L60 44 L56 30 Z"/>',
   calendario: '<rect x="16" y="22" width="68" height="62" rx="6"/><path d="M16 40 H84 M34 12 V30 M66 12 V30"/><path d="M32 56 H40 M46 56 H54 M60 56 H68 M32 70 H40 M46 70 H54"/>',
+  foglio: '<path d="M26 10 H60 L78 28 V90 H26 Z"/><path d="M60 10 V28 H78"/><path d="M38 48 H66 M38 62 H66 M38 76 H54"/>',
+  orologio: '<circle cx="50" cy="50" r="37"/><path d="M50 27 V50 L66 60"/>',
 };
 
 // L'apostrofo dritto diventa quello tipografico, come nelle immagini di Matteo.
@@ -105,7 +113,7 @@ function markupTitolo(titolo, px) {
     .join('');
 }
 
-function svgIcona(nome, cx, cy) {
+export function svgIcona(nome, cx, cy) {
   const cerchio = `<circle cx="${cx}" cy="${cy}" r="${CERCHIO}" fill="${NOTTE}"/>`;
   if (String(nome).startsWith('testo:')) return { svg: cerchio, testo: nome.slice(6) };
   const disegno = ICONE[nome] || ICONE.goccia;

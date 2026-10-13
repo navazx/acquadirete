@@ -2,8 +2,9 @@ name: Promemoria scheda Google
 
 # Parte quando la routine cloud "agente-scheda-google" (il 15 del mese)
 # scrive le idee di stagione in agenti/promemoria/google-business.md, e le manda
-# su Telegram. La routine non ha nessun token: scrive nel repo, e il messaggio
-# lo manda questo workflow con il token preso dai secret.
+# su Telegram, seguite dalle immagini gia' pronte (agenti/promemoria/immagini/,
+# stesso commit del testo). La routine non ha nessun token: scrive nel repo, e
+# il messaggio lo manda questo workflow con il token preso dai secret.
 on:
   push:
     branches: [main]
@@ -23,6 +24,9 @@ jobs:
       # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
       - name: Checkout del repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Due commit: lo script guarda quali immagini sono arrivate con l'ultimo.
+          fetch-depth: 2
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -39,5 +43,6 @@ jobs:
         # (provato il 15 set 2026 dal Chrome di Matteo, loggato come proprietario).
         run: >-
           node scripts/promemoria.mjs agenti/promemoria/google-business.md
+          --foto agenti/promemoria/immagini
           --link-testo "Scrivi il post qui (si apre già la finestra):"
           --link "https://www.google.com/search?q=Acquadirete+di+Stefano+Piconese#mpd=promote/updates/add"

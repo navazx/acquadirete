@@ -340,10 +340,62 @@ script scrive `public/assets/social/recensione-<data>.jpg` e lo mette nel campo
 come per le curiosità. Non riusare una recensione già uscita
 (`git log -p -- agenti/social-bozza.json`).
 
-**La cucina dello stampo** (`scripts/grafica/base-curiosita.jpg`) è un disegno, non
-una foto. Il 12 ott 2026 è stata ritoccata perché i tubi sembravano attaccati alla
-vasca del lavello: negli impianti veri escono da dietro, salgono lungo il muro e
-spariscono dietro il lavello verso il miscelatore, e dove si collegano non si vede.
+## La grafica della scheda Google
+
+I post del profilo Google dell'attività hanno il loro stampo,
+`scripts/grafica-scheda.mjs`: stesso sfondo, carattere, colori e icone delle
+curiosità, ma in **4:3** (1672×1254), che è il formato che Google consiglia per i
+post della scheda. Un'immagine quadrata lì perde l'etichetta in cima e il logo in
+fondo. Lo usa l'agente della scheda Google, una voce per ogni idea del promemoria,
+in `agenti/promemoria/google-business-grafica.json`:
+
+```json
+{ "immagini": [
+  { "idea": 1,
+    "etichetta": "ATTENZIONE",
+    "titolo": "Depuratore gratis col\nbonus della Regione?\n*Quel bonus non esiste*",
+    "intro": "facoltativa: una o due frasi",
+    "punti": [
+      { "icona": "scudo", "titolo": "Titoletto corto", "testo": "Una o due frasi." },
+      { "icona": "foglio", "titolo": "…", "testo": "…" },
+      { "icona": "orologio", "titolo": "…", "testo": "…" }
+    ] }
+] }
+```
+
+- **Titolo**: tre righe al massimo, una ventina di caratteri l'una, con gli a capo
+  decisi a mano (`\n`). Fra asterischi la parte in azzurro: è la frase che deve
+  restare anche a chi vede solo la miniatura.
+- **Etichetta**: senza, resta CURIOSITÀ con la lampadina. `ATTENZIONE` prende il
+  triangolo (per gli avvisi). Qualsiasi altra, corta (`IN ZONA`, `NOVITÀ`: 14
+  caratteri al massimo), resta senza disegno.
+- **Punti**: esattamente tre. Qui c'è più spazio che nel quadrato: un `\n` nel
+  testo mette l'a capo dove sta meglio, così non resta una parola sola in fondo.
+- Icone: quelle delle curiosità, più `foglio` e `orologio`.
+
+`node scripts/grafica-scheda.mjs agenti/promemoria/google-business-grafica.json`
+scrive `agenti/promemoria/immagini/idea-<n>.jpg` e toglie quelle del mese prima.
+Stanno fuori da `public/`: non vanno sul sito, arrivano a Matteo su Telegram
+(`scripts/promemoria.mjs --foto`, che manda solo quelle dello stesso commit del
+testo) e il post sulla scheda lo pubblica lui.
+
+**Lo sfondo degli stampi** (`scripts/grafica/base-curiosita.jpg`) è uno solo per
+curiosità, recensioni e scheda Google: una modifica lì cambia tutte le immagini
+da quel momento in poi. È un disegno, non una foto, ed è stato ritoccato tre volte
+fra il 12 e il 13 ott 2026:
+
+- **i tubi** sembravano attaccati alla vasca del lavello: negli impianti veri
+  escono da dietro, salgono lungo il muro e spariscono dietro il lavello verso il
+  miscelatore, e dove si collegano non si vede;
+- **il logo in basso** era disegnato a occhio insieme al resto e Matteo ha detto
+  che non sembrava quello ufficiale: adesso è il logo vero, preso dai vettoriali
+  (marchio e scritta affiancati, sotto "ACQUA DI QUALITÀ, OGNI GIORNO."). Su
+  qualsiasi immagine nuova il logo si prende dai vettoriali, non si ridisegna;
+- **il frontale del depuratore**: ingrandendo, Matteo ha visto sullo schermo e sui
+  tasti dei simboli che non esistono, e il logo disegnato a occhio anche lì.
+  Adesso c'è quello che si vede sull'impianto vero: schermo "+20°C SET+02°C" e
+  sotto "ON", tasti K1 K2 K3 K4, logo ufficiale. Chi guarda queste immagini sono
+  clienti che l'impianto ce l'hanno in casa: una scritta finta la riconoscono.
 
 **Le grafiche si tolgono dal sito dopo l'uso** (scelta di Matteo, 12 ott 2026):
 pubblicato o scartato il post, `scripts/risposte.mjs` cancella l'immagine fatta con
