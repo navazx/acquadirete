@@ -11,8 +11,10 @@ on:
       - 'proposta/**'
 
 # Per registrare la proposta in agenti/proposte.json su main.
+# actions: per passare al Meccanico una proposta che non si costruisce.
 permissions:
   contents: write
+  actions: write
 
 jobs:
   annuncia:
@@ -50,4 +52,5 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
           BUILD_ESITO: ${{ steps.build.outcome }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/proposta-annuncia.mjs

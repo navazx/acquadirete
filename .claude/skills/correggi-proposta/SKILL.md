@@ -27,7 +27,9 @@ già quello su cui sei: controllalo con `git branch --show-current`. Non clonare
   per le correzioni SEO, `.claude/skills/direttore/SKILL.md` per gli ordini del
   mese (ramo `proposta/ordini-`: lì gli euro non vanno mai nel repo, e i numeri
   per rifare il ragionamento non li hai, quindi cambia solo quello che Matteo
-  chiede). E `CLAUDE.md`.
+  chiede). Per una riparazione del Meccanico (ramo `proposta/riparazione-`):
+  `.claude/skills/meccanico/SKILL.md` e `agenti/meccanico/lezioni.md`, e resta
+  vietato toccare `.github/workflows/`. E `CLAUDE.md`.
 - Le lezioni di quell'agente, cioè le correzioni che Matteo ha già dato altre
   volte: `agenti/contenuti/lezioni.md` per un articolo, `agenti/seo/lezioni.md`
   per le correzioni SEO, `agenti/ordini-lezioni.md` per gli ordini del mese.

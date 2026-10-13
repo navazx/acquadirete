@@ -1,0 +1,107 @@
+name: Meccanico - ripara quello che non ha funzionato
+
+# Non ha un orario: lo chiama chi trova un guasto (il controllo del Direttore
+# ogni mattina, la segreteria quando una proposta non si costruisce o non si
+# unisce, l'agente Ads se l'analisi non riesce) con scripts/lib/meccanico.mjs.
+#
+# Fino al 13 ott 2026, davanti a un guasto, a Matteo arrivava "chiedi a Claude
+# dal PC di guardarci": il lavoro tornava a lui. Ora il Meccanico legge i log,
+# trova la causa e:
+#   - se basta far ripartire qualcosa, lo fa ripartire;
+#   - se e' rotto un pezzo del progetto, prepara la riparazione come proposta
+#     (ramo proposta/riparazione-<data>) e Matteo risponde APPROVA RIPARAZIONE;
+#   - se serve una cosa che puo' fare solo Matteo (un token scaduto), gli scrive
+#     i passi uno per uno.
+# Istruzioni: .claude/skills/meccanico/SKILL.md. Guasti gia' visti:
+# agenti/meccanico/LEGGIMI.md.
+on:
+  workflow_dispatch:
+    inputs:
+      problemi:
+        description: 'I guasti, in JSON: { chi, quando, problemi: [{ testo, workflow, giro }] }'
+        required: true
+      prova:
+        description: 'Prova: lavora davvero, ma stampa il messaggio invece di mandarlo e non rilancia niente'
+        type: boolean
+        default: false
+
+# Un guasto per volta: due meccanici insieme si pesterebbero i piedi.
+concurrency:
+  group: meccanico
+  cancel-in-progress: false
+
+jobs:
+  ripara:
+    runs-on: ubuntu-latest
+    # Tempo largo: Matteo ha chiesto qualita', non velocita' (agenti/METODO.md).
+    timeout-minutes: 90
+    permissions:
+      # contents: per spingere il ramo della riparazione e la nota della bacheca.
+      contents: write
+      # actions: per leggere i log dei giri falliti e far ripartire un agente.
+      actions: write
+      # Serve all'azione per autenticarsi come app GitHub di Claude.
+      id-token: write
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      # I guasti passano dal file, non dalla riga di comando: sono testo libero.
+      - name: I guasti da guardare
+        env:
+          PROBLEMI: ${{ inputs.problemi }}
+        run: printf '%s\n' "$PROBLEMI" > /tmp/meccanico-problemi.json
+
+      # In prova il Meccanico lavora uguale ma non spinge nessun ramo: lo capisce
+      # da questo file.
+      - name: Segna che e' una prova
+        if: ${{ inputs.prova == true }}
+        run: touch /tmp/meccanico-prova
+
+      - name: Raccogli le prove (giri e log)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/meccanico-raccogli.mjs
+
+      # NON passare github_token: il push del ramo proposta/riparazione-* deve
+      # svegliare "Proposta - presentala a Matteo". Vedi agente-seo.yml.
+      # Se l'IA si ferma il giro va avanti: a Matteo arriva comunque un messaggio.
+      - name: Trova la causa e ripara
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: '/meccanico'
+          claude_args: |
+            --model claude-opus-5-5
+            --effort xhigh
+
+      - name: Fai ripartire quello che serve e scrivi a Matteo
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          PROVA: ${{ inputs.prova }}
+        run: node scripts/meccanico-manda.mjs
+
+      - name: In prova - butta le note
+        if: ${{ always() && inputs.prova == true }}
+        run: rm -rf /tmp/bacheca
+
+      # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/).
+      - name: Consegna le note alla bacheca
+        if: ${{ always() && inputs.prova != true }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/bacheca-consegna.mjs

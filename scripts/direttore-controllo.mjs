@@ -18,6 +18,14 @@
 //   4. La sveglia ha fatto partire questo controllo, o e' partito di riserva?
 //   5. Cosa aspetta una risposta di Matteo, e da quanti giorni.
 //
+//  Cosa fa quando trova un guasto (dal 13 ott 2026: prima scriveva a Matteo
+//  "chiedi a Claude dal PC di guardarci", cioe' gli rimandava il lavoro):
+//   - un agente che non e' partito lo fa partire lui, subito;
+//   - tutto il resto lo passa al Meccanico (lib/meccanico.mjs, meccanico.yml), che
+//     legge i log, trova la causa e la sistema o porta la riparazione da approvare;
+//   - un agente partito tardi ma che ha finito il lavoro non e' "non ha
+//     funzionato": lo dice a parte, e il Meccanico guarda perche' era in ritardo.
+//
 //  Quando parla:
 //   - su Telegram SOLO se qualcosa non ha funzionato, o se una cosa aspetta
 //     Matteo da 2, 5, 7, 14… giorni. Se e' tutto a posto tace.
@@ -33,6 +41,7 @@ import { pathToFileURL } from 'node:url';
 import { AGENTI, ROUTINE } from '../netlify/functions/_shared/orari.mjs';
 import { ultimoAppuntamento } from '../netlify/functions/_shared/sveglia.mjs';
 import { lasciaNota } from './lib/bacheca.mjs';
+import { avvia, chiamaMeccanico } from './lib/meccanico.mjs';
 import { decise } from './agente-seo.mjs';
 
 const REPO = process.env.GITHUB_REPOSITORY || 'navazx/acquadirete';
@@ -69,7 +78,7 @@ const giri = (workflow, dal) =>
 
 // --- La bacheca -------------------------------------------------------------
 
-const ETICHETTE = { 'seo': 'seo', 'social': 'social', 'direttore': 'direttore', 'contenuti': 'contenuti', 'recensioni': 'recensioni', 'scheda google': 'scheda', 'lead e clienti': 'lead', 'ads': 'ads', 'matteo': 'matteo' };
+const ETICHETTE = { 'meccanico': 'meccanico', 'seo': 'seo', 'social': 'social', 'direttore': 'direttore', 'contenuti': 'contenuti', 'recensioni': 'recensioni', 'scheda google': 'scheda', 'lead e clienti': 'lead', 'ads': 'ads', 'matteo': 'matteo' };
 
 /** Le note recenti: quelle gia' sulla bacheca (la copia nel repo) e quelle ancora in arrivo. */
 export function leggiNote(adesso, { copia = 'agenti/bacheca.md', inArrivo = 'agenti/bacheca/in-arrivo' } = {}) {
@@ -103,7 +112,9 @@ const haLasciatoNota = (note, agente, dal) => note.some((n) => n.agente === agen
 
 /**
  * Torna { problemi, attese, regolari }:
- *   problemi  cose che non hanno funzionato (righe di testo)
+ *   problemi  cose che non hanno funzionato: { testo, tipo, nome, workflow, giro… }.
+ *             `tipo` dice a rimedia() cosa farne; workflow e giro dicono al
+ *             Meccanico dove guardare
  *   attese    cose che aspettano Matteo: { testo, giorni } (giorni null = senza data)
  *   regolari  quello che ha girato bene, per la prova e per il riepilogo
  */
@@ -114,28 +125,29 @@ export async function controlla(adesso = new Date()) {
   // 1. Gli agenti su GitHub.
   for (const a of AGENTI.filter((x) => !x.controllore)) {
     const quando = ultimoAppuntamento(a.cron, adesso, INDIETRO);
-    if (!quando) { vecchi.push(`${a.nome}: nessun appuntamento negli ultimi 35 giorni.`); continue; }
+    if (!quando) { vecchi.push({ testo: `${a.nome}: nessun appuntamento negli ultimi 35 giorni.` }); continue; }
     const eta = adesso - quando;
+    const chi = { nome: a.nome, workflow: a.workflow };
     if (eta < TEMPO_PER_PARTIRE) { regolari.push(`${a.nome}: appuntamento ${quandoIt(quando)}, è presto per controllare.`); continue; }
     const recente = eta <= DA_DIRE;
     const dove = recente ? problemi : vecchi;
 
     const { workflow_runs: elenco = [] } = await giri(a.workflow, quando);
     if (!elenco.length) {
-      dove.push(`${a.nome}: NON È PARTITO. Doveva partire ${quandoIt(quando)}.`);
+      dove.push({ ...chi, tipo: 'non-partito', inputs: a.inputs, testo: `${a.nome}: NON È PARTITO. Doveva partire ${quandoIt(quando)}.` });
       continue;
     }
     const primo = elenco[elenco.length - 1], ultimo = elenco[0];
     const ritardo = new Date(primo.created_at) - quando;
     if (ultimo.conclusion === 'failure' || ultimo.conclusion === 'timed_out') {
-      dove.push(`${a.nome}: È FALLITO (giro di ${quandoIt(new Date(ultimo.created_at))}).`);
+      dove.push({ ...chi, tipo: 'fallito', giro: ultimo.id, tentativo: ultimo.run_attempt, testo: `${a.nome}: È FALLITO (giro di ${quandoIt(new Date(ultimo.created_at))}).` });
     } else if (ritardo > RITARDO) {
-      dove.push(`${a.nome}: è partito con ${ore(ritardo)} di ritardo (doveva partire ${quandoIt(quando)}).`);
+      dove.push({ ...chi, tipo: 'ritardo', giro: primo.id, avviato_da: primo.event, finito: ultimo.conclusion, testo: `${a.nome}: è partito con ${ore(ritardo)} di ritardo (doveva partire ${quandoIt(quando)}).` });
     } else {
       regolari.push(`${a.nome}: partito in orario ${quandoIt(quando)}.`);
     }
     if (a.nota && eta >= TEMPO_PER_LA_NOTA && !haLasciatoNota(note, a.nota, quando)) {
-      dove.push(`${a.nome}: ha girato ma NON HA LASCIATO LA NOTA sulla bacheca.`);
+      dove.push({ ...chi, tipo: 'nota', giro: ultimo.id, testo: `${a.nome}: ha girato ma NON HA LASCIATO LA NOTA sulla bacheca.` });
     }
   }
 
@@ -143,7 +155,7 @@ export async function controlla(adesso = new Date()) {
   const proposte = leggi('agenti/proposte.json', []);
   for (const r of ROUTINE) {
     const quando = ultimoAppuntamento(r.cron, adesso, INDIETRO);
-    if (!quando) { vecchi.push(`${r.nome}: nessun appuntamento negli ultimi 35 giorni.`); continue; }
+    if (!quando) { vecchi.push({ testo: `${r.nome}: nessun appuntamento negli ultimi 35 giorni.` }); continue; }
     const eta = adesso - quando;
     if (eta < 2 * ORA) { regolari.push(`${r.nome}: appuntamento ${quandoIt(quando)}, è presto per controllare.`); continue; }
     const dove = eta <= DA_DIRE ? problemi : vecchi;
@@ -156,8 +168,8 @@ export async function controlla(adesso = new Date()) {
     }
     if (!traccia && r.proposta) traccia = proposte.some((p) => p.tipo === r.proposta && new Date(p.creata) >= quando);
 
-    if (!traccia) dove.push(`${r.nome}: NON RISULTA PARTITO. Doveva partire ${quandoIt(quando)} e non ha lasciato tracce.`);
-    else if (!nota && eta >= TEMPO_PER_LA_NOTA) dove.push(`${r.nome}: ha lavorato (${quandoIt(quando)}) ma NON HA LASCIATO LA NOTA sulla bacheca.`);
+    if (!traccia) dove.push({ nome: r.nome, tipo: 'routine', testo: `${r.nome}: NON RISULTA PARTITO. Doveva partire ${quandoIt(quando)} e non ha lasciato tracce.` });
+    else if (!nota && eta >= TEMPO_PER_LA_NOTA) dove.push({ nome: r.nome, tipo: 'routine-nota', testo: `${r.nome}: ha lavorato (${quandoIt(quando)}) ma NON HA LASCIATO LA NOTA sulla bacheca.` });
     else regolari.push(`${r.nome}: ha lavorato ${quandoIt(quando)}.`);
   }
 
@@ -165,13 +177,13 @@ export async function controlla(adesso = new Date()) {
   const ferme = note.filter((n) => !n.consegnata && adesso - n.quando > 4 * ORA);
   if (ferme.length) {
     const piuVecchia = Math.min(...ferme.map((n) => n.quando.getTime()));
-    problemi.push(`Postino della bacheca: ${ferme.length === 1 ? 'una nota è ferma' : `${ferme.length} note sono ferme`} da ${ore(adesso - piuVecchia)}, non le sta consegnando.`);
+    problemi.push({ nome: 'Postino della bacheca', tipo: 'postino', testo: `Postino della bacheca: ${ferme.length === 1 ? 'una nota è ferma' : `${ferme.length} note sono ferme`} da ${ore(adesso - piuVecchia)}, non le sta consegnando.` });
   } else regolari.push('Postino della bacheca: nessuna nota ferma.');
 
   // 4. La sveglia: questo controllo lo fa partire lei. Se e' partito col giro di
   //    riserva di GitHub, la sveglia e' ferma.
   if (process.env.GITHUB_EVENT_NAME === 'schedule') {
-    problemi.push('Sveglia degli agenti: oggi NON mi ha fatto partire, sono partito col giro di riserva di GitHub. Se la sveglia è ferma, gli agenti non partono in orario.');
+    problemi.push({ nome: 'Sveglia degli agenti', tipo: 'sveglia', workflow: 'direttore-controllo.yml', testo: 'Sveglia degli agenti: oggi NON mi ha fatto partire, sono partito col giro di riserva di GitHub. Se la sveglia è ferma, gli agenti non partono in orario.' });
   }
 
   // 5. Cosa aspetta Matteo.
@@ -181,7 +193,7 @@ export async function controlla(adesso = new Date()) {
     }
     const ultima = (p.correzioni || []).at(-1);
     if (p.stato === 'da correggere' && ultima && adesso - new Date(ultima.chiesta) > 2 * ORA) {
-      problemi.push(`Correzione di «${p.titolo}»: l'hai chiesta ${quandoIt(new Date(ultima.chiesta))} e non è tornata.`);
+      problemi.push({ nome: 'Correzione di una proposta', tipo: 'correzione', workflow: 'correggi-proposta.yml', ramo: p.ramo, testo: `Correzione di «${p.titolo}»: l'hai chiesta ${quandoIt(new Date(ultima.chiesta))} e non è tornata.` });
     }
   }
   const bozza = leggi('agenti/social-bozza.json', null);
@@ -198,7 +210,7 @@ export async function controlla(adesso = new Date()) {
   const giroSeo = seo && ultimoAppuntamento(seo.cron, adesso, INDIETRO);
   const proposta = proposte.some((p) => p.tipo === 'SEO' && (p.stato === 'in attesa' || p.stato === 'da correggere'));
   if (scelte.length && !proposta && giroSeo && adesso - giroSeo > 3 * ORA && adesso - giroSeo <= DA_DIRE) {
-    problemi.push(`Agente SEO: ci sono ${scelte.length === 1 ? 'una ricerca' : `${scelte.length} ricerche`} con più pagine in concorrenza (${scelte.map((s) => `"${s.ricerca}"`).join(', ')}) ma NON HA MANDATO LA PROPOSTA.`);
+    problemi.push({ nome: 'Agente SEO', tipo: 'seo-proposta', workflow: 'agente-seo.yml', testo: `Agente SEO: ci sono ${scelte.length === 1 ? 'una ricerca' : `${scelte.length} ricerche`} con più pagine in concorrenza (${scelte.map((s) => `"${s.ricerca}"`).join(', ')}) ma NON HA MANDATO LA PROPOSTA.` });
   }
 
   return { problemi, attese, regolari, vecchi };
@@ -208,11 +220,53 @@ export async function controlla(adesso = new Date()) {
 const daRicordare = (a) => a.giorni !== null && (a.giorni === 2 || a.giorni === 5 || (a.giorni >= 7 && a.giorni % 7 === 0));
 const daQuanto = (a) => (a.giorni === null ? '' : a.giorni === 0 ? ' (da oggi)' : a.giorni === 1 ? ' (da ieri)' : ` (da ${a.giorni} giorni)`);
 
-export function componi({ problemi, attese }, adesso, soloPromemoria = false) {
+/**
+ * Quello che il Direttore fa da solo, prima di scrivere a Matteo.
+ *   - chi non e' partito lo fa partire (e' un clic, non serve capire niente);
+ *   - tutto il resto lo passa al Meccanico, in una chiamata sola. Le routine su
+ *     claude.ai da qui non si possono far ripartire: il Meccanico guarda le
+ *     tracce e dice cosa manca.
+ * Segna su ogni problema `fatto` (cosa ha fatto lui) o `passato` (al Meccanico), e
+ * torna { meccanico } col motivo per cui non e' riuscito a chiamarlo, se c'e'.
+ * Con fai = false (la prova) dice cosa farebbe e non tocca niente.
+ */
+export async function rimedia(problemi, { fai = true } = {}) {
+  for (const p of problemi) {
+    if (p.tipo === 'non-partito') {
+      const errore = fai ? await avvia(p.workflow, p.inputs) : null;
+      if (errore) { p.passato = true; p.gia_fatto = `Il Direttore ha provato a farlo partire e non ci è riuscito: ${errore}.`; }
+      else p.fatto = fai ? "l'ho fatto partire io adesso" : '(prova) lo farei partire io adesso';
+    } else {
+      p.passato = true;
+    }
+  }
+  const daPassare = problemi.filter((p) => p.passato);
+  if (!daPassare.length || !fai) return { meccanico: null };
+  const errore = await chiamaMeccanico('Direttore (controllo del mattino)', daPassare.map(({ passato, fatto, inputs, ...resto }) => resto));
+  return { meccanico: errore };
+}
+
+const elenco = (righe) => righe.map((r) => `• ${r}`).join('\n');
+
+export function componi({ problemi, attese, meccanico = null }, adesso, soloPromemoria = false) {
   const blocchi = [`Controllo degli agenti del ${giornoIt(adesso)}`];
-  if (problemi.length) blocchi.push(`NON HA FUNZIONATO (${problemi.length})\n${problemi.map((p) => `• ${p}`).join('\n')}\n→ Chiedi a Claude dal PC di guardarci.`);
+
+  const fatti = problemi.filter((p) => p.fatto);
+  // In ritardo ma finito bene: il lavoro c'e'. Un giro in ritardo e non finito bene e' un guasto.
+  const ritardi = problemi.filter((p) => p.tipo === 'ritardo' && p.finito === 'success');
+  const passati = problemi.filter((p) => p.passato && !ritardi.includes(p));
+
+  if (fatti.length) blocchi.push(`SISTEMATO DA ME (${fatti.length})\n${elenco(fatti.map((p) => `${p.testo}\n  → ${p.fatto}.`))}`);
+  if (ritardi.length) blocchi.push(`IN RITARDO, MA IL LAVORO È FATTO (${ritardi.length})\n${elenco(ritardi.map((p) => p.testo))}`);
+  if (passati.length) blocchi.push(`NON HA FUNZIONATO (${passati.length})\n${elenco(passati.map((p) => p.testo))}`);
+  if (ritardi.length + passati.length) {
+    blocchi.push(meccanico
+      ? `→ Volevo passarlo al Meccanico ma non sono riuscito a chiamarlo (${meccanico}). Ci riprovo al controllo di domani mattina.`
+      : `→ L'ho passato al Meccanico: sta guardando ${passati.length ? 'cosa si è rotto' : 'perché sono partiti tardi'} e ti scrive lui fra poco, con la causa e cosa ha fatto. Tu per ora non devi fare niente.`);
+  }
+
   const lista = soloPromemoria ? attese.filter(daRicordare) : attese;
-  if (lista.length) blocchi.push(`ASPETTANO TE (${lista.length})\n${lista.map((a) => `• ${a.testo}${daQuanto(a)}`).join('\n')}`);
+  if (lista.length) blocchi.push(`ASPETTANO TE (${lista.length})\n${elenco(lista.map((a) => `${a.testo}${daQuanto(a)}`))}`);
   if (!problemi.length) blocchi.push('Tutti gli agenti hanno girato regolari.');
   return blocchi.join('\n\n');
 }
@@ -233,21 +287,23 @@ async function main() {
 
   const esito = await controlla(adesso);
   const { problemi, attese, regolari, vecchi } = esito;
+  // Prima fa, poi racconta: il messaggio dice cosa e' gia' stato fatto.
+  Object.assign(esito, await rimedia(problemi, { fai: !prova }));
   console.log(`${problemi.length} problemi, ${attese.length} cose che aspettano Matteo, ${regolari.length} voci regolari.`);
 
   if (prova) {
     console.log(`\n(prova: niente Telegram, niente bacheca)\n\n${componi(esito, adesso)}`);
     console.log(`\nREGOLARI\n${regolari.map((r) => `• ${r}`).join('\n')}`);
-    if (vecchi.length) console.log(`\nVECCHI (oltre due giorni fa: non si dicono più, ma sono successi)\n${vecchi.map((r) => `• ${r}`).join('\n')}`);
+    if (vecchi.length) console.log(`\nVECCHI (oltre due giorni fa: non si dicono più, ma sono successi)\n${vecchi.map((r) => `• ${r.testo}`).join('\n')}`);
     return;
   }
 
   const lunedi = adesso.getUTCDay() === 1;
   if (problemi.length || lunedi) {
     const testo = problemi.length
-      ? `Controllo degli agenti: ${problemi.length === 1 ? 'una cosa non ha funzionato' : `${problemi.length} cose non hanno funzionato`}. ${problemi.join(' ')}`
+      ? `Controllo degli agenti: ${problemi.length === 1 ? 'una cosa non è andata liscia' : `${problemi.length} cose non sono andate lisce`}. ${problemi.map((p) => (p.fatto ? `${p.testo} Sistemato: ${p.fatto}.` : p.testo)).join(' ')}${problemi.some((p) => p.passato) ? (esito.meccanico ? ' Non sono riuscito a chiamare il Meccanico.' : ' Passato al Meccanico.') : ''}`
       : `Controllo degli agenti, riepilogo della settimana: tutti hanno girato regolari.${attese.length ? ` Aspettano Matteo: ${attese.map((a) => a.testo).join(' ')}` : ' Niente in attesa di Matteo.'}`;
-    try { lasciaNota('direttore', testo, problemi.length ? ['tutti'] : ['matteo']); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
+    try { lasciaNota('direttore', testo, problemi.length ? ['meccanico', 'matteo'] : ['matteo']); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
   }
 
   if (problemi.length || attese.some(daRicordare)) {

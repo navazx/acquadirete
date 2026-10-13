@@ -41,6 +41,15 @@ export function aPezzi(testo, limite = LIMITE) {
   return pezzi;
 }
 
+/** Un giro andato male non si rimanda a Matteo: lo guarda il Meccanico. */
+async function alMeccanico(testo) {
+  const { chiamaMeccanico } = await import('./lib/meccanico.mjs');
+  const errore = await chiamaMeccanico('Agente Ads', [{ tipo: 'fallito', nome: 'Revisione Ads', workflow: 'agente-ads.yml', giro: Number(process.env.GITHUB_RUN_ID) || undefined, testo }]);
+  return errore
+    ? 'Lo segnala il Direttore al controllo di domani mattina.'
+    : 'L\'ho passato al Meccanico: guarda lui perché e, se si può, la fa ripartire.';
+}
+
 async function main() {
   const revisione = leggi(REVISIONE);
   const base = leggi(BASE);
@@ -50,11 +59,12 @@ async function main() {
     if (leggi(DETTAGLIO)) await documento(DETTAGLIO, 'Revisione della pubblicità: il dettaglio');
     console.log(`Revisione approfondita mandata (${revisione.length} caratteri${leggi(DETTAGLIO) ? ', col dettaglio allegato' : ''}).`);
   } else if (base) {
-    for (const pezzo of aPezzi(`${base}\n\nNota: oggi l'analisi approfondita non è riuscita, questa è la revisione di base coi soli conti. Chiedi a Claude dal PC di guardare perché.`)) await messaggio(pezzo);
+    const coda = await alMeccanico('La revisione della pubblicità è uscita solo coi conti di base: l\'analisi approfondita (il passo con l\'IA) non ha scritto niente.');
+    for (const pezzo of aPezzi(`${base}\n\nNota: oggi l'analisi approfondita non è riuscita, questa è la revisione di base coi soli conti. ${coda}`)) await messaggio(pezzo);
     console.log(`L'analisi non ha scritto niente: mandata la revisione di base (${base.length} caratteri).`);
     process.exitCode = 1;   // il giro risulta fallito, cosi' il Direttore lo segnala
   } else {
-    await messaggio('La revisione della pubblicità di questo mese non è riuscita: non ho né l\'analisi né i conti di base. Chiedi a Claude dal PC di guardare perché.');
+    await messaggio(`La revisione della pubblicità di questo mese non è riuscita: non ho né l'analisi né i conti di base. ${await alMeccanico('La revisione della pubblicità non è riuscita: mancano sia l\'analisi sia i conti di base.')}`);
     console.log('Niente da mandare: né analisi né base.');
     process.exitCode = 1;
   }

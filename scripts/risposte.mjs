@@ -10,7 +10,7 @@
 //    post social   PUBBLICA [1|2|3] · RIMANDA (o SALTA) · SCARTA [motivo]
 //                  CORREGGI [POST] <cosa cambiare> — lo sistema e lo rimanda
 //                  (anche uno SCARTA che chiede di correggere vale cosi')
-//    proposte      APPROVA [ARTICOLO|SEO] · RIFIUTA [ARTICOLO|SEO] [motivo]
+//    proposte      APPROVA [ARTICOLO|SEO|ORDINI|RIPARAZIONE] · RIFIUTA [...] [motivo]
 //                  CORREGGI [ARTICOLO|SEO] <cosa cambiare> — la riscrive e la
 //                  ripropone (anche un RIFIUTA che chiede di correggere vale cosi')
 //
@@ -41,6 +41,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { messaggio, risposte, conferma, scaricaFile, firma, CHI_PROPONE } from './lib/telegram.mjs';
 import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
+import { chiamaMeccanico } from './lib/meccanico.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
 const STATO = 'agenti/telegram-stato.json';
@@ -83,7 +84,7 @@ export function ordine(testo) {
     return { argomento: 'social', azione: CHIEDE_DI_CORREGGERE_IL_POST.test(motivo) ? 'correggi' : 'scarta', motivo };
   }
 
-  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (?:il |l')?(articolo|seo|ordini|post))?\b[\s:,.-]*(.*)$/i);
+  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (?:il |l'|la )?(articolo|seo|ordini|riparazione|post))?\b[\s:,.-]*(.*)$/i);
   if (a) {
     let azione = a[1].toLowerCase();
     const tipo = a[2] ? a[2].toUpperCase() : null;
@@ -222,7 +223,7 @@ async function correggiPost(bozza, note) {
   }
   lezione('POST', `post «${bozza.tema}» da correggere: ${note}`);
   if (!(await avvia('correggi-post.yml', { note: note.slice(0, 2000) }))) {
-    await messaggio('Non sono riuscito a far partire la correzione del post. Resta in attesa com\'era: chiedi a Claude dal PC.');
+    await messaggio(`Non sono riuscita a far partire la correzione del post. Resta in attesa com'era.\n${await alMeccanico({ tipo: 'correzione-non-parte', workflow: 'correggi-post.yml', testo: 'Matteo ha chiesto CORREGGI per il post social, ma il workflow della correzione (correggi-post.yml) non è partito.' })}`);
     return;
   }
   await messaggio(
@@ -241,6 +242,7 @@ const LEZIONI = {
   ARTICOLO: 'agenti/contenuti/lezioni.md',
   SEO: 'agenti/seo/lezioni.md',
   ORDINI: 'agenti/ordini-lezioni.md',
+  RIPARAZIONE: 'agenti/meccanico/lezioni.md',
   POST: 'agenti/social-lezioni.md',
 };
 
@@ -249,6 +251,17 @@ function lezione(tipo, testo) {
   if (!file) return false;
   appendFileSync(file, `\n- ${oggi().slice(0, 10)} — ${testo}\n`);
   return true;
+}
+
+/**
+ * Un guasto della segreteria non si rimanda a Matteo: lo si passa al Meccanico.
+ * Torna la frase da mettere in fondo al messaggio.
+ */
+async function alMeccanico(problema) {
+  const errore = await chiamaMeccanico('Segreteria (risposte su Telegram)', [{ giro: Number(process.env.GITHUB_RUN_ID) || undefined, ...problema }]);
+  return errore
+    ? 'Non sono riuscita nemmeno a chiamare il Meccanico: riscrivimi lo stesso ordine fra qualche minuto.'
+    : 'L\'ho passato al Meccanico: guarda lui cosa si è inceppato e ti scrive. Tu non devi fare niente.';
 }
 
 /** Fa partire un altro workflow. Col token di GitHub un avvio a mano parte comunque. */
@@ -289,8 +302,8 @@ async function approva(p) {
     console.log(e.stderr || e.message);
     aggiorna(p.ramo, { problema: `non si unisce a main (${oggi()})` });
     await messaggio(
-      `Non riesco a mettere online «${p.titolo}»: nel frattempo il sito è cambiato negli stessi punti.\n` +
-      'Resta in attesa. Chiedi a Claude dal PC di sistemarla.',
+      `Non riesco ancora a mettere online «${p.titolo}»: nel frattempo il sito è cambiato negli stessi punti.\n` +
+      `Resta in attesa. ${await alMeccanico({ tipo: 'proposta-non-si-unisce', ramo: p.ramo, workflow: 'risposte.yml', testo: `Matteo ha approvato «${p.titolo}» (ramo ${p.ramo}) ma il ramo non si unisce a main: i due sono cambiati negli stessi punti. Va riallineato a main sul suo stesso ramo, così torna a Matteo da approvare.` })}`,
     );
     return;
   }
@@ -353,7 +366,7 @@ async function correggi(p, note) {
   lezione(p.tipo, `«${p.titolo}» da correggere: ${note}`);
   if (!(await avvia('correggi-proposta.yml', { ramo: p.ramo, note: note.slice(0, 2000) }))) {
     aggiorna(p.ramo, { stato: 'in attesa' });
-    await messaggio(`Non sono riuscito a far partire la correzione di «${p.titolo}». Resta in attesa com'era: chiedi a Claude dal PC.`);
+    await messaggio(`Non sono riuscita a far partire la correzione di «${p.titolo}». Resta in attesa com'era.\n${await alMeccanico({ tipo: 'correzione-non-parte', ramo: p.ramo, workflow: 'correggi-proposta.yml', testo: `Matteo ha chiesto CORREGGI per «${p.titolo}» (ramo ${p.ramo}), ma il workflow della correzione (correggi-proposta.yml) non è partito. Le sue note: ${note.slice(0, 600)}` })}`);
     return;
   }
   await messaggio(

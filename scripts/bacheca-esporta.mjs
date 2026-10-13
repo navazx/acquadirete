@@ -22,7 +22,7 @@ import { normalizza } from './lib/bacheca.mjs';
 const GIORNI = 30;
 const NOMI = {
   direttore: 'Direttore', contenuti: 'Contenuti', seo: 'SEO', social: 'Social',
-  recensioni: 'Recensioni', scheda: 'Scheda Google', lead: 'Lead e clienti', ads: 'Ads', matteo: 'MATTEO', tutti: 'tutti',
+  recensioni: 'Recensioni', scheda: 'Scheda Google', lead: 'Lead e clienti', ads: 'Ads', meccanico: 'Meccanico', matteo: 'MATTEO', tutti: 'tutti',
 };
 
 function fileJson(dir) {

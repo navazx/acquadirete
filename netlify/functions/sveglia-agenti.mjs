@@ -75,7 +75,7 @@ export default async () => {
     await notifyTelegram(
       'La sveglia degli agenti non è riuscita a far partire:\n' +
       rotti.map((e) => `• ${e.nome}: ${e.dettaglio}`).join('\n') +
-      '\n\nRiprovo da sola ogni 15 minuti per 12 ore. Se domani non è arrivato niente, chiedi a Claude dal PC: di solito è il token GitHub su Netlify che è scaduto.',
+      '\n\nRiprovo da sola ogni 15 minuti per 12 ore. Se resto ferma, domattina il Direttore se ne accorge e chiama il Meccanico, che ti scrive cosa serve: di solito è il token GitHub su Netlify che è scaduto, e quello lo puoi rifare solo tu.',
       'SVEGLIA DEGLI AGENTI',
     );
   }

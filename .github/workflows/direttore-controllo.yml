@@ -16,10 +16,11 @@ on:
     - cron: '0 14 * * *'
   workflow_dispatch:
 
-# contents: per consegnare la nota alla bacheca. actions: per leggere i giri.
+# contents: per consegnare la nota alla bacheca. actions: per leggere i giri, far
+# partire un agente che non e' partito e chiamare il Meccanico (meccanico.yml).
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 jobs:
   controllo:

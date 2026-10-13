@@ -14,11 +14,13 @@
 //       testo completo come file da leggere sul telefono.
 //
 //  Nomi dei rami:  proposta/articolo-<slug>   proposta/seo-<data>
+//                  proposta/ordini-<mese>     proposta/riparazione-<data>
 // ============================================================================
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { messaggio, documento, firma, CHI_PROPONE } from './lib/telegram.mjs';
+import { chiamaMeccanico } from './lib/meccanico.mjs';
 
 const SITO = 'https://www.acquadirete.it';
 const REPO = 'https://github.com/navazx/acquadirete';
@@ -32,6 +34,8 @@ const ramo = process.env.GITHUB_REF_NAME || git('rev-parse', '--abbrev-ref', 'HE
 const tipo = ramo.startsWith('proposta/articolo-') ? 'ARTICOLO'
   : ramo.startsWith('proposta/seo-') ? 'SEO'
   : ramo.startsWith('proposta/ordini-') ? 'ORDINI'
+  // RIPARAZIONE: un guasto sistemato dal Meccanico (meccanico.yml), dal 13 ott 2026.
+  : ramo.startsWith('proposta/riparazione-') ? 'RIPARAZIONE'
   : null;
 
 /**
@@ -90,7 +94,7 @@ async function main() {
     .join('\n')
     .trim()
     .slice(0, 2500);
-  const titolo = oggetto.replace(/^(articolo|seo|ordini)\s*:\s*/i, '');
+  const titolo = oggetto.replace(/^(articolo|seo|ordini|riparazione)\s*:\s*/i, '');
   const cambiati = git('diff', '--name-only', 'origin/main...HEAD').split('\n').filter(Boolean);
 
   // La proposta arriva a nome di chi l'ha preparata, non di chi la consegna.
@@ -100,11 +104,20 @@ async function main() {
     const log = existsSync('/tmp/build.log')
       ? readFileSync('/tmp/build.log', 'utf8').trim().split('\n').slice(-12).join('\n')
       : '(log non disponibile)';
+    // Una proposta che non si costruisce non si rimanda a Matteo: la sistema il
+    // Meccanico sul suo stesso ramo, e torna qui da sola. Se e' una riparazione
+    // sua a non costruirsi, non lo si richiama (girerebbe in tondo).
+    const errore = tipo === 'RIPARAZIONE' ? 'è una riparazione sua' : await chiamaMeccanico('Segreteria (proposte)', [{
+      tipo: 'proposta-non-si-costruisce', ramo, workflow: 'proposta-annuncia.yml', giro: Number(process.env.GITHUB_RUN_ID) || undefined,
+      testo: `La proposta «${titolo}» (ramo ${ramo}) non passa la prova: con queste modifiche il sito non si costruisce.`,
+      ultime_righe: log.slice(-1500),
+    }]);
     await messaggio(
       `La proposta «${titolo}» non passa la prova: con queste modifiche il sito non si costruisce, ` +
-      'quindi non te la propongo.\n\n' +
-      `Ultime righe dell'errore:\n${log}\n\n` +
-      'Il ramo resta lì: chiedi a Claude dal PC di guardarlo.',
+      'quindi non te la propongo ancora.\n\n' +
+      (errore
+        ? `Ultime righe dell'errore:\n${log}\n\nNon sono riuscita a passarla al Meccanico (${errore}): questa volta serve Claude dal PC, digli «guarda la proposta che non si costruisce».`
+        : 'L\'ho passata al Meccanico: corregge l\'errore e te la ripropone. Tu non devi fare niente.'),
     );
     process.exitCode = 1;
     return;
@@ -120,7 +133,9 @@ async function main() {
     ? `Articolo proposto: «${titolo}»`
     : tipo === 'ORDINI'
       ? `Il Direttore propone le priorità di ${titolo}`
-      : `Correzioni SEO proposte: ${titolo}`;
+      : tipo === 'RIPARAZIONE'
+        ? `Riparazione proposta: ${titolo}`
+        : `Correzioni SEO proposte: ${titolo}`;
 
   const testo = [
     testa,
@@ -129,7 +144,7 @@ async function main() {
     '',
     anteprima ? 'Il dettaglio è nel file qui sotto.' : cambiamentiInChiaro(cambiati),
     '',
-    `APPROVA ${tipo} — va online`,
+    `APPROVA ${tipo} — ${tipo === 'RIPARAZIONE' ? 'la applico subito' : 'va online'}`,
     `CORREGGI ${tipo} e cosa cambiare — la sistemo e te la ripropongo`,
     `RIFIUTA ${tipo} e il motivo — non va online, e il motivo resta come lezione`,
   ].join('\n');

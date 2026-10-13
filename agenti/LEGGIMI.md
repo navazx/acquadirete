@@ -195,9 +195,36 @@ Sono conti, non opinioni:
 - chi doveva lasciare una nota sulla bacheca l'ha lasciata? Il postino consegna?
 - cosa aspetta una risposta di Matteo, e da quanti giorni?
 
-Se è tutto a posto tace. Se qualcosa non ha funzionato lo scrive a Matteo su
-Telegram e sulla bacheca; se una cosa lo aspetta da 2, 5, 7, 14… giorni glielo
+Se è tutto a posto tace. Se una cosa aspetta Matteo da 2, 5, 7, 14… giorni glielo
 ricorda. Il lunedì lascia sulla bacheca il riepilogo della settimana.
+
+**Quando trova un guasto non lo rimanda a Matteo** (dal 13 ott 2026: prima gli
+scriveva "chiedi a Claude dal PC di guardarci"). Un agente che non è partito lo fa
+partire lui. Tutto il resto lo passa al Meccanico, e a Matteo scrive cosa ha già
+fatto e che il Meccanico gli scriverà.
+
+## Chi ripara: il Meccanico
+
+Il Meccanico (workflow *Meccanico - ripara quello che non ha funzionato*,
+istruzioni in `.claude/skills/meccanico/`, guasti già visti in
+`agenti/meccanico/LEGGIMI.md`) non ha un orario: lo chiama chi trova un guasto,
+con `chiamaMeccanico()` di `scripts/lib/meccanico.mjs`. Oggi lo chiamano il
+controllo del Direttore, la segreteria (una proposta che non si costruisce o non
+si unisce, una correzione che non parte) e l'agente Ads (l'analisi non riuscita).
+
+Legge i log, trova la causa con la prova, e poi:
+
+- se era passeggero, fa ripartire il giro;
+- se è rotto un pezzo del progetto, prepara la riparazione sul ramo
+  `proposta/riparazione-<data>` e Matteo risponde `APPROVA RIPARAZIONE`,
+  `CORREGGI RIPARAZIONE` o `RIFIUTA RIPARAZIONE` come per le altre proposte;
+- se serve una cosa che può fare solo Matteo (un token scaduto), gli scrive i
+  passi uno per uno;
+- solo se la riparazione tocca i file dei workflow, che né lui né la segreteria
+  possono spingere, dice a Matteo cosa far fare a Claude dal PC.
+
+**Uno script nuovo che può fallire non scrive "chiedi a Claude": chiama il
+Meccanico.** Al suo workflow servono `actions: write` e `GITHUB_TOKEN`.
 
 **Gli orari di tutti stanno in un posto solo**,
 `netlify/functions/_shared/orari.mjs`: da lì li legge la sveglia, che fa partire
@@ -217,6 +244,7 @@ ripetuta la volta dopo:
 | articoli del blog | `agenti/contenuti/lezioni.md` |
 | correzioni SEO | `agenti/seo/lezioni.md` |
 | ordini del mese (Direttore) | `agenti/ordini-lezioni.md` |
+| riparazioni (Meccanico) | `agenti/meccanico/lezioni.md` |
 
 **Chi compone il post del sabato legge `agenti/social-lezioni.md` per intero prima
 di scegliere tema, foto e parole: sono regole, non suggerimenti.** Le correzioni

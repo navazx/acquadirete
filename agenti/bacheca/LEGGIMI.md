@@ -36,7 +36,7 @@ istruzioni, cose che stanno già in `ordini.md`.
 
 - da 1 a 3 note per giro, una o due frasi ciascuna, al massimo 400 caratteri;
 - `per`: `["tutti"]` oppure gli agenti a cui serve: `direttore`, `contenuti`,
-  `seo`, `social`, `recensioni`, `scheda`, `lead`, `ads`, `matteo`;
+  `seo`, `social`, `recensioni`, `scheda`, `lead`, `ads`, `meccanico`, `matteo`;
 - **se il tuo messaggio su Telegram chiede a Matteo di fare o decidere qualcosa,
   lascia la stessa cosa in una nota `per: ["matteo"]`**: su Telegram passa una
   volta e si perde, sulla bacheca resta (lezione del 12 ott 2026);
