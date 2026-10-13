@@ -24,7 +24,7 @@ const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 /** true quando ci sono sia token che chat id: senza, gli script stampano a schermo. */
 export const TELEGRAM_READY = Boolean(TG_TOKEN && CHAT_ID);
 
-function loadKey() {
+export function loadKey() {
   if (process.env.GSC_KEY_JSON) return JSON.parse(process.env.GSC_KEY_JSON);
   if (process.env.GSC_KEY_FILE) return JSON.parse(readFileSync(process.env.GSC_KEY_FILE, 'utf8'));
   throw new Error('Chiave mancante: imposta il secret GSC_KEY_JSON (o GSC_KEY_FILE per il test locale).');

@@ -196,6 +196,14 @@ export async function controlla(adesso = new Date()) {
       problemi.push({ nome: 'Correzione di una proposta', tipo: 'correzione', workflow: 'correggi-proposta.yml', ramo: p.ramo, testo: `Correzione di «${p.titolo}»: l'hai chiesta ${quandoIt(new Date(ultima.chiesta))} e non è tornata.` });
     }
   }
+  // La proposta dell'agente Ads (modifiche a Google Ads gia' pronte): dopo 21 giorni
+  // e' scaduta e non si puo' piu' approvare, quindi non si ricorda piu'.
+  for (const p of leggi('agenti/ads/proposte.json', [])) {
+    const giorni = Math.floor((adesso - new Date(p.creata)) / GIORNO);
+    if (p.stato === 'in attesa' && giorni <= 21) {
+      attese.push({ giorni, testo: `Pubblicità, ${p.titolo} già pronte: rispondi APPROVA ADS (le applico io) o RIFIUTA ADS e il motivo.` });
+    }
+  }
   const bozza = leggi('agenti/social-bozza.json', null);
   if (bozza && bozza.inviato && !bozza.pubblicato && !bozza.scartato) {
     attese.push({ giorni: Math.floor((adesso - new Date(bozza.inviato)) / GIORNO), testo: `Post social (${bozza.tema}): rispondi PUBBLICA, CORREGGI, RIMANDA o SCARTA.` });

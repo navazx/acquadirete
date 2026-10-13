@@ -10,8 +10,10 @@
 //  termini di ricerca ed elenco dei concorrenti esclusi sono affari di
 //  Acquadirete. Legge, ragiona, manda il messaggio. Fine.
 //
-//  NON TOCCA GOOGLE ADS: il service account ha ruolo "Solo lettura". Le
-//  esclusioni le propone; metterle tocca a Matteo.
+//  NON TOCCA GOOGLE ADS: questo script legge e basta. Dal 13 ott 2026 le
+//  modifiche semplici (escludere una ricerca, mettere in pausa una parola o un
+//  annuncio) l'analisi le porta gia' pronte e partono solo dopo l'APPROVA ADS di
+//  Matteo su Telegram: vedi lib/ads-azioni.mjs e scripts/risposte.mjs.
 //
 //  Cosa manda, sugli ultimi 30 giorni interi confrontati coi 30 prima:
 //    1. i numeri: clic, spesa, conversioni, costo per conversione
@@ -46,7 +48,8 @@
 //    GSC_KEY_FILE=../seo-report/gsc-key-readonly.json PROVA=true node scripts/agente-ads.mjs
 // ============================================================================
 
-import { query, euro } from './lib/ads.mjs';
+import { query, euro, struttura } from './lib/ads.mjs';
+import { storia } from './lib/ads-proposte.mjs';
 import { sheetsToken, leggiLead } from './lib/gestionale.mjs';
 import { writeFileSync } from 'node:fs';
 import { lasciaNota } from './lib/bacheca.mjs';
@@ -443,26 +446,26 @@ async function main() {
       )).map((x) => ({ campagna: x.campaign.name, gruppo: x.adGroup.name, stato: x.adGroup.status, ...m(x) })));
     }
     await tenta('paroleChiave', async () => (await query(
-      `SELECT ad_group.name, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type,
+      `SELECT ad_group.name, ad_group_criterion.resource_name, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type,
               ad_group_criterion.quality_info.quality_score,
               metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
        FROM keyword_view WHERE ${ora.gaql} AND ad_group_criterion.status = 'ENABLED'`,
     )).map((x) => ({
-      gruppo: x.adGroup.name, parola: x.adGroupCriterion.keyword.text, corrispondenza: x.adGroupCriterion.keyword.matchType,
+      id: x.adGroupCriterion.resourceName, gruppo: x.adGroup.name, parola: x.adGroupCriterion.keyword.text, corrispondenza: x.adGroupCriterion.keyword.matchType,
       punteggioQualita: x.adGroupCriterion.qualityInfo?.qualityScore, ...m(x),
     })));
     await tenta('terminiPerGruppo', async () => (await query(
-      `SELECT ad_group.name, search_term_view.search_term, search_term_view.status,
+      `SELECT ad_group.name, ad_group.resource_name, search_term_view.search_term, search_term_view.status,
               metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
        FROM search_term_view WHERE ${ora.gaql}`,
-    )).map((x) => ({ gruppo: x.adGroup.name, termine: x.searchTermView.searchTerm, stato: x.searchTermView.status, ...m(x) })));
+    )).map((x) => ({ gruppo: x.adGroup.name, gruppoId: x.adGroup.resourceName, termine: x.searchTermView.searchTerm, stato: x.searchTermView.status, ...m(x) })));
     await tenta('annunci', async () => (await query(
-      `SELECT ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, ad_group_ad.ad_strength,
+      `SELECT ad_group.name, ad_group_ad.resource_name, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, ad_group_ad.ad_strength,
               ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions,
               metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
        FROM ad_group_ad WHERE ${ora.gaql} AND ad_group_ad.status = 'ENABLED'`,
     )).map((x) => ({
-      gruppo: x.adGroup.name, forza: x.adGroupAd.adStrength, pagina: x.adGroupAd.ad.finalUrls?.[0],
+      id: x.adGroupAd.resourceName, gruppo: x.adGroup.name, forza: x.adGroupAd.adStrength, pagina: x.adGroupAd.ad.finalUrls?.[0],
       titoli: (x.adGroupAd.ad.responsiveSearchAd?.headlines || []).map((h) => h.text),
       descrizioni: (x.adGroupAd.ad.responsiveSearchAd?.descriptions || []).map((h) => h.text), ...m(x),
     })));
@@ -490,6 +493,14 @@ async function main() {
        FROM ad_group_criterion WHERE ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD'`,
     )).map((x) => ({ gruppo: x.adGroup.name, parola: x.adGroupCriterion.keyword.text, corrispondenza: x.adGroupCriterion.keyword.matchType })));
 
+    // Com'e' fatto l'account, con l'indirizzo di ogni cosa: serve a chi propone le
+    // modifiche da applicare (campagne e gruppi dove escludere, parole e annunci da
+    // mettere in pausa) e a controllarle prima di mandarle a Matteo.
+    await tenta('struttura', struttura);
+    // Le proposte dei mesi scorsi: cosa e' stato applicato, cosa rifiutato e perche'.
+    let proposteGiaFatte;
+    try { proposteGiaFatte = storia(); } catch (e) { proposteGiaFatte = { errore: String(e.message).slice(0, 200) }; }
+
     const dati = {
       creato: new Date().toISOString(),
       attenzione: 'Dati riservati: dentro c\'è la spesa. Non vanno copiati nel repository, in un commit o in una nota della bacheca.',
@@ -506,6 +517,7 @@ async function main() {
       },
       meta,
       gestionale: foglio,
+      proposteGiaFatte,
       revisioneDiBase: testo,
     };
     writeFileSync(process.env.ADS_DATI, JSON.stringify(dati, null, 1));

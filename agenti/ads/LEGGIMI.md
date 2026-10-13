@@ -13,9 +13,59 @@ Le cifre stanno nella revisione che arriva a Matteo su Telegram.
 2. L'agente con l'intelligenza artificiale (`.claude/skills/revisione-ads/`) studia
    quei dati e scrive la revisione vera.
 3. Il workflow la manda a Matteo. Se l'analisi non riesce, manda quella di base.
+4. Se l'analisi ha preparato delle modifiche semplici a Google Ads, gli arriva
+   subito dopo **la proposta**: l'elenco numerato, già pronto.
 
-L'agente **legge e basta**: non può cambiare niente su Google Ads né su Meta, e
-non deve. Budget, esclusioni e annunci li tocca Matteo, o Claude dal PC con lui.
+## Cosa può applicare l'agente, e cosa no (dal 13 ott 2026)
+
+Matteo ha chiesto: *"ma poi chi le applica le cose che dice?"*. Da allora le
+modifiche semplici non restano un elenco di clic da fare: l'agente le porta
+pronte e lui risponde su Telegram.
+
+| Matteo scrive | Cosa succede |
+|---|---|
+| `APPROVA ADS` | le applica tutte su Google Ads |
+| `APPROVA ADS 1 3` | solo quelle coi numeri scritti |
+| `RIFIUTA ADS` e il motivo | non tocca niente; il motivo va in `lezioni.md` |
+| `ANNULLA ADS` | rimette com'era l'ultima proposta applicata |
+
+**Si può applicare così, e solo dopo il suo APPROVA:**
+
+- escludere una ricerca (parola chiave esclusa, a frase o esatta);
+- mettere in pausa una parola chiave;
+- mettere in pausa un annuncio;
+- il contrario di queste tre, con ANNULLA ADS, e solo su quello che ha fatto lui.
+
+**Non si può, mai:** budget, offerte, campagne o gruppi accesi o spenti, annunci
+nuovi o riscritti, cancellazioni, e tutto Meta. Non è una raccomandazione: il
+codice che scrive su Google Ads (`scripts/lib/ads.mjs`, `PERMESSE`) accetta solo
+quelle forme di operazione e rifiuta il resto.
+
+**I controlli** (`scripts/lib/ads-azioni.mjs`) si fanno due volte, quando la
+proposta nasce e di nuovo quando si applica. Una modifica viene scartata se:
+
+- punta a una campagna, un gruppo, una parola o un annuncio che non esiste;
+- un'esclusione fermerebbe una nostra parola chiave attiva, una ricerca che nel
+  mese ha portato una conversione, o più del 15% dei clic;
+- riguarda prezzo, costo, gratis o preventivo (vedi sotto);
+- una pausa lascerebbe un gruppo senza parole o senza annunci, toccherebbe
+  qualcosa che ha convertito, o toglierebbe in tutto più del 20% dei clic;
+- supera i tetti: 15 esclusioni, 3 parole in pausa, 1 annuncio in pausa per volta.
+
+La proposta vale 21 giorni, poi scade. Sta in `agenti/ads/proposte.json`: in
+chiaro ci sono solo data, stato e quante modifiche; l'elenco è cifrato, perché
+il repository è pubblico. La chiave è quella del service account degli agenti
+su GitHub, quindi **dal PC la proposta non si può leggere**: per sapere cosa
+c'era dentro si guarda il messaggio su Telegram.
+
+Perché funzioni, su Google Ads l'utente del service account `seo-report-bot`
+deve avere accesso **Standard** (lo decide Matteo: Amministratore → Accesso e
+sicurezza → Utenti). Con "Sola lettura" le proposte arrivano lo stesso, ma
+all'APPROVA Google ferma tutto e l'agente lo dice. Si prova senza cambiare
+niente con il workflow **Agente Ads - prova dell'accesso**. La chiave sul PC
+(`cruscotto-readonly`) resta di sola lettura.
+
+Meta resta fuori: lì l'agente legge e consiglia, e fa tutto Matteo.
 
 ## Il metro vero
 

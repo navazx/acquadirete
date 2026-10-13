@@ -54,7 +54,7 @@ const CHI = {
   'proposta-annuncia.mjs': 'SEGRETERIA',
 };
 // Chi ha preparato una proposta, dal suo tipo.
-export const CHI_PROPONE = { ARTICOLO: 'AGENTE CONTENUTI', SEO: 'AGENTE SEO', ORDINI: 'DIRETTORE', POST: 'AGENTE SOCIAL', RIPARAZIONE: 'MECCANICO', RECENSIONI: 'AGENTE RECENSIONI' };
+export const CHI_PROPONE = { ARTICOLO: 'AGENTE CONTENUTI', SEO: 'AGENTE SEO', ORDINI: 'DIRETTORE', POST: 'AGENTE SOCIAL', RIPARAZIONE: 'MECCANICO', RECENSIONI: 'AGENTE RECENSIONI', ADS: 'AGENTE ADS' };
 
 let firmaScelta = null;
 /** Da qui in avanti i messaggi partono a nome di `nome`. */

@@ -4,6 +4,9 @@ name: Risposte su Telegram
 # ed esegue: PUBBLICA / RIMANDA / SCARTA per il post social, APPROVA / RIFIUTA
 # per le proposte degli agenti (articoli, correzioni SEO). Le foto mandate al
 # bot finiscono fra quelle per i post social.
+# Dal 13 ott 2026 anche APPROVA ADS / RIFIUTA ADS / ANNULLA ADS: le modifiche a
+# Google Ads preparate dall'agente Ads (escludere ricerche, mettere in pausa
+# parole e annunci). Si applicano SOLO da qui, e solo su un ordine di Matteo.
 # E' l'unico lettore di Telegram: due si ruberebbero i messaggi a vicenda.
 # Se non c'e' niente in sospeso non fa e non dice niente.
 #
@@ -60,6 +63,9 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
           META_PUBLISH_TOKEN: ${{ secrets.META_PUBLISH_TOKEN }}
+          # Per APPROVA ADS: e' il service account che entra in Google Ads, e la
+          # chiave con cui e' chiuso l'elenco delle modifiche in attesa.
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           GITHUB_TOKEN: ${{ github.token }}
           ORDINE_A_MANO: ${{ inputs.ordine }}
         run: node scripts/risposte.mjs
@@ -105,3 +111,11 @@ jobs:
           fi
           git pull --rebase origin main
           git push origin HEAD:main
+
+      # Dopo un APPROVA ADS o un ANNULLA ADS resta una nota per la bacheca: su
+      # Google Ads e' cambiato qualcosa, e gli altri agenti devono saperlo.
+      - name: Consegna le note alla bacheca
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/bacheca-consegna.mjs

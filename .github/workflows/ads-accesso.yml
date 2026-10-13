@@ -1,0 +1,31 @@
+name: Agente Ads - prova dell'accesso
+
+# Dice se l'agente Ads puo' scrivere su Google Ads, senza cambiare niente:
+# chiede a Google se accetterebbe un'esclusione finta (validateOnly) e basta.
+# Serve dopo aver alzato l'accesso del service account da "Sola lettura" a
+# "Standard", per sapere se APPROVA ADS funzionera'. Si avvia solo a mano.
+# Verde = puo' scrivere. Rosso = e' ancora di sola lettura (lo dice nel log).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  accesso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Google Ads accetterebbe una modifica?
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+        run: node scripts/ads-accesso.mjs

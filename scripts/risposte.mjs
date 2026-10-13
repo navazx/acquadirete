@@ -13,6 +13,11 @@
 //    proposte      APPROVA [ARTICOLO|SEO|ORDINI|RIPARAZIONE|RECENSIONI] · RIFIUTA [...] [motivo]
 //                  CORREGGI [ARTICOLO|SEO] <cosa cambiare> — la riscrive e la
 //                  ripropone (anche un RIFIUTA che chiede di correggere vale cosi')
+//    pubblicita'   APPROVA ADS [1 3] · RIFIUTA ADS [motivo] · ANNULLA ADS
+//                  Le modifiche a Google Ads preparate dall'agente Ads (escludere
+//                  ricerche, mettere in pausa parole e annunci): APPROVA le
+//                  applica, coi numeri solo quelle; ANNULLA rimette com'era
+//                  l'ultima applicata. Vedi lib/ads-proposte.mjs.
 //
 //  Quello che Matteo corregge o rifiuta, col suo perche', finisce nel file delle
 //  lezioni di quell'agente (vedi LEZIONI piu' sotto): lo rilegge ogni volta.
@@ -42,6 +47,8 @@ import { pathToFileURL } from 'node:url';
 import { messaggio, risposte, conferma, scaricaFile, firma, CHI_PROPONE } from './lib/telegram.mjs';
 import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
 import { chiamaMeccanico } from './lib/meccanico.mjs';
+import { leggi as proposteAds, inAttesa, applica as applicaAds, rifiuta as rifiutaAds, annulla as annullaAds } from './lib/ads-proposte.mjs';
+import { lasciaNota } from './lib/bacheca.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
 const STATO = 'agenti/telegram-stato.json';
@@ -55,6 +62,7 @@ const AIUTO =
   'Gli ordini che riconosco sono questi:\n\n' +
   'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · CORREGGI e cosa cambiare · RIMANDA · SCARTA\n' +
   'Per le proposte: APPROVA ARTICOLO · CORREGGI ARTICOLO e cosa cambiare · RIFIUTA ARTICOLO e il motivo\n' +
+  'Per la pubblicità: APPROVA ADS (oppure APPROVA ADS 1 3) · RIFIUTA ADS e il motivo · ANNULLA ADS\n' +
   'Per i post: mandami una foto e la metto fra quelle da usare';
 
 const leggiJson = (f, vuoto) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : vuoto);
@@ -84,22 +92,31 @@ export function ordine(testo) {
     return { argomento: 'social', azione: CHIEDE_DI_CORREGGERE_IL_POST.test(motivo) ? 'correggi' : 'scarta', motivo };
   }
 
-  const a = pulito.match(/^(approva|rifiuta|correggi)(?: (?:il |l'|la )?(articolo|seo|ordini|riparazione|recensioni|post))?\b[\s:,.-]*(.*)$/i);
+  // ANNULLA vale solo per la pubblicita': rimette com'era l'ultima proposta applicata.
+  if (/^annulla (?:ads|(?:la )?pubblicit[aà])$/i.test(pulito)) return { argomento: 'annulla-ads' };
+
+  // (?![a-zà-ù0-9_]) fa il lavoro di \b, che dopo una lettera accentata non scatta.
+  const a = pulito.match(/^(approva|rifiuta|correggi)(?![a-zà-ù0-9_])(?: (?:il |l'|la )?(articolo|seo|ordini|riparazione|recensioni|post|ads|pubblicit[aà])(?![a-zà-ù0-9_]))?[\s:,.-]*(.*)$/i);
   if (a) {
     let azione = a[1].toLowerCase();
-    const tipo = a[2] ? a[2].toUpperCase() : null;
+    const tipo = a[2] ? (/^pubblicit/i.test(a[2]) ? 'ADS' : a[2].toUpperCase()) : null;
     const motivo = (a[3] || '').trim();
     // CORREGGI POST e' per il post social. Un CORREGGI senza dire cosa lo decide
     // main(), guardando che cosa c'e' in attesa.
     if (tipo === 'POST') return azione === 'correggi' ? { argomento: 'social', azione, motivo } : null;
     // "approva domani" o "approva l'articolo" non sono ordini: meglio chiedere
     // che approvare per sbaglio.
-    if (azione === 'approva' && motivo) return null;
+    // Fanno eccezione i numeri: "APPROVA ADS 1 3" approva solo quelle modifiche.
+    if (azione === 'approva' && motivo) {
+      if (tipo === 'POST' || !/^\d{1,2}(?:[\s,e]+\d{1,2})*$/i.test(motivo)) return null;
+      return { argomento: 'proposta', azione, tipo, motivo: '', solo: [...new Set(motivo.match(/\d+/g).map(Number))] };
+    }
     // Un RIFIUTA che chiede di correggere e' un CORREGGI: il 5 ott 2026 Matteo ha
     // scritto "RIFIUTA ... correggi l'articolo e riproponimelo in giornata", e
     // l'articolo e' finito nel cestino.
-    if (azione === 'rifiuta' && CHIEDE_DI_CORREGGERE.test(motivo)) azione = 'correggi';
-    return { argomento: 'proposta', azione, tipo, motivo };
+    const daRifiuta = azione === 'rifiuta' && CHIEDE_DI_CORREGGERE.test(motivo);
+    if (daRifiuta) azione = 'correggi';
+    return { argomento: 'proposta', azione, tipo, motivo, ...(daRifiuta && { daRifiuta }) };
   }
   return null;
 }
@@ -245,6 +262,7 @@ const LEZIONI = {
   RIPARAZIONE: 'agenti/meccanico/lezioni.md',
   RECENSIONI: 'agenti/recensioni/lezioni.md',
   POST: 'agenti/social-lezioni.md',
+  ADS: 'agenti/ads/lezioni.md',
 };
 
 function lezione(tipo, testo) {
@@ -347,9 +365,61 @@ async function eseguiProposta(o, aperte) {
     await messaggio(`Ci sono ${candidate.length} proposte in attesa: scrivi ${tipi.map((t) => `${verbo} ${t}`).join(' oppure ')}.`);
     return;
   }
+  if (candidate[0].tipo === 'ADS') {
+    await eseguiAds(o, candidate[0]);
+    return;
+  }
+  if (o.solo) {
+    await messaggio(`«${candidate[0].titolo}» si approva o si rifiuta tutta intera: scrivi APPROVA ${candidate[0].tipo}. Non ho fatto niente.`);
+    return;
+  }
   if (o.azione === 'approva') await approva(candidate[0]);
   else if (o.azione === 'correggi') await correggi(candidate[0], o.motivo);
   else await rifiuta(candidate[0], o.motivo);
+}
+
+// ---------------------------------------------------------------------------
+//  Pubblicita': le modifiche a Google Ads preparate dall'agente Ads
+// ---------------------------------------------------------------------------
+
+// Una modifica applicata a Google Ads va detta anche sulla bacheca. La consegna
+// la fa il workflow, dopo.
+function notaAds(testo) {
+  try { lasciaNota('ads', testo, ['direttore']); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
+}
+
+/**
+ * La proposta non e' un ramo: e' un elenco di modifiche (cifrato) in
+ * agenti/ads/proposte.json. APPROVA le applica su Google Ads, tutte o solo quelle
+ * coi numeri detti; RIFIUTA non tocca niente. I limiti di cosa puo' partire stanno
+ * in lib/ads-azioni.mjs e lib/ads.mjs, non qui.
+ */
+async function eseguiAds(o, p) {
+  firma(CHI_PROPONE.ADS);
+  // Un "RIFIUTA ADS ... correggi" resta un rifiuto: qui non c'e' niente da riscrivere.
+  if (o.azione === 'rifiuta' || o.daRifiuta) {
+    const r = rifiutaAds(p.id, o.motivo);
+    if (r.lezione) lezione('ADS', r.lezione);
+    await messaggio(r.testo);
+    return;
+  }
+  if (o.azione === 'correggi') {
+    await messaggio(
+      'Le modifiche alla pubblicità non si correggono a parole. Scrivi APPROVA ADS coi numeri di quelle che vuoi ' +
+      '(per esempio APPROVA ADS 1 3), oppure RIFIUTA ADS e il motivo. Non ho fatto niente.',
+    );
+    return;
+  }
+  const r = await applicaAds(p.id, o.solo || []);
+  if (r.nota) notaAds(r.nota);
+  await messaggio(r.guasto ? `${r.testo}\n${await alMeccanico({ tipo: 'ads-non-applicata', workflow: 'risposte.yml', testo: r.guasto })}` : r.testo);
+}
+
+async function eseguiAnnullaAds() {
+  firma(CHI_PROPONE.ADS);
+  const r = await annullaAds();
+  if (r.nota) notaAds(r.nota);
+  await messaggio(r.guasto ? `${r.testo}\n${await alMeccanico({ tipo: 'ads-non-annullata', workflow: 'risposte.yml', testo: r.guasto })}` : r.testo);
 }
 
 /**
@@ -380,7 +450,7 @@ async function correggi(p, note) {
 //  Foto per i post
 // ---------------------------------------------------------------------------
 
-const TENTATIVO = /^\s*(pubblica|scarta|rimanda|salta|approva|rifiuta|correggi)/i;
+const TENTATIVO = /^\s*(pubblica|scarta|rimanda|salta|approva|rifiuta|correggi|annulla)/i;
 
 /**
  * Nome della foto senza estensione: data e numero del messaggio, cosi' due foto
@@ -454,7 +524,11 @@ async function salvaFoto(elenco) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const aperte = leggiJson(PROPOSTE, []).filter((p) => p.stato === 'in attesa');
+  // Le proposte in attesa: i rami degli agenti, piu' quella dell'agente Ads (che
+  // non e' un ramo, ma si approva e si rifiuta allo stesso modo).
+  const aperte = [...leggiJson(PROPOSTE, []).filter((p) => p.stato === 'in attesa'), ...inAttesa(proposteAds())];
+  // CORREGGI vale solo per quelle che si possono riscrivere.
+  const daRiscrivere = aperte.filter((p) => p.tipo !== 'ADS');
 
   const { ultimoUpdate = 0, ultimaFoto } = leggiJson(STATO, {});
   const aMano = (process.env.ORDINE_A_MANO || '').trim();
@@ -503,14 +577,18 @@ async function main() {
     }
     // Un CORREGGI senza dire cosa: se in attesa c'e' solo il post, e' per il post.
     // Se ci sono sia il post sia una proposta, si chiede invece di tirare a caso.
-    if (o.argomento === 'proposta' && o.azione === 'correggi' && !o.tipo && postInAttesa) {
-      if (!aperte.length) {
+    if (o.argomento === 'annulla-ads') {
+      ordini.set('annulla-ads', o);
+      continue;
+    }
+    if (o.argomento === 'proposta' && o.azione === 'correggi' && !o.daRifiuta && !o.tipo && postInAttesa) {
+      if (!daRiscrivere.length) {
         ordini.set('social', { argomento: 'social', azione: 'correggi', motivo: o.motivo });
         continue;
       }
       await messaggio(
-        `In attesa ci sono il post e ${aperte.length === 1 ? 'una proposta' : `${aperte.length} proposte`}: ` +
-        `scrivi CORREGGI POST oppure ${[...new Set(aperte.map((p) => `CORREGGI ${p.tipo}`))].join(' oppure ')}, e poi le correzioni.`,
+        `In attesa ci sono il post e ${daRiscrivere.length === 1 ? 'una proposta' : `${daRiscrivere.length} proposte`}: ` +
+        `scrivi CORREGGI POST oppure ${[...new Set(daRiscrivere.map((p) => `CORREGGI ${p.tipo}`))].join(' oppure ')}, e poi le correzioni.`,
       );
       continue;
     }
@@ -527,6 +605,7 @@ async function main() {
   for (const o of ordini.values()) {
     firma(null);   // ogni ordine riparte dalla Segreteria; chi lo esegue mette il suo nome
     if (o.argomento === 'social') await eseguiSocial(o);
+    else if (o.argomento === 'annulla-ads') await eseguiAnnullaAds();
     else await eseguiProposta(o, aperte);
   }
 }

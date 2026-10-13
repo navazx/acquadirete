@@ -9,13 +9,18 @@ name: Agente Ads - revisione mensile
 #      studia e scrive la revisione vera: dove vanno i soldi, cosa fare, cosa no;
 #   3. scripts/ads-manda.mjs la manda a Matteo. Se l'analisi non e' riuscita
 #      manda quella di base, cosi' il 18 non resta mai muto.
+#      Dal 13 ott 2026 manda anche LA PROPOSTA: le modifiche semplici (ricerche
+#      da escludere, parole e annunci da mettere in pausa) gia' pronte e
+#      controllate. Matteo risponde APPROVA ADS e le applica scripts/risposte.mjs.
 #
 # Ha preso il posto di "Promemoria Google Ads", che diceva a Matteo di aprire il
 # report a mano.
 #
-# NON scrive niente nel repo, di proposito: il repository e' pubblico, e spesa e
-# termini di ricerca non devono finirci. E non tocca Google Ads: il service
-# account (seo-report-bot, chiave in GSC_KEY_JSON) ha ruolo "Solo lettura".
+# Nel repo non finiscono mai spesa e termini di ricerca: il repository e'
+# pubblico. L'unica cosa che ci va e' agenti/ads/proposte.json, dove l'elenco
+# delle modifiche in attesa e' cifrato. E questo workflow non cambia niente su
+# Google Ads: chiede solo a Google se le modifiche sarebbero accettate
+# (validateOnly). Applicarle tocca a risposte.yml, dopo l'APPROVA ADS di Matteo.
 # L'orario non sta piu' qui: lo tiene la sveglia su Netlify
 # (netlify/functions/sveglia-agenti.mjs, il 18 del mese 07:00 UTC), che fa partire
 # questo workflow a mano. Il giro programmato di GitHub arrivava con ore di
@@ -84,16 +89,22 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: '6369351410'
+          # Per la proposta: chiedere a Google se accetterebbe le modifiche, chiudere
+          # l'elenco e metterlo su main (dopo l'azione di Claude le credenziali del
+          # checkout non valgono piu').
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/ads-manda.mjs
 
-      # In prova si dice solo se i file ci sono e quanto sono lunghi.
+      # In prova si dice solo se i testi ci sono, quanto sono lunghi, e come
+      # andrebbero i controlli sulle modifiche da applicare. Non manda e non
+      # spinge niente; a Google chiede solo se le accetterebbe.
       - name: In prova - cosa sarebbe partito
         if: ${{ inputs.prova == true }}
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
         run: |
-          for f in /tmp/ads-revisione.txt /tmp/ads-dettaglio.txt /tmp/ads-base.txt; do
-            if [ -s "$f" ]; then echo "$f: $(wc -m < "$f") caratteri"; else echo "$f: non c'e'"; fi
-          done
+          node scripts/ads-manda.mjs --prova
           rm -rf /tmp/bacheca
 
       # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/),
@@ -109,4 +120,4 @@ jobs:
 
       - name: Butta i file coi dati
         if: ${{ always() }}
-        run: rm -f /tmp/ads-dati.json /tmp/ads-base.txt /tmp/ads-nota-base.json /tmp/ads-revisione.txt /tmp/ads-dettaglio.txt
+        run: rm -f /tmp/ads-dati.json /tmp/ads-base.txt /tmp/ads-nota-base.json /tmp/ads-revisione.txt /tmp/ads-dettaglio.txt /tmp/ads-azioni.json
