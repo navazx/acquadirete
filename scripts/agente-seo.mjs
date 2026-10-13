@@ -403,6 +403,7 @@ export function lasciaNoteSullaBacheca(esito, nuovi, risolti, segnali) {
   const righe = segnali.slice(0, 5).map((s) => {
     if (s.tipo === 'vetrina') per.add('seo');
     if (s.tipo === 'soglia' && blog(s.pagina)) per.add('contenuti');
+    if (s.tipo === 'soglia' && !blog(s.pagina)) per.add('seo');
     if (s.tipo === 'prima-pagina' || s.tipo === 'sale') per.add('social');
     const dove = s.pagina ? ` (${s.pagina})` : '';
     return `"${s.ricerca}"${dove}: ${NOMI_SEGNALI[s.tipo] || s.tipo}`;
@@ -431,6 +432,21 @@ export function decise(testo, oggi = new Date()) {
     const [data, , tipo, ricerca] = riga.split('|').map((c) => c.trim());
     if (tipo !== 'concorrenza' || !ricerca || Number.isNaN(Date.parse(data))) continue;
     if ((oggi - new Date(data)) / 86400000 <= 60) fatte.add(ricerca.replace(/^"|"$/g, '').toLowerCase());
+  }
+  return fatte;
+}
+
+/**
+ * Le pagine gia' lavorate per un certo motivo (vetrina, soglia) negli ultimi 60
+ * giorni, lette da posizioni-lavorate.md. Serve al controllo del Direttore per
+ * capire se l'agente SEO ha lasciato indietro una pagina che era sua.
+ */
+export function pagineLavorate(testo, tipoCercato, oggi = new Date()) {
+  const fatte = new Set();
+  for (const riga of String(testo).split('\n')) {
+    const [data, pagina, tipo] = riga.split('|').map((c) => c.trim());
+    if (tipo !== tipoCercato || !pagina || Number.isNaN(Date.parse(data))) continue;
+    if ((oggi - new Date(data)) / 86400000 <= 60) fatte.add(pagina);
   }
   return fatte;
 }

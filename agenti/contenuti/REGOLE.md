@@ -35,7 +35,8 @@ cioè in fondo alla prima pagina o all'inizio della seconda. Lì non clicca quas
 nessuno, e **il titolo non c'entra**: l'articolo deve salire.
 
 - Salta gli articoli che compaiono in `agenti/seo/posizioni-lavorate.md` negli ultimi
-  60 giorni. Le pagine che non sono del blog **non sono tue**, anche se sono in soglia.
+  60 giorni. Le pagine che non sono del blog **non sono tue**, anche se sono in soglia:
+  le rinforza l'agente SEO il lunedì.
 - Se ce ne sono più di uno, prendi quello con più viste sommando le sue ricerche.
 - Leggi le ricerche che lo riguardano: dicono cosa cerca la gente. L'articolo sale se
   risponde meglio **a quelle domande**. Aggiungi 1-2 sezioni nuove, o allarga quelle

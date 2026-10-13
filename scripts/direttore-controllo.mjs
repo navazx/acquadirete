@@ -42,7 +42,8 @@ import { AGENTI, ROUTINE } from '../netlify/functions/_shared/orari.mjs';
 import { ultimoAppuntamento } from '../netlify/functions/_shared/sveglia.mjs';
 import { lasciaNota } from './lib/bacheca.mjs';
 import { avvia, chiamaMeccanico } from './lib/meccanico.mjs';
-import { decise } from './agente-seo.mjs';
+import { decise, pagineLavorate } from './agente-seo.mjs';
+import { blog } from './lib/posizioni.mjs';
 
 const REPO = process.env.GITHUB_REPOSITORY || 'navazx/acquadirete';
 const MINUTO = 60000, ORA = 60 * MINUTO, GIORNO = 24 * ORA;
@@ -209,7 +210,8 @@ export async function controlla(adesso = new Date()) {
     attese.push({ giorni: Math.floor((adesso - new Date(bozza.inviato)) / GIORNO), testo: `Post social (${bozza.tema}): rispondi PUBBLICA, CORREGGI, RIMANDA o SCARTA.` });
   }
   const segnali = leggi('agenti/seo/posizioni.json', {}).segnali || [];
-  const fatte = decise(existsSync('agenti/seo/posizioni-lavorate.md') ? readFileSync('agenti/seo/posizioni-lavorate.md', 'utf8') : '', adesso);
+  const lavorate = existsSync('agenti/seo/posizioni-lavorate.md') ? readFileSync('agenti/seo/posizioni-lavorate.md', 'utf8') : '';
+  const fatte = decise(lavorate, adesso);
   const scelte = segnali.filter((s) => s.tipo === 'concorrenza' && !fatte.has(s.ricerca.toLowerCase()));
   // Le scelte le propone l'agente SEO in coda al controllo del lunedi'. Se dopo il
   // suo giro ci sono ancora pagine in concorrenza e nessuna proposta in attesa, non
@@ -219,6 +221,14 @@ export async function controlla(adesso = new Date()) {
   const proposta = proposte.some((p) => p.tipo === 'SEO' && (p.stato === 'in attesa' || p.stato === 'da correggere'));
   if (scelte.length && !proposta && giroSeo && adesso - giroSeo > 3 * ORA && adesso - giroSeo <= DA_DIRE) {
     problemi.push({ nome: 'Agente SEO', tipo: 'seo-proposta', workflow: 'agente-seo.yml', testo: `Agente SEO: ci sono ${scelte.length === 1 ? 'una ricerca' : `${scelte.length} ricerche`} con più pagine in concorrenza (${scelte.map((s) => `"${s.ricerca}"`).join(', ')}) ma NON HA MANDATO LA PROPOSTA.` });
+  }
+  // Stessa cosa per le pagine dei servizi a un passo dalla prima pagina: dal 13
+  // ott 2026 le rinforza l'agente SEO, e ogni pagina finisce in una proposta o
+  // nel registro delle pagine lavorate.
+  const giaRinforzate = pagineLavorate(lavorate, 'soglia', adesso);
+  const daRinforzare = [...new Set(segnali.filter((s) => s.tipo === 'soglia' && s.pagina && !blog(s.pagina) && !giaRinforzate.has(s.pagina)).map((s) => s.pagina))];
+  if (daRinforzare.length && !proposta && giroSeo && adesso - giroSeo > 3 * ORA && adesso - giroSeo <= DA_DIRE) {
+    problemi.push({ nome: 'Agente SEO', tipo: 'seo-proposta', workflow: 'agente-seo.yml', testo: `Agente SEO: ${daRinforzare.length === 1 ? 'una pagina dei servizi è' : `${daRinforzare.length} pagine dei servizi sono`} a un passo dalla prima pagina di Google (${daRinforzare.join(', ')}) ma NON HA MANDATO LA PROPOSTA per rinforzarle.` });
   }
 
   return { problemi, attese, regolari, vecchi };

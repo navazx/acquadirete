@@ -131,8 +131,12 @@ function chiCiPensa(tipo, pagine) {
   if (tipo === 'soglia') {
     const articoli = pagine.filter(blog).length;
     if (articoli === pagine.length) return '→ Ci pensa l\'agente Contenuti: il 5 del mese ti propone l\'articolo arricchito al posto di uno nuovo.';
-    if (articoli) return '→ Gli articoli li arricchisce l\'agente Contenuti il 5 del mese. Le pagine dei servizi no: portano i contatti, e si decidono insieme a Claude dal PC.';
-    return '→ Sono pagine dei servizi: portano i contatti, quindi nessun agente le riscrive da solo. Si decidono insieme a Claude dal PC.';
+    // Le pagine dei servizi portano i contatti: non si riscrivono, si rinforzano
+    // (una domanda in piu', collegamenti da altre pagine) e Matteo approva. Fino al
+    // 13 ott 2026 qui c'era scritto "si decidono insieme a Claude dal PC".
+    const rinforzo = 'l\'agente SEO: le rinforza senza riscriverle (una domanda e risposta in più, collegamenti da altre pagine) e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA, CORREGGI o RIFIUTA.';
+    if (articoli) return `→ Gli articoli li arricchisce l'agente Contenuti il 5 del mese. Alle pagine dei servizi ci pensa ${rinforzo}`;
+    return `→ Sono pagine dei servizi. Ci pensa ${rinforzo}`;
   }
   if (tipo === 'concorrenza') return '→ Ci pensa l\'agente SEO: sceglie la pagina da far vincere e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA, CORREGGI o RIFIUTA.';
   return null;

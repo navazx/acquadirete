@@ -68,8 +68,18 @@ Prendi solo quello che `REGOLE.md` ti permette di correggere:
   pagine sulla stessa ricerca" di `REGOLE.md`. Matteo conferma su Telegram: non
   gli si chiede di scegliere, gli si porta la scelta fatta.
 
-`soglia` non è tuo. **Se non c'è niente, fermati senza creare niente**: è il caso
-normale, non un errore.
+- dalle posizioni, i segnali con `tipo: "soglia"` su una pagina che **non** è un
+  articolo del blog (la `pagina` non comincia con `/blog/`) e che non ha una riga
+  `soglia` in `agenti/seo/posizioni-lavorate.md` negli ultimi 60 giorni: **la
+  rinforzi senza riscriverla** (una domanda e risposta in più, collegamenti da
+  altre pagine), come dice la sezione "una pagina dei servizi a un passo dalla
+  prima pagina" di `REGOLE.md`. Per scrivere la risposta leggi prima, per intero,
+  "Regole che non si discutono" e "Fatti veri che si possono usare" in
+  `agenti/contenuti/REGOLE.md`.
+
+`soglia` sugli articoli del blog non è tuo: li arricchisce l'agente Contenuti.
+**Se non c'è niente, fermati senza creare niente**: è il caso normale, non un
+errore.
 
 ## PASSO 3 bis — L'analisi, prima di toccare qualcosa
 

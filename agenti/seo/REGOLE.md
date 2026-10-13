@@ -8,8 +8,10 @@ La regola di fondo: **si correggono cose con un prima e un dopo che Matteo capis
 in una riga.** Quando serve una scelta semplice (quale di due pagine deve vincere
 una ricerca) **la proponi tu, già pronta, e Matteo la conferma su Telegram**: non
 si lascia una cosa semplice ad aspettare che lui si sieda al PC (sua richiesta del
-12 ott 2026). Quello che richiede di riscrivere i testi o di cambiare strategia
-resta fuori: lo segnala il controllo.
+12 ott 2026). Vale anche per le pagine dei servizi che devono salire: **le
+rinforzi aggiungendo, senza riscriverle** (dal 13 ott 2026). Quello che richiede
+di riscrivere i testi che ci sono o di cambiare strategia resta fuori: lo segnala
+il controllo.
 
 ## Cosa correggi
 
@@ -117,17 +119,98 @@ Vale anche quando la scelta è "non cambio niente".
 Va nella **stessa proposta** delle altre correzioni, se ce ne sono. Nel conto del
 titolo del commit (`SEO: <quante> correzioni`) ogni scelta vale una correzione.
 
-`tipo: "soglia"` **non è tuo**: richiede di riscrivere il testo, e sugli articoli
-ci pensa l'agente Contenuti. Gli altri tipi (prima pagina, sale, scende, fuori)
-sono solo notizie.
+## Dalle posizioni su Google: una pagina dei servizi a un passo dalla prima pagina
+
+Fra i `segnali` ti riguardano anche quelli con `tipo: "soglia"` **la cui `pagina`
+non comincia con `/blog/`**: una pagina dei servizi (Firenze, Prato, osmosi,
+uffici…) che per una ricerca sta fra il 9° e il 15° posto, con tante viste e zero
+clic. È in fondo alla prima pagina o all'inizio della seconda, dove non clicca
+quasi nessuno. **Il titolo non c'entra: la pagina deve salire.**
+
+Gli articoli del blog in soglia **non sono tuoi**: li arricchisce l'agente Contenuti.
+
+Fino al 13 ott 2026 queste pagine finivano a Matteo con scritto "si decidono
+insieme a Claude dal PC", perché sono le pagine che portano i contatti. Matteo ha
+chiesto anche qui il contrario: la proposta la prepari tu, lui conferma su
+Telegram. Proprio perché portano i contatti, la regola è una: **si aggiunge, non
+si riscrive.** Quello che c'è e funziona resta identico.
+
+**Quali pagine.** Raggruppa i segnali per pagina (più ricerche sulla stessa pagina
+sono un lavoro solo). Salta le pagine che in `agenti/seo/posizioni-lavorate.md`
+hanno una riga di tipo `soglia` negli ultimi 60 giorni.
+
+**Prima studia** (`agenti/METODO.md`):
+
+- in `agenti/seo/ricerche.json`, tutte le ricerche per cui Google mostra quella
+  pagina: dicono cosa cerca davvero la gente che ci arriva vicino;
+- la pagina com'è online adesso (`curl`), per intero: **risponde a quella ricerca
+  con parole sue?** Se chi cerca "depuratore acqua prato prezzi" non trova una
+  riga che parli di come si arriva al prezzo, il motivo è quello;
+- le domande frequenti che la pagina ha già, e gli articoli del blog che parlano
+  dello stesso argomento (`lib/blogPosts.ts`).
+
+**Cosa puoi fare, e nient'altro.**
+
+1. **Una domanda e risposta in più** fra le domande frequenti di quella pagina
+   (l'elenco `faqs` della pagina in `lib/data.ts`; finisce anche nei dati che
+   Google legge). La domanda è scritta come la cerca la gente; la risposta è di
+   due-quattro frasi, in italiano piano. **Una sola per pagina.** Se una domanda
+   che c'è già risponde alla ricerca, non aggiungerne una doppia.
+   Per scriverla valgono le sezioni "Regole che non si discutono" e "Fatti veri
+   che si possono usare" di `agenti/contenuti/REGOLE.md`, che devi leggere per
+   intero prima: niente prezzi, percentuali o tempi inventati, sulla salute solo
+   fatti generali, niente addolcitori. Se la ricerca chiede una cosa che non puoi
+   dire con un fatto vero (un prezzo), la risposta dice come si arriva a saperlo
+   ("dipende dall'impianto: te lo diciamo col sopralluogo gratuito"), non lo inventa.
+2. **Collegamenti interni verso la pagina**: da due o tre articoli del blog o
+   pagine dove quell'argomento o quella città sono già nominati. Valgono le regole
+   dei collegamenti scritte sopra per la concorrenza: testo vicino alla ricerca,
+   una frase che c'è già oppure **una sola** frase nuova, breve e vera. Al massimo
+   tre.
+
+**Cosa non fai mai, nemmeno per farla salire.**
+
+- Non tocchi titolo, description, H1, il testo in cima, i punti di forza, le
+  frasi che ci sono, le foto, l'ordine dei pezzi, i pulsanti e il modulo.
+- Non togli niente.
+- **La home non si tocca.** Se la pagina in soglia è la home e per quella ricerca
+  esiste una pagina dedicata, il lavoro sono solo i collegamenti verso la pagina
+  dedicata (è una scelta di concorrenza: vedi sopra). Se non esiste, lo scrivi
+  nell'anteprima ("è la home, non cambio niente") e lo segni nel registro.
+- Le altre pagine che non sono né servizi né articoli (Recensioni, Contatti,
+  l'indice del blog): solo i collegamenti del punto 2.
+
+**Nell'anteprima**, per ogni pagina:
+
+```
+Pagina: la pagina di Prato (www.acquadirete.it/depuratore-acqua-prato/)
+Oggi: quando cercano «…» esce all'11° posto, 45 volte in un mese, e nessuno
+clicca: è in fondo alla prima pagina.
+Cosa aggiungo: fra le domande frequenti, «…?», con questa risposta: «…»
+Da dove la collego: dall'articolo «…», nella frase «…».
+Cosa non cambia: titolo, testi, foto e modulo della pagina restano identici.
+Da verificare con te: ogni cosa detta nella risposta che non sta nei fatti veri
+(se non c'è niente, "niente").
+```
+
+**In `agenti/seo/posizioni-lavorate.md`**, sul ramo della proposta, una riga per
+pagina: `AAAA-MM-GG | <pagina> | soglia | <la ricerca con più viste> | seo`. Vale
+anche quando la scelta è "non cambio niente".
+
+Va nella **stessa proposta** delle altre correzioni, se ce ne sono; nel conto del
+titolo del commit ogni pagina rinforzata vale una correzione.
+
+Gli altri tipi di segnale (prima pagina, sale, scende, fuori) sono solo notizie.
 
 ## Cosa NON tocchi mai
 
 - **Gli indirizzi delle pagine** e gli slug. Mai.
 - I redirect in `netlify.toml`, a meno che un `redirect-vecchio` sia rotto e la
   destinazione giusta sia già scritta nel controllo.
-- I testi delle pagine e degli articoli oltre a titoli, description e alt. Unica
-  eccezione: la frase col collegamento, per la concorrenza fra pagine (vedi sopra).
+- I testi delle pagine e degli articoli oltre a titoli, description e alt. Due
+  sole eccezioni, tutte e due aggiunte e mai riscritture: la frase col
+  collegamento, e la domanda e risposta in più su una pagina dei servizi che deve
+  salire (vedi sopra).
 - Le pagine che non rispondono 200, le immagini pesanti, le pagine orfane: servono
   decisioni che non sono tue. Restano segnalate.
 - Le diciture "130+" / "oltre 130" recensioni: vedi `CLAUDE.md`.

@@ -77,8 +77,12 @@ Le regole per scrivere gli articoli stanno in `agenti/contenuti/REGOLE.md`.
 zero clic → l'agente delle correzioni SEO riscrive titolo e description) e `soglia` su
 un articolo del blog (fra il 9° e il 15° posto → l'agente Contenuti lo arricchisce al
 posto di un articolo nuovo). Chi lavora una pagina lo segna in
-`seo/posizioni-lavorate.md` e per 60 giorni non la si ritocca. `concorrenza` e le
-pagine dei servizi in soglia restano a Matteo: toccano le pagine che portano i contatti.
+`seo/posizioni-lavorate.md` e per 60 giorni non la si ritocca. Anche `concorrenza`
+(più pagine sulla stessa ricerca) e le pagine dei servizi in `soglia` le prende
+l'agente delle correzioni SEO, e le porta a Matteo come proposta: sceglie lui la
+pagina da far vincere, e una pagina dei servizi la rinforza **senza riscriverla**
+(una domanda e risposta in più, collegamenti da altre pagine). Prima restavano a
+Matteo con scritto "si decide con Claude dal PC".
 
 ## Le recensioni su Google
 
