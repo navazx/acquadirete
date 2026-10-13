@@ -52,9 +52,12 @@ promemoria aggiungi una riga: "Da dove vengono queste idee", in italiano semplic
 
 ## Le immagini (dopo la rilettura, prima del PASSO 3)
 
-Ogni idea arriva a Matteo con la sua immagine già fatta (sua richiesta del 12 ott
-2026). Si fa con lo stampo `scripts/grafica-scheda.mjs`, spiegato nella sezione "La
-grafica della scheda Google" di agenti/LEGGIMI.md: leggila.
+TUTTE le idee arrivano a Matteo con la loro immagine già fatta, nessuna esclusa:
+se le idee sono tre, le immagini sono tre. Lui sceglie quale post pubblicare
+guardandole una accanto all'altra (sua richiesta del 12 e del 13 ott 2026), e
+un'idea senza immagine parte già scartata. Si fanno con lo stampo
+`scripts/grafica-scheda.mjs`, spiegato nella sezione "La grafica della scheda
+Google" di agenti/LEGGIMI.md: leggila.
 
 1. Scrivi `agenti/promemoria/google-business-grafica.json`, sovrascrivendo quello
    del mese prima: una voce per idea, con `idea` (1, 2, 3), `etichetta`, `titolo`,
@@ -68,10 +71,12 @@ grafica della scheda Google" di agenti/LEGGIMI.md: leggila.
    Scrive `agenti/promemoria/immagini/idea-<n>.jpg` e toglie quelle vecchie.
 4. APRI ogni immagine col tool Read e guardala: un a capo che lascia una parola
    sola, un titolo che non si legge a colpo d'occhio, un testo fitto si correggono
-   (accorcia, o sposta gli a capo con \n) e si rifà.
+   (accorcia, o sposta gli a capo con \n, anche nell'intro) e si rifà.
+5. Conta: tante idee nel promemoria, altrettanti file idea-<n>.jpg.
 
-Se lo stampo dà un errore che non riesci a sistemare accorciando i testi, non
-aggirarlo: manda il promemoria senza immagini e scrivilo in cima al messaggio.
+Se per un'idea lo stampo dà un errore che non riesci a sistemare accorciando i
+testi, non aggirarlo e non mandarla senza immagine: cambia idea, oppure, se
+proprio non si riesce, scrivi in cima al messaggio quale immagine manca e perché.
 
 PASSO 3 - Scrivi il testo in agenti/promemoria/google-business.md, sovrascrivendo quello del mese prima.
 
