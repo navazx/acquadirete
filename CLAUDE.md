@@ -23,6 +23,8 @@ Netlify con **auto-deploy via Git**: il repo è **github.com/navazx/acquadirete*
 
 **Pagina degli annunci Google** `/sopralluogo-gratuito` (dal 14 ott 2026): ci arriva solo chi clicca un annuncio. Noindex, fuori da `ROUTES` e dalla sitemap, senza menu né piè di pagina del sito (li nasconde uno `<style>` nella pagina), modulo corto `components/ModuloSopralluogo.tsx` (nome, telefono, zona → `/api/lead` come ContactForm) e barra Chiama/WhatsApp fissa sul telefono. Prezzi, garanzia e rate li copia da `/prezzi-depuratori`: se cambiano là, vanno cambiati anche qui.
 
+**Pagina `/chi-siamo`** (dal 14 ott 2026) e **`public/llms.txt`**: servono soprattutto alle IA (ChatGPT, Perplexity, Gemini), che cercano chi siamo in frasi semplici. La pagina ha una scheda "In breve" con i fatti e un JSON-LD `AboutPage` che richiama l'azienda del layout con lo stesso `@id` (`/#azienda`); il layout elenca in `sameAs` scheda Google, Facebook e Instagram — **ogni nuovo profilo esterno (Bing Places, Apple, Cylex, PagineGialle…) va aggiunto lì**. `llms.txt` è testo scritto a mano: prezzi, garanzia, "oltre 130 recensioni" e media 4,9 vanno aggiornati anche lì quando cambiano (il grep del "130" qui sotto non guarda in `public/`).
+
 Più `/blog` (indice) e i singoli articoli in `app/blog/[slug]/page.tsx` (contenuti in `lib/blogPosts.ts`), e le pagine legali `/privacy-policy`, `/cookie-policy`, `/note-legali` (escluse di proposito da `app/sitemap.ts`).
 
 ## Contatti e dati aziendali

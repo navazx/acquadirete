@@ -15,6 +15,7 @@ export const ROUTES: Record<PageId, string> = {
   recensioni: '/recensioni',
   contatti: '/contatti',
   prezzi: '/prezzi-depuratori',
+  chiSiamo: '/chi-siamo',
 };
 
 // Etichetta breve usata nel breadcrumb delle pagine servizio.
@@ -31,4 +32,5 @@ export const PAGE_BREADCRUMB: Record<PageId, string> = {
   recensioni: 'Recensioni',
   contatti: 'Contatti',
   prezzi: 'Prezzi',
+  chiSiamo: 'Chi siamo',
 };

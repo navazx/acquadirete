@@ -384,6 +384,14 @@ export const BLOG_POSTS: BlogPost[] = [
         ],
       },
       {
+        heading: 'E chi dice che l\'acqua depurata è una bufala?',
+        paragraphs: [
+          'Online si trovano articoli che chiamano l\'acqua depurata "una bufala". Alcune di quelle critiche sono giuste, e preferiamo dirlo noi: l\'acqua del rubinetto a Firenze, Prato e Pistoia è potabile e controllata. Un depuratore non serve a renderla sicura: serve a renderla più buona e più leggera, e a smettere di comprare e portare a casa bottiglie.',
+          'È vero anche che l\'osmosi inversa scarica una parte dell\'acqua: serve a lavare la membrana. Nei sistemi più recenti lo scarto è ridotto al minimo, e riguarda solo l\'acqua da bere che l\'impianto produce, non quella del lavandino o della doccia.',
+          'Per questo al sopralluogo proviamo prima la tua acqua. Se è già buona e ti dà fastidio solo il sapore di cloro, ti diciamo che bastano i carboni attivi, che non scaricano niente. L\'osmosi la proponiamo quando serve davvero: acqua molto dura, oppure chi vuole un\'acqua leggera come un\'oligominerale.',
+        ],
+      },
+      {
         heading: 'Hai un dubbio specifico di salute? Parlane col tuo medico',
         paragraphs: [
           'Se hai una condizione medica particolare, segui una dieta specifica, o hai dubbi legati all\'alimentazione di un neonato, la risposta più corretta non te la diamo noi né un articolo online: parlane con il tuo medico o pediatra, che conosce la tua situazione. Noi possiamo dirti con certezza come funziona l\'impianto e come regoliamo i minerali; le valutazioni mediche personali restano un\'altra cosa.',
@@ -402,6 +410,10 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Perché allora alcuni dicono che "fa male"?',
         a: 'Quasi sempre per la riduzione dei minerali, scambiata per un rischio. Regolando il residuo fisso, come facciamo noi, questo timore non ha più ragione d\'essere.',
+      },
+      {
+        q: 'L\'osmosi inversa spreca molta acqua?',
+        a: 'Una parte dell\'acqua serve a lavare la membrana e finisce nello scarico. Nei sistemi recenti è ridotta al minimo e riguarda solo l\'acqua da bere prodotta dall\'impianto. Se ti basta togliere il sapore di cloro, i carboni attivi non scaricano niente.',
       },
     ],
   },

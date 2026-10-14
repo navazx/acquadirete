@@ -93,6 +93,7 @@ export default function Footer() {
               { href: ROUTES.business, label: 'Depuratori Uffici e Ristoranti' },
               { href: ROUTES.assistenza, label: 'Manutenzione e Assistenza' },
               { href: ROUTES.prezzi, label: 'Prezzi' },
+              { href: ROUTES.chiSiamo, label: 'Chi siamo' },
             ].map((item) => (
               <li key={item.href}>
                 <Link

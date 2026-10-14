@@ -8,7 +8,7 @@ import Footer from '../components/Footer';
 import CookieConsent from '../components/CookieConsent';
 import MetaPixel from '../components/MetaPixel';
 import GoogleAdsTag from '../components/GoogleAdsTag';
-import { CONTACT, SITE_URL, OG_DEFAULTS } from '../lib/siteConfig';
+import { CONTACT, SITE_URL, OG_DEFAULTS, GOOGLE_PROFILE_URL, SOCIAL } from '../lib/siteConfig';
 import { REVIEW_RATING, REVIEW_TOTAL } from '../lib/reviews';
 
 // Font self-hosted da Next (next/font): nessuna richiesta bloccante verso
@@ -57,7 +57,15 @@ export const metadata: Metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
+  // @id fisso: la pagina /chi-siamo lo richiama, così Google e le IA capiscono
+  // che parlano della stessa azienda.
+  '@id': `${SITE_URL}/#azienda`,
   name: CONTACT.companyName,
+  alternateName: 'Acquadirete',
+  description:
+    "Installazione, manutenzione e assistenza di depuratori d'acqua (osmosi inversa, carboni attivi, acqua frizzante) per case, uffici e locali tra Firenze, Prato e Pistoia. Sede a Montespertoli, dal 2005.",
+  foundingDate: '2005',
+  founder: { '@type': 'Person', name: 'Stefano Piconese' },
   image: `${SITE_URL}/logo.png`,
   // Logo quadrato (512x512): Google lo preferisce al logo.png originale
   // (1015x647, non quadrato) per Knowledge Panel, Ads e rich result.
@@ -74,6 +82,9 @@ const jsonLd = {
     postalCode: '50025',
     addressCountry: 'IT',
   },
+  // I profili fuori dal sito: senza questo collegamento le IA non sanno che
+  // la scheda Google con le recensioni e le pagine social sono nostre.
+  sameAs: [GOOGLE_PROFILE_URL, SOCIAL.facebook, SOCIAL.instagram],
   areaServed: ['Firenze', 'Prato', 'Pistoia', 'Provincia di Firenze', 'Provincia di Prato', 'Provincia di Pistoia'],
   aggregateRating: {
     '@type': 'AggregateRating',
