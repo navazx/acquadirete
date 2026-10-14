@@ -19,7 +19,7 @@ import { REVIEW_RATING_TESTO, REVIEW_TOTAL } from '../../lib/reviews';
 export const metadata: Metadata = {
   title: "Depuratore d'acqua installato da 400 € | Acquadirete",
   description:
-    'Depuratori a Firenze, Prato e Pistoia installati da 400 €. Sopralluogo gratuito e senza impegno, 10 anni di garanzia, anche a rate a tasso zero.',
+    'Depuratori a Firenze, Prato e Pistoia installati da 400 €. Sopralluogo gratuito, 10 anni di garanzia (esclusi i consumabili), anche a rate a tasso zero.',
   alternates: { canonical: '/sopralluogo-gratuito' },
   openGraph: { ...OG_DEFAULTS, url: '/sopralluogo-gratuito' },
   robots: { index: false, follow: false },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const PUNTI = [
   'Sopralluogo gratuito e senza impegno',
   'Installazione compresa, fatta da noi',
-  '10 anni di garanzia',
+  '10 anni di garanzia (esclusi i consumabili)',
   'Anche a rate a tasso zero',
 ];
 
@@ -44,10 +44,11 @@ const PASSI = [
   { titolo: 'Ti lasciamo il preventivo', testo: 'Con le voci principali scritte, valido 3 mesi. Decidi con calma.' },
 ];
 
-// Tre recensioni vere da lib/google-reviews.json, accorciate senza cambiarne il senso.
+// Tre recensioni vere da lib/google-reviews.json. Dove sono accorciate c'è […]:
+// le parole che restano sono quelle del cliente, senza ritocchi.
 const RECENSIONI = [
-  { autore: 'Mino M.', testo: 'Stefano si è dimostrato preparato e disponibile. La comparazione con altri rivenditori è risultata la più favorevole, considerando la garanzia.' },
-  { autore: 'Simone B.', testo: "Dopo oltre due anni dall'installazione l'unica cosa di cui mi pento è di non averlo acquistato prima. Stefano e Matteo hanno una grande professionalità e una grande simpatia." },
+  { autore: 'Mino M.', testo: '[…] Stefano si è dimostrato preparato e disponibile. La comparazione con altri rivenditori è risultata la più favorevole, considerando la garanzia e gli altri vantaggi che ho trovato. Consigliato!' },
+  { autore: 'Simone B.', testo: "Dopo oltre due anni dall'installazione devo dire che l'unica cosa di cui mi pento è di non averlo acquistato prima. Stefano e Matteo hanno una grande professionalità e una grande simpatia. […]" },
   { autore: 'Elisa B.', testo: 'Stefano molto disponibile e professionale. Ha saputo consigliarmi il prodotto giusto capendo fin da subito le esigenze! Consigliatissimo!' },
 ];
 
@@ -59,7 +60,7 @@ const DOMANDE = [
   },
   {
     q: 'Perché costa più di quelli che vedo nei negozi o online?',
-    a: "Perché nella scatola c'è solo l'impianto. Da noi c'è anche chi viene prima a guardare la tua acqua, chi lo installa e lo tara, chi ti avvisa quando vanno cambiati i filtri. E se si rompe, abbiamo i ricambi e sappiamo aggiustarlo: non devi rispedire niente a nessuno. In più, 10 anni di garanzia.",
+    a: "Perché nella scatola c'è solo l'impianto. Da noi c'è anche chi viene prima a guardare la tua acqua, chi lo installa e lo tara, chi ti avvisa quando vanno cambiati i filtri. E se si rompe, abbiamo i ricambi e sappiamo aggiustarlo: non devi rispedire niente a nessuno. In più, 10 anni di garanzia (esclusi i consumabili).",
   },
   {
     q: 'E i depuratori «gratis»?',

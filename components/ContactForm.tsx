@@ -145,7 +145,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           <CheckCircle2 size={48} className="relative z-10 animate-bounce" />
           <span className="absolute inset-0 bg-emerald-200/40 rounded-full scale-110 animate-ping"></span>
         </div>
-        <h3 className="text-2xl font-bold text-blue-950 mb-2">Richiesta Ricevuta con Successo!</h3>
+        <h3 className="text-2xl font-bold text-blue-950 mb-2">Richiesta ricevuta!</h3>
         <p className="text-gray-600 max-w-md mx-auto text-sm leading-relaxed mb-6">
           Grazie <strong className="text-blue-900">{formData.nome}</strong>, la tua richiesta per <strong className="text-blue-900">
             {formData.servizio === 'depuratore' && 'Depuratore Domestico'}

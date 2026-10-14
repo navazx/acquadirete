@@ -41,7 +41,7 @@ grep -rn "130" sito/components/ sito/app/ sito/lib/ --include=*.tsx --include=*.
 
 (Ci sono anche in `lib/data.ts`. Occhio ai falsi amici come `130px`.)
 
-L'arrotondamento per difetto è voluto: "130+" resta veritiero finché `total` ≥ 130, quindi non va rincorso a ogni recensione nuova — si aggiorna a scaglioni di dieci. **Dal 13 ott 2026 lo fa l'agente Recensioni da solo**: quando il totale arriva alla decina dopo (o la media scende sotto 4,8 e le frasi "a 5 stelle" vanno rilette) prepara la modifica sul ramo `proposta/recensioni-<data>` e Matteo risponde `APPROVA RECENSIONI` su Telegram (`recensioni-testi.yml`, skill `testi-recensioni`).
+L'arrotondamento per difetto è voluto: "130+" resta veritiero finché `total` ≥ 130, quindi non va rincorso a ogni recensione nuova — si aggiorna a scaglioni di dieci. **Dal 13 ott 2026 lo fa l'agente Recensioni da solo**: quando il totale arriva alla decina dopo (o la media scende sotto 4,8 e le frasi "a 5 stelle" vanno rilette — dal 14 ott 2026 sul sito non ce ne sono più: dicono "oltre 130 recensioni" con la media viva `REVIEW_RATING_TESTO`, vedi `agenti/contenuti/REGOLE.md`) prepara la modifica sul ramo `proposta/recensioni-<data>` e Matteo risponde `APPROVA RECENSIONI` su Telegram (`recensioni-testi.yml`, skill `testi-recensioni`).
 
 C'è anche un metodo automatico predisposto ma non attivo: `scripts/fetch-google-reviews.mjs` (girato in `prebuild`) sovrascriverebbe il JSON se in `.env.local` fosse impostata `GOOGLE_PLACES_API_KEY` (+ opz. `GOOGLE_PLACE_ID`). Senza chiave non fa nulla.
 

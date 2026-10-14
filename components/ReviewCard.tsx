@@ -21,7 +21,7 @@ export default function ReviewCard({ review }: { review: Review }) {
       </div>
       <figcaption className="text-xs text-slate-500 border-t border-slate-150 pt-3">
         <span className="block font-bold text-slate-900">{review.author}</span>
-        {review.date} · recensione Google verificata
+        {review.date} · recensione su Google
       </figcaption>
     </figure>
   );

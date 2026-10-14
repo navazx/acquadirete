@@ -47,8 +47,8 @@ export default function ReviewList({ carousel = false }: Props) {
 
           {/* Social Proof Text */}
           <div className="text-center space-y-1.5 md:border-x md:border-slate-200 px-4">
-            <span className="text-3xl font-black text-blue-600 block font-mono">{REVIEW_TOTAL}+</span>
-            <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">Valutazioni Certificate</span>
+            <span className="text-3xl font-black text-blue-600 block font-mono">{REVIEW_TOTAL}</span>
+            <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">Recensioni su Google</span>
             <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
               Le hanno lasciate su Google i nostri clienti tra Firenze, Prato e Pistoia, dopo aver provato i depuratori e l'assistenza.
             </p>
@@ -58,7 +58,7 @@ export default function ReviewList({ carousel = false }: Props) {
           <div className="flex flex-col items-center md:items-end justify-center">
             <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-white px-3.5 py-1.5 rounded-md border border-slate-200 font-bold uppercase tracking-wider mb-4">
               <ShieldCheck size={14} className="text-emerald-600" />
-              <span>Verificate al 100%</span>
+              <span>Prese da Google</span>
             </div>
             <div className="flex flex-col gap-2 w-full md:w-auto items-stretch">
               <a
@@ -138,7 +138,7 @@ export default function ReviewList({ carousel = false }: Props) {
                   ))}
                 </div>
                 <span className="text-xs bg-slate-50 text-slate-500 px-2.5 py-0.5 rounded-md border border-slate-200 font-mono font-bold uppercase tracking-wider">
-                  Cliente Verificato
+                  Da Google
                 </span>
               </div>
 

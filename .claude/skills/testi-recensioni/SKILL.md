@@ -75,8 +75,10 @@ decina dopo, si passa a quella.
 
 ### Lavoro `media`: una frase può non essere più vera
 
-La media è scesa sotto la soglia. Il sito ha frasi come "recensioni a 5 stelle",
-"130+ Recensioni a 5 Stelle", "oltre 130 recensioni a 5 stelle".
+La media è scesa sotto la soglia. Il sito aveva frasi come "recensioni a 5 stelle",
+"130+ Recensioni a 5 Stelle", "oltre 130 recensioni a 5 stelle". Dal 14 ott 2026 sono
+state tutte riscritte con la media viva (`REVIEW_RATING_TESTO`), che si aggiorna da
+sola: cercale lo stesso con `grep -rni "5 stelle"`, e se non ne trovi segui il punto 5.
 
 1. Per ogni frase chiediti: **con la media e il totale veri, è ancora vera?**
    Google ci dà solo media e totale, non quante recensioni hanno 5 stelle: quante

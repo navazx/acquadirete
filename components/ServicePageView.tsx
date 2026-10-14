@@ -202,14 +202,14 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Cosa ne pensa chi lo ha installato?</h3>
-            <p className="text-xs text-slate-500">Recensioni verificate degli utenti di Firenze, Prato e Pistoia.</p>
+            <p className="text-xs text-slate-500">Recensioni lasciate su Google da clienti di Firenze, Prato e Pistoia.</p>
           </div>
           <Link
             href={ROUTES.recensioni}
-            title="Vedi tutte le recensioni certificate"
+            title="Vedi tutte le recensioni su Google"
             className="text-xs text-blue-600 font-bold hover:underline cursor-pointer flex items-center gap-1.5"
           >
-            <span>Vedi tutte le recensioni certificate</span>
+            <span>Vedi tutte le recensioni su Google</span>
             <ChevronRight size={12} />
           </Link>
         </div>

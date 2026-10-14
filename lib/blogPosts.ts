@@ -401,7 +401,7 @@ export const BLOG_POSTS: BlogPost[] = [
     faqs: [
       {
         q: 'L\'acqua a osmosi è la stessa che compro in bottiglia?',
-        a: 'È molto simile alle acque minerali oligominerali, "leggere", che trovi in commercio: regoliamo il residuo fisso per ottenere un risultato comparabile, senza microplastiche e senza il peso delle bottiglie.',
+        a: 'È molto simile alle acque minerali oligominerali, "leggere", che trovi in commercio: regoliamo il residuo fisso per ottenere un risultato comparabile, senza plastica e senza il peso delle bottiglie.',
       },
       {
         q: 'È sicura da bere tutti i giorni?',
@@ -689,7 +689,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'La domanda giusta da fare al fornitore: e se si rompe?',
         paragraphs: [
           'In una casa, un depuratore fermo per qualche giorno è una scocciatura. In un ristorante nel pieno del sabato sera è un problema serio, perché il servizio non può fermarsi ad aspettare un tecnico.',
-          'È il motivo per cui, quando parliamo con un\'attività, mettiamo subito sul tavolo la parte meno affascinante del discorso: chi interviene, in quanto tempo e cosa succede nel frattempo. Noi lavoriamo con assistenza rapida e macchina sostitutiva in caso di guasto, proprio perché il tuo servizio non può dipendere dai nostri tempi. Qualunque fornitore tu scelga, è la domanda che ti consigliamo di fare prima di firmare.',
+          'È il motivo per cui, quando parliamo con un\'attività, mettiamo subito sul tavolo la parte meno affascinante del discorso: chi interviene, in quanto tempo e cosa succede nel frattempo. Noi lavoriamo con assistenza rapida e, quando la riparazione richiede tempo, una macchina sostitutiva, proprio perché il tuo servizio non può dipendere dai nostri tempi. Qualunque fornitore tu scelga, è la domanda che ti consigliamo di fare prima di firmare.',
         ],
       },
       {
@@ -747,7 +747,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'L\'unico punto che va guardato bene: il rubinetto dedicato',
         paragraphs: [
           'C\'è però un dettaglio che cambia la risposta, ed è giusto dirtelo prima e non dopo. Molti impianti prevedono un rubinettino separato per l\'acqua depurata, accanto a quello normale. Se il tuo lavello ha già un foro libero — capita spesso, è il foro predisposto per il dosatore del sapone o per il vecchio miscelatore — non si tocca niente. Se invece un foro va praticato sul piano o sul lavello, quella è una modifica permanente, e su una casa non tua è una cosa che va concordata prima.',
-          'Non è l\'unica strada possibile, e anzi nella pratica il foro nuovo si evita quasi sempre. La soluzione più comoda è il miscelatore multivia — a 3, 4 o 5 vie a seconda di quante acque vuoi avere a disposizione — che installiamo noi al posto del rubinetto esistente: usa il foro che c\'è già, quindi sul piano non si aggiunge nulla e in cucina resta un rubinetto solo, più ordinato di due separati.',
+          'Non è l\'unica strada possibile, e anzi nella pratica il foro nuovo si evita quasi sempre. La soluzione più comoda è il miscelatore multivia — a 3, 4 o 5 vie a seconda di quante acque vuoi avere a disposizione — che installiamo noi al posto del rubinetto esistente: spesso usa il foro che c\'è già, e in cucina resta un rubinetto solo, più ordinato di due separati. Quando il piano va forato lo stesso, lo facciamo noi.',
           'Per darti un\'idea concreta, nella versione a 5 vie dallo stesso rubinetto escono cinque acque: calda e fredda dell\'acquedotto come adesso, più depurata a temperatura ambiente, depurata fredda e frizzante. In alternativa, dove il multivia non serve, si sfrutta semplicemente un altro foro già presente sul piano.',
           'Quale strada sia praticabile a casa tua si capisce guardando il tuo lavello, non a parole al telefono — ed è la prima cosa che verifichiamo durante il sopralluogo.',
         ],

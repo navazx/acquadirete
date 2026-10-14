@@ -46,7 +46,7 @@ export default function WaterCalc() {
         </div>
         <div>
           <h3 className="text-xl font-bold tracking-tight text-slate-900 leading-none">
-            Calcola il Tuo Risparmio
+            Calcola il tuo risparmio
           </h3>
           <p className="text-xs text-slate-500 mt-1">
             Scopri quanto spendi in acqua minerale a Firenze e l'impatto ecologico delle bottiglie.

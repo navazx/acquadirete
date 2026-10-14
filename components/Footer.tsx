@@ -46,7 +46,7 @@ export default function Footer() {
             className="pt-2 flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer w-fit"
           >
             <span className="flex text-amber-400 text-sm">★★★★★</span>
-            <span className="text-xs text-slate-600 font-medium font-mono">130+ Recensioni Google ({REVIEW_RATING_TESTO} Stelle)</span>
+            <span className="text-xs text-slate-600 font-medium font-mono">130+ recensioni Google (media {REVIEW_RATING_TESTO})</span>
           </a>
           <div className="flex items-center gap-3 pt-1">
             <a
@@ -145,7 +145,7 @@ export default function Footer() {
                 {CONTACT.hours.map((h, i) => (
                   <p key={i} className="font-semibold text-slate-900">{h}</p>
                 ))}
-                <p className="text-xs mt-1 text-slate-500">Assistenza in pochi giorni e macchina sostitutiva in caso di guasto</p>
+                <p className="text-xs mt-1 text-slate-500">Assistenza in pochi giorni e, se la riparazione richiede tempo, macchina sostitutiva</p>
               </div>
             </li>
           </ul>

@@ -53,7 +53,7 @@ const FAQ = [
   },
   {
     q: 'Perché costa più di quelli che vedo nei negozi o online?',
-    a: "Perché nella scatola c'è solo l'impianto. Da noi c'è anche chi viene prima a guardare la tua acqua e ti dice cosa ti serve davvero; chi lo installa, collega lo scarico e lo tara, e se serve fora il piano della cucina con gli attrezzi giusti; chi ti avvisa quando vanno cambiati i filtri. E se si rompe, abbiamo i ricambi e sappiamo aggiustarlo: non devi rispedire niente a nessuno. In più, 10 anni di garanzia. Il fai da te all'inizio costa meno, ma non basta saper fare un po' di idraulica: ogni macchina è diversa, e quando c'è un problema bisogna capire qual è, che pezzo serve e come cambiarlo.",
+    a: "Perché nella scatola c'è solo l'impianto. Da noi c'è anche chi viene prima a guardare la tua acqua e ti dice cosa ti serve davvero; chi lo installa, collega lo scarico e lo tara, e se serve fora il piano della cucina con gli attrezzi giusti; chi ti avvisa quando vanno cambiati i filtri. E se si rompe, abbiamo i ricambi e sappiamo aggiustarlo: non devi rispedire niente a nessuno. In più, 10 anni di garanzia (esclusi i consumabili). Il fai da te all'inizio costa meno, ma non basta saper fare un po' di idraulica: ogni macchina è diversa, e quando c'è un problema bisogna capire qual è, che pezzo serve e come cambiarlo.",
   },
   {
     q: 'Il contratto «gratis» non conviene mai?',
@@ -77,7 +77,7 @@ export default function PrezziPage() {
             Quanto costa un depuratore? Te lo diciamo subito
           </h1>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Quasi nessuno scrive i prezzi, e molti li nascondono dietro un &laquo;da 1 € al giorno&raquo;. Noi le cifre vere le scriviamo qui, e il prezzo esatto per casa tua te lo diamo col sopralluogo gratuito.
+            Pochi scrivono i prezzi veri, e molti li nascondono dietro un &laquo;da 1 € al giorno&raquo;. Noi le cifre vere le scriviamo qui, e il prezzo esatto per casa tua te lo diamo col sopralluogo gratuito.
           </p>
         </div>
       </PageBand>

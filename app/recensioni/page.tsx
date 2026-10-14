@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import ReviewList from '../../components/ReviewList';
 import OpenModalButton from '../../components/OpenModalButton';
 import PageBand from '../../components/PageBand';
-import { REVIEWS, REVIEW_RATING, REVIEW_TOTAL } from '../../lib/reviews';
+import { REVIEWS, REVIEW_RATING, REVIEW_RATING_TESTO, REVIEW_TOTAL } from '../../lib/reviews';
 import { CONTACT, SITE_URL, OG_DEFAULTS } from '../../lib/siteConfig';
 
 export const metadata: Metadata = {
-  title: 'Recensioni Acquadirete | 130+ a 5 Stelle su Google',
+  title: `Recensioni Acquadirete | 130+ su Google, media ${REVIEW_RATING_TESTO}`,
   description:
-    'Leggi oltre 130 recensioni a 5 stelle su Google dei clienti Acquadirete a Firenze, Prato e Pistoia. Depuratori d\'acqua, installazione e assistenza.',
+    `Leggi oltre 130 recensioni su Google (media ${REVIEW_RATING_TESTO}) dei clienti Acquadirete a Firenze, Prato e Pistoia. Depuratori d'acqua, installazione e assistenza.`,
   alternates: { canonical: '/recensioni' },
   openGraph: { ...OG_DEFAULTS, url: '/recensioni' },
 };
@@ -56,10 +56,10 @@ export default function RecensioniPage() {
           Feedback Clienti
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
-          Oltre 130 Recensioni Google a 5 Stelle
+          Oltre 130 recensioni su Google, media {REVIEW_RATING_TESTO}
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
-          Siamo orgogliosi della fiducia che le famiglie e le attività commerciali di Firenze, Prato e Pistoia ci riservano da anni. Leggi le testimonianze certificate o invia la tua recensione sul servizio ricevuto.
+          Siamo orgogliosi della fiducia che le famiglie e le attività commerciali di Firenze, Prato e Pistoia ci riservano da anni. Leggi cosa scrivono su Google o lascia la tua recensione sul servizio ricevuto.
         </p>
       </div>
       </PageBand>

@@ -143,6 +143,24 @@ conto, "te lo diciamo col sopralluogo gratuito". Nessuna cifra.
   "quando la riparazione richiede tempo e serve".
 - **Preventivo scritto: "più o meno"**. Non promettere che ogni risposta è messa per
   iscritto: "le voci principali le trovi scritte sul preventivo".
+- **Il preventivo è gratuito, senza impegno e vale 3 mesi.**
+- **10 anni di garanzia sugli impianti, esclusi i consumabili.** L'esclusione si
+  scrive sempre insieme alla garanzia, mai "10 anni di garanzia" da solo.
+- **Recensioni Google**: si scrive "oltre 130 recensioni su Google" con la media vera
+  (`REVIEW_RATING_TESTO`), mai "130 recensioni a 5 stelle": Google non dice quante
+  sono da 5. E non sono "certificate": quella parola non si usa.
+
+## Parole che non si usano
+
+Le ha tolte la revisione dei testi del 14 ott 2026; non vanno rimesse.
+
+- "Ideale per neonati" o qualsiasi promessa per bambini: sui neonati decide il pediatra.
+- "Definitiva", "ultra", "altissima qualità", "sistemi certificati": parole da depliant,
+  non nostre.
+- Allarmismi sull'acqua del rubinetto: "non è più sicura", elenchi di metalli pesanti,
+  pesticidi, batteri, "senza microplastiche". Si parla di sapore, cloro e calcare.
+- "Per sempre", "si ripaga", "la maggior parte delle persone preferisce…": promesse e
+  statistiche che non possiamo dimostrare.
 
 ## Come si scrive nel codice
 

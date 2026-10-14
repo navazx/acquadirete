@@ -1,4 +1,5 @@
 import { ServiceInfo, ServicePageId } from './types';
+import { REVIEW_RATING_TESTO } from './reviews';
 
 // Le immagini sono servite come file statici da /public/assets.
 const heroPrato = '/assets/hero-prato.webp';
@@ -31,7 +32,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Centinaia di impianti installati tra Firenze, Prato e Pistoia.',
       'Assistenza rapida, in pochi giorni.',
       'Se la riparazione richiede tempo, ti lasciamo una macchina sostitutiva: niente ritorno alle bottiglie.',
-      'Oltre 130 recensioni a 5 stelle su Google.'
+      `Oltre 130 recensioni su Google, con una media di ${REVIEW_RATING_TESTO} su 5.`
     ],
     faqs: [
       {
@@ -51,8 +52,8 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     localSeo: {
       heading: 'Depuratori d\'acqua a Prato e provincia',
       body: [
-        'A Prato l\'acqua del rubinetto è generalmente piuttosto dura e ricca di calcare: un depuratore a osmosi inversa o un sistema a carboni attivi migliora sensibilmente il gusto e la qualità dell\'acqua che bevi e con cui cucini, senza dover più comprare e trasportare casse di bottiglie su per le scale.',
-        'Seguiamo clienti privati e attività a Prato città e in tutta la provincia — Montemurlo, Vaiano, Vernio, Carmignano e Poggio a Caiano — con installazione, manutenzione programmata e macchina sostitutiva in caso di guasto. Siamo un punto di riferimento sul territorio fin dal 2005.'
+        'A Prato l\'acqua dell\'acquedotto è controllata fino al contatore. Da lì in poi passa dalla colonna del condominio e dalle tubature di casa, ed è per questo che due appartamenti nella stessa via possono avere un\'acqua diversa, nel sapore e nel calcare. Per questo prima di consigliarti un impianto proviamo l\'acqua al tuo rubinetto: a volte serve l\'osmosi inversa, altre volte bastano i carboni attivi.',
+        'Seguiamo clienti privati e attività a Prato città e in tutta la provincia — Montemurlo, Vaiano, Vernio, Carmignano e Poggio a Caiano — con installazione, manutenzione programmata e, quando una riparazione richiede tempo, una macchina sostitutiva. Siamo un punto di riferimento sul territorio fin dal 2005.'
       ]
     }
   },
@@ -70,7 +71,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Centinaia di impianti installati tra Firenze, Prato e Pistoia.',
       'Assistenza rapida, in pochi giorni.',
       'Se la riparazione richiede tempo, ti lasciamo una macchina sostitutiva: niente ritorno alle bottiglie.',
-      'Oltre 130 recensioni a 5 stelle su Google.'
+      `Oltre 130 recensioni su Google, con una media di ${REVIEW_RATING_TESTO} su 5.`
     ],
     faqs: [
       {
@@ -90,8 +91,8 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     localSeo: {
       heading: 'Depuratori d\'acqua a Pistoia e provincia',
       body: [
-        'A Pistoia l\'acqua del rubinetto è generalmente piuttosto dura e ricca di calcare: un depuratore a osmosi inversa o un sistema a carboni attivi migliora sensibilmente il gusto e la qualità dell\'acqua che bevi e con cui cucini, senza dover più comprare e trasportare casse di bottiglie su per le scale.',
-        'Seguiamo clienti privati e attività a Pistoia città e in tutta la provincia — Montecatini Terme, Monsummano Terme, Pescia e Quarrata — con installazione, manutenzione programmata e macchina sostitutiva in caso di guasto. Siamo un punto di riferimento sul territorio fin dal 2005.'
+        'A Pistoia, come altrove, il sapore dell\'acqua cambia da zona a zona e a volte da casa a casa: conta anche com\'è fatto l\'impianto del palazzo. Un depuratore a osmosi inversa o a carboni attivi toglie il sapore di cloro e ti fa smettere di portare a casa casse di bottiglie; quale dei due ti serve te lo diciamo dopo aver provato l\'acqua al tuo rubinetto.',
+        'Seguiamo clienti privati e attività a Pistoia città e in tutta la provincia — Montecatini Terme, Monsummano Terme, Pescia e Quarrata — con installazione, manutenzione programmata e, quando una riparazione richiede tempo, una macchina sostitutiva. Siamo un punto di riferimento sul territorio fin dal 2005.'
       ]
     }
   },
@@ -109,12 +110,12 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Centinaia di impianti installati a Firenze e provincia.',
       'Acqua leggera e sicura, con il contenuto di minerali regolato in base alle tue esigenze.',
       'Se la riparazione richiede tempo, ti lasciamo una macchina sostitutiva: niente ritorno alle bottiglie.',
-      'Oltre 130 recensioni a 5 stelle su Google da clienti veri.'
+      `Oltre 130 recensioni su Google da clienti veri, con una media di ${REVIEW_RATING_TESTO} su 5.`
     ],
     faqs: [
       {
         q: 'L\'acqua a osmosi è troppo povera di minerali?',
-        a: 'I nostri impianti regolano il contenuto di sali minerali in base alle tue esigenze. Non è acqua "morta": è acqua leggera e sicura, come una buona oligominerale, ma senza microplastiche e senza bottiglie da portare a casa.'
+        a: 'I nostri impianti regolano il contenuto di sali minerali in base alle tue esigenze. Non è acqua "morta": è acqua leggera, come una buona oligominerale, ma senza plastica e senza bottiglie da portare a casa.'
       },
       {
         q: 'Spreca acqua?',
@@ -142,16 +143,16 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     // delle due foto (compresa la macchina, che sta a destra).
     heroAspect: 'wide',
     problem: [
-      'L\'osmosi inversa è un sistema che spinge l\'acqua del rubinetto attraverso una membrana con fori piccolissimi. Questa membrana lascia passare l\'acqua, ma trattiene quello che non vuoi bere: cloro, metalli pesanti, pesticidi, batteri, microplastiche.',
-      'Il risultato è acqua leggera, pulita e sicura, direttamente dal tuo rubinetto. Niente bottiglie da comprare, trasportare e smaltire.'
+      'L\'osmosi inversa è un sistema che spinge l\'acqua del rubinetto attraverso una membrana con fori piccolissimi. Questa membrana lascia passare l\'acqua e trattiene quasi tutto quello che c\'è disciolto: cloro, calcare, le sostanze che danno odori e sapori, e anche gran parte dei sali minerali, che poi regoliamo noi.',
+      'Il risultato è acqua leggera e dal sapore pulito, direttamente dal tuo rubinetto. Niente bottiglie da comprare, trasportare e smaltire.'
     ],
     benefitsTitle: 'I vantaggi concreti',
     benefits: [
       'Acqua buona sempre disponibile, senza più casse d\'acqua da portare a casa.',
-      'Risparmio nel tempo: l\'impianto si ripaga rispetto a una vita di bottiglie.',
+      'Nel tempo spendi meno che a comprare l\'acqua in bottiglia.',
       'Meno plastica, per te e per l\'ambiente.',
       'Ottima per cucinare: pasta, tè e caffè hanno un sapore più pulito.',
-      'Nessun foro nuovo nel piano: col miscelatore multivia sfruttiamo il rubinetto che hai già, e in cucina ne resta uno solo.'
+      'Un rubinetto solo in cucina: col miscelatore multivia spesso usiamo il foro di quello che hai già. Se il piano va forato, lo facciamo noi.'
     ],
     faqs: [
       {
@@ -164,7 +165,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       },
       {
         q: 'L\'acqua avrà un sapore strano?',
-        a: 'Al contrario: togliendo il cloro, la maggior parte delle persone trova l\'acqua più buona di quella in bottiglia.'
+        a: 'No, anzi: senza il sapore di cloro, a molti piace più di quella in bottiglia.'
       }
     ],
     ctaLabel: 'Richiedi il sopralluogo gratuito',
@@ -190,7 +191,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Elimina cloro, odori e cattivi sapori: l\'acqua del rubinetto torna buona da bere.',
       'Nessuno scarto d\'acqua e impianto più semplice rispetto all\'osmosi.',
       'Costi contenuti e ingombro ridotto sotto il lavello.',
-      'Un solo rubinetto in cucina: col miscelatore multivia l\'acqua filtrata esce dallo stesso miscelatore, senza aggiungere fori al piano.',
+      'Un solo rubinetto in cucina: col miscelatore multivia l\'acqua filtrata esce dallo stesso miscelatore, e spesso si usa il foro che c\'è già.',
       'Installazione e manutenzione seguite da noi: ti avvisiamo quando cambiare i filtri.'
     ],
     faqs: [
@@ -248,7 +249,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       },
       {
         q: 'Serve un secondo rubinetto sul lavello?',
-        a: 'Non per forza. Con un miscelatore multivia, che installiamo noi al posto di quello esistente, esce tutto dallo stesso rubinetto: nella versione a 5 vie hai acqua di rete calda e fredda, depurata a temperatura ambiente, depurata fredda e frizzante. Si usa il foro che c\'è già, quindi sul piano non si aggiunge nulla.'
+        a: 'Non per forza. Con un miscelatore multivia, che installiamo noi al posto di quello esistente, esce tutto dallo stesso rubinetto: nella versione a 5 vie hai acqua di rete calda e fredda, depurata a temperatura ambiente, depurata fredda e frizzante. Spesso si usa il foro che c\'è già; se il piano va forato, lo facciamo noi.'
       },
       {
         q: 'Va bene anche per bar e ristoranti?',
@@ -283,7 +284,7 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
       'Assistenza rapida e, se la riparazione richiede tempo, una macchina sostitutiva.',
       'Manutenzione gestita da noi: ti avvisiamo noi quando intervenire.',
       'Fornitore serio e tracciabile, non un venditore porta a porta: preventivo chiaro e fattura.',
-      'Oltre 130 recensioni a 5 stelle su Google.'
+      `Oltre 130 recensioni su Google, con una media di ${REVIEW_RATING_TESTO} su 5.`
     ],
     ctaLabel: 'Richiedi un preventivo gratuito',
     localSeo: {
@@ -303,11 +304,11 @@ export const SERVICES_INFO: Record<ServicePageId, ServiceInfo> = {
     heroPosition: 'top',
     problem: [
       'Capita spesso: hai comprato un depuratore anni fa, magari da un venditore che ti aveva promesso mari e monti, e adesso quell\'azienda non risponde più, ha chiuso, o ti chiede cifre assurde per cambiare un filtro.',
-      'L\'impianto è buono, ma senza manutenzione regolare smette di funzionare bene — e l\'acqua non è più sicura come dovrebbe. Noi ci siamo per questo. E non spariamo.'
+      'L\'impianto è buono, ma senza manutenzione regolare smette di funzionare bene: un filtro esausto filtra peggio. Noi ci siamo per questo, e non spariamo nel nulla.'
     ],
     benefitsTitle: 'Di cosa ci occupiamo',
     benefits: [
-      'Sostituzione filtri e membrane nei tempi giusti, per acqua sempre sicura.',
+      'Sostituzione filtri e membrane nei tempi giusti, per un\'acqua sempre buona.',
       'Sanificazione periodica dell\'impianto.',
       'Riparazioni e ricambi in caso di guasto o perdita.',
       'Controllo della qualità dell\'acqua prodotta.',

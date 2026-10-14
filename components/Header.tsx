@@ -9,6 +9,7 @@ import { ROUTES, PAGE_BREADCRUMB } from '../lib/routes';
 import { PageId } from '../lib/types';
 import { useModal } from './ModalProvider';
 import WhatsAppIcon from './WhatsAppIcon';
+import { REVIEW_RATING_TESTO } from '../lib/reviews';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,7 +71,7 @@ export default function Header() {
               className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
             >
               <span className="flex text-amber-400">★★★★★</span>
-              <span className="text-white font-semibold">130+ Recensioni a 5 Stelle Google</span>
+              <span className="text-white font-semibold">130+ recensioni Google, media {REVIEW_RATING_TESTO}</span>
             </a>
             <span className="hidden md:inline text-blue-100">| Depurazione Acqua a Firenze, Prato e Pistoia</span>
           </div>

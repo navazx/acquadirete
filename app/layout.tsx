@@ -9,7 +9,7 @@ import CookieConsent from '../components/CookieConsent';
 import MetaPixel from '../components/MetaPixel';
 import GoogleAdsTag from '../components/GoogleAdsTag';
 import { CONTACT, SITE_URL, OG_DEFAULTS, GOOGLE_PROFILE_URL, SOCIAL } from '../lib/siteConfig';
-import { REVIEW_RATING, REVIEW_TOTAL } from '../lib/reviews';
+import { REVIEW_RATING, REVIEW_RATING_TESTO, REVIEW_TOTAL } from '../lib/reviews';
 
 // Font self-hosted da Next (next/font): nessuna richiesta bloccante verso
 // Google Fonts, niente @import in CSS.
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete',
   description:
-    'Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 130 recensioni a 5 stelle su Google. Sopralluogo gratuito.',
+    `Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 130 recensioni Google (media ${REVIEW_RATING_TESTO}). Sopralluogo gratuito.`,
   alternates: { canonical: '/' },
   // Niente title/description qui: così ogni pagina usa i propri (Next fa il
   // fallback da title/description → og e twitter), evitando anteprime social

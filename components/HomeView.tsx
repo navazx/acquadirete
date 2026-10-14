@@ -45,7 +45,7 @@ export default function HomeView() {
   const faqs = [
     {
       q: "L'acqua a osmosi è troppo povera di minerali?",
-      a: "I nostri impianti regolano il contenuto di sali minerali in base alle tue esigenze. Non è acqua \"morta\": è acqua leggera e sicura, come una buona oligominerale, ma senza microplastiche e senza bottiglie da portare a casa."
+      a: "I nostri impianti regolano il contenuto di sali minerali in base alle tue esigenze. Non è acqua \"morta\": è acqua leggera, come una buona oligominerale, ma senza plastica e senza bottiglie da portare a casa."
     },
     {
       q: "Spreca acqua?",
@@ -77,12 +77,12 @@ export default function HomeView() {
           <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
             Depuratori acqua a Firenze e Prato:<br />
             <span className="text-blue-600">
-              acqua buona dal rubinetto, per sempre.
+              acqua buona dal rubinetto, ogni giorno.
             </span>
           </h1>
 
           <p className="text-base text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
-            Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che serve: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-slate-900 font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia. Assistenza locale, con persone vere: interventi in pochi giorni e macchina sostitutiva in caso di guasto.
+            Depuratori d'acqua installati e seguiti da chi conosce ogni famiglia che segue: acqua buona dal rubinetto, sempre disponibile. Dal <strong className="text-slate-900 font-bold">2005</strong>, centinaia di impianti in provincia di Firenze, Prato e Pistoia. Assistenza locale, con persone vere: interventi in pochi giorni e, quando la riparazione richiede tempo, una macchina sostitutiva.
           </p>
 
           {/* Una pagina per città: da qui Google capisce quale mostrare per "depuratore acqua <città>". */}
@@ -131,9 +131,9 @@ export default function HomeView() {
               <p>
                 Veniamo a vedere la tua acqua e a farti il preventivo <strong className="text-slate-900 font-semibold">gratis</strong>, sugli impianti diamo <strong className="text-slate-900 font-semibold">10 anni di garanzia</strong>, e su Google trovi{' '}
                 <a href={GOOGLE_PROFILE_URL} target="_blank" rel="noreferrer" title="Leggi le recensioni su Google" className="text-blue-600 font-semibold hover:underline cursor-pointer">
-                  oltre 130 recensioni a 5 stelle
+                  oltre 130 recensioni
                 </a>{' '}
-                lasciate dalle famiglie e dalle attività che seguiamo tra Firenze, Prato e Pistoia.
+                (media {REVIEW_RATING_TESTO} su 5) lasciate dalle famiglie e dalle attività che seguiamo tra Firenze, Prato e Pistoia.
               </p>
             </div>
             <button
@@ -168,7 +168,7 @@ export default function HomeView() {
         <div className="max-w-4xl mx-auto space-y-10 relative z-10">
           <div className="text-center space-y-5">
             <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-md border border-blue-200">
-              Perché Fidarsi di Noi
+              Perché fidarsi di noi
             </span>
             <h2 className="text-3xl md:text-3xl font-bold tracking-tight">
               Comprare un depuratore oggi è un campo minato.
@@ -181,14 +181,14 @@ export default function HomeView() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
             <div className="bg-blue-600 p-6 rounded-lg border border-blue-500 space-y-2">
               <Award className="text-white mb-1" size={22} />
-              <h3 className="text-base font-bold text-white">10 Anni di Garanzia</h3>
+              <h3 className="text-base font-bold text-white">10 anni di garanzia</h3>
               <p className="text-sm text-blue-50 leading-relaxed">
                 <strong className="text-white">10 anni di garanzia</strong> sui nostri impianti (esclusi i consumabili). Se in questi dieci anni qualcosa non va, veniamo a sistemarlo noi: non ti giriamo a un numero verde.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
               <ThumbsUp className="text-blue-500 mb-1" size={22} />
-              <h3 className="text-base font-bold text-slate-900">Consulenza Onesta</h3>
+              <h3 className="text-base font-bold text-slate-900">Consulenza onesta</h3>
               <p className="text-sm text-slate-600 leading-relaxed">
                 Niente agenti, niente canoni che non finiscono mai. Ti proponiamo solo quello che ti serve, con due prezzi scritti: quanto costa l&apos;impianto e quanto costa mantenerlo negli anni. Dopo aver provato l&apos;acqua a casa tua, non prima.
               </p>
@@ -204,7 +204,7 @@ export default function HomeView() {
               <MapPin className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Una persona, non un call center</h3>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Al <strong className="text-slate-900 font-semibold">{CONTACT.phoneDisplay}</strong> risponde Stefano, sempre lo stesso numero dal 2005. Centinaia di impianti tra Firenze, Prato e Pistoia e oltre 130 recensioni a 5 stelle su Google.
+                Al <strong className="text-slate-900 font-semibold">{CONTACT.phoneDisplay}</strong> risponde Stefano, sempre lo stesso numero dal 2005. Centinaia di impianti tra Firenze, Prato e Pistoia e oltre 130 recensioni su Google, con una media di {REVIEW_RATING_TESTO} su 5.
               </p>
             </div>
           </div>
@@ -263,10 +263,10 @@ export default function HomeView() {
           header={
             <>
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
-                Depuratori con acqua refrigerata e gassata, anche per piccoli spazi
+                Cosa installiamo e cosa seguiamo
               </h2>
               <p className="text-sm text-slate-500 leading-relaxed">
-                Scegli la categoria adatta alle tue necessità. Installiamo solo sistemi certificati di altissima qualità tecnologica progettati per durare a lungo.
+                Ti diciamo quale ti serve dopo aver provato la tua acqua, anche quando basta il più semplice.
               </p>
             </>
           }
@@ -277,7 +277,7 @@ export default function HomeView() {
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <Droplets size={22} />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Carboni Attivi</h3>
+              <h3 className="text-lg font-bold text-slate-900">Carboni attivi</h3>
               <p className="text-sm text-slate-500 leading-relaxed">
                 Microfiltrazione che elimina cloro, odori e cattivi sapori mantenendo i minerali naturali dell'acqua. Semplice, senza scarto d'acqua.
               </p>
@@ -302,12 +302,12 @@ export default function HomeView() {
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <Sparkles size={22} />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Osmosi Inversa</h3>
+              <h3 className="text-lg font-bold text-slate-900">Osmosi inversa</h3>
               <p className="text-sm text-slate-500 leading-relaxed">
-                La tecnologia di purificazione molecolare definitiva. Regolazione del residuo fisso per avere un'acqua oligominerale ultra leggera.
+                Il depuratore più completo: toglie cloro, calcare e cattivi sapori, e regoliamo i minerali per un'acqua leggera come una buona oligominerale.
               </p>
               <ul className="text-xs text-slate-600 font-medium space-y-1.5 pt-2">
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-blue-500 shrink-0 font-bold" /> Ideale per neonati</li>
+                <li className="flex items-center gap-1.5"><Check size={12} className="text-blue-500 shrink-0 font-bold" /> Acqua leggera</li>
                 <li className="flex items-center gap-1.5"><Check size={12} className="text-blue-500 shrink-0 font-bold" /> Perfetta per cucinare</li>
               </ul>
             </div>
@@ -327,7 +327,7 @@ export default function HomeView() {
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <Clock size={22} />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Uffici e Ristoranti</h3>
+              <h3 className="text-lg font-bold text-slate-900">Uffici e ristoranti</h3>
               <p className="text-sm text-slate-500 leading-relaxed">
                 Acqua microfiltrata, liscia o frizzante, dalla tua rete per uffici, bar e ristoranti. Stop a ordini, casse e vuoti da gestire.
               </p>
@@ -352,7 +352,7 @@ export default function HomeView() {
               <div className="bg-blue-50 text-blue-600 p-3.5 rounded-lg w-fit">
                 <ShieldCheck size={22} />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Assistenza &amp; Filtri</h3>
+              <h3 className="text-lg font-bold text-slate-900">Assistenza e filtri</h3>
               <p className="text-sm text-slate-500 leading-relaxed">
                 Sostituzione filtri, sanificazione e riparazioni, anche per impianti di altre marche a Firenze, Prato e Pistoia.
               </p>
@@ -390,7 +390,7 @@ export default function HomeView() {
       {/* FAQ Interactive Accordion */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Domande Frequenti (FAQ)</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Domande frequenti</h2>
           <p className="text-xs text-slate-500">Le domande che ci fanno più spesso sull'acqua a osmosi inversa.</p>
         </div>
 

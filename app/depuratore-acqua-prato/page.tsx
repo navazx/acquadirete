@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import ServicePageView from '../../components/ServicePageView';
 import { OG_DEFAULTS } from '../../lib/siteConfig';
+import { REVIEW_RATING_TESTO } from '../../lib/reviews';
 
 export const metadata: Metadata = {
-  title: 'Depuratore Acqua Prato | 130+ Recensioni a 5 Stelle',
+  title: `Depuratore Acqua Prato | 130+ Recensioni, Media ${REVIEW_RATING_TESTO}`,
   description:
     'Depuratori a osmosi inversa a Prato e provincia, installati e assistiti dal 2005. 10 anni di garanzia, oltre 130 recensioni. Sopralluogo gratuito.',
   alternates: { canonical: '/depuratore-acqua-prato' },
