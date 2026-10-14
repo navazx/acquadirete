@@ -21,6 +21,8 @@ Netlify con **auto-deploy via Git**: il repo è **github.com/navazx/acquadirete*
 ## Pagine attive (11 + blog + legali)
 `/`, `/depuratore-acqua-firenze`, `/depuratore-acqua-prato`, `/depuratore-acqua-pistoia`, `/osmosi-inversa-firenze`, `/depuratore-acqua-uffici-firenze`, `/assistenza-depuratore-firenze`, `/depuratore-carboni-attivi-firenze`, `/acqua-frizzante-firenze`, `/recensioni`, `/contatti` (mappa completa in `lib/routes.ts`).
 
+**Pagina degli annunci Google** `/sopralluogo-gratuito` (dal 14 ott 2026): ci arriva solo chi clicca un annuncio. Noindex, fuori da `ROUTES` e dalla sitemap, senza menu né piè di pagina del sito (li nasconde uno `<style>` nella pagina), modulo corto `components/ModuloSopralluogo.tsx` (nome, telefono, zona → `/api/lead` come ContactForm) e barra Chiama/WhatsApp fissa sul telefono. Prezzi, garanzia e rate li copia da `/prezzi-depuratori`: se cambiano là, vanno cambiati anche qui.
+
 Più `/blog` (indice) e i singoli articoli in `app/blog/[slug]/page.tsx` (contenuti in `lib/blogPosts.ts`), e le pagine legali `/privacy-policy`, `/cookie-policy`, `/note-legali` (escluse di proposito da `app/sitemap.ts`).
 
 ## Contatti e dati aziendali

@@ -21,7 +21,7 @@ const SERVICE_LABELS: Record<string, string> = {
 // giro sensato. Gli stessi codici Z1–ZX vanno usati sul modulo Meta Lead Ads e
 // nella colonna "Zona" dell'Excel clienti: se le tassonomie divergono, i dati
 // vanno tradotti a mano.
-const ZONE = [
+export const ZONE = [
   { code: 'Z1', label: 'Firenze città', comuni: 'Firenze, tutti i quartieri' },
   { code: 'Z2', label: 'Scandicci, Sesto, Campi, Calenzano', comuni: 'Scandicci, Sesto Fiorentino, Campi Bisenzio, Calenzano, Signa, Lastra a Signa, Vaglia' },
   { code: 'Z3', label: 'Bagno a Ripoli, Impruneta, Chianti', comuni: 'Bagno a Ripoli, Impruneta, Greve, San Casciano, Tavarnelle, Barberino' },
