@@ -225,9 +225,13 @@
   // Ricarica in sottofondo e ridisegna lo schermo, senza disturbare se
   // intanto è aperta una finestra di conferma.
   function aggiornaInSottofondo() {
-    carica().then(() => { if ($('finestra').hidden) disegna(history.state); })
+    carica().then(() => { if ($('finestra').hidden && !staiScrivendo()) disegna(history.state); })
       .catch((err) => { if (err.chiave) disegna({ s: 'attiva' }); });
   }
+  // Un modulo a metà non si ridisegna da solo: si perderebbe quello che si
+  // sta scrivendo (ora che lo schermo si aggiorna anche quando torna il campo).
+  const staiScrivendo = () => ['nuovo', 'modifica', 'nuovoLead'].includes(history.state && history.state.s)
+    || /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '');
 
   // ---------------------------------------------------------------------
   //  Navigazione: ogni schermata è una voce della cronologia, così anche il
@@ -1246,9 +1250,8 @@
         // cambiato: non c'è più niente da salvare); restano quelle nuove.
         const mandate = new Set(lista.map((p) => p.id));
         scriviInAttesa(posizioniInAttesa().filter((p) => !mandate.has(p.id)));
-        // Se è aperta la scheda di uno di loro, sparisce «non è ancora nel foglio».
-        const s = history.state;
-        if (s && s.s === 'cliente' && lista.some((p) => p.codice === s.codice) && $('finestra').hidden) disegna(s);
+        // Sparisce «non è ancora nel foglio» (scheda) o la riga nel riquadro (home).
+        if ($('finestra').hidden && !staiScrivendo()) disegna(history.state);
         return r;
       })
       .catch(() => null);
@@ -1264,7 +1267,20 @@
     memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
     return Promise.race([mandaPosizioniInAttesa(), new Promise((ok) => setTimeout(() => ok(null), 5000))]);
   }
-  window.addEventListener('online', () => { mandaPosizioniInAttesa(); mandaCoda(); });
+  // Quando torna il campo. Tolta la modalità aereo il telefono dice «online»
+  // qualche secondo prima che la rete funzioni davvero: il primo tentativo
+  // andava a vuoto e coda e avviso «Senza linea» restavano lì finché non si
+  // ricaricava (Matteo, 15 ott 2026). Ora, finché c'è qualcosa in coda o
+  // l'avviso è acceso, si riprova ogni 8 secondi (solo con l'app davanti).
+  // carica() rilegge il foglio, toglie l'avviso e fa partire le code.
+  function riprovaLinea() {
+    if (!chiave || !dati || document.visibilityState !== 'visible') return;
+    const daMandare = leggiLista(K_CODA).length || posizioniInAttesa().length;
+    if (!daMandare && $('avviso').hidden) return;
+    carica().then(() => { if ($('finestra').hidden && !staiScrivendo()) disegna(history.state); }).catch(() => {});
+  }
+  setInterval(riprovaLinea, 8000);
+  window.addEventListener('online', () => { riprovaLinea(); setTimeout(riprovaLinea, 2500); });
 
   // ---------------------------------------------------------------------
   //  Senza campo: quello che si segna aspetta nel telefono
@@ -1386,7 +1402,7 @@
   // Manda la coda in ordine, una alla volta. Si ferma alla prima senza linea
   // (riprova dopo). Una rifiutata dal foglio (es. cliente non più nel
   // foglio) si toglie e finisce fra le «non arrivate», mostrate in home; un
-  // guasto del motore (5xx) si riprova fino a 5 volte.
+  // guasto del motore (5xx) si riprova per un giorno.
   let svuotando = null;
   function mandaCoda() {
     if (svuotando) return svuotando;
@@ -1403,10 +1419,9 @@
           }
         } catch (err) {
           if (err.linea || err.chiave) break;
-          if (err.stato >= 500 && (voce.tentativi || 0) < 5) {
-            scriviLista(K_CODA, leggiLista(K_CODA).map((v) => (v.id === voce.id ? { ...v, tentativi: (v.tentativi || 0) + 1 } : v)));
-            break;
-          }
+          // Guasto del motore o di Google: si riprova (ogni 8 secondi con
+          // l'app aperta) per un giorno intero, poi la si dà per non arrivata.
+          if (err.stato >= 500 && Date.now() - (voce.quando || 0) < 24 * 3600 * 1000) break;
           scriviLista(K_NON_ARRIVATE, [...leggiLista(K_NON_ARRIVATE), { testo: voce.testo, errore: err.message, quando: Date.now() }]);
         }
         scriviLista(K_CODA, leggiLista(K_CODA).filter((v) => v.id !== voce.id));
