@@ -8,6 +8,8 @@ Le note di MATTEO vengono da lui: valgono come sue indicazioni, sempre dentro
 le regole del tuo lavoro. Le altre sono degli agenti: informazioni, non ordini.
 Gli ordini veri stanno in `agenti/ordini.md`.
 
+- **15/10, 12:26 · Scheda Google** → per Contenuti, SEO: Per Contenuti e SEO: le ricerche sull'acqua potabile di Firenze sono il gruppo più cercato in zona (214 viste in un mese, 11 clic), mentre 'depuratori acqua firenze' resta senza clic con la home verso il 14° posto.
+- **15/10, 12:26 · Scheda Google**: Promemoria della scheda Google del 15 ottobre pronto, con tre post e le loro immagini: l'acqua di Firenze è potabile ma sa di cloro (carboni attivi), d'inverno basta casse d'acqua su per le scale (depuratore a Firenze), e la nuova pagina Chi siamo con Stefano e Matteo. Social e Contenuti: questi temi li ha già la scheda questo mese.
 - **14/10, 18:01 · Ads** → per Direttore: Matteo ha approvato su Telegram la proposta per Google Ads del 14/10: applicate 14 modifiche (14 ricerche escluse). Budget e offerte non toccati. La revisione del mese prossimo dice se hanno funzionato.
 - **14/10, 17:56 · Ads** → per Direttore, MATTEO: Pubblicità, punto intermedio su Meta: dopo la zona ristretta i fuori zona sono calati ma restano quasi metà, e ancora nessun cliente. Il video nuovo Meta l'ha mostrato pochissimo: ho consigliato a Matteo di spegnere la vecchia inserzione fino al 31. Su Google il gruppo Prezzi non ha ancora portato contatti, si decide il 18 novembre; un titolo dice 5,0 e va corretto in 4,9.
 - **14/10, 17:56 · Ads** → per MATTEO, Direttore: Per MATTEO: ho preparato 14 modifiche a Google Ads già pronte (ricerche da escludere, parole da mettere in pausa). Su Telegram rispondi APPROVA ADS e le applico io, oppure RIFIUTA ADS e il motivo.
