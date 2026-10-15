@@ -431,12 +431,19 @@ export async function segnaFatta(foglio, { codice, data, frequenza }, { chi = 'a
     frequenzaScritta = true;
   }
 
+  const prossima = piuMesi(quando, mesi);
+  const serProssima = serialeDa(prossima.a, prossima.m, prossima.g);
+  const nome = testo(r[col.NOME - 1]);
+  // La stessa richiesta arrivata due volte: il telefono senza campo riprova,
+  // ma la prima era già passata (15 ott 2026). La data è già quella giusta:
+  // non si riscrive niente e lo storico non si ripete.
+  if (serialeDaCella(r[col.MANUTENZIONE - 1]) === serProssima) {
+    return { ok: true, nome, fatta: testoData(quando), prossima: testoData(prossima), annulla: null, giaSegnata: true };
+  }
+
   // Cosa c'era prima (formula compresa), per poterlo rimettere.
   const cellaK = `'${TAB_CLIENTI}'!${lettera(col.MANUTENZIONE)}${riga}`;
   const [[prima = '']] = (await foglio.leggi(cellaK, 'FORMULA')).concat([['']]);
-
-  const prossima = piuMesi(quando, mesi);
-  const serProssima = serialeDa(prossima.a, prossima.m, prossima.g);
   const scritture = [{ range: cellaK, values: [[serProssima]] }];
   if (frequenzaScritta) {
     scritture.push({ range: `'${TAB_CLIENTI}'!${lettera(col.FREQUENZA)}${riga}`, values: [[mesi]] });
@@ -445,7 +452,6 @@ export async function segnaFatta(foglio, { codice, data, frequenza }, { chi = 'a
   // non c'è nessuna conversione di data (né di fuso) di mezzo.
   await foglio.scrivi(scritture, 'RAW');
 
-  const nome = testo(r[col.NOME - 1]);
   let storico = null;
   try {
     storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO,
@@ -630,6 +636,12 @@ export async function spostaCliente(foglio, { codice, verso }) {
     ? [clienti, persi, TAB_CLIENTI, TAB_PERSI]
     : [persi, clienti, TAB_PERSI, TAB_CLIENTI];
 
+  // Già spostato: la stessa richiesta arrivata due volte (il telefono senza
+  // campo riprova). Non è un errore.
+  const haCodice = (x) => x.griglia.slice(x.mappa.riga).some((r) => testo(r[x.mappa.col.CODICE - 1]).toUpperCase() === cod);
+  if (!haCodice(da) && haCodice(a)) {
+    return { ok: true, codice: cod, verso, giaSpostato: true, annulla: { codice: cod, verso: verso === 'persi' ? 'clienti' : 'persi' } };
+  }
   const riga = trovaCliente(da.griglia, da.mappa, cod);
   const intestDa = (da.griglia[da.mappa.riga - 1] || []).map(testo);
   const intestA = (a.griglia[a.mappa.riga - 1] || []).map(testo);
@@ -1005,7 +1017,9 @@ export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
   return { ok: true, nome, data: riga[0], doppione: !!esito.doppione, riga: esito.riga ?? null };
 }
 
-export async function notaLead(foglio, { riga, data, nome, nota }) {
+// `giorno` ("gg/mm") è il giorno in cui la nota è stata scritta: se il
+// telefono era senza campo arriva dopo, ma col suo giorno.
+export async function notaLead(foglio, { riga, data, nome, nota, giorno }) {
   riga = parseInt(riga, 10);
   const t = testo(nota).replace(/\s+/g, ' ').slice(0, 500);
   if (!t) throw problema('La nota è vuota.');
@@ -1013,7 +1027,11 @@ export async function notaLead(foglio, { riga, data, nome, nota }) {
   const r = trovaLead(griglia, mappa, { riga, data, nome });
   const prima = testo(griglia[r - 1][mappa.col.NOTE - 1]);
   const { g, m } = oggi();
-  const nuova = [prima, `${String(g).padStart(2, '0')}/${String(m).padStart(2, '0')}: ${t}`].filter(Boolean).join(' — ');
+  const quando = /^\d{2}\/\d{2}$/.test(testo(giorno)) ? testo(giorno) : `${String(g).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+  const aggiunta = `${quando}: ${t}`;
+  // La stessa nota arrivata due volte (il telefono senza campo riprova).
+  if (prima.endsWith(aggiunta)) return { ok: true, note: prima };
+  const nuova = [prima, aggiunta].filter(Boolean).join(' — ');
   await foglio.scrivi([{ range: `'${TAB_LEAD}'!${lettera(mappa.col.NOTE)}${r}`, values: [[nuova.slice(0, 5000)]] }], 'RAW');
   return { ok: true, note: nuova };
 }

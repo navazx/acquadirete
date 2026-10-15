@@ -167,6 +167,15 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .stato[aria-pressed="true"] .pallino { border-color: var(--blu); background: var(--blu); color: #fff; }
 .stato[aria-pressed="true"] .pallino svg { font-size: 16px; }
 .titoletto { margin: 22px 0 8px; font-size: 18px; font-weight: 700; }
+.riquadro-coda { margin: 0 0 16px; padding: 14px 16px; border-radius: 16px; background: var(--arancio-chiaro); color: var(--arancio); }
+.riquadro-coda b { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.riquadro-coda b svg { font-size: 22px; }
+.riquadro-coda p { margin: 6px 0; color: var(--testo); font-size: 16px; }
+.riquadro-coda ul { margin: 6px 0 10px; padding-left: 20px; color: var(--testo); font-size: 16px; }
+.riquadro-coda .btn { width: 100%; }
+.riquadro-coda.rifiutate { background: var(--rosso-chiaro); color: var(--rosso); }
+.riquadro-coda.piccolo { display: flex; gap: 8px; align-items: flex-start; font-size: 16px; font-weight: 600; }
+.riquadro-coda.piccolo svg { flex: none; font-size: 20px; margin-top: 1px; }
 .sommario-cerca { margin: 14px 2px 0; color: var(--grigio); font-size: 17px; }
 .gruppo-cerca { scroll-margin-top: 70px; }
 .nota-posizione { margin: 6px 4px 0; color: var(--grigio); font-size: 16px; text-align: center; }
