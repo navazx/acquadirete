@@ -2,69 +2,70 @@
   "immagini": [
     {
       "idea": 1,
-      "etichetta": "ATTENZIONE",
-      "titolo": "Depuratore gratis col\nbonus della Regione?\n*Quel bonus non esiste*",
-      "intro": "Te lo propongono al telefono o con una pubblicità su Facebook e Instagram. La Regione Toscana, però, non prevede contributi per mettere un depuratore in casa.",
+      "etichetta": "A FIRENZE",
+      "titolo": "Acqua di Firenze:\npotabile, ma\n*sa di cloro?*",
+      "intro": "Il gestore dell'acquedotto la controlla di continuo.\nIl cloro serve a tenerla sicura lungo i tubi, fino a casa tua.",
       "punti": [
         {
-          "icona": "scudo",
-          "titolo": "Non dare i tuoi dati a chi promette il bonus",
-          "testo": "Né al telefono, né nel modulo\ndi una pubblicità che lo promette."
+          "icona": "rubinetto",
+          "titolo": "Potabile e controllata",
+          "testo": "Bere dal rubinetto a Firenze\nè una scelta sicura."
         },
         {
-          "icona": "foglio",
-          "titolo": "Chiedi tutto per scritto",
-          "testo": "Nome dell'azienda, proposta e condizioni,\nsu un foglio che resta a te."
+          "icona": "filtro",
+          "titolo": "Spesso bastano i carboni attivi",
+          "testo": "Tolgono il gusto di cloro, lasciano i minerali\ne non scaricano acqua."
         },
         {
-          "icona": "orologio",
-          "titolo": "Non firmare la sera stessa",
-          "testo": "Prenditi tempo: un'offerta che vale\nsolo oggi è una pressione."
+          "icona": "check",
+          "titolo": "Prima la guardiamo, gratis",
+          "testo": "Nel sopralluogo ti diciamo cosa serve,\nanche quando non serve niente."
         }
       ]
     },
     {
       "idea": 2,
-      "titolo": "Calcare nel bollitore?\nA Firenze la durezza\n*cambia da zona a zona*",
-      "intro": "Con il freddo tornano tisane e minestre, e l'alone bianco su pentole e bollitore si nota di più: è il calcare dell'acqua di casa.",
+      "etichetta": "IN INVERNO",
+      "titolo": "Basta casse d'acqua\nsu per le scale:\n*esce dal rubinetto*",
+      "intro": "Con un depuratore, a Firenze e dintorni l'acqua buona\nda bere esce dal rubinetto di casa tua.",
       "punti": [
         {
-          "icona": "rubinetto",
-          "titolo": "Potabile e controllata",
-          "testo": "A Firenze l'acqua del rubinetto lo è.\nLa durezza, però, non è uguale dappertutto."
+          "icona": "bolle",
+          "titolo": "Naturale, fredda o frizzante",
+          "testo": "Con il miscelatore a 5 vie,\ntutte dallo stesso rubinetto."
         },
         {
-          "icona": "casa",
-          "titolo": "Conta quella di casa tua",
-          "testo": "L'unico modo per sapere com'è\nè guardarla al tuo rubinetto."
+          "icona": "foglio",
+          "titolo": "Preventivo gratuito",
+          "testo": "Senza impegno, e vale 3 mesi:\nhai tutto il tempo per pensarci."
         },
         {
-          "icona": "check",
-          "titolo": "Lo facciamo noi, gratis",
-          "testo": "Nel sopralluogo ti diciamo se un depuratore ha senso,\nanche quando la tua acqua va già bene così."
+          "icona": "scudo",
+          "titolo": "10 anni di garanzia",
+          "testo": "Sugli impianti, esclusi i consumabili."
         }
       ]
     },
     {
       "idea": 3,
-      "etichetta": "A PRATO",
-      "titolo": "Depuratore a Prato:\n*un rubinetto solo*\nper tutta l'acqua",
-      "intro": "Lo installiamo con un miscelatore multivia a 3, 4 o 5 vie,\nche prende il posto del rubinetto che hai già.",
+      "etichetta": "CHI SIAMO",
+      "titolo": "Acquadirete\nsiamo noi due:\n*Stefano e Matteo*",
+      "intro": "Dal 2005 installiamo e seguiamo depuratori d'acqua\ntra Firenze, Prato e Pistoia, da Montespertoli.",
       "punti": [
         {
+          "icona": "famiglia",
+          "titolo": "Niente agenti né call center",
+          "testo": "Quando chiami, rispondiamo noi."
+        },
+        {
           "icona": "attrezzi",
-          "titolo": "Usa il foro che c'è già",
-          "testo": "Spesso così non serve forare il piano."
+          "titolo": "A casa tua veniamo noi",
+          "testo": "Sopralluoghi, installazioni e manutenzioni\nli facciamo noi due."
         },
         {
-          "icona": "rubinetto",
-          "titolo": "Un rubinetto invece di due",
-          "testo": "In cucina ne resta uno solo, per tutto."
-        },
-        {
-          "icona": "bolle",
-          "titolo": "Nel 5 vie c'è tutto",
-          "testo": "Calda e fredda di casa, depurata a temperatura\nambiente, depurata fredda e frizzante."
+          "icona": "check",
+          "titolo": "Ti diciamo come stanno le cose",
+          "testo": "Anche quando la risposta è\nche non ti serve niente."
         }
       ]
     }
