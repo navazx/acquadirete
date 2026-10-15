@@ -193,10 +193,13 @@
           const v = vecchi.get(c.codice);
           if (!c.prec && v && v.prec && indirizzoCercato(v) === indirizzoCercato(c)) Object.assign(c, { prec: v.prec, lat: v.lat, lng: v.lng });
         });
+        // E quelle segnate col «Sono qui» senza campo: c'è linea, partono.
+        applicaInAttesa(r.clienti);
         dati = { oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati };
         aggiornatoAlle = Date.now();
         memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
         $('avviso').hidden = true;
+        mandaPosizioniInAttesa();
         return dati;
       }).finally(() => { caricando = null; });
     }
@@ -667,7 +670,9 @@
       navigator.geolocation.getCurrentPosition(
         (p) => ok({ lat: p.coords.latitude, lng: p.coords.longitude, margine: Math.round(p.coords.accuracy) }),
         (err) => ko(new Error(erroreGps(err))),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: fresca ? 0 : 60000 },
+        // Senza campo il GPS parte senza l'aiuto della rete e ci mette di più:
+        // per «Sono qui» si aspetta fino a 30 secondi.
+        { enableHighAccuracy: true, timeout: fresca ? 30000 : 20000, maximumAge: fresca ? 0 : 60000 },
       );
     });
   }
@@ -771,9 +776,10 @@
 
   // Il link che apre Google Maps col percorso: si parte da dove si è, l'ultima
   // tappa è l'arrivo. Indirizzi scritti (Google li trova meglio delle
-  // coordinate); le coordinate solo se l'indirizzo manca.
+  // coordinate di OpenStreetMap); le coordinate se la posizione è segnata
+  // sul posto («Sono qui»), o se l'indirizzo manca.
   function linkGiro(tappe) {
-    const dove = (c) => (c.indirizzo
+    const dove = (c) => sulPosto(c) || (c.indirizzo
       ? [c.indirizzo, senzaCap(c.citta) ? c.citta : '', c.provincia].filter(Boolean).join(', ')
       : `${c.lat},${c.lng}`);
     const q = new URLSearchParams({ api: '1', travelmode: 'driving', destination: dove(tappe[tappe.length - 1]) });
@@ -1058,13 +1064,20 @@
   // ---------------------------------------------------------------------
   //  Scheda cliente
   // ---------------------------------------------------------------------
-  function pulsantiContatto(testo, indirizzo) {
+  // Il punto da dare a Google Maps: la posizione segnata sul posto («Sono
+  // qui») se c'è, perché è quella giusta; se no l'indirizzo scritto, che
+  // Google trova meglio delle coordinate di OpenStreetMap. Fino al 15 ott
+  // 2026 «Portami lì» usava sempre l'indirizzo, e dopo un «Sono qui» portava
+  // ancora nel posto sbagliato.
+  const sulPosto = (c) => (c && c.prec === 'gps' && c.lat != null ? `${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}` : '');
+  function pulsantiContatto(testo, indirizzo, cliente = null) {
     const nums = telefoni(testo);
     const mail = email(testo);
     let html = nums.map((n) => `<a class="btn pieno largo" href="tel:${esc(n.tel)}">${icona('telefono')} Chiama ${esc(n.mostra)}</a>`).join('');
     const cell = nums.find((n) => n.cellulare);
     if (cell) html += `<a class="btn" href="https://wa.me/${esc(cell.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp</a>`;
-    if (indirizzo) html += `<a class="btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(indirizzo)}" target="_blank" rel="noopener">${icona('mappa')} Portami lì</a>`;
+    const dove = sulPosto(cliente) || indirizzo;
+    if (dove) html += `<a class="btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dove)}" target="_blank" rel="noopener">${icona('mappa')} Portami lì</a>`;
     if (mail) html += `<a class="btn" href="mailto:${esc(mail)}">${icona('posta')} Email</a>`;
     return html;
   }
@@ -1077,7 +1090,7 @@
     const s = scadenza(c);
     const indirizzoCompleto = [c.indirizzo, senzaCap(c.citta) ? c.citta : '', c.provincia].filter(Boolean).join(', ');
     const riga = (etichetta, valore) => (valore ? `<div><dt>${etichetta}</dt><dd>${esc(valore)}</dd></div>` : '');
-    const azioni = pulsantiContatto(c.contatto, c.indirizzo || c.citta ? indirizzoCompleto : '');
+    const azioni = pulsantiContatto(c.contatto, c.indirizzo || c.citta ? indirizzoCompleto : '', c);
     // Tipico dei clienti appena passati da lead: la riga nasce quasi vuota.
     const mancano = [
       !c.indirizzo && 'indirizzo', !c.citta && 'città', !c.tipo && 'impianto',
@@ -1108,7 +1121,7 @@
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
-      <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}</p>
+      <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
       <h3 class="titoletto">Dati del cliente</h3>
       <dl class="dati">
         ${riga('Impianto', c.tipo)}
@@ -1159,25 +1172,72 @@
       $('no').onclick = chiudiFinestra;
       $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
         const prima = c.prec && c.prec !== 'nessuna' ? { lat: c.lat, lng: c.lng, prec: c.prec } : null;
-        const salva = (p) => api('posizioni', { posizioni: [{ codice: c.codice, cercato: indirizzoCercato(c), ...p }] }).then((r) => {
-          if (!r.salvate) throw new Error("Non salvata: l'indirizzo del cliente è appena cambiato. Torna indietro e riprova.");
-          Object.assign(c, p);
-          memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
-        });
-        try {
-          await salva({ lat: qui.lat, lng: qui.lng, prec: 'gps' });
-          chiudiFinestra();
-          disegna(history.state);
-          messaggio('Posizione salvata ✓', prima ? {
-            durata: 15000,
-            azione: { testo: 'Annulla', fai: () => salva(prima).then(() => { disegna(history.state); messaggio('Annullato.'); }).catch((err) => messaggio(err.message, { errore: true, durata: 8000 })) },
-          } : {});
-        } catch (err) {
-          messaggio(err.message, { errore: true, durata: 8000 });
+        const r = await segnaPosizione(c, { lat: qui.lat, lng: qui.lng, prec: 'gps' });
+        chiudiFinestra();
+        disegna(history.state);
+        if (r && r.salvate === 0) {
+          messaggio("Non salvata: l'indirizzo del cliente è appena cambiato. Torna indietro e riprova.", { errore: true, durata: 8000 });
+          return;
         }
+        const annulla = prima && {
+          testo: 'Annulla',
+          fai: () => segnaPosizione(c, prima).then(() => { disegna(history.state); messaggio('Annullato.'); }),
+        };
+        messaggio(r ? 'Posizione salvata ✓' : 'Posizione segnata ✓ Qui non c\'è campo: la mando al foglio appena torna.', { durata: annulla ? 15000 : r ? 5000 : 9000, azione: annulla });
       });
     });
   }
+
+  // Posizioni segnate col «Sono qui» e non ancora arrivate al foglio: dal
+  // cliente spesso non c'è campo (cantine, campagna). Restano nel telefono e
+  // partono da sole appena c'è linea (all'apertura, quando torna la rete,
+  // quando si torna sull'app); intanto valgono già per la mappa e per
+  // «Portami lì». Per ogni cliente vale l'ultima segnata.
+  const K_POSIZIONI = 'gestione-posizioni-da-mandare';
+  function posizioniInAttesa() {
+    try { const v = JSON.parse(memoria.leggi(K_POSIZIONI) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
+  }
+  function scriviInAttesa(lista) {
+    if (lista.length) memoria.scrivi(K_POSIZIONI, JSON.stringify(lista.slice(-50))); else memoria.togli(K_POSIZIONI);
+  }
+  // Sopra i dati appena riletti dal foglio, che queste ancora non le hanno.
+  function applicaInAttesa(clienti) {
+    for (const p of posizioniInAttesa()) {
+      const c = clienti.find((x) => x.codice === p.codice);
+      if (c && indirizzoCercato(c) === p.cercato) Object.assign(c, { lat: p.lat, lng: p.lng, prec: p.prec });
+    }
+  }
+  // Torna la risposta del foglio, o null se non è arrivata (restano in coda).
+  let mandando = null;
+  async function mandaPosizioniInAttesa() {
+    while (mandando) await mandando;
+    const lista = posizioniInAttesa();
+    if (!lista.length || !chiave) return null;
+    mandando = api('posizioni', { posizioni: lista.map(({ codice, cercato, lat, lng, prec }) => ({ codice, cercato, lat, lng, prec })) })
+      .then((r) => {
+        // Via quelle mandate, anche le «saltate» (l'indirizzo intanto è
+        // cambiato: non c'è più niente da salvare); restano quelle nuove.
+        const mandate = new Set(lista.map((p) => p.id));
+        scriviInAttesa(posizioniInAttesa().filter((p) => !mandate.has(p.id)));
+        // Se è aperta la scheda di uno di loro, sparisce «non è ancora nel foglio».
+        const s = history.state;
+        if (s && s.s === 'cliente' && lista.some((p) => p.codice === s.codice) && $('finestra').hidden) disegna(s);
+        return r;
+      })
+      .catch(() => null);
+    try { return await mandando; } finally { mandando = null; }
+  }
+  // Col campo che va e viene una richiesta può restare appesa a lungo: dopo
+  // 5 secondi non si aspetta più (la posizione è già nel telefono) e
+  // l'invio continua da solo.
+  async function segnaPosizione(c, p) {
+    const voce = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, codice: c.codice, cercato: indirizzoCercato(c), ...p };
+    scriviInAttesa([...posizioniInAttesa().filter((x) => x.codice !== c.codice), voce]);
+    Object.assign(c, p);
+    memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
+    return Promise.race([mandaPosizioniInAttesa(), new Promise((ok) => setTimeout(() => ok(null), 5000))]);
+  }
+  window.addEventListener('online', () => { mandaPosizioniInAttesa(); });
 
   // Scheda di un cliente perso: solo i dati e i contatti, più "È tornato cliente".
   function schedaPerso(c) {
@@ -1801,6 +1861,9 @@
   //  Avvio
   // ---------------------------------------------------------------------
   history.replaceState(history.state || { s: 'home' }, '', location.pathname + location.hash);
+  // Per aprirsi anche senza campo (sw.js). Se il telefono non lo permette, pazienza.
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/gestione/sw.js', { scope: '/gestione/' }).catch(() => {});
+
   disegna(history.state);
 
   if (chiave && dati) {
@@ -1808,13 +1871,15 @@
     carica().then(() => { if ($('finestra').hidden) disegna(history.state); }).catch((err) => {
       if (err.chiave) return disegna({ s: 'attiva' });
       const alle = aggiornatoAlle ? new Date(aggiornatoAlle).toLocaleString('it-IT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
-      $('avviso').textContent = `Senza linea: vedi i dati del ${alle}. Per segnare le cose serve la linea.`;
+      $('avviso').textContent = `Senza linea: vedi i dati del ${alle}. Per segnare le cose serve la linea; «Sono qui» invece funziona, e la posizione parte appena torna il campo.`;
       $('avviso').hidden = false;
     });
   }
 
   // Tornando sull'app dopo un po' (es. dal telefono dopo una chiamata), rilegge.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && chiave && Date.now() - (aggiornatoAlle || 0) > 120000) aggiornaInSottofondo();
+    if (document.visibilityState !== 'visible' || !chiave) return;
+    mandaPosizioniInAttesa();
+    if (Date.now() - (aggiornatoAlle || 0) > 120000) aggiornaInSottofondo();
   });
 })();
