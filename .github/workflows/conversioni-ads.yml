@@ -1,0 +1,51 @@
+name: Conversioni Ads - i clienti tornano a Google
+
+# I contatti arrivati da un annuncio Google e diventati "Cliente" nel Gestionale
+# tornano a Google Ads come conversioni, così Google impara quali clic portano
+# clienti (dal 16 ott 2026). Cosa parte e perché: scripts/lib/ads-conversioni.mjs.
+# Parte solo il codice del clic, il giorno e il valore di un cliente, e solo per
+# chi sul sito ha accettato i cookie. Niente nomi, telefoni o email.
+#
+# Rilanciarlo non fa danni: Google riconosce le conversioni già caricate.
+# Nei log solo conteggi: il repository è pubblico.
+on:
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: Google controlla e basta, non cambia niente'
+        type: boolean
+        default: true
+
+# Per consegnare la nota alla bacheca (un file su main).
+permissions:
+  contents: write
+
+jobs:
+  conversioni:
+    runs-on: ubuntu-latest
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Carica i clienti nati da un annuncio
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          VALORE_CLIENTE: ${{ secrets.VALORE_CLIENTE }}
+          # Le date del Gestionale sono ora italiana.
+          TZ: Europe/Rome
+        run: node scripts/conversioni-ads.mjs ${{ inputs.prova == false && ' ' || '--prova' }}
+
+      # La nota per la bacheca va su main (agenti/bacheca/in-arrivo/). Se non
+      # riesce lo dice nel log, ma non fa fallire il giro.
+      - name: Consegna le note alla bacheca
+        if: ${{ always() && inputs.prova == false }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/bacheca-consegna.mjs

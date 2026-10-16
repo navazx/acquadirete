@@ -17,6 +17,9 @@
 //  modifiche partono solo dopo l'APPROVA ADS di Matteo su Telegram
 //  (scripts/risposte.mjs). Finche' il service account ha ruolo "Solo lettura"
 //  Google rifiuta comunque ogni scrittura.
+//
+//  L'unica altra scrittura sta in lib/ads-conversioni.mjs (dal 16 ott 2026):
+//  rimandare a Google i contatti diventati clienti. Non tocca soldi ne' annunci.
 // ============================================================================
 
 import { getAccessToken } from './gsc.mjs';
