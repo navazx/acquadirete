@@ -166,7 +166,8 @@
   // secondi conta come «niente linea» (e le azioni vanno in coda, vedi
   // «Senza campo»). Gli errori portano lo stato HTTP: la coda distingue un
   // rifiuto del foglio (4xx: non si riprova) da un guasto (5xx: si riprova).
-  const nientelinea = () => Object.assign(new Error('Niente linea. Riprova quando c\'è campo.'), { linea: true });
+  // forse: la richiesta potrebbe essere arrivata lo stesso (20 s senza risposta).
+  const nientelinea = (forse = false) => Object.assign(new Error('Niente linea. Riprova quando c\'è campo.'), { linea: true, forse });
   async function api(azione, datiAzione) {
     const ferma = new AbortController();
     const timer = setTimeout(() => ferma.abort(), 20000);
@@ -177,10 +178,10 @@
           ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Chiave': chiave || '' }, body: JSON.stringify({ azione, dati: datiAzione }), signal: ferma.signal }
           : { headers: { 'X-Chiave': chiave || '' }, cache: 'no-store', signal: ferma.signal });
       } catch {
-        throw nientelinea();
+        throw nientelinea(ferma.signal.aborted);
       }
       let corpo = {};
-      try { corpo = await res.json(); } catch { if (ferma.signal.aborted) throw nientelinea(); /* risposta vuota */ }
+      try { corpo = await res.json(); } catch { if (ferma.signal.aborted) throw nientelinea(true); /* risposta vuota */ }
       if (res.status === 401) {
         memoria.togli(K_CHIAVE);
         chiave = null;
@@ -1299,7 +1300,8 @@
     try { const v = JSON.parse(memoria.leggi(k) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
   }
   const scriviLista = (k, v) => (v.length ? memoria.scrivi(k, JSON.stringify(v)) : memoria.togli(k));
-  const FUORI_LINEA = ' Senza campo: parte appena c\'è linea.';
+  // In coda per la linea che manca, o in fila dietro altre che stanno partendo.
+  const fuoriLinea = (voce) => (voce && voce.dietro ? ' È in fila dopo le altre: parte fra poco.' : ' Senza campo: parte appena c\'è linea.');
 
   const clienteIn = (d, codice) => d.clienti.find((x) => x.codice === codice) || (d.persi || []).find((x) => x.codice === codice);
   const leadIn = (d, x) => d.lead.find((l) => l.data === x.data && l.nome === x.nome) || d.lead.find((l) => String(l.riga) === String(x.riga));
@@ -1369,15 +1371,37 @@
 
   // Prova subito; se la linea non c'è va in coda e lo schermo cambia già.
   // Torna { r } (la risposta del foglio) oppure { voce } (in coda).
+  //
+  // Prima nel telefono, poi al foglio (16 ott 2026, Matteo: «se modifico e
+  // chiudo subito l'app si salva?»). La voce si scrive in coda PRIMA di
+  // mandarla: se l'app si chiude mentre c'è «Salvo…», all'apertura riparte
+  // da sola. `forse` = potrebbe essere già arrivata: il motore regge il
+  // doppione, e la coda non lo segnala come errore. Se in coda c'è già
+  // altro, la nuova va in fondo e parte dopo, perché l'ordine conta.
+  const inVoloOra = new Set(); // voci che manda() sta mandando adesso: mandaCoda non le tocca
+  const segnaForse = (id, forse) => scriviLista(K_CODA, leggiLista(K_CODA).map((v) => (v.id === id ? { ...v, forse } : v)));
   async function manda(azione, datiAzione, testo) {
-    try {
-      return { r: await api(azione, datiAzione) };
-    } catch (err) {
-      if (!err.linea) throw err;
-      const voce = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, azione, dati: datiAzione, testo, quando: Date.now() };
-      scriviLista(K_CODA, [...leggiLista(K_CODA), voce]);
-      if (dati && APPLICA[azione]) { APPLICA[azione](dati, datiAzione); salvaDati(); }
+    const prima = leggiLista(K_CODA);
+    const voce = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, azione, dati: datiAzione, testo, quando: Date.now(), forse: !prima.length, dietro: prima.length > 0 };
+    scriviLista(K_CODA, [...prima, voce]);
+    const applica = () => { if (dati && APPLICA[azione]) { APPLICA[azione](dati, datiAzione); salvaDati(); } };
+    if (prima.length) {
+      applica();
+      mandaCoda();
       return { voce };
+    }
+    inVoloOra.add(voce.id);
+    try {
+      const r = await api(azione, datiAzione);
+      scriviLista(K_CODA, leggiLista(K_CODA).filter((v) => v.id !== voce.id));
+      return { r };
+    } catch (err) {
+      if (!err.linea) { scriviLista(K_CODA, leggiLista(K_CODA).filter((v) => v.id !== voce.id)); throw err; }
+      segnaForse(voce.id, !!err.forse);
+      applica();
+      return { voce };
+    } finally {
+      inVoloOra.delete(voce.id);
     }
   }
   // Fotografia di un cliente o contatto, per rimetterlo com'era.
@@ -1410,19 +1434,24 @@
       let cambiate = 0;
       for (;;) {
         const [voce] = leggiLista(K_CODA);
-        if (!voce || !chiave) break;
+        if (!voce || !chiave || inVoloOra.has(voce.id)) break;
+        // Da qui potrebbe arrivare: se l'app si chiude adesso, al riavvio si sa.
+        segnaForse(voce.id, true);
         try {
           const r = await api(voce.azione, voce.dati);
-          // Il cliente nuovo c'era già (stesso nome): il foglio non l'ha aggiunto.
-          if (voce.azione === 'nuovo' && r.giaPresente) {
+          // Il cliente nuovo c'era già (stesso nome): il foglio non l'ha
+          // aggiunto. Se però era «forse arrivato», quello che c'è è lui.
+          if (voce.azione === 'nuovo' && r.giaPresente && !voce.forse) {
             scriviLista(K_NON_ARRIVATE, [...leggiLista(K_NON_ARRIVATE), { testo: voce.testo, errore: `c'era già ${r.perso ? 'fra i clienti persi' : 'fra i clienti'} (${r.codice}), non l'ho aggiunto di nuovo`, quando: Date.now() }]);
           }
         } catch (err) {
-          if (err.linea || err.chiave) break;
+          if (err.linea || err.chiave) { if (err.linea) segnaForse(voce.id, voce.forse || !!err.forse); break; }
           // Guasto del motore o di Google: si riprova (ogni 8 secondi con
           // l'app aperta) per un giorno intero, poi la si dà per non arrivata.
           if (err.stato >= 500 && Date.now() - (voce.quando || 0) < 24 * 3600 * 1000) break;
-          scriviLista(K_NON_ARRIVATE, [...leggiLista(K_NON_ARRIVATE), { testo: voce.testo, errore: err.message, quando: Date.now() }]);
+          // Un «annulla» forse già arrivato: «la data è cambiata» vuol dire che è fatto.
+          const giaFatto = voce.forse && voce.azione === 'annulla' && err.stato === 409;
+          if (!giaFatto) scriviLista(K_NON_ARRIVATE, [...leggiLista(K_NON_ARRIVATE), { testo: voce.testo, errore: err.message, quando: Date.now() }]);
         }
         scriviLista(K_CODA, leggiLista(K_CODA).filter((v) => v.id !== voce.id));
         cambiate++;
@@ -1505,7 +1534,7 @@
         if (r) await carica().catch(() => {});
         chiudiFinestra();
         disegna(history.state);
-        messaggio((persi ? 'Spostato fra i clienti persi' : 'È di nuovo fra i clienti ✓') + (voce ? FUORI_LINEA : ''), {
+        messaggio((persi ? 'Spostato fra i clienti persi' : 'È di nuovo fra i clienti ✓') + (voce ? fuoriLinea(voce) : ''), {
           durata: 15000,
           azione: {
             testo: 'Annulla',
@@ -1552,7 +1581,7 @@
       if (r) { c.avviso = r.avviso; c.motivo = r.motivo; }
       chiudiFinestra();
       disegna(history.state);
-      messaggio(testo + (voce ? FUORI_LINEA : ''), {
+      messaggio(testo + (voce ? fuoriLinea(voce) : ''), {
         durata: 15000,
         azione: {
           testo: 'Annulla',
@@ -1606,7 +1635,7 @@
           c.prossimaSeriale = serialeDa(+x[2], +x[1], +x[0]);
         }
         disegna(history.state);
-        messaggio(`Rimandata al ${c.prossima}` + (voce ? FUORI_LINEA : ''), {
+        messaggio(`Rimandata al ${c.prossima}` + (voce ? fuoriLinea(voce) : ''), {
           durata: 15000,
           azione: { testo: 'Annulla', fai: voce ? () => annullaInCoda(voce, ripristina) : () => annulla(r.annulla, c, ripristina) },
         });
@@ -1688,7 +1717,7 @@
         disegna(history.state);
         // Senza «Annulla» solo se il foglio l'aveva già segnata (richiesta doppia).
         const puoiAnnullare = voce || (r && r.annulla);
-        messaggio(`Segnata ✓ Prossima: ${c.prossima}` + (voce ? FUORI_LINEA : ''), {
+        messaggio(`Segnata ✓ Prossima: ${c.prossima}` + (voce ? fuoriLinea(voce) : ''), {
           durata: 15000,
           azione: puoiAnnullare ? { testo: 'Annulla', fai: voce ? () => annullaInCoda(voce, ripristina) : () => annulla(r.annulla, c, ripristina) } : null,
         });
@@ -1707,7 +1736,7 @@
       if (voce) {
         if (ripristina) { ripristina(); salvaDati(); }
         disegna(history.state);
-        messaggio('Annullato.' + FUORI_LINEA);
+        messaggio('Annullato.' + fuoriLinea(voce));
         return;
       }
       messaggio('Annullato: la data è tornata com\'era.');
@@ -1840,7 +1869,7 @@
             // Compare fra i contatti quando arriva al foglio; intanto è nel riquadro in home.
             history.replaceState({ s: 'home' }, '', location.pathname + location.hash);
             disegna(history.state);
-            messaggio('Contatto segnato ✓' + FUORI_LINEA, { durata: 8000 });
+            messaggio('Contatto segnato ✓' + fuoriLinea(voce), { durata: 8000 });
             return;
           }
           await carica().catch(() => {});
@@ -1925,7 +1954,7 @@
           const { r, voce } = await manda('nota', { riga: l.riga, data: l.data, nome: l.nome, nota: testo, giorno: `${due(o.g)}/${due(o.m)}` }, `Nota per ${l.nome}`);
           if (r) l.note = r.note;
           disegna(history.state);
-          messaggio('Nota salvata ✓' + (voce ? FUORI_LINEA : ''));
+          messaggio('Nota salvata ✓' + (voce ? fuoriLinea(voce) : ''));
         } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
       });
     };
@@ -1938,7 +1967,7 @@
         // Senza campo: lo stato cambia già qui; se diventa cliente, la sua
         // scheda nasce quando la richiesta arriva al foglio.
         disegna(history.state);
-        messaggio((nuovo === 'Cliente' ? 'Segnato: diventa cliente appena arriva al foglio.' : `Salvato ✓ ${ETICHETTE_STATO[nuovo] || nuovo}.`) + FUORI_LINEA, { durata: 8000 });
+        messaggio((nuovo === 'Cliente' ? 'Segnato: diventa cliente appena arriva al foglio.' : `Salvato ✓ ${ETICHETTE_STATO[nuovo] || nuovo}.`) + fuoriLinea(voce), { durata: 8000 });
         return;
       }
       l.stato = nuovo;
@@ -2099,10 +2128,10 @@
       if (mesi !== c.frequenza) campi.frequenza = mesi;
       if (!Object.keys(campi).length) { history.back(); return; }
       try {
-        const { r } = await manda('modifica', { codice: c.codice, campi }, `Dati cambiati: ${c.nome}`);
+        const { r, voce } = await manda('modifica', { codice: c.codice, campi }, `Dati cambiati: ${c.nome}`);
         if (r) await carica().catch(() => {});
         history.back();
-        messaggio('Dati salvati ✓' + (r ? '' : FUORI_LINEA), { durata: r ? 5000 : 8000 });
+        messaggio('Dati salvati ✓' + (r ? '' : fuoriLinea(voce)), { durata: r ? 5000 : 8000 });
       } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
     }
 
@@ -2116,7 +2145,7 @@
           // Il codice C0xx lo dà il foglio: la scheda nasce quando arriva.
           history.replaceState({ s: 'home' }, '', location.pathname + location.hash);
           disegna(history.state);
-          messaggio('Cliente segnato ✓' + FUORI_LINEA, { durata: 8000 });
+          messaggio('Cliente segnato ✓' + fuoriLinea(voce), { durata: 8000 });
           return;
         }
         if (r.giaPresente) {

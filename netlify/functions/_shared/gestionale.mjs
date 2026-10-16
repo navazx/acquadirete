@@ -1004,8 +1004,26 @@ export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
     `(scritto dall'app da ${chi})`,
   ].filter(Boolean).join(' — ');
 
+  // La stessa richiesta arrivata due volte (il telefono riprova se l'app si è
+  // chiusa mentre mandava, 16 ott 2026): oggi l'app ha già scritto un contatto
+  // con questo nome e questo telefono o email. L'anti-doppioni del sito lo
+  // prenderebbe per la stessa persona che richiama («Ha ricontattato il…»).
+  const adesso = nowInItaly();
+  const oggiTesto = adesso.split(',')[0].trim();
+  const cifre = (s) => String(s).replace(/\D/g, '').slice(-9);
+  const { griglia: gl, mappa: ml } = await leggiLead(foglio);
+  for (let i = ml.riga; i < gl.length; i++) {
+    const r = gl[i] || [];
+    const v = (campo) => testo(r[ml.col[campo] - 1]);
+    if (v('NOME') !== nome || !v('DATA').startsWith(oggiTesto) || !v('NOTE').includes('(scritto dall\'app')) continue;
+    const contatto = v('CONTATTO');
+    const stesso = (telefono && cifre(telefono).length === 9 && contatto.replace(/\D/g, '').includes(cifre(telefono)))
+      || (email && contatto.toLowerCase().includes(email.toLowerCase()));
+    if (stesso) return { ok: true, nome, data: v('DATA'), doppione: true, riga: i + 1, giaScritto: true };
+  }
+
   const riga = [
-    nowInItaly(),
+    adesso,
     nome,
     [telefono, email].filter(Boolean).join(' · '),
     PROVENIENZE.includes(dati.provenienza) ? dati.provenienza : 'Altro',
