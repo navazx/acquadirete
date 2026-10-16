@@ -16,6 +16,8 @@
 export const AGENTI = [
   { nome: 'Recensioni', workflow: 'recensioni.yml', cron: '50 6 * * *', inputs: { prova: 'false' } },
   { nome: 'Cruscotto settimanale', workflow: 'cruscotto.yml', cron: '40 6 * * 1' },
+  // Dal 16 ott 2026 (deciso da Matteo): i clienti nati da un annuncio tornano a Google Ads.
+  { nome: 'Conversioni Ads (clienti a Google)', workflow: 'conversioni-ads.yml', cron: '55 6 * * 1', inputs: { prova: 'false' } },
   { nome: 'Controllo SEO del lunedì', workflow: 'agente-seo.yml', cron: '5 7 * * 1', nota: 'seo' },
   { nome: 'Bozza del post social', workflow: 'social-bozza.yml', cron: '30 7 * * 6' },
   { nome: 'Direttore (priorità del mese)', workflow: 'direttore.yml', cron: '0 6 1 * *', nota: 'direttore' },

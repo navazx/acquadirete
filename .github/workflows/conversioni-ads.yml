@@ -8,7 +8,12 @@ name: Conversioni Ads - i clienti tornano a Google
 #
 # Rilanciarlo non fa danni: Google riconosce le conversioni già caricate.
 # Nei log solo conteggi: il repository è pubblico.
+# Ogni lunedì alle 06:55 UTC. Lo fa partire la sveglia su Netlify
+# (netlify/functions/_shared/orari.mjs); il giro programmato qui sotto resta come
+# rete di sicurezza, tanto rilanciarlo non fa danni. Se cambi l'orario, cambialo anche là.
 on:
+  schedule:
+    - cron: '55 6 * * 1'
   workflow_dispatch:
     inputs:
       prova:
@@ -39,12 +44,13 @@ jobs:
           VALORE_CLIENTE: ${{ secrets.VALORE_CLIENTE }}
           # Le date del Gestionale sono ora italiana.
           TZ: Europe/Rome
-        run: node scripts/conversioni-ads.mjs ${{ inputs.prova == false && ' ' || '--prova' }}
+        # Il giro programmato non ha inputs: è un giro vero. A mano parte in prova.
+        run: node scripts/conversioni-ads.mjs ${{ github.event_name == 'workflow_dispatch' && inputs.prova != false && '--prova' || '' }}
 
       # La nota per la bacheca va su main (agenti/bacheca/in-arrivo/). Se non
       # riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
-        if: ${{ always() && inputs.prova == false }}
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.prova != false) }}
         env:
           POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}

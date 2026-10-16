@@ -169,7 +169,9 @@ arrivati da ogni pagina (`scripts/lib/visite.mjs`). Prima del 16 ott 2026 non c'
 Il modulo salva, nella colonna I di `Lead-Contatti` ("Clic annuncio Google"), il codice
 del clic di chi arriva da un annuncio, con la sua scelta sui cookie. Serve a dire a
 Google Ads quali clic hanno portato un cliente (conversioni offline), e si carica solo
-per chi ha accettato i cookie. Caricarlo è una decisione di Matteo (`AUTONOMIA.md`).
+per chi ha accettato i cookie. Matteo ha deciso di caricarli il 16 ott 2026: lo fa ogni
+lunedì `conversioni-ads.yml` (`scripts/conversioni-ads.mjs`), nell'azione secondaria
+"Cliente (dal Gestionale)" di Google Ads.
 
 ### Quanto vale un cliente
 

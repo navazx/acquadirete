@@ -52,7 +52,10 @@ marchi dei concorrenti.
 
 ### Promozioni decise
 
-(nessuna, per ora)
+- **16 ott 2026, Matteo:** i contatti arrivati da un annuncio e diventati clienti tornano
+  a Google Ads ogni lunedì (`conversioni-ads.yml`), da soli. Parte solo il codice del clic,
+  il giorno e il valore, e solo per chi ha accettato i cookie: niente nomi né telefoni.
+  L'azione "Cliente (dal Gestionale)" è secondaria: farla contare per le offerte resta rosso.
 
 ## Soglie minime prima di giudicare
 
