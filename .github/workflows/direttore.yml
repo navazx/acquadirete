@@ -55,6 +55,9 @@ jobs:
       - name: Raccogli i numeri del mese
         env:
           GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          # Quanto vale un cliente e il tetto del costo per cliente (cifre riservate:
+          # finiscono solo nel file in /tmp, come la spesa). Vedi scripts/lib/visite.mjs.
+          VALORE_CLIENTE: ${{ secrets.VALORE_CLIENTE }}
           MESE: ${{ inputs.mese }}
         run: node scripts/direttore-dati.mjs /tmp/direttore-dati.json $MESE
 

@@ -138,6 +138,51 @@ Altre due cose che sembrano difetti e non lo sono:
   rumore. Le eccezioni sono quelle da 3 stelle o meno, dove aspettare costa: lì
   l'avviso parte lo stesso giorno.
 
+## Migliorare nel tempo: prove, visite, valore di un cliente (dal 16 ott 2026)
+
+Matteo vuole che tutta l'acquisizione dei clienti sia gestita e migliorata dagli agenti,
+con decisioni che fanno vendere e guadagnare. Per questo ci sono quattro pezzi comuni.
+
+### Il registro delle prove: `prove.md`
+
+Ogni modifica che Matteo approva (APPROVA di qualsiasi tipo, APPROVA ADS compreso) la
+segreteria la scrive da sola in `prove.md` (`scripts/lib/prove.mjs`), con le righe
+`Cosa ci si aspetta:` e `Come si misura:` copiate dall'anteprima e la data in cui
+ricontrollarla (quattro settimane dopo). Il 1° del mese il Direttore guarda le prove
+arrivate a scadenza e scrive l'esito coi numeri veri: tenuta, non ha funzionato (con la
+lezione), troppo presto. Ogni agente, prima di proporre, legge il registro: non ripropone
+una prova andata male e non tocca una cosa la cui prova è in corso. Le prove decise a mano
+(Meta, pagine fatte al PC) si aggiungono a mano nello stesso formato.
+
+### Le visite del sito
+
+Il sito conta da solo (`lib/statistiche.ts`, `/api/visita`), senza cookie e senza dati
+delle persone, pagina per pagina: pagine viste, ingressi divisi per provenienza (Google,
+annuncio, social, IA, altri siti, diretti), moduli iniziati e inviati, clic su Chiama e
+WhatsApp. Gli eventi vanno nella scheda `Visite-oggi` del Gestionale e ogni notte
+(`netlify/functions/statistiche-giorno.mjs`) diventano una riga per pagina e per giorno in
+`Visite-sito`. Il Direttore e l'agente Ads le ricevono già sommate accanto ai contatti
+arrivati da ogni pagina (`scripts/lib/visite.mjs`). Prima del 16 ott 2026 non c'è niente.
+
+### Il codice del clic degli annunci
+
+Il modulo salva, nella colonna I di `Lead-Contatti` ("Clic annuncio Google"), il codice
+del clic di chi arriva da un annuncio, con la sua scelta sui cookie. Serve a dire a
+Google Ads quali clic hanno portato un cliente (conversioni offline), e si carica solo
+per chi ha accettato i cookie. Caricarlo è una decisione di Matteo (`AUTONOMIA.md`).
+
+### Quanto vale un cliente
+
+Il margine di un impianto e della manutenzione, e il tetto di quanto può costare un
+cliente in pubblicità, li ha dati Matteo il 16 ott 2026. Sono cifre in euro: stanno nel
+secret `VALORE_CLIENTE` di GitHub e arrivano solo nei file in `/tmp` del Direttore e
+dell'agente Ads. **Mai nel repo, nei commit, nelle anteprime o sulla bacheca.**
+
+### Cosa si può fare da soli: `AUTONOMIA.md`
+
+Verde (da soli), giallo (pronto, dopo l'APPROVA), rosso (mai da soli); come un tipo di
+modifica passa da giallo a verde; le soglie minime di dati prima di giudicare.
+
 ## Un solo lettore di Telegram
 
 Telegram consegna ogni messaggio a chi lo legge per primo. Per questo **c'è un solo

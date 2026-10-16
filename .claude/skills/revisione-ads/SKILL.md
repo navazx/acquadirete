@@ -82,6 +82,17 @@ da quali righe dei dati viene.
   "i contatti di questo mese non hanno ancora avuto il tempo di firmare".
 - I contatti segnati `daAnnuncioGoogle` sono gli unici che si sa per certo
   arrivare dagli annunci: da quali pagine arrivano?
+- **Il tetto** (dal 16 ott 2026): in `valoreCliente` c'è il margine minimo di un
+  cliente e il tetto del costo per cliente deciso da Matteo. Un canale che porta
+  clienti sotto il tetto può avere più budget, uno sopra il tetto o senza clienti
+  da più di un mese va ridotto. Lo proponi tu, decide lui. Le cifre vanno solo
+  nella revisione per Matteo, mai nella nota della bacheca.
+- **Le pagine d'arrivo** (`gestionale.pagine`): visite della pagina (contatore del
+  sito, dal 16 ott 2026; la colonna "Da annuncio Google" conta chi arriva dagli
+  annunci) contro i contatti arrivati da quella pagina. Dal 14 ott 2026 tre annunci
+  su cinque vanno su /sopralluogo-gratuito/ e due (Osmosi, Prato) sulle loro
+  pagine, che fanno da confronto: di' come va la prova, con le soglie di
+  `agenti/AUTONOMIA.md`.
 
 **2. Google Ads: dove vanno i soldi.**
 - Gruppo per gruppo, questo mese contro il mese prima: spesa, clic, costo per
@@ -116,6 +127,14 @@ pausa manca a qualcuno? Dillo nella revisione, in una riga, coi numeri. Quelle
 **rifiutate** non si ripropongono: il motivo di Matteo vale come una regola. Quelle
 rimaste senza risposta le puoi riproporre solo se i numeri le reggono ancora.
 
+**3 ter. La strategia di offerta.** Oggi la campagna è su "massimizza i clic":
+Google cerca clic economici, non persone che chiamano. Passare a "massimizza le
+conversioni" ha senso quando Google vede abbastanza conversioni vere. Dal 16 ott
+2026 il modulo salva il codice del clic (colonna "Clic annuncio Google" del
+Gestionale): quando ci sono contatti da annuncio diventati clienti, proponi di
+caricarli su Google come conversioni (solo quelli con "cookie accettati") e poi
+di cambiare strategia. È una decisione di Matteo: cambia come si spendono i soldi.
+
 **4. La prudenza sui numeri piccoli.**
 Acquadirete ha poche conversioni al mese. Prima di ogni conclusione chiediti: con
 questi numeri, se fosse solo caso vedrei la stessa cosa? Se sì, scrivi "troppo
@@ -138,7 +157,10 @@ caratteri**: contali con `node`. La legge sul telefono, quindi:
 2. **I numeri che contano**, pochi: per canale spesa, contatti veri, fuori zona,
    clienti, costo per cliente. Con il confronto col mese prima.
 3. **Le cose da fare, al massimo tre**, in ordine di importanza. Per ognuna: cosa
-   fare, perché, quanto vale secondo i numeri, e cosa si rischia. Se è una delle
+   fare, perché, quanto vale secondo i numeri, e cosa si rischia. Se tocca la
+   spesa scrivi sempre **gli euro al mese prima e dopo** e **quanti contatti in
+   meno o in più ci si aspetta**: "risparmi tot al mese e perdi forse un contatto"
+   è una decisione che si prende in un attimo, una percentuale da sola no. Se è una delle
    modifiche che porti già pronte (PASSO 3 bis) scrivi **"te la porto pronta nel
    messaggio qui sotto: basta APPROVA ADS"** e non il percorso nei menu. Il
    percorso dove si clicca lo scrivi solo per quello che deve fare lui (budget,

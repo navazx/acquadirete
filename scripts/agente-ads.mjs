@@ -53,6 +53,7 @@ import { storia } from './lib/ads-proposte.mjs';
 import { sheetsToken, leggiLead } from './lib/gestionale.mjs';
 import { writeFileSync } from 'node:fs';
 import { lasciaNota } from './lib/bacheca.mjs';
+import { valoreCliente, visitePerPagina, contattiPerPagina } from './lib/visite.mjs';
 
 // --- META ADS ----------------------------------------------------------------
 // Token dell'utente di sistema "Acquadirete Automazioni" con ads_read, e ruolo
@@ -164,8 +165,16 @@ async function leggiFoglio(p) {
     daAnnuncioGoogle: /annuncio google/i.test(l.note),
     pagina: (l.note.match(/dalla pagina (\/[^\s,)]*)/i) || [null, null])[1],
   }));
+  // Le pagine d'arrivo: visite (contatore del sito) contro contatti, nel periodo.
+  let pagine;
+  try {
+    pagine = { visite: await visitePerPagina(await sheetsToken(), p.da, p.a), contattiDaOgniPagina: contattiPerPagina(tutti, da, a) };
+  } catch (e) {
+    pagine = { errore: String(e.message).slice(0, 200) };
+  }
   return {
     righe,
+    pagine,
     mesePerMese: storico,
     meta: conta((l) => /meta|facebook|instagram/i.test(l.provenienza)),
     sito: conta((l) => /sito/i.test(l.provenienza)),
@@ -517,6 +526,9 @@ async function main() {
       },
       meta,
       gestionale: foglio,
+      // Cifre riservate (secret VALORE_CLIENTE): margine di un cliente e tetto
+      // del costo per cliente. Come la spesa: mai nel repo o sulla bacheca.
+      valoreCliente: valoreCliente(),
       proposteGiaFatte,
       revisioneDiBase: testo,
     };

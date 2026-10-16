@@ -130,6 +130,13 @@ clic; per una scelta fra pagine in concorrenza: la ricerca, le pagine e le
 posizioni, quale vince, perché e cosa cambia), e in fondo una riga su cosa non
 cambia.
 
+In fondo aggiungi anche le due righe del registro delle prove (`agenti/METODO.md`,
+punto 7), che comincino proprio con `Cosa ci si aspetta:` e `Come si misura:`. Per
+esempio: "Cosa ci si aspetta: la pagina di Prato sale sotto il 10° posto per
+«depuratori acqua prato»" e "Come si misura: posizione e clic in Search Console
+fra quattro settimane". Prima di proporre, guarda in `agenti/prove.md` se su quella
+pagina c'è già una prova in corso: se sì, lasciala stare.
+
 È il file che Matteo legge sul telefono: scrivilo in italiano semplice, **senza codice
 e senza nomi di file del progetto**. Senza questo file la proposta arriva
 incomprensibile.

@@ -65,6 +65,9 @@ jobs:
           # Meta: utente di sistema con ads_read e ruolo 'Visualizza le prestazioni'.
           # Token separato da quello dei lead (su Netlify): se salta, i lead arrivano lo stesso.
           META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
+          # Quanto vale un cliente e il tetto del costo per cliente (cifre riservate,
+          # come la spesa). Vedi scripts/lib/visite.mjs.
+          VALORE_CLIENTE: ${{ secrets.VALORE_CLIENTE }}
           ADS_DATI: /tmp/ads-dati.json
           ADS_BASE: /tmp/ads-base.txt
           ADS_NOTA_BASE: /tmp/ads-nota-base.json

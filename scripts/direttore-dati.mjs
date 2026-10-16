@@ -25,6 +25,8 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { getAccessToken, query, ymd } from './lib/gsc.mjs';
 import { sheetsToken, leggi, leggiLead } from './lib/gestionale.mjs';
+import { valoreCliente, visitePerPagina, contattiPerPagina } from './lib/visite.mjs';
+import { daControllare } from './lib/prove.mjs';
 
 process.env.TZ = 'Europe/Rome';
 
@@ -123,6 +125,13 @@ async function main() {
     rimandati: (storiaSocial.match(/^\+\s+"rimandata":/gm) || []).length,
   };
   const recensioni = leggiJson('agenti/recensioni/stato.json', {});
+
+  // --- Le pagine: visite contro contatti (dal 16 ott 2026) ---------------------
+  const finePiena = new Date(fine.getFullYear(), fine.getMonth(), fine.getDate(), 23, 59, 59);
+  const pagine = {
+    visite: await visitePerPagina(token, ymd(inizio), ymd(fine)),
+    contattiDaOgniPagina: contattiPerPagina(tutti, inizio, finePiena),
+  };
   const posizioni = leggiJson('agenti/seo/posizioni.json', {});
 
   const dati = {
@@ -142,6 +151,11 @@ async function main() {
     social,
     recensioni: { totale: recensioni.totale, media: recensioni.media },
     ordiniPrecedenti: existsSync('agenti/ordini.md') ? readFileSync('agenti/ordini.md', 'utf8') : null,
+    pagine,
+    // Cifre riservate (secret VALORE_CLIENTE): margine di un cliente e tetto del
+    // costo per cliente. Mai nel repo, nei commit o sulla bacheca.
+    valoreCliente: valoreCliente(),
+    proveDaControllare: daControllare(new Date()),
   };
   writeFileSync(uscita, `${JSON.stringify(dati, null, 2)}\n`);
   console.log(`Dati del ${etichetta} pronti: ${settimane.length} settimane, ${contatti.mese} contatti (prima ${contatti.mesePrima}), ${articoli.length} articoli, ${social.pubblicati} post, ${proposte.length} proposte.`);

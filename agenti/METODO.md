@@ -73,7 +73,27 @@ Non si chiede a Matteo di scegliere fra opzioni e non si rimanda "a una seduta a
 PC": si sceglie, si prepara la modifica come proposta, e gli si chiede solo la
 conferma su Telegram. Vedi "Due regole per ogni agente" in `agenti/LEGGIMI.md`.
 
-## 7. Cosa resta vietato, sempre
+## 7. Ogni modifica è una prova (dal 16 ott 2026)
+
+Matteo vuole che gli agenti migliorino da soli nel tempo, e si migliora solo
+guardando se quello che si è fatto ha funzionato.
+
+- **Prima di proporre**, leggi `agenti/prove.md`: cosa è già stato provato su quella
+  pagina, quella ricerca, quel canale, e com'è andata. Non si ripropone una prova
+  andata male, e non si tocca una cosa la cui prova è ancora in corso.
+- **In ogni anteprima scrivi due righe**, proprio con queste parole all'inizio:
+  `Cosa ci si aspetta:` (cosa deve cambiare nei numeri: clic, posizione, contatti,
+  clienti) e `Come si misura:` (dove si guarda e dopo quanto). All'APPROVA la
+  segreteria le copia nel registro, e fra quattro settimane il Direttore le
+  confronta coi numeri veri.
+- **Il metro è il cliente.** Contatti e clienti nel Gestionale vengono prima di clic
+  e visite. Le visite pagina per pagina (contatore del sito, scheda `Visite-sito`)
+  servono a capire dove si perde la gente, non a festeggiare.
+- **I numeri sono piccoli**: rispetta le soglie minime di `agenti/AUTONOMIA.md`
+  prima di dire che qualcosa funziona o non funziona.
+- Cosa puoi fare da solo e cosa no sta in `agenti/AUTONOMIA.md`.
+
+## 8. Cosa resta vietato, sempre
 
 Spendere soldi o cambiare budget, contattare clienti, cancellare dati, pubblicare
 senza approvazione. Più qualità non vuol dire più permessi.

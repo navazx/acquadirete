@@ -48,6 +48,20 @@ doveva misurare si è mosso? Una riga a testa, con il numero vero. Se un ordine 
 è stato fatto, chiediti perché prima di riproporlo uguale: se dipendeva da Matteo
 e lui non l'ha fatto, forse era la priorità sbagliata.
 
+**Le prove da controllare** (dal 16 ott 2026). In `proveDaControllare` dei dati ci
+sono le modifiche approvate la cui data di controllo è arrivata (`agenti/prove.md`).
+Per ognuna guarda i numeri veri, prima e dopo: contatti e clienti nel Gestionale,
+visite e contatti della pagina (`pagine`), clic e posizioni (`google`). Poi scrivi
+l'esito nel registro, al posto di "Esito: da vedere":
+
+- `Esito: tenuta` e il numero che lo dimostra;
+- `Esito: non ha funzionato` e il numero, più la lezione in una riga (cosa non
+  rifare). Se va tolta, proponilo fra le priorità;
+- `Esito: troppo presto` se i numeri non bastano (vedi le soglie in
+  `agenti/AUTONOMIA.md`), con la nuova data di controllo.
+
+Non inventare un esito: "troppo presto" è una risposta seria.
+
 ## PASSO 3 — Scegli 3 priorità, non di più
 
 Guarda dove si perdono più clienti o più soldi, e dove c'è più da guadagnare con
@@ -62,6 +76,17 @@ meno lavoro. Regole:
   tanti contatti e nessun cliente costa di più, non di meno.
 - **I clienti "Sito web" comprendono la ricerca gratuita**: il costo per cliente
   di Google Ads che ne esce è un minimo, dillo quando lo usi.
+- **Il tetto del costo per cliente** sta in `valoreCliente` (riservato: margine
+  minimo di un cliente e tetto deciso da Matteo il 16 ott 2026). Un canale che
+  porta clienti sotto il tetto merita più spazio, uno sopra il tetto o senza
+  clienti da più di un mese va ridotto: lo proponi, decide Matteo. Nel repo scrivi
+  "sotto il tetto" o "sopra il tetto", mai le cifre.
+- **Le pagine**: in `pagine` ci sono le visite di ogni pagina (contatore del sito,
+  dal 16 ott 2026) e i contatti arrivati da ognuna. Una pagina con tante visite e
+  nessun contatto è un posto dove si perdono clienti: può diventare una priorità.
+- **L'autonomia**: rileggi `agenti/AUTONOMIA.md`. Se un tipo di modifica ha
+  raggiunto la soglia per diventare automatico, proponilo come priorità; decide
+  Matteo approvando gli ordini.
 - **Ogni priorità ha un responsabile** fra gli agenti che esistono (contenuti il 5
   del mese, social il sabato, SEO il lunedì, Ads il 18, recensioni ogni giorno,
   l'app Gestione per i contatti da risentire) **oppure Matteo**, se serve una sua
@@ -99,7 +124,8 @@ rimasta uguale", mai il numero. Gli euro stanno solo in `/tmp/direttore-numeri.t
 
 ## PASSO 5 — Commit e push
 
-Committa solo `agenti/ordini.md` e l'anteprima. **La prima riga del messaggio
+Committa solo `agenti/ordini.md`, l'anteprima e, se hai scritto degli esiti,
+`agenti/prove.md`. **La prima riga del messaggio
 deve essere esattamente `Ordini: <mese e anno in lettere>`** (per esempio
 `Ordini: novembre 2026`): diventa il titolo del messaggio che arriva a Matteo.
 Sotto, una riga per priorità, senza euro. Nel messaggio **non scrivere mai le

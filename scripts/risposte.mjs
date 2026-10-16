@@ -49,6 +49,7 @@ import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
 import { chiamaMeccanico } from './lib/meccanico.mjs';
 import { leggi as proposteAds, inAttesa, applica as applicaAds, rifiuta as rifiutaAds, annulla as annullaAds } from './lib/ads-proposte.mjs';
 import { lasciaNota } from './lib/bacheca.mjs';
+import { segnaProva, attesaDa } from './lib/prove.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
 const STATO = 'agenti/telegram-stato.json';
@@ -331,10 +332,26 @@ async function approva(p) {
   git('push', 'origin', 'HEAD:main');
   try { git('push', 'origin', '--delete', p.ramo); } catch { /* gia' cancellato */ }
   aggiorna(p.ramo, { stato: 'approvata', decisa: oggi() });
+  segnaProvaApprovata(p);
 
   await messaggio(
     `Approvato: «${p.titolo}» va online fra un paio di minuti.` + (p.url ? `\n${p.url}` : ''),
   );
+}
+
+// Ogni proposta approvata entra nel registro delle prove (agenti/prove.md), con
+// quello che l'anteprima dice di aspettarsi: fra quattro settimane il Direttore
+// guarda se ha funzionato. Un registro che non si scrive non deve fermare la
+// pubblicazione, quindi l'errore si dice e basta.
+function segnaProvaApprovata(p) {
+  try {
+    const anteprime = git('diff', '--name-only', 'HEAD^1', 'HEAD', '--', 'agenti/anteprime/').split(/\r?\n/).filter((x) => x.endsWith('.md'));
+    const testo = anteprime.map((a) => (existsSync(a) ? readFileSync(a, 'utf8') : '')).join('\n');
+    const { attesa, misura } = attesaDa(testo);
+    segnaProva({ tipo: p.tipo, titolo: `«${p.titolo}»`, cosa: `approvata da Matteo su Telegram (${p.ramo})`, attesa, misura });
+  } catch (e) {
+    console.log(`Registro delle prove non aggiornato: ${e.message}`);
+  }
 }
 
 async function rifiuta(p, motivo) {
@@ -412,6 +429,20 @@ async function eseguiAds(o, p) {
   }
   const r = await applicaAds(p.id, o.solo || []);
   if (r.nota) notaAds(r.nota);
+  // Le modifiche applicate a Google Ads sono una prova come le altre.
+  if (r.nota) {
+    try {
+      segnaProva({
+        tipo: 'ADS',
+        titolo: 'modifiche a Google Ads approvate su Telegram',
+        cosa: r.nota.replace(/^Matteo ha approvato su Telegram /, ''),
+        attesa: 'meno clic che non portano contatti, senza perdere contatti veri',
+        misura: 'clic, spesa e contatti "arrivato da un annuncio Google" nel Gestionale, quattro settimane prima e dopo',
+      });
+    } catch (e) {
+      console.log(`Registro delle prove non aggiornato: ${e.message}`);
+    }
+  }
   await messaggio(r.guasto ? `${r.testo}\n${await alMeccanico({ tipo: 'ads-non-applicata', workflow: 'risposte.yml', testo: r.guasto })}` : r.testo);
 }
 

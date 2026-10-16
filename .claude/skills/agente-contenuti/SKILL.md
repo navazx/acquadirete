@@ -86,6 +86,11 @@ Oltre al testo dell'articolo, in cima, in italiano semplice:
 - **Cosa dicono gli altri e cosa aggiungiamo noi**: due o tre righe.
 - **Cosa ho verificato e dove**: l'elenco delle fonti aperte.
 - **Da verificare col titolare**: ogni affermazione che non ha una prova.
+- **Cosa ci si aspetta:** e **Come si misura:**, due righe che cominciano proprio così
+  (vedi `agenti/METODO.md`, punto 7): per esempio la ricerca che deve salire, i clic
+  attesi, i contatti dalla pagina. Finiscono nel registro delle prove.
+- **Quale pagina dei servizi spinge**: un articolo deve portare verso il sopralluogo.
+  Di' quale pagina dei servizi collega e con quale frase.
 
 PASSO 5 - Controlli, prima di spingere:
 - conta con node i caratteri di metaTitle (massimo 60) e metaDescription (massimo 160). Non a occhio.
