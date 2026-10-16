@@ -99,6 +99,84 @@ export async function appendRow(tab, headers, row) {
   if (!res.ok) throw new Error(`Append fallito (${res.status}): ${await res.text()}`);
 }
 
+// Come appendRow, ma tante righe con una sola chiamata (le scrive il conteggio
+// notturno delle visite, statistiche-giorno.mjs: una funzione programmata ha
+// 30 secondi, e una chiamata per riga non ci starebbe).
+export async function appendRows(tab, headers, rows) {
+  if (!rows.length) return;
+  const sheetId = process.env.LEADS_SHEET_ID;
+  if (!sheetId) throw new Error('LEADS_SHEET_ID mancante');
+  const token = await getAccessToken();
+  let anchor = await findHeaderRow(token, sheetId, tab, headers[0]);
+  if (anchor === null) {
+    await createTab(token, sheetId, tab, headers);
+    anchor = 1;
+  }
+  const res = await appendValues(token, sheetId, `'${tab}'!A${anchor}`, rows);
+  if (!res.ok) throw new Error(`Append fallito (${res.status}): ${await res.text()}`);
+}
+
+// Le righe di una scheda sotto l'intestazione in riga 1, come testo. [] se la
+// scheda non esiste ancora.
+export async function leggiRighe(tab, colonne = 'A2:Z') {
+  const sheetId = process.env.LEADS_SHEET_ID;
+  if (!sheetId) throw new Error('LEADS_SHEET_ID mancante');
+  const token = await getAccessToken();
+  const range = encodeURIComponent(`'${tab}'!${colonne}`);
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    if (res.status === 400 && /unable to parse range/i.test(text)) return [];
+    throw new Error(`Lettura scheda "${tab}" fallita (${res.status}): ${text}`);
+  }
+  return (await res.json()).values ?? [];
+}
+
+// Svuota le righe sotto l'intestazione (riga 1) e ci rimette `rows`.
+export async function riscriviRighe(tab, rows) {
+  const sheetId = process.env.LEADS_SHEET_ID;
+  if (!sheetId) throw new Error('LEADS_SHEET_ID mancante');
+  const token = await getAccessToken();
+  const clear = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(`'${tab}'!A2:Z`)}:clear`,
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!clear.ok) throw new Error(`Svuotamento "${tab}" fallito (${clear.status}): ${await clear.text()}`);
+  if (!rows.length) return;
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(`'${tab}'!A2`)}?valueInputOption=RAW`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: rows }),
+    },
+  );
+  if (!res.ok) throw new Error(`Riscrittura "${tab}" fallita (${res.status}): ${await res.text()}`);
+}
+
+// Scrive il nome di una colonna nella riga d'intestazione di una scheda, se
+// quella cella è ancora vuota (la colonna "Clic annuncio Google" di
+// Lead-Contatti, aggiunta il 16 ott 2026: nasce la prima volta che serve).
+export async function assicuraIntestazione(tab, primaIntestazione, lettera, testo) {
+  const sheetId = process.env.LEADS_SHEET_ID;
+  if (!sheetId) throw new Error('LEADS_SHEET_ID mancante');
+  const token = await getAccessToken();
+  const riga = await findHeaderRow(token, sheetId, tab, primaIntestazione);
+  if (!riga) return;
+  const cella = encodeURIComponent(`'${tab}'!${lettera}${riga}`);
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${cella}`;
+  const letta = await fetch(base, { headers: { Authorization: `Bearer ${token}` } });
+  if (!letta.ok) return;
+  if (((await letta.json()).values?.[0]?.[0] ?? '').trim()) return;
+  await fetch(`${base}?valueInputOption=RAW`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [[testo]] }),
+  });
+}
+
 // ---------------------------------------------------------------------------
 //  Anti-doppioni
 //  Capita spesso che la stessa persona compili il modulo due volte (o una volta
@@ -224,6 +302,8 @@ async function unisciNellaRiga(token, sheetId, tab, esistente, row) {
     .filter(Boolean)
     .join(' — ');
   metti(COL.NOTE, noteNuove.slice(0, 2000));
+  // Colonna I (dal 16 ott 2026): il codice del clic dell'annuncio, se c'è.
+  if (row[8]) metti(8, row[8]);
 
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,

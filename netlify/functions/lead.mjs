@@ -6,7 +6,7 @@
 // Le colonne e i valori di Provenienza/Stato rispecchiano i menu a tendina
 // già presenti nella scheda del foglio: non cambiarli qui senza aggiornare
 // anche il foglio (e viceversa).
-import { appendOrMergeRow, nowInItaly, nomeProprio } from './_shared/google-sheets.mjs';
+import { appendOrMergeRow, assicuraIntestazione, nowInItaly, nomeProprio } from './_shared/google-sheets.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
@@ -81,10 +81,17 @@ export default async (req) => {
     return Response.json({ ok: false, error: 'JSON non valido' }, { status: 400 });
   }
 
-  const { nome, telefono, email, zona, servizio, messaggio, pagina, daAnnuncioGoogle, website } = body ?? {};
+  const { nome, telefono, email, zona, servizio, messaggio, pagina, daAnnuncioGoogle, website, clicGoogle, consenso } = body ?? {};
   // Confronto stretto con true: qualunque altra cosa (stringhe comprese) vale
   // "non da annuncio". Lo decide lib/provenienza.ts dal gclid nell'indirizzo.
   const daAnnuncio = daAnnuncioGoogle === true;
+  // Il codice del clic e la scelta sui cookie (dal 16 ott 2026) vanno nella
+  // colonna I di Lead-Contatti: "gclid=… · cookie accettati". Servono per dire a
+  // Google Ads quali clic hanno portato un cliente, e si carica solo per chi ha
+  // accettato i cookie. Solo forme note, mai testo libero.
+  const codice = /^(gclid|gbraid|wbraid)=[w-]{10,200}$/.test(String(clicGoogle ?? '')) ? String(clicGoogle) : '';
+  const sceltaCookie = consenso === 'accepted' ? 'cookie accettati' : consenso === 'rejected' ? 'cookie rifiutati' : 'cookie non scelti';
+  const colonnaClic = codice ? `${codice} · ${sceltaCookie}` : '';
 
   // Campo trappola: nel form è nascosto e nessuna persona lo vede, quindi se
   // arriva pieno è un bot che compila tutto quello che trova. Rispondiamo
@@ -123,9 +130,13 @@ export default async (req) => {
         clip(servizio, 100),
         'Da richiamare',
         note,
+        // H = "Data stato" (la scrivono l'app e il foglio), I = codice del clic.
+        ...(colonnaClic ? ['', colonnaClic] : []),
       ],
       { telefono, email }
     );
+    // La prima volta che arriva un codice, la colonna I prende il suo nome.
+    if (colonnaClic) await assicuraIntestazione(TAB, HEADERS[0], 'I', 'Clic annuncio Google').catch(() => {});
     const righe = [
       esito.doppione ? '🔁 Ha riscritto dal SITO (già in lista)' : '🔔 Nuovo contatto dal SITO',
       `👤 ${nomeProprio(clip(nome, 200))}`,

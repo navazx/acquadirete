@@ -33,3 +33,24 @@ const arrivatoDaAnnuncioGoogle =
 export function vieneDaAnnuncioGoogle(): boolean {
   return arrivatoDaAnnuncioGoogle;
 }
+
+// Il codice del clic (dal 16 ott 2026): non solo "è arrivato da un annuncio",
+// ma QUALE clic, così quando il contatto diventa cliente si può dire a Google
+// Ads "questo clic ha portato un cliente" (conversioni offline) e Google
+// impara a cercare chi compra invece di chi clicca. Finisce in una colonna sua
+// del Gestionale insieme alla scelta sui cookie: su Google si carica solo per
+// chi li ha accettati. Formato "gclid=…" (o gbraid/wbraid da iPhone).
+function codiceDa(search: string): string {
+  const p = new URLSearchParams(search);
+  for (const k of PARAMETRI_ANNUNCIO) {
+    const v = p.get(k);
+    if (v && /^[\w-]{10,200}$/.test(v)) return `${k}=${v}`;
+  }
+  return '';
+}
+
+const codiceClic = typeof window !== 'undefined' ? codiceDa(window.location.search) : '';
+
+export function codiceClicGoogle(): string {
+  return codiceClic;
+}

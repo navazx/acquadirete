@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import ContaVisite from '../components/ContaVisite';
 
 // Transizione di entrata delle pagine, in CSS puro (classe .page-enter in
 // app/globals.css).
@@ -18,6 +19,8 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
     <div key={pathname} className="page-enter">
+      {/* Il contatore delle visite (lib/statistiche.ts): qui perché si rimonta a ogni pagina. */}
+      <ContaVisite />
       {children}
     </div>
   );

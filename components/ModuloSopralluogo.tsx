@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom';
 import { Phone, User, MapPin, ChevronDown, CheckCircle2, Send } from 'lucide-react';
 import { CONTACT, telHref, whatsappHref } from '../lib/siteConfig';
 import { setGoogleAdsUserData, trackGoogleAdsConversion } from '../lib/googleAds';
-import { vieneDaAnnuncioGoogle } from '../lib/provenienza';
+import { vieneDaAnnuncioGoogle, codiceClicGoogle } from '../lib/provenienza';
+import { getConsent } from '../lib/cookieConsent';
+import { segna } from '../lib/statistiche';
 import { ZONE } from './ContactForm';
 import WhatsAppIcon from './WhatsAppIcon';
 
@@ -52,6 +54,13 @@ export default function ModuloSopralluogo() {
   const [website, setWebsite] = useState('');
   const [invio, setInvio] = useState(false);
   const [fatto, setFatto] = useState(false);
+  // Il contatore conta un modulo "iniziato" alla prima casella toccata.
+  const [iniziato, setIniziato] = useState(false);
+  const alPrimoCampo = () => {
+    if (iniziato) return;
+    setIniziato(true);
+    segna('modulo-iniziato');
+  };
 
   const zonaScelta = ZONE.find((z) => z.code === zona);
 
@@ -75,6 +84,10 @@ export default function ModuloSopralluogo() {
           messaggio: '',
           pagina: window.location.pathname,
           daAnnuncioGoogle: vieneDaAnnuncioGoogle(),
+          // Il codice del clic e la scelta sui cookie: su Google Ads si carica
+          // "è diventato cliente" solo per chi ha accettato (lib/provenienza.ts).
+          clicGoogle: codiceClicGoogle(),
+          consenso: getConsent() ?? '',
           website,
         }),
       });
@@ -83,6 +96,7 @@ export default function ModuloSopralluogo() {
 
       window.fbq?.('track', 'Lead', { content_name: 'Sopralluogo gratuito' });
       setGoogleAdsUserData({ email: '', phone: telefono });
+      segna('modulo-inviato');
       trackGoogleAdsConversion('form');
       setFatto(true);
     } catch (err) {
@@ -130,7 +144,7 @@ export default function ModuloSopralluogo() {
         Lasciaci il numero: ti richiamano Stefano o Matteo, non un call center.
       </p>
 
-      <form onSubmit={invia} className="mt-5 space-y-3.5">
+      <form onSubmit={invia} onFocus={alPrimoCampo} className="mt-5 space-y-3.5">
         <label className="block">
           <span className="sr-only">Nome e cognome</span>
           <span className="relative block">

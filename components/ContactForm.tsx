@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import { Mail, Phone, User, MapPin, Clock, Sparkles, CheckCircle2, Send, MessageSquare, ChevronDown } from 'lucide-react';
 import { CONTACT } from '../lib/siteConfig';
 import { setGoogleAdsUserData, trackGoogleAdsConversion } from '../lib/googleAds';
-import { vieneDaAnnuncioGoogle } from '../lib/provenienza';
+import { vieneDaAnnuncioGoogle, codiceClicGoogle } from '../lib/provenienza';
+import { getConsent } from '../lib/cookieConsent';
+import { segna } from '../lib/statistiche';
 
 const SERVICE_LABELS: Record<string, string> = {
   depuratore: 'Depuratore per la casa',
@@ -51,6 +53,13 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  // Il contatore conta un modulo "iniziato" alla prima casella toccata.
+  const [iniziato, setIniziato] = useState(false);
+  const alPrimoCampo = () => {
+    if (iniziato) return;
+    setIniziato(true);
+    segna('modulo-iniziato');
+  };
 
   // Campo trappola per i bot: è nascosto, nessuna persona lo compila mai.
   // Se arriva pieno, /api/lead scarta la richiesta. Sta fuori da formData
@@ -90,6 +99,10 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           // Finisce nelle note del Gestionale: così si vede quanti contatti
           // porta davvero la pubblicità, anche da chi ha rifiutato i cookie.
           daAnnuncioGoogle: vieneDaAnnuncioGoogle(),
+          // Il codice del clic e la scelta sui cookie: su Google Ads si carica
+          // "è diventato cliente" solo per chi ha accettato (lib/provenienza.ts).
+          clicGoogle: codiceClicGoogle(),
+          consenso: getConsent() ?? '',
           website,
         }),
       });
@@ -104,6 +117,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
       // Conversione Google Ads (stessa logica: gtag esiste solo col consenso).
       // I dati per le conversioni avanzate vanno impostati prima dell'evento.
       setGoogleAdsUserData({ email: formData.email, phone: formData.telefono });
+      segna('modulo-inviato');
       trackGoogleAdsConversion('form');
       setIsSubmitted(true);
     } catch (err) {
@@ -196,7 +210,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} onFocus={alPrimoCampo} className="space-y-4">
         {/* Name input */}
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">

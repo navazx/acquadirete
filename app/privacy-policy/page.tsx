@@ -48,7 +48,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-3">2. Tipologie di dati trattati</h2>
           <p><strong>a) Dati di navigazione.</strong> I sistemi informatici acquisiscono, nel corso del normale esercizio, alcuni dati la cui trasmissione è implicita nell'uso dei protocolli Internet (es. indirizzi IP, tipo di browser, pagine visitate). Questi dati sono utilizzati al solo fine di ricavare informazioni statistiche anonime sull'uso del sito e per controllarne il corretto funzionamento.</p>
-          <p className="mt-3"><strong>b) Dati forniti volontariamente dall'utente.</strong> L'invio tramite il modulo di contatto, l'invio di email o il contatto telefonico comporta l'acquisizione dei dati di contatto (es. nome, email, numero di telefono) e di ogni dato contenuto nella comunicazione.</p>
+          <p className="mt-3"><strong>b) Dati forniti volontariamente dall'utente.</strong> L'invio tramite il modulo di contatto, l'invio di email o il contatto telefonico comporta l'acquisizione dei dati di contatto (es. nome, email, numero di telefono) e di ogni dato contenuto nella comunicazione. Se si arriva al sito da un annuncio Google, insieme alla richiesta si conserva anche il codice tecnico del clic sull&apos;annuncio, per sapere quali annunci portano davvero clienti: viene comunicato a Google solo se si sono accettati i cookie di marketing.</p>
           <p className="mt-3"><strong>c) Cookie e strumenti analoghi.</strong> Per il dettaglio si rimanda alla{' '}
             <Link href="/cookie-policy" title="Leggi la Cookie Policy" className="text-blue-600 hover:underline">Cookie Policy</Link>.
           </p>
