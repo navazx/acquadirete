@@ -1,0 +1,98 @@
+name: Controllo SEO del mese
+
+# Il 27 di ogni mese il controllo SEO approfondito (dal 17 ott 2026), prima che il
+# Direttore scriva le priorità del mese (il 1°) e l'agente Contenuti scelga
+# l'articolo (il 5): così leggono il rapporto fresco.
+#   1. scripts/seo-mese.mjs raccoglie i dati (indicizzazione pagina per pagina,
+#      velocità sul telefono, dati strutturati, collegamenti, 90 giorni di
+#      ricerche, contatti per pagina) in agenti/seo/mese.json e li mette su main;
+#   2. l'agente (.claude/skills/controllo-seo-mese) li studia, guarda i
+#      concorrenti, scrive il rapporto e prepara le correzioni come proposta;
+#   3. scripts/seo-mese-manda.mjs mette il rapporto su main (agenti/seo/mese.md)
+#      e manda il messaggio a Matteo. Se l'analisi non è riuscita manda i soli dati.
+#
+# Lo fa partire la sveglia su Netlify (netlify/functions/_shared/orari.mjs, il 27
+# alle 07:30 UTC). Il giro programmato di GitHub arriva con ore di ritardo, e
+# tenendoli tutti e due partirebbe due volte.
+on:
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: raccoglie e studia, ma non manda niente e non propone niente'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+  # Per chiamare il Meccanico se l'analisi non riesce.
+  actions: write
+
+jobs:
+  mese:
+    runs-on: ubuntu-latest
+    # Tempo largo: Matteo ha chiesto qualità, non velocità (agenti/METODO.md).
+    timeout-minutes: 120
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      - name: Raccogli i dati del mese
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+        run: node scripts/seo-mese.mjs
+
+      - name: Metti i dati su main
+        if: ${{ inputs.prova != true }}
+        run: |
+          git config user.name  "agente-seo"
+          git config user.email "noreply@acquadirete.it"
+          git add agenti/seo/mese.json
+          git diff --cached --quiet && exit 0
+          git commit -m "SEO: dati del controllo del mese [skip netlify]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      # NON passare github_token: il push del ramo proposta/seo-mese-* deve far
+      # partire "Proposta - presentala a Matteo" (vedi agente-seo.yml). In prova
+      # git push è tolto: l'agente studia e scrive in /tmp, ma non propone.
+      - name: Studia i dati e scrivi il rapporto
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ inputs.prova == true && '/controllo-seo-mese prova' || '/controllo-seo-mese' }}
+          claude_args: |
+            --model claude-opus-5-5
+            --effort xhigh
+            --allowedTools "Bash,Read,Write,Edit,Grep,Glob,WebSearch,WebFetch"
+            ${{ inputs.prova == true && '--disallowedTools "Bash(git push*)" "Bash(git commit*)"' || '' }}
+
+      - name: Manda il rapporto a Matteo
+        if: ${{ inputs.prova != true }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: '6369351410'
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/seo-mese-manda.mjs
+
+      - name: In prova - cosa sarebbe partito
+        if: ${{ inputs.prova == true }}
+        run: |
+          node scripts/seo-mese-manda.mjs --prova
+          echo "--- rapporto ---"
+          cat /tmp/seo-mese/mese.md 2>/dev/null | head -150 || true
+          rm -rf /tmp/bacheca
+
+      - name: Consegna le note alla bacheca
+        if: ${{ always() && inputs.prova != true }}
+        env:
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/bacheca-consegna.mjs

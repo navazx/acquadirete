@@ -185,6 +185,20 @@ dell'agente Ads. **Mai nel repo, nei commit, nelle anteprime o sulla bacheca.**
 Verde (da soli), giallo (pronto, dopo l'APPROVA), rosso (mai da soli); come un tipo di
 modifica passa da giallo a verde; le soglie minime di dati prima di giudicare.
 
+## Il controllo SEO del mese (dal 17 ott 2026)
+
+Il 27 di ogni mese `seo-mese.yml` fa il controllo lungo: `scripts/seo-mese.mjs` passa
+ogni pagina della sitemap all'ispezione di Search Console (indicizzata? quando l'ha
+vista Google?), misura la velocità sul telefono (PageSpeed), legge dati strutturati e
+collegamenti interni, 90 giorni di ricerche e i contatti nati da ogni pagina, e scrive
+`agenti/seo/mese.json`. Poi l'agente (`.claude/skills/controllo-seo-mese`) guarda anche
+i concorrenti e le schede fuori dal sito, scrive il rapporto `agenti/seo/mese.md` con
+tre priorità, e prepara le correzioni come proposta `proposta/seo-mese-<data>` (si
+approva con APPROVA SEO). Il rapporto lo leggono il Direttore il 1°, l'agente Contenuti
+il 5 (i buchi fra ricerche e pagine) e l'agente SEO del lunedì (le correzioni rimaste).
+Le pagine da far indicizzare arrivano a Matteo col link di Search Console: da fuori
+Google non permette di chiederlo.
+
 ## Un solo lettore di Telegram
 
 Telegram consegna ogni messaggio a chi lo legge per primo. Per questo **c'è un solo

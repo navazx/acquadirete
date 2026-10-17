@@ -36,6 +36,9 @@ lavoro: le tre priorità devono reggere a chi le mette in dubbio.
 - `agenti/ordini-lezioni.md` — gli ordini del mese che Matteo ha rifiutato o fatto
   correggere, col suo motivo: valgono come regole per te. E `agenti/seo/lezioni.md`
   e `agenti/social-lezioni.md`: cosa ha corretto agli altri agenti.
+- `agenti/seo/mese.md` — il controllo SEO del mese (il 27): indicizzazione,
+  velocità, ricerche e pagine, concorrenti, le pagine che portano contatti, e le
+  sue tre priorità. Se una tocca i contatti, pesala nelle tue.
 - `agenti/bacheca.md` — **la bacheca**: tutto quello che gli agenti hanno visto
   nel mese, e le note di Matteo. È il tuo resoconto dalla squadra: usalo per
   giudicare il mese e per scegliere. Le note di MATTEO pesano più delle altre.

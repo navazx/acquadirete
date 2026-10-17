@@ -39,6 +39,9 @@ Poi leggi per intero, in quest'ordine:
 - `agenti/LEGGIMI.md`, la sezione "Le proposte".
 - `agenti/ordini.md` — le priorità del mese approvate da Matteo: se una tocca la
   SEO, guarda prima quella.
+- `agenti/seo/mese.md` — il controllo SEO del mese. La sezione "Per l'agente SEO del
+  lunedì" ha correzioni già studiate che il controllo del mese non ha potuto proporre
+  (c'era già una proposta in attesa): sono tue, e vengono prima dei segnali nuovi.
 - `agenti/bacheca.md` — le note degli ultimi 30 giorni, degli altri agenti e di
   Matteo. Se una riguarda una pagina che stai per toccare, tienine conto.
 - `CLAUDE.md`.
@@ -76,6 +79,10 @@ Prendi solo quello che `REGOLE.md` ti permette di correggere:
   prima pagina" di `REGOLE.md`. Per scrivere la risposta leggi prima, per intero,
   "Regole che non si discutono" e "Fatti veri che si possono usare" in
   `agenti/contenuti/REGOLE.md`.
+
+- dal controllo del mese (`agenti/seo/mese.md`), le correzioni della sezione "Per
+  l'agente SEO del lunedì" non ancora fatte (guarda `git log`), con i limiti che il
+  controllo del mese si dà (`.claude/skills/controllo-seo-mese`, PASSO 4).
 
 `soglia` sugli articoli del blog non è tuo: li arricchisce l'agente Contenuti.
 **Se non c'è niente, fermati senza creare niente**: è il caso normale, non un

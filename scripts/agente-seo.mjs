@@ -64,7 +64,7 @@ const prova = process.argv.includes('--prova');
 const percorso = (url) => { try { return new URL(url).pathname; } catch { return url; } };
 const kb = (b) => `${Math.round(b / 1024)} KB`;
 
-function decodifica(s = '') {
+export function decodifica(s = '') {
   return s
     .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'")
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
@@ -72,7 +72,7 @@ function decodifica(s = '') {
     .trim();
 }
 
-async function scarica(url, metodo = 'GET') {
+export async function scarica(url, metodo = 'GET') {
   try {
     const res = await fetch(url, {
       method: metodo,
@@ -91,7 +91,7 @@ async function scarica(url, metodo = 'GET') {
   }
 }
 
-async function inParallelo(elementi, quanti, fn) {
+export async function inParallelo(elementi, quanti, fn) {
   const risultati = new Array(elementi.length);
   let prossimo = 0;
   const lavoratori = Array.from({ length: Math.min(quanti, elementi.length) }, async () => {
