@@ -36,7 +36,8 @@ export function messaggioDiBase(d) {
     for (const p of daIndicizzare) righe.push(`${p.pagina} (${p.indicizzazione.stato})`, p.indicizzazione.link || '');
   }
   if (/non misurata/.test(d.velocita)) righe.push('', 'La velocità sul telefono non è misurata: va acceso PageSpeed nel progetto Google Cloud acquadirete-seo.');
-  else if (r.lente.length) righe.push('', `Lente sul telefono (oltre 2,5 secondi): ${r.lente.map((x) => `${x.pagina} ${String(x.lcp).replace('.', ',')} s`).join(', ')}.`);
+  else if (r.lente.length) righe.push('', `Lente sul telefono: ${r.lente.map((x) => x.pagina).join(', ')}.`);
+  else righe.push('', `Velocità sul telefono: a posto (punteggio medio ${r.velocitaMedia}).`);
   return righe.filter((x, i, a) => x || a[i - 1]).join('\n');
 }
 

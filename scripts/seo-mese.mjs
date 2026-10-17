@@ -171,8 +171,12 @@ async function velocita(token, url) {
       lcp: a['largest-contentful-paint']?.numericValue ? tonda(a['largest-contentful-paint'].numericValue / 1000) : null,
       cls: a['cumulative-layout-shift']?.numericValue != null ? tonda(a['cumulative-layout-shift'].numericValue, 3) : null,
       tbt: a['total-blocking-time']?.numericValue != null ? Math.round(a['total-blocking-time'].numericValue) : null,
-      // Dati veri delle persone (Chrome): solo se il sito ha abbastanza visite.
-      persone: campo ? Object.fromEntries(Object.entries(campo).map(([k, v]) => [k, v.category])) : null,
+      // Dati veri delle persone (Chrome, ultimi 28 giorni). Con poche visite Google
+      // non li ha per la singola pagina e dà quelli di tutto il sito: "di" lo dice.
+      persone: campo ? {
+        di: dati.loadingExperience.id === url ? 'questa pagina' : 'tutto il sito',
+        ...Object.fromEntries(Object.entries(campo).map(([k, v]) => [k, v.category])),
+      } : null,
       daMigliorare: Object.values(a)
         .filter((x) => x.details?.type === 'opportunity' && (x.details.overallSavingsMs || 0) >= 300)
         .sort((x, y) => y.details.overallSavingsMs - x.details.overallSavingsMs)
@@ -274,13 +278,18 @@ async function main() {
     nonIndicizzate: pagine.filter((p) => p.indicizzazione?.esito && p.indicizzazione.esito !== 'PASS').map((p) => p.pagina),
     canonicalScelteDaGoogleDiverse: pagine.filter((p) => p.indicizzazione?.canonicalGoogle && p.indicizzazione.canonicalGoogle !== p.pagina).map((p) => p.pagina),
     velocitaMedia: (() => { const v = pagine.map((p) => p.velocita?.punteggio).filter((x) => x != null); return v.length ? Math.round(v.reduce((s, x) => s + x, 0) / v.length) : null; })(),
-    lente: pagine.filter((p) => p.velocita?.lcp > 2.5).map((p) => ({ pagina: p.pagina, lcp: p.velocita.lcp })),
+    // Lente davvero: per le persone vere, se Google ha il dato; se no il laboratorio
+    // (un telefono lento simulato, più severo: oltre 4 secondi).
+    lente: pagine.filter((p) => {
+      const vere = p.velocita?.persone?.LARGEST_CONTENTFUL_PAINT_MS;
+      return vere ? vere === 'SLOW' : p.velocita?.lcp > 4;
+    }).map((p) => ({ pagina: p.pagina, lcp: p.velocita.lcp, persone: p.velocita.persone?.LARGEST_CONTENTFUL_PAINT_MS ?? null })),
     senzaCollegamentiNelTesto: pagine.filter((p) => p.pagina !== '/' && !p.collegamenti.nelTesto.length).map((p) => p.pagina),
   };
 
   const uscita = {
     letto: new Date().toISOString(),
-    come_si_legge: 'Una voce per ogni pagina della sitemap. indicizzazione = ispezione di Search Console (esito PASS = indicizzata, link = apre la pagina in Search Console). velocita = PageSpeed sul telefono (lcp in secondi, sotto 2,5 va bene; cls sotto 0,1; tbt in millisecondi). collegamenti.nelTesto = le pagine che portano qui dal testo (non dal menu), con le parole del collegamento. google = 90 giorni di Search Console. contatti90 = contatti nati da quella pagina negli ultimi 90 giorni (Gestionale). visite = contatore del sito, partito il 16 ott 2026.',
+    come_si_legge: 'Una voce per ogni pagina della sitemap. indicizzazione = ispezione di Search Console (esito PASS = indicizzata, link = apre la pagina in Search Console). velocita = PageSpeed sul telefono: punteggio, lcp (secondi), cls e tbt (millisecondi) sono del laboratorio, un telefono lento simulato e più severo del vero; persone = come va per le persone vere (FAST, AVERAGE, SLOW), della pagina o di tutto il sito (campo "di"). Conta prima persone. collegamenti.nelTesto = le pagine che portano qui dal testo (non dal menu), con le parole del collegamento. google = 90 giorni di Search Console. contatti90 = contatti nati da quella pagina negli ultimi 90 giorni (Gestionale). visite = contatore del sito, partito il 16 ott 2026.',
     velocita: velocitaSpenta ? `non misurata: ${velocitaSpenta}` : 'misurata',
     riassunto,
     meseScorso: meseScorso?.riassunto ? { letto: meseScorso.letto, ...meseScorso.riassunto, perPagina: Object.fromEntries((meseScorso.pagine || []).map((p) => [p.pagina, { indicizzata: p.indicizzazione?.esito === 'PASS', velocita: p.velocita?.punteggio ?? null, lcp: p.velocita?.lcp ?? null, viste: p.google?.viste ?? 0, clic: p.google?.clic ?? 0 }])) } : null,

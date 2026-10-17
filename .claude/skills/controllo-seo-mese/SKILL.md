@@ -58,9 +58,13 @@ la velocità, se l'API di PageSpeed non è accesa), dillo e vai avanti.
    non indicizzate e per quelle cambiate di recente e non ancora riviste, tieni il
    `link`: Matteo apre la pagina in Search Console e preme "Richiedi indicizzazione"
    (da fuori Google non lo permette).
-2. **Velocità sul telefono.** LCP sopra 2,5 secondi, CLS sopra 0,1, punteggio sotto 70.
-   Guarda `daMigliorare`: quale causa si ripete su più pagine? Una causa comune è una
-   correzione sola.
+2. **Velocità sul telefono.** Conta prima `velocita.persone`: come va per le persone
+   vere (FAST, AVERAGE, SLOW). Se è FAST, la pagina va bene anche se il laboratorio
+   (`lcp`, un telefono lento simulato) dice 3 secondi: non proporre lavori di
+   velocità per guadagnare decimi. Si interviene se le persone vere sono AVERAGE o
+   SLOW, se il punteggio scende sotto 70, o se una pagina peggiora molto rispetto a
+   `meseScorso`. Guarda `daMigliorare`: quale causa si ripete su più pagine? Una
+   causa comune è una correzione sola.
 3. **Dati strutturati.** I problemi che vede Google (`risultatiArricchiti[].problemi`)
    e i tipi scritti nelle pagine (`datiStrutturati.tipi`). Le pagine dei servizi hanno
    le domande (FAQPage)? Gli articoli hanno Article e BreadcrumbList? Prima di dire che
