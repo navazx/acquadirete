@@ -1,34 +1,53 @@
 {
-  "tema": "recensione",
-  "foto": "assets/social/recensione-2026-10-12.jpg",
+  "tema": "curiosità sull'acqua",
+  "foto": "assets/social/curiosita-2026-10-17.jpg",
   "grafica": {
-    "frase": "Dopo oltre due anni dall'installazione devo dire che l'unica cosa di cui mi pento è di non averlo acquistato prima.",
-    "autore": "Simone Biagiotti"
+    "titolo": "Lo sapevi che l'acqua è controllata *fino al contatore*?",
+    "punti": [
+      {
+        "icona": "scudo",
+        "titolo": "Fino al contatore",
+        "testo": "Il gestore dell'acquedotto controlla l'acqua e ne risponde fino al contatore."
+      },
+      {
+        "icona": "casa",
+        "titolo": "Dopo, è casa tua",
+        "testo": "Colonna del condominio e tubi di casa sono privati. Per questo due case nella stessa via possono avere acqua diversa."
+      },
+      {
+        "icona": "rubinetto",
+        "titolo": "Dopo una lunga sosta",
+        "testo": "Lasciala scorrere qualche minuto prima di berla, e usala per le piante. Lo consiglia l'Istituto Superiore di Sanità."
+      }
+    ]
   },
   "varianti": [
     {
-      "testo": "«Dopo oltre due anni dall'installazione devo dire che l'unica cosa di cui mi pento è di non averlo acquistato prima.» Le recensioni che ci fanno più piacere sono quelle che arrivano anni dopo: vuol dire che l'impianto lavora bene anche quando noi non ci siamo. Alle manutenzioni pensiamo noi, ti avvisiamo quando è il momento.",
+      "testo": "L'acquedotto controlla l'acqua e ne risponde fino al contatore. Da lì in poi ci sono la colonna del condominio e i tubi di casa, ed è per questo che due appartamenti nella stessa via possono avere un'acqua che sa diversa. L'acqua che conta è quella che esce dal tuo rubinetto: durante il sopralluogo gratuito la analizziamo lì, davanti a te.",
       "hashtag": [
-        "#depuratoreacqua",
-        "#acquafrizzante",
+        "#acquadelrubinetto",
+        "#firenze",
         "#prato",
-        "#firenze"
+        "#pistoia"
+      ]
+    },
+    {
+      "testo": "Un consiglio che non costa niente: quando un rubinetto è rimasto fermo tutta la notte, o per le ferie, lascia scorrere l'acqua per qualche minuto prima di berla o di cucinarci. Quella non la buttare: va bene per le piante o per lavare. Lo consiglia l'Istituto Superiore di Sanità.",
+      "hashtag": [
+        "#acquadelrubinetto",
+        "#firenze",
+        "#consiglidicasa",
+        "#acquabuona"
+      ]
+    },
+    {
+      "testo": "Dal contatore in poi l'impianto è di casa tua, e il depuratore ne fa parte. L'Istituto Superiore di Sanità consiglia, a chi ha un apparecchio per l'acqua in casa, di curarne con scrupolo la manutenzione. Per i nostri clienti ci pensiamo noi, dal 2005, fra Firenze, Prato e Pistoia: ti avvisiamo quando è il momento del cambio filtri.",
+      "hashtag": [
+        "#assistenzadepuratori",
+        "#depuratoreacqua",
+        "#firenze",
+        "#prato"
       ]
     }
-  ],
-  "inviato": "2026-10-12T11:29:43.466Z",
-  "nota": "Rifatta il 12 ott dopo lo scarto del 10: testo della variante 2 di allora, con la grafica delle recensioni al posto della foto. Scelta da Matteo in chat, non su Telegram.",
-  "pubblicato": "2026-10-12T11:31:43.081Z",
-  "variantePubblicata": 1,
-  "esiti": {
-    "facebook": {
-      "id": "1164447766749757_122123207223366858",
-      "url": "https://www.facebook.com/1164447766749757_122123207223366858"
-    },
-    "instagram": {
-      "id": "18573047743078722",
-      "url": "https://www.instagram.com/p/18573047743078722/"
-    }
-  },
-  "graficaTolta": true
+  ]
 }
