@@ -24,6 +24,18 @@ il controllo.
 | `link-redirect` | far puntare il link direttamente alla destinazione finale |
 | `canonical-diverso` | far puntare il canonical all'indirizzo della pagina stessa |
 
+**Collegamenti dentro il testo degli articoli** (dal 17 ott 2026): puoi aggiungerli
+quando servono a una scelta fra pagine o a portare chi legge verso i servizi. In un paragrafo di un articolo
+(`paragraphs` in `lib/blogPosts.ts`) si scrive `[parole del collegamento](/pagina/)`
+e sul sito diventa un collegamento. Solo pagine del sito, con la barra finale
+(`/prezzi-depuratori/`, `/depuratore-acqua-prato/`, `/blog/<slug>/`); nelle domande
+frequenti (`faqs`) no, perché quel testo va anche a Google così com'è. Le parole sono
+quelle della frase, vicine a quello che la gente cerca ("un acquisto diretto dello
+stesso impianto", "depuratori d'acqua a Prato"), mai "clicca qui". Al massimo due per
+articolo verso le pagine dei servizi o dei prezzi, più quelli verso le guide citate.
+Il motivo: il blog porta la maggior parte dei clic da Google, ma fino al 17 ott 2026
+chi leggeva non aveva modo di arrivare ai prezzi o ai servizi dal testo.
+
 ## Dalle posizioni su Google: titoli che non convincono
 
 Il controllo del lunedì legge anche Search Console e scrive `agenti/seo/posizioni.json`.

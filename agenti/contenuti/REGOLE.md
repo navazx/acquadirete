@@ -188,6 +188,20 @@ Ogni articolo nuovo si collega in tre modi:
 L'abbinamento conta: un articolo per chi ha casa non si collega a uno per bar e
 ristoranti.
 
+4. **Nel testo**, almeno un collegamento verso la pagina dei servizi o dei prezzi
+   che l'articolo spinge, e uno verso ogni guida che l'articolo cita.
+
+**Collegamenti dentro il testo** (dal 17 ott 2026). In un paragrafo di un articolo
+(`paragraphs` in `lib/blogPosts.ts`) si scrive `[parole del collegamento](/pagina/)`
+e sul sito diventa un collegamento. Solo pagine del sito, con la barra finale
+(`/prezzi-depuratori/`, `/depuratore-acqua-prato/`, `/blog/<slug>/`); nelle domande
+frequenti (`faqs`) no, perché quel testo va anche a Google così com'è. Le parole sono
+quelle della frase, vicine a quello che la gente cerca ("un acquisto diretto dello
+stesso impianto", "depuratori d'acqua a Prato"), mai "clicca qui". Al massimo due per
+articolo verso le pagine dei servizi o dei prezzi, più quelli verso le guide citate.
+Il motivo: il blog porta la maggior parte dei clic da Google, ma fino al 17 ott 2026
+chi leggeva non aveva modo di arrivare ai prezzi o ai servizi dal testo.
+
 ## La proposta
 
 - Si lavora sul ramo `proposta/articolo-<slug>`. **Mai su `main`.**

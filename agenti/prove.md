@@ -33,3 +33,10 @@ il repository è pubblico.
 - Come si misura: le stesse tre domande del 14 ottobre, rifatte; ingressi "Da IA" nel contatore del sito.
 - Si controlla dal: 2026-12-14
 - Esito: da vedere
+
+## 2026-10-17 · SITO · collegamenti dentro il testo degli articoli
+- Cosa è cambiato: gli articoli possono avere collegamenti nel testo; 10 aggiunti su frasi che c'erano già (due verso la pagina dei prezzi, dagli articoli sul depuratore "gratis" e su noleggio e acquisto; gli altri verso le guide citate). Il vecchio indirizzo dell'osmosi a Prato ora porta alla pagina di Prato. Proposto dal controllo SEO del mese, deciso da Matteo.
+- Cosa ci si aspetta: più lettori degli articoli che passano alla pagina dei prezzi e ai servizi, e qualche contatto in più da quelle pagine.
+- Come si misura: contatore del sito, viste della pagina dei prezzi che non sono ingressi e moduli partiti da prezzi e servizi; contatti per pagina nel controllo SEO di dicembre. Sotto i 3-4 contatti di differenza è rumore.
+- Si controlla dal: 2026-11-14
+- Esito: da vedere

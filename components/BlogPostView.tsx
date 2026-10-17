@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Check, Clock, ChevronRight } from 'lucide-react';
 import ContactForm from './ContactForm';
@@ -10,6 +10,26 @@ import { SITE_URL } from '../lib/siteConfig';
 import { ROUTES, PAGE_BREADCRUMB } from '../lib/routes';
 import { BLOG_POSTS } from '../lib/blogPosts';
 import { BlogPost } from '../lib/types';
+
+// Collegamenti dentro il testo degli articoli (dal 17 ott 2026): in un paragrafo,
+// [parole](/pagina/) diventa un collegamento a quella pagina del sito. Solo pagine
+// nostre (indirizzi che cominciano con "/"): tutto il resto resta testo com'è.
+const COLLEGAMENTO = /\[([^\]]+)\]\((\/[a-z0-9\-/]*)\)/g;
+function conCollegamenti(testo: string) {
+  const pezzi: ReactNode[] = [];
+  let ultimo = 0;
+  for (const m of testo.matchAll(COLLEGAMENTO)) {
+    pezzi.push(testo.slice(ultimo, m.index));
+    pezzi.push(
+      <Link key={m.index} href={m[2]} className="text-blue-600 underline underline-offset-2 hover:text-blue-700">
+        {m[1]}
+      </Link>,
+    );
+    ultimo = (m.index ?? 0) + m[0].length;
+  }
+  pezzi.push(testo.slice(ultimo));
+  return pezzi;
+}
 
 export default function BlogPostView({ post }: { post: BlogPost }) {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -102,7 +122,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{section.heading}</h2>
             )}
             {section.paragraphs.map((para, pIdx) => (
-              <p key={pIdx} className="text-sm text-slate-600 leading-relaxed">{para}</p>
+              <p key={pIdx} className="text-sm text-slate-600 leading-relaxed">{conCollegamenti(para)}</p>
             ))}
           </div>
         ))}

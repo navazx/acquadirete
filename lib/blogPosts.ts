@@ -104,7 +104,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Come funziona davvero il modello "gratis"',
         paragraphs: [
-          'Nella grande maggioranza dei casi, "gratis" significa che l\'impianto non si paga in un\'unica soluzione iniziale, ma tramite un canone mensile o un contratto pluriennale — spesso 5 anni o più. Alla fine, il costo totale pagato è quasi sempre superiore a quello di un acquisto diretto dello stesso impianto.',
+          'Nella grande maggioranza dei casi, "gratis" significa che l\'impianto non si paga in un\'unica soluzione iniziale, ma tramite un canone mensile o un contratto pluriennale — spesso 5 anni o più. Alla fine, il costo totale pagato è quasi sempre superiore a quello di [un acquisto diretto dello stesso impianto](/prezzi-depuratori/).',
           'Non è necessariamente scorretto: per alcune famiglie un canone mensile più basso può avere senso. Il problema nasce quando le condizioni reali del contratto — durata, penali di recesso, cosa succede in caso di guasto — non vengono spiegate con chiarezza al momento della firma.',
         ],
       },
@@ -188,7 +188,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Occhio alle promozioni troppo aggressive',
         paragraphs: [
-          'Un prezzo molto più basso della media, o una promozione "solo per oggi", spesso nasconde un contratto a canone con costi nascosti più alti nel tempo. Ne parliamo nel dettaglio nella nostra guida sui contratti "depuratore gratis" — vale la pena leggerla prima di firmare qualsiasi cosa.',
+          'Un prezzo molto più basso della media, o una promozione "solo per oggi", spesso nasconde un contratto a canone con costi nascosti più alti nel tempo. Ne parliamo nel dettaglio nella nostra [guida sui contratti "depuratore gratis"](/blog/depuratore-acqua-gratis-contratti/) — vale la pena leggerla prima di firmare qualsiasi cosa.',
         ],
       },
     ],
@@ -230,7 +230,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Perché succede così spesso',
         paragraphs: [
           'Il mercato dei depuratori ha tante piccole realtà locali e diversi venditori che operano tramite agenzie o reti commerciali, spesso legate a contratti di vendita porta a porta o telefonica. Quando l\'agenzia chiude, cambia ragione sociale o il venditore smette di lavorare in quella zona, il cliente resta con un impianto funzionante ma senza più nessuno che se ne occupi.',
-          'Ne abbiamo parlato anche nella nostra guida sui contratti "depuratore gratis": spesso il modello di vendita è pensato per durare quanto il contratto, non quanto l\'impianto. Passati gli anni dell\'accordo, l\'assistenza è spesso la prima cosa a sparire.',
+          'Ne abbiamo parlato anche nella nostra [guida sui contratti "depuratore gratis"](/blog/depuratore-acqua-gratis-contratti/): spesso il modello di vendita è pensato per durare quanto il contratto, non quanto l\'impianto. Passati gli anni dell\'accordo, l\'assistenza è spesso la prima cosa a sparire.',
         ],
       },
       {
@@ -317,7 +317,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Non vuoi pagare tutto in una volta? Si può rateizzare a tasso zero',
         paragraphs: [
           'Il vantaggio principale del noleggio è non dover affrontare subito l\'intera spesa. Ma questo non è un buon motivo per rinunciare all\'acquisto: possiamo rateizzare l\'impianto a tasso zero, così spalmi il costo nel tempo senza interessi e senza sorprese.',
-          'La differenza rispetto al canone di noleggio è sostanziale. Con la rateizzazione paghi il prezzo dell\'impianto — quello che hai visto e approvato — diviso in comode rate, e a fine pagamento l\'impianto è tuo: nessun interesse, nessun costo nascosto, nessun obbligo di restituirlo o riscattarlo. In pratica ottieni la comodità della rata mensile, ma con i vantaggi della proprietà.',
+          'La differenza rispetto al canone di noleggio è sostanziale. Con la rateizzazione paghi [il prezzo dell\'impianto](/prezzi-depuratori/) — quello che hai visto e approvato — diviso in comode rate, e a fine pagamento l\'impianto è tuo: nessun interesse, nessun costo nascosto, nessun obbligo di restituirlo o riscattarlo. In pratica ottieni la comodità della rata mensile, ma con i vantaggi della proprietà.',
         ],
       },
       {
@@ -616,7 +616,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Quando ha senso un depuratore (e quale)',
         paragraphs: [
           'Se il tuo unico fastidio è il sapore di cloro, spesso basta un impianto a carboni attivi: semplice, senza scarto d\'acqua, mantiene i minerali naturali e toglie ciò che rovina il gusto. Se invece la tua zona ha un\'acqua molto dura, o vuoi un\'acqua leggera anche per cucinare, l\'osmosi inversa è la soluzione più completa.',
-          'La scelta giusta dipende dall\'acqua che hai davvero in casa: per questo prima di proporre qualsiasi impianto la analizziamo sul posto, davanti a te. Ne abbiamo parlato in dettaglio nella guida "Carboni attivi o osmosi inversa?", se vuoi approfondire le differenze.',
+          'La scelta giusta dipende dall\'acqua che hai davvero in casa: per questo prima di proporre qualsiasi impianto la analizziamo sul posto, davanti a te. Ne abbiamo parlato in dettaglio nella guida ["Carboni attivi o osmosi inversa?"](/blog/carboni-attivi-vs-osmosi-inversa/), se vuoi approfondire le differenze.',
         ],
       },
       {
@@ -763,7 +763,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Se cambi casa, l\'impianto viene con te',
         paragraphs: [
           'È il vero motivo per cui l\'affitto non è un ostacolo: l\'impianto è tuo, non della casa. Quando traslochi lo si smonta e lo si rimonta nella casa nuova, e continui a usare quello che hai già pagato. Non è un caso raro: è una delle richieste di assistenza più normali che riceviamo.',
-          'È anche il motivo per cui, se sei in affitto, ti conviene guardare con ancora più attenzione ai contratti pluriennali e alle formule "gratis" con canone mensile: un vincolo lungo su una casa in cui non sai quanto resterai è una complicazione in più. Ne abbiamo parlato nella guida sui contratti "depuratore gratis", e vale la pena leggerla prima di firmare qualcosa.',
+          'È anche il motivo per cui, se sei in affitto, ti conviene guardare con ancora più attenzione ai contratti pluriennali e alle formule "gratis" con canone mensile: un vincolo lungo su una casa in cui non sai quanto resterai è una complicazione in più. Ne abbiamo parlato nella [guida sui contratti "depuratore gratis"](/blog/depuratore-acqua-gratis-contratti/), e vale la pena leggerla prima di firmare qualcosa.',
         ],
       },
       {
@@ -835,13 +835,13 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Il confronto che conta davvero: bottiglie e boccioni in ufficio',
         paragraphs: [
-          'Il paragone giusto non è con un numero assoluto, ma con quello che fai già oggi: casse d\'acqua da caricare, boccioni da cambiare, un fornitore da richiamare quando manca la scorta. Sono tutti costi reali che non compaiono su una fattura dell\'erogatore, ma pesano comunque in tempo e spazio, oltre che in denaro. Ne avevamo parlato anche per bar e ristoranti nella guida sull\'acqua microfiltrata in sala: le stesse logiche valgono, con numeri diversi, anche per un ufficio.',
+          'Il paragone giusto non è con un numero assoluto, ma con quello che fai già oggi: casse d\'acqua da caricare, boccioni da cambiare, un fornitore da richiamare quando manca la scorta. Sono tutti costi reali che non compaiono su una fattura dell\'erogatore, ma pesano comunque in tempo e spazio, oltre che in denaro. Ne avevamo parlato anche per bar e ristoranti nella [guida sull\'acqua microfiltrata in sala](/blog/acqua-frizzante-bar-ristoranti/): le stesse logiche valgono, con numeri diversi, anche per un ufficio.',
         ],
       },
       {
         heading: 'Acquisto o noleggio: cambia anche qui il conto',
         paragraphs: [
-          'Come per i depuratori domestici, anche per gli erogatori da ufficio trovi sul mercato sia l\'acquisto diretto che il noleggio con canone. Le stesse attenzioni valgono: guarda la durata del contratto, cosa succede in caso di guasto e cosa è compreso davvero nella manutenzione, non solo la cifra scritta più in grande sul preventivo. Ne parliamo nel dettaglio, anche se pensata per la casa, nella nostra guida su noleggio e acquisto del depuratore: i princìpi restano gli stessi.',
+          'Come per i depuratori domestici, anche per gli erogatori da ufficio trovi sul mercato sia l\'acquisto diretto che il noleggio con canone. Le stesse attenzioni valgono: guarda la durata del contratto, cosa succede in caso di guasto e cosa è compreso davvero nella manutenzione, non solo la cifra scritta più in grande sul preventivo. Ne parliamo nel dettaglio, anche se pensata per la casa, nella nostra [guida su noleggio e acquisto del depuratore](/blog/noleggio-vs-acquisto-depuratore/): i princìpi restano gli stessi.',
         ],
       },
       {
@@ -988,7 +988,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Perché "gratis grazie al bonus" quasi sempre è un contratto di anni',
         paragraphs: [
           'Quando si arriva al foglio, la parola "gratis" cambia significato. Nella maggior parte dei casi vuol dire che l\'impianto non si paga tutto all\'inizio, ma con un canone mensile e un contratto che dura anni: cinque, a volte più. Al mese sembra poco. Sommato per tutta la durata, quasi sempre viene più di quanto costerebbe comprare lo stesso impianto.',
-          'Se il bonus non esiste, i soldi li mette qualcuno, e quel qualcuno sei tu, un po\' per volta. Dentro al contratto ci sono poi le cose che contano davvero: quanto dura, cosa si paga per uscire prima, di chi è l\'impianto alla fine, chi viene quando si rompe. Le abbiamo messe in fila nel nostro articolo sul depuratore "gratis" e su come funzionano quei contratti.',
+          'Se il bonus non esiste, i soldi li mette qualcuno, e quel qualcuno sei tu, un po\' per volta. Dentro al contratto ci sono poi le cose che contano davvero: quanto dura, cosa si paga per uscire prima, di chi è l\'impianto alla fine, chi viene quando si rompe. Le abbiamo messe in fila nel nostro [articolo sul depuratore "gratis"](/blog/depuratore-acqua-gratis-contratti/) e su come funzionano quei contratti.',
         ],
       },
       {
@@ -996,7 +996,7 @@ export const BLOG_POSTS: BlogPost[] = [
         paragraphs: [
           'Prima cosa: non dare dati. Isee, codice fiscale, quante persone vivono in casa, indirizzo, conto in banca. Per ricevere un\'informazione non serve niente di tutto questo, e non va lasciato nemmeno nel modulo di una pubblicità che promette il bonus. Se chi chiama ne ha bisogno subito, è perché sta compilando qualcosa, non perché ti sta informando.',
           'Seconda cosa: chiedi tutto per scritto. Il nome dell\'azienda e la partita IVA, cosa ti stanno proponendo e a quali condizioni, su un\'email o su un foglio che resta a te. Chi ha un\'offerta vera non ha problemi a metterla nero su bianco.',
-          'Terza: prenditi tempo. Nessuna firma la sera stessa, nessun acconto, nessuna fretta. Se un\'offerta vale solo oggi, non è un\'offerta: è una pressione. E se hai già firmato qualcosa a casa tua, nel nostro articolo sui contratti del depuratore "gratis" trovi le cose da controllare subito.',
+          'Terza: prenditi tempo. Nessuna firma la sera stessa, nessun acconto, nessuna fretta. Se un\'offerta vale solo oggi, non è un\'offerta: è una pressione. E se hai già firmato qualcosa a casa tua, nel nostro [articolo sui contratti del depuratore "gratis"](/blog/depuratore-acqua-gratis-contratti/) trovi le cose da controllare subito.',
           'Se invece il depuratore ti interessa davvero, chiedi un preventivo a un\'azienda della tua zona, una che puoi andare a trovare e richiamare fra due anni. Senza bonus di mezzo.',
         ],
       },

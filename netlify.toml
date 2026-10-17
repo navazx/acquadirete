@@ -93,7 +93,9 @@
 
 [[redirects]]
   from = "/paginaseo/13.depuratori-a-osmosi-inversa-a-prato*"
-  to = "/osmosi-inversa-firenze/"
+  # Era sulla pagina dell'osmosi di Firenze: Google lo mostrava per «depuratori acqua prato»
+  # contro la scelta del 12 ott 2026 (vince la pagina di Prato). Corretto il 17 ott 2026.
+  to = "/depuratore-acqua-prato/"
   status = 301
   force = true
 
@@ -118,6 +120,13 @@
 
 [[redirects]]
   from = "/scheda/23.modelli-a-colonna-da-terra-per-ufficio*"
+  to = "/depuratore-acqua-uffici-firenze/"
+  status = 301
+  force = true
+
+# Lo stesso, con la maiuscola com'era nel vecchio sito: senza, finiva sulla home.
+[[redirects]]
+  from = "/scheda/23.Modelli-a-colonna-da-terra-per-ufficio*"
   to = "/depuratore-acqua-uffici-firenze/"
   status = 301
   force = true

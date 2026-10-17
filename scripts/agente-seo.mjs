@@ -54,6 +54,8 @@ const IMMAGINE_PESANTE = 400 * 1024;
 // Erano i controlli della routine "guardiano-404-redirect".
 const REDIRECT_ATTESI = [
   ['/paginaseo/3.vendita-depuratori-acqua-prato.aspx', '/depuratore-acqua-prato/'],
+  // Corretto il 17 ott 2026: portava all'osmosi di Firenze, contro la scelta di far vincere Prato.
+  ['/paginaseo/13.depuratori-a-osmosi-inversa-a-prato', '/depuratore-acqua-prato/'],
   ['/paginaseo/15.depuratori-a-osmosi-inversa-a-scandicci', '/osmosi-inversa-firenze/'],
   ['/default.aspx', '/'],
   ['/scheda/23.modelli-a-colonna-da-terra-per-ufficio', '/depuratore-acqua-uffici-firenze/'],
