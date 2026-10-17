@@ -69,6 +69,11 @@ function tipiJsonLd(html) {
 function leggiPagina(url, html) {
   const h1 = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1];
   const collegamenti = [];
+  // Dove stanno menu e piè di pagina: un collegamento lì dentro è "del menu", uno
+  // fuori è nel testo, anche se porta a una pagina che sta pure nel menu (errore
+  // del primo giro, 17 ott 2026: contava come menu tutto quello che c'era anche là).
+  const zoneMenu = [...html.matchAll(/<(header|footer|nav)\b[\s\S]*?<\/\1>/gi)].map((m) => [m.index, m.index + m[0].length]);
+  const nelMenu = (i) => zoneMenu.some(([da, a]) => i >= da && i < a);
   for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
     const href = (m[1].match(/\shref="([^"]+)"/i) || [])[1];
     if (!href || /^(mailto:|tel:|javascript:|#)/i.test(href)) continue;
@@ -76,7 +81,7 @@ function leggiPagina(url, html) {
     try { u = new URL(decodifica(href), url); } catch { continue; }
     if (!/(^|\.)acquadirete\.it$/.test(u.host)) continue;
     const testo = testoPiano(m[2]) || decodifica((m[1].match(/\saria-label="([^"]*)"/i) || [])[1] || '');
-    collegamenti.push({ a: u.pathname, testo: testo.slice(0, 80) });
+    collegamenti.push({ a: u.pathname, testo: testo.slice(0, 80), menu: nelMenu(m.index) });
   }
   // Parole del contenuto vero: senza intestazione e piè di pagina del sito.
   const corpo = html.replace(/<header[\s\S]*?<\/header>|<footer[\s\S]*?<\/footer>|<nav[\s\S]*?<\/nav>/gi, ' ');
@@ -91,11 +96,7 @@ function leggiPagina(url, html) {
 
 /** Chi porta a chi, con quali parole, e a quanti clic dalla home. */
 function grafo(pagine) {
-  const tutte = pagine.length;
-  // Un collegamento che compare in quasi tutte le pagine è del menu o del piè di pagina.
-  const quante = new Map();
-  for (const p of pagine) for (const a of new Set(p.collegamenti.map((c) => c.a))) quante.set(a, (quante.get(a) || 0) + 1);
-  const delMenu = new Set([...quante].filter(([, n]) => n >= Math.max(3, tutte * 0.8)).map(([a]) => a));
+  const delMenu = new Set(pagine.flatMap((p) => p.collegamenti.filter((c) => c.menu).map((c) => c.a)));
 
   const entranti = new Map();
   for (const p of pagine) {
@@ -103,7 +104,7 @@ function grafo(pagine) {
       if (c.a === p.pagina) continue;
       if (!entranti.has(c.a)) entranti.set(c.a, { daMenu: false, nelTesto: new Map() });
       const e = entranti.get(c.a);
-      if (delMenu.has(c.a)) { e.daMenu = true; continue; }
+      if (c.menu) { e.daMenu = true; continue; }
       const voce = e.nelTesto.get(p.pagina) || new Set();
       if (c.testo) voce.add(c.testo);
       e.nelTesto.set(p.pagina, voce);
@@ -261,7 +262,7 @@ async function main() {
         clicDallaHome: profondita.get(p.pagina) ?? null,
         dalMenu: Boolean(e?.daMenu),
         nelTesto,
-        escono: [...new Set(p.collegamenti.map((c) => c.a).filter((a) => !delMenu.includes(a) && a !== p.pagina))],
+        escono: [...new Set(p.collegamenti.filter((c) => !c.menu && c.a !== p.pagina).map((c) => c.a))],
       },
       google: google.pagine[p.pagina] || { viste: 0, clic: 0 },
       contatti90: contatti[p.pagina] || { contatti: 0, daAnnuncio: 0, clienti: 0 },
