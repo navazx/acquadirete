@@ -117,6 +117,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .testa p { margin: 6px 0 0; color: var(--grigio); font-size: 18px; }
 .azioni { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
 .azioni .largo { grid-column: 1 / -1; }
+.azioni .btn { white-space: nowrap; padding-left: 10px; padding-right: 10px; }
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 60px; padding: 10px 16px;
@@ -251,6 +252,10 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .pallino-mappa.mese, .pin.mese { background: #f29900; }
 .pallino-mappa.due, .pin.due { background: #f7c32e; }
 .pallino-mappa.sospese, .pin.sospese { background: #8a97a5; }
+/* Cliente senza manutenzioni vicine, sulla mappa solo se cercato o nel giro. */
+.pin.lontana { background: #1b7a3d; }
+/* Il cliente aperto da «Sulla mappa»: alone blu. */
+.pin.evidenziato { box-shadow: 0 0 0 5px rgba(15, 108, 189, .45), 0 2px 6px rgba(0, 0, 0, .5); }
 .stato-mappa { margin: -4px 0 10px; font-size: 16px; color: var(--grigio); }
 /* z-index 0: i livelli di Leaflet restano sotto la barra blu e le finestre. */
 .mappa { position: relative; z-index: 0; height: 60vh; margin: 0 -16px; background: #e5ebf1; }

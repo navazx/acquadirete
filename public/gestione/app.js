@@ -86,6 +86,7 @@
     pausa: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
     personaPiu: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
     mirino: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+    cartina: '<path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -257,7 +258,10 @@
     stato = stato || { s: 'home' };
     // Si lascia la mappa (o la si ridisegna): si ricorda dove si guardava.
     if (mappaAttiva) {
-      vistaMappa = { centro: mappaAttiva.getCenter(), zoom: mappaAttiva.getZoom() };
+      // La mappa aperta su un cliente («Sulla mappa») si ricorda a parte:
+      // quella delle manutenzioni non deve riaprirsi ingrandita su di lui.
+      const v = { centro: mappaAttiva.getCenter(), zoom: mappaAttiva.getZoom() };
+      if (mappaAttiva.evid) vistaCercato = { ...v, evid: mappaAttiva.evid }; else vistaMappa = v;
       mappaAttiva.remove();
       mappaAttiva = null;
     }
@@ -759,6 +763,7 @@
   let elencoGiroAperto = false;
   let mappaAttiva = null;   // la mappa Leaflet mostrata adesso
   let vistaMappa = null;    // centro e zoom, per ritrovarla uguale tornando indietro
+  let vistaCercato = null;  // lo stesso, per la mappa aperta su un cliente ({ evid, centro, zoom })
   let fermaPosizione = () => {}; // smette di seguire il telefono quando si lascia la mappa
 
   const clienteDa = (codice) => dati.clienti.find((c) => c.codice === codice);
@@ -838,6 +843,17 @@
     const scelte = new Set(Array.isArray(stato.cat) ? stato.cat : CATEGORIE_DI_BASE);
     giro = giro.filter((k) => clienteDa(k));
     const tutti = dati.clienti.map((c) => ({ c, cat: categoriaMappa(c) })).filter((x) => x.cat);
+    // Il cliente aperto da «Sulla mappa» nella sua scheda (17 ott 2026) e le
+    // tappe del giro si vedono anche senza una manutenzione vicina: puntino
+    // verde, «lontana». `centra` vale una volta sola (poi diventa `evid`), così
+    // un aggiornamento in sottofondo non riporta la mappa su di lui.
+    const evid = stato.centra || stato.evid || null;
+    [evid, ...giro].forEach((k) => {
+      const c = k && clienteDa(k);
+      if (c && !tutti.some((x) => x.c === c)) tutti.push({ c, cat: 'lontana' });
+    });
+    const evidenziato = (c) => c.codice === evid;
+    const segni = new Map(); // codice → puntino, per aprire il fumetto del cliente cercato
     const conta = {};
     tutti.forEach((x) => { conta[x.cat] = (conta[x.cat] || 0) + 1; });
 
@@ -937,20 +953,23 @@
     function disegnaPuntini() {
       if (!strato) return;
       strato.clearLayers();
-      // Le tappe del giro si vedono sempre, anche se la loro categoria è spenta.
-      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || nelGiro(x.c))));
+      segni.clear();
+      // Le tappe del giro e il cliente cercato si vedono sempre, anche se la
+      // loro categoria è spenta.
+      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || nelGiro(x.c) || evidenziato(x.c))));
       visibili.forEach((x) => {
         const n = giro.indexOf(x.c.codice);
-        const classi = ['pin', x.cat, x.c.prec === 'paese' ? 'circa' : '', n >= 0 ? 'nel-giro' : ''].filter(Boolean).join(' ');
+        const ev = evidenziato(x.c);
+        const classi = ['pin', x.cat, x.c.prec === 'paese' ? 'circa' : '', n >= 0 ? 'nel-giro' : '', ev ? 'evidenziato' : ''].filter(Boolean).join(' ');
         const testo = n >= 0 ? String(n + 1) : x.cat === 'urgenti' ? '!' : '';
-        const grande = x.cat === 'urgenti' || n >= 0;
-        const lato = grande ? 32 : 26;
+        const lato = ev ? 36 : x.cat === 'urgenti' || n >= 0 ? 32 : 26;
         const segno = L.marker([x.lat, x.lng], {
           icon: L.divIcon({ className: 'pin-mappa', html: `<span class="${classi}">${testo}</span>`, iconSize: [lato, lato], iconAnchor: [lato / 2, lato / 2], popupAnchor: [0, -lato / 2] }),
           keyboard: false,
-          // Urgenti e tappe del giro sopra gli altri puntini.
-          zIndexOffset: n >= 0 ? 2000 : x.cat === 'urgenti' ? 1000 : x.cat === 'scadute' ? 500 : 0,
+          // Il cliente cercato, le tappe del giro e gli urgenti sopra gli altri puntini.
+          zIndexOffset: ev ? 3000 : n >= 0 ? 2000 : x.cat === 'urgenti' ? 1000 : x.cat === 'scadute' ? 500 : 0,
         });
+        segni.set(x.c.codice, segno);
         segno.bindPopup(() => popup(x.c), { maxWidth: 280, minWidth: 220, autoPanPaddingTopLeft: [16, 64], autoPanPaddingBottomRight: [16, 16] });
         segno.on('popupopen', (e) => {
           const el = e.popup.getElement();
@@ -1054,8 +1073,20 @@
           .catch(() => { /* telefono che non lo dice: si aspetta il pulsante */ });
       }
 
-      if (vistaMappa) {
-        m.setView(vistaMappa.centro, vistaMappa.zoom);
+      m.evid = evid;
+      const vista = evid ? (vistaCercato && vistaCercato.evid === evid ? vistaCercato : null) : vistaMappa;
+      const cercato = evid && clienteDa(evid);
+      if (cercato && cercato.lat != null && (stato.centra || !vista)) {
+        // Da «Sulla mappa»: vicino a lui, col suo fumetto aperto. Poi
+        // `centra` diventa `evid`: resta evidenziato ma la mappa non ci
+        // torna più da sola.
+        m.setView([cercato.lat, cercato.lng], 16);
+        const s = segni.get(cercato.codice);
+        if (s) s.openPopup();
+        const { centra, ...resto } = history.state || {};
+        history.replaceState({ ...resto, evid: cercato.codice }, '', location.pathname + location.hash);
+      } else if (vista) {
+        m.setView(vista.centro, vista.zoom);
       } else {
         // Si apre sulla zona dove sta il grosso dei clienti: i pochi lontani
         // (Livorno, Versilia) si vedono allontanando la mappa.
@@ -1072,7 +1103,7 @@
 
       // Le posizioni che mancano: prima quelle che si vedono, le urgenti in testa.
       const ordineCat = Object.fromEntries(CATEGORIE_MAPPA.map((k, i) => [k.id, scelte.has(k.id) ? i : i + 10]));
-      const mancano = tutti.filter((x) => !x.c.prec && x.c.citta).sort((a, b) => ordineCat[a.cat] - ordineCat[b.cat]).map((x) => x.c);
+      const mancano = tutti.filter((x) => !x.c.prec && x.c.citta).sort((a, b) => (ordineCat[a.cat] ?? 99) - (ordineCat[b.cat] ?? 99)).map((x) => x.c);
       quandoTrovata = (c) => {
         if (mappaAttiva !== m) return;
         if (c) { if (c.lat != null) disegnaPuntini(); disegnaStato(true); } else disegnaStato(false);
@@ -1106,6 +1137,9 @@
     if (cell) html += `<a class="btn" href="https://wa.me/${esc(cell.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp</a>`;
     const dove = sulPosto(cliente) || indirizzo;
     if (dove) html += `<a class="btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dove)}" target="_blank" rel="noopener">${icona('mappa')} Portami lì</a>`;
+    // La mappa dell'app, centrata su di lui (17 ott 2026): per vedere chi gli
+    // sta vicino e metterlo nel giro. Solo se ha una posizione.
+    if (cliente && cliente.lat != null) html += `<button class="btn" type="button" id="sulla-mappa">${icona('cartina')} Sulla mappa</button>`;
     if (mail) html += `<a class="btn" href="mailto:${esc(mail)}">${icona('posta')} Email</a>`;
     return html;
   }
@@ -1172,6 +1206,7 @@
     if ($('togli-avviso')) $('togli-avviso').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
+    if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
   }
 
   // «Sono qui»: dal cliente, il punto dove sta il telefono diventa la sua
