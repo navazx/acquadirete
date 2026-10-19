@@ -29,7 +29,7 @@ process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
-const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO } =
+const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI } =
   await import('../netlify/functions/_shared/gestionale.mjs');
 
 // ---------------------------------------------------------------------------
@@ -59,10 +59,14 @@ async function creaFoglioFinto() {
     const coordinate = await vero.leggi(`'${TAB_COORDINATE}'!A1:F3000`, 'UNFORMATTED_VALUE');
     if (coordinate.length) schede[TAB_COORDINATE] = coordinate;
   } catch { /* scheda non ancora creata */ }
-  // Lo storico degli interventi, per la pagina «Interventi fatti».
+  // Lo storico degli interventi, per la pagina «Interventi fatti», e i giri.
   try {
     const storico = await vero.leggi(`'${TAB_STORICO}'!A1:J5000`, 'FORMATTED_VALUE');
     if (storico.length) schede[TAB_STORICO] = storico;
+  } catch { /* scheda non ancora creata */ }
+  try {
+    const giri = await vero.leggi(`'${TAB_GIRI}'!A1:P3000`, 'UNFORMATTED_VALUE');
+    if (giri.length) schede[TAB_GIRI] = giri;
   } catch { /* scheda non ancora creata */ }
   console.log(`Copia in memoria: ${schede[TAB_CLIENTI].length} righe clienti, ${schede[TAB_LEAD].length} righe lead, ${Math.max((schede[TAB_COORDINATE] || []).length - 1, 0)} posizioni`);
 

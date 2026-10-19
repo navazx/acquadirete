@@ -373,6 +373,11 @@ export async function leggiTutto(foglio) {
     console.error('Storico non letto:', err);
     return [];
   });
+  // Le tappe dei giri: idem.
+  const giri = leggiGiri(foglio).catch((err) => {
+    console.error('Giri non letti:', err);
+    return { tappe: [] };
+  });
   const [{ griglia: gc, mappa: mc }, { griglia: gl, mappa: ml }] = await Promise.all([
     leggiClienti(foglio),
     leggiLead(foglio),
@@ -432,7 +437,20 @@ export async function leggiTutto(foglio) {
     console.error('Clienti persi non letti:', err);
   }
 
-  return { oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD, storico: await storico, pagamenti: PAGAMENTI };
+  // Le tappe: le righe di "Giri" più quelle ancora nella colonna "Chi ci va"
+  // (del 19 ott), come tappe di oggi senza ora, se il cliente non ha già una
+  // tappa da fare. Senza `riga`: al telefono non serve.
+  const { tappe: righeGiri } = await giri;
+  const tappe = righeGiri.map(({ riga, ...t }) => t);
+  for (const c of clienti) {
+    if (!c.chiVa || tappe.some((t) => t.codice === c.codice && !t.stato)) continue;
+    tappe.push({ id: idDaColonna(c.codice), giorno: '', ora: '', chi: c.chiVa, lavoro: 'Manutenzione', codice: c.codice, contatto: '', nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, telefono: '', note: '', lat: null, lng: null, stato: '', vecchia: true });
+  }
+
+  return {
+    oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD, storico: await storico, pagamenti: PAGAMENTI,
+    tappe, lavori: LAVORI,
+  };
 }
 
 // Le righe si spostano (gli ordinamenti del menu "Foglio di lavoro"): un
@@ -549,6 +567,141 @@ export async function assegnaManutenzione(foglio, { codice, codici, a = '' }, { 
 }
 
 // ---------------------------------------------------------------------------
+//  Tappe dei giri (scheda "Giri")
+// ---------------------------------------------------------------------------
+// Dal 20 ott 2026 (Matteo: «aggiungere al giro mio o di babbo anche lavori che
+// non sono le manutenzioni scadute, tipo un guasto, una nuova installazione,
+// un sopralluogo; e nel giro gli orari») ogni tappa è una riga della scheda
+// "Giri": il giorno, l'ora (facoltativa), di chi è, che lavoro è, e chi si va
+// a trovare. Può essere un cliente (Codice), un contatto di Lead-Contatti non
+// ancora cliente (Contatto = "data|nome") o un indirizzo qualsiasi; nome,
+// indirizzo e posizione sono scritti nella riga, così la tappa si apre anche
+// senza il cliente. L'Id lo sceglie il telefono: la stessa richiesta arrivata
+// due volte (senza campo) aggiorna la stessa riga invece di farne due.
+// Le tappe tolte si svuotano (le righe non si spostano mai). La colonna
+// "Chi ci va" di Clienti-Impianti (19 ott) resta letta come «tappa di oggi
+// senza ora» finché quella tappa non si tocca: allora diventa una riga qui.
+// Nessuna automazione del foglio legge questa scheda.
+export const TAB_GIRI = 'Giri';
+const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il'];
+export const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
+const G = Object.fromEntries(INTESTAZIONI_GIRI.map((h, i) => [h, i]));
+
+async function leggiGiri(foglio) {
+  let griglia;
+  try {
+    griglia = await foglio.leggi(`'${TAB_GIRI}'!A1:P3000`, 'UNFORMATTED_VALUE');
+  } catch (err) {
+    if (err.status === 400) return { griglia: null, tappe: [] }; // scheda non ancora creata
+    throw err;
+  }
+  const tappe = [];
+  for (let i = 1; i < (griglia || []).length; i++) {
+    const r = griglia[i] || [];
+    const id = testo(r[G.Id]);
+    if (!id) continue; // tappa tolta
+    const lat = Number(r[G.Lat]);
+    const lng = Number(r[G.Lng]);
+    tappe.push({
+      riga: i + 1, id, giorno: testo(r[G.Giorno]), ora: testo(r[G.Ora]), chi: testo(r[G.Chi]).toLowerCase(),
+      lavoro: testo(r[G.Lavoro]), codice: testo(r[G.Codice]).toUpperCase(), contatto: testo(r[G.Contatto]),
+      nome: testo(r[G.Nome]), indirizzo: testo(r[G.Indirizzo]), citta: testo(r[G.Città]), telefono: testo(r[G.Telefono]),
+      note: testo(r[G.Note]), lat: r[G.Lat] === '' || !isFinite(lat) ? null : lat, lng: r[G.Lng] === '' || !isFinite(lng) ? null : lng,
+      stato: testo(r[G.Stato]),
+    });
+  }
+  return { griglia, tappe };
+}
+
+// La tappa vecchia della colonna "Chi ci va", finché non diventa una riga.
+const idDaColonna = (codice) => `col-${codice}`;
+async function togliDaColonna(foglio, codice) {
+  const { griglia, mappa } = await leggiClienti(foglio);
+  if (!mappa.col.CHI) return;
+  const riga = trovaCliente(griglia, mappa, codice);
+  if (!testo((griglia[riga - 1] || [])[mappa.col.CHI - 1])) return;
+  await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(mappa.col.CHI)}${riga}`, values: [['']] }], 'RAW');
+}
+
+const riga16 = (t) => INTESTAZIONI_GIRI.map((h) => {
+  const v = { Id: t.id, Giorno: t.giorno, Ora: t.ora, Chi: nomePersona(t.chi), Lavoro: t.lavoro, Codice: t.codice, Contatto: t.contatto, Nome: t.nome,
+    Indirizzo: t.indirizzo, 'Città': t.citta, Telefono: t.telefono, Note: t.note, Lat: t.lat ?? '', Lng: t.lng ?? '', Stato: t.stato, 'Aggiunta il': t.aggiunta }[h];
+  return v == null ? '' : v;
+});
+
+// Aggiunge o cambia una tappa (stesso Id = stessa tappa). Restituisce la
+// tappa di prima per l'annulla (o null se è nuova: l'annulla la toglie).
+export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 'app' } = {}) {
+  const id = testo(dati.id);
+  if (!/^[\w-]{6,40}$/.test(id)) throw problema('Tappa non valida.');
+  const chi = testo(dati.chi).toLowerCase();
+  if (!persone.includes(chi)) throw problema('Scegli di chi è il giro.');
+  const lavoro = LAVORI.find((l) => normalizza(l) === normalizza(dati.lavoro)) || 'Altro';
+  const giorno = leggiDataUtente(dati.giorno);
+  if (!giorno) throw problema('Scegli il giorno della tappa.');
+  const serG = serialeDa(giorno.a, giorno.m, giorno.g);
+  const serOggi = serialeDa(...Object.values(oggi()));
+  if (serG < serOggi - 400 || serG > serOggi + 400) throw problema('Il giorno è troppo lontano: controlla la data.');
+  const ora = testo(dati.ora);
+  const oraOk = ora.match(/^(\d{1,2})[:.](\d{2})$/);
+  if (ora && !(oraOk && +oraOk[1] < 24 && +oraOk[2] < 60)) throw problema('Orario non valido.');
+  const codice = testo(dati.codice).toUpperCase();
+  if (codice && !/^C\d+$/.test(codice)) throw problema('Codice cliente non valido.');
+  const nome = testo(dati.nome).slice(0, 120);
+  if (!nome) throw problema('Manca il nome della tappa.');
+  const numero = (v) => (v === '' || v == null || !isFinite(Number(v)) ? null : Math.round(Number(v) * 1e6) / 1e6);
+  const lat = numero(dati.lat);
+  const lng = numero(dati.lng);
+  const tappa = {
+    id, giorno: testoData(giorno), ora: oraOk ? `${oraOk[1].padStart(2, '0')}:${oraOk[2]}` : '', chi, lavoro, codice,
+    contatto: testo(dati.contatto).slice(0, 120), nome, indirizzo: testo(dati.indirizzo).slice(0, 200), citta: testo(dati.citta).slice(0, 80),
+    telefono: testo(dati.telefono).slice(0, 80), note: testo(dati.note).slice(0, 300),
+    lat: lat != null && lat > 35 && lat < 48 ? lat : null, lng: lng != null && lng > 6 && lng < 19 ? lng : null,
+    stato: testo(dati.stato) === 'Fatta' ? 'Fatta' : '', aggiunta: `${testoData(oggi())} (${chiScrive})`,
+  };
+  const { griglia, tappe } = await leggiGiri(foglio);
+  const prima = tappe.find((t) => t.id === id) || null;
+  if (prima) {
+    tappa.aggiunta = testo((griglia[prima.riga - 1] || [])[G['Aggiunta il']]) || tappa.aggiunta;
+    await foglio.scrivi([{ range: `'${TAB_GIRI}'!A${prima.riga}:P${prima.riga}`, values: [riga16(tappa)] }], 'RAW');
+  } else {
+    await foglio.accodaRighe(TAB_GIRI, INTESTAZIONI_GIRI, [riga16(tappa)]);
+  }
+  // La tappa vecchia di "Chi ci va" ora è una riga: la colonna si svuota.
+  if (id.startsWith('col-') && codice) await togliDaColonna(foglio, codice).catch((err) => console.error('Chi ci va non svuotata:', err));
+  return { ok: true, tappa, annulla: prima ? { ...prima, riga: undefined } : { id, togli: true } };
+}
+
+// Toglie una tappa dal giro (la riga si svuota). L'annulla la rimette uguale.
+export async function togliTappa(foglio, { id }) {
+  const k = testo(id);
+  if (k.startsWith('col-')) {
+    await togliDaColonna(foglio, k.slice(4).toUpperCase());
+    return { ok: true, annulla: null };
+  }
+  const { tappe } = await leggiGiri(foglio);
+  const t = tappe.find((x) => x.id === k);
+  if (!t) return { ok: true, giaTolta: true, annulla: null };
+  await foglio.svuota(`'${TAB_GIRI}'!A${t.riga}:P${t.riga}`);
+  return { ok: true, annulla: { ...t, riga: undefined } };
+}
+
+// Le tappe di un cliente non ancora fatte, fino al giorno della manutenzione
+// fatta compreso: diventano «Fatta». Restituisce gli Id, per l'annulla.
+async function segnaTappeFatte(foglio, codice, serQuando) {
+  const { tappe } = await leggiGiri(foglio);
+  const fatte = tappe.filter((t) => t.codice === codice && !t.stato && (serialeDaCella(t.giorno) ?? Infinity) <= serQuando);
+  if (fatte.length) await foglio.scrivi(fatte.map((t) => ({ range: `'${TAB_GIRI}'!O${t.riga}`, values: [['Fatta']] })), 'RAW');
+  return fatte.map((t) => t.id);
+}
+async function rimettiTappe(foglio, ids) {
+  if (!Array.isArray(ids) || !ids.length) return;
+  const { tappe } = await leggiGiri(foglio);
+  const daRimettere = tappe.filter((t) => ids.includes(t.id) && t.stato === 'Fatta');
+  if (daRimettere.length) await foglio.scrivi(daRimettere.map((t) => ({ range: `'${TAB_GIRI}'!O${t.riga}`, values: [['']] })), 'RAW');
+}
+
+// ---------------------------------------------------------------------------
 //  Manutenzione fatta
 // ---------------------------------------------------------------------------
 
@@ -616,6 +769,8 @@ export async function segnaFatta(foglio, { codice, data, frequenza, pagamento },
   const avvisoPrima = await togliAvviso(foglio, mappa, riga, r, AVVISI);
   const chiPrima = col.CHI ? testo(r[col.CHI - 1]) : '';
   if (chiPrima) await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(col.CHI)}${riga}`, values: [['']] }], 'RAW');
+  // E le sue tappe nei giri fino a quel giorno sono fatte (20 ott 2026).
+  const tappeFatte = await segnaTappeFatte(foglio, testo(codice).toUpperCase(), serQuando).catch((err) => { console.error('Tappe non segnate:', err); return []; });
 
   return {
     ok: true,
@@ -623,7 +778,7 @@ export async function segnaFatta(foglio, { codice, data, frequenza, pagamento },
     fatta: testoData(quando),
     prossima: testoData(prossima),
     pagamento: pag,
-    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico, avvisoPrima, chiPrima },
+    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico, avvisoPrima, chiPrima, tappeFatte },
   };
 }
 
@@ -690,7 +845,7 @@ export async function impostaAvviso(foglio, { codice, avviso = '', motivo = '', 
   };
 }
 
-export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima, chiPrima }) {
+export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima, chiPrima, tappeFatte }) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const riga = trovaCliente(griglia, mappa, codice);
   const { col } = mappa;
@@ -728,6 +883,8 @@ export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaSc
   if (chiRimesso && mappa.col.CHI && /^[\p{L} ]+$/u.test(chiRimesso)) {
     await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(mappa.col.CHI)}${riga}`, values: [[chiRimesso]] }], 'RAW');
   }
+  // E le tappe dei giri tornano da fare.
+  await rimettiTappe(foglio, (Array.isArray(tappeFatte) ? tappeFatte : []).map(testo).filter((x) => /^[\w-]{6,40}$/.test(x))).catch((err) => console.error('Tappe non rimesse:', err));
   return { ok: true };
 }
 

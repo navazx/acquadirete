@@ -306,10 +306,9 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 
 /* ---- Giri del giorno, pagamenti, interventi fatti (19 ott 2026) ---- */
 .etichetta.chi-mio { background: var(--blu); color: #fff; }
-.chi-va { margin: 0 0 16px; }
-.chi-va > span { display: block; margin: 0 2px 6px; font-weight: 700; font-size: 18px; }
-.scelta.scelta-chi { grid-template-columns: .8fr 1.25fr 1fr; }
-.scelta.scelta-chi button { min-height: 52px; padding: 0 6px; font-size: 17px; }
+.scelta.scelta-chi { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+.scelta.scelta-giorno { grid-template-columns: 1fr 1fr 1.3fr; }
+.scelta.scelta-chi button, .scelta.scelta-giorno button { min-height: 52px; padding: 0 6px; font-size: 17px; }
 .btn.arancio { background: var(--arancio-chiaro); color: var(--arancio); box-shadow: inset 0 0 0 2px var(--arancio); }
 .btn.scelto { color: var(--blu-scuro); box-shadow: inset 0 0 0 3px var(--blu); }
 .finestra .domanda { margin: 14px 0 0; font-size: 21px; font-weight: 700; color: var(--testo); }
@@ -325,7 +324,30 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .tappa .voce { box-shadow: none; border-radius: 0; }
 .numero { display: inline-grid; place-items: center; min-width: 28px; height: 28px; margin-right: 8px; border-radius: 50%; background: var(--blu); color: #fff; font-size: 15px; vertical-align: 2px; }
 .numero.suo { background: var(--grigio); }
-.tappa-azioni { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 0 12px 12px; }
-.tappa-azioni .btn { min-height: 48px; padding: 6px 14px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--linea); }
+.tappa-azioni { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; padding: 0 12px 12px; }
+.tappa-azioni.senza-passa { grid-template-columns: 1fr auto; }
+.tappa-azioni .btn { min-height: 48px; padding: 6px 12px; font-size: 17px; white-space: nowrap; box-shadow: inset 0 0 0 2px var(--linea); }
 .apri-giro { width: 100%; margin-top: 10px; }
 .giro-altro { margin: 8px 0 0; color: var(--grigio); font-size: 15px; }
+/* Giri per giorno, orari e lavori (20 ott 2026). */
+.giorni { display: grid; grid-template-columns: 56px 1fr 56px; gap: 8px; align-items: center; }
+.giorni .btn { min-height: 56px; padding: 0; }
+.giorno-scelto { text-align: center; line-height: 1.2; }
+.giorno-scelto b { display: block; font-size: 22px; }
+.giorno-scelto small { color: var(--grigio); font-size: 15px; }
+.vai-giorno { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; color: var(--grigio); font-size: 15px; }
+.vai-giorno input { margin-left: 6px; min-height: 40px; padding: 0 8px; border: 2px solid var(--linea); border-radius: 10px; background: var(--carta); font-size: 16px; }
+.ora { margin-right: 8px; color: var(--blu-scuro); }
+.nota-tappa { color: var(--testo) !important; font-style: italic; }
+.tappe-scheda { display: grid; gap: 8px; margin: 0 0 16px; }
+.tappa-riga { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-radius: 14px; background: var(--blu-chiaro); color: var(--blu-scuro); font-size: 16px; font-weight: 600; }
+.tappa-riga span { display: flex; align-items: center; gap: 6px; }
+.etichetta.lavoro-guasto { background: var(--rosso-chiaro); color: var(--rosso); }
+.etichetta.lavoro-installazione { background: var(--verde-chiaro); color: var(--verde); }
+.etichetta.lavoro-sopralluogo { background: var(--arancio-chiaro); color: var(--arancio); }
+.etichetta.lavoro-altro { background: #edf0f3; color: var(--grigio); }
+.pin.tappa { background: var(--blu); }
+.finestra .pillole-lavoro { flex-wrap: wrap; overflow: visible; margin: 8px 0 0; padding: 0; }
+.finestra .campo-data { width: 100%; margin: 10px 0 0; min-height: 52px; padding: 0 14px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-size: 18px; }
+.finestra .campo { margin: 14px 0 0; }
+.vai-giorno label, .vai-giorno .link { white-space: nowrap; }

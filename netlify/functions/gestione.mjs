@@ -17,7 +17,7 @@ import { timingSafeEqual, createHash } from 'node:crypto';
 import {
   leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
-  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, creaFoglioGoogle,
+  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -78,7 +78,9 @@ const AZIONI = {
   nota: notaLead,
   posizioni: salvaPosizioni,
   pagamento: cambiaPagamento,
-  assegna: assegnaManutenzione,
+  assegna: assegnaManutenzione, // il giro del 19 ott, per i telefoni con l'app vecchia
+  tappa: salvaTappa,
+  togliTappa,
 };
 
 // creaFoglio è un parametro solo per il server di prova in locale

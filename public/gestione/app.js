@@ -91,6 +91,8 @@
     euro: '<path d="M17.5 6.5a6.5 6.5 0 1 0 0 11M4 10h9M4 14h9"/>',
     frecciaGiu: '<path d="M12 5v14M6 13l6 6 6-6"/>',
     frecciaSu: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+    frecciaSx: '<path d="M15 5l-7 7 7 7"/>',
+    frecciaDx: '<path d="M9 5l7 7-7 7"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -215,7 +217,7 @@
         applicaInAttesa(r.clienti);
         const nuovi = {
           oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati,
-          storico: r.storico || [], io: r.io || '', persone: r.persone || [],
+          storico: r.storico || [], io: r.io || '', persone: r.persone || [], tappe: r.tappe || [],
         };
         // Le azioni ancora in coda: il foglio non le ha, lo schermo sì.
         for (const v of leggiLista(K_CODA)) if (APPLICA[v.azione]) APPLICA[v.azione](nuovi, v.dati);
@@ -381,9 +383,6 @@
   const altri = () => ((dati && dati.persone) || []).filter((p) => p !== io());
   const nomeChi = (k) => (k ? k.charAt(0).toUpperCase() + k.slice(1) : '');
   const daChi = (k) => (k === io() ? 'da te' : `da ${nomeChi(k)}`);
-  const etichettaChi = (c) => (!c.chiVa ? ''
-    : c.chiVa === io() ? '<span class="etichetta chi-mio">Nel tuo giro</span>'
-      : `<span class="etichetta">Nel giro di ${esc(nomeChi(c.chiVa))}</span>`);
 
   // Dopo «Manutenzione fatta» l'app chiede come ha pagato. «Da risentire» =
   // non ha ancora pagato: si ritrova negli Interventi fatti, e quando paga si
@@ -456,7 +455,7 @@
     titolo('Acquadirete', false);
     const { scadute, presto, urgenti } = contaScadenze();
     // Le tappe dei giri: le tue e quelle dell'altro.
-    const tappe = (p) => dati.clienti.filter((c) => c.chiVa === p).length;
+    const tappe = (p) => tappeDel(oggiTesto(), p).length;
     const quante = (n) => (n === 0 ? 'nessuna tappa' : n === 1 ? '1 tappa' : `${n} tappe`);
     const giri = io() ? [`${quante(tappe(io()))} per te`, ...altri().map((p) => `${quante(tappe(p))} per ${nomeChi(p)}`)] : [];
     const qualcuna = io() && [io(), ...altri()].some((p) => tappe(p));
@@ -540,9 +539,9 @@
     } else if (c.avviso) {
       const mo = leggiMotivo(c);
       const etichetta = c.avviso === 'Urgente' ? `<span class="etichetta rosso">Urgente${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>` : `<span class="etichetta grigio">Sospesa${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>`;
-      riga3 = `<span class="riga3">${etichetta}${etichettaChi(c)}</span>${mo.perche ? `<span class="riga2" style="color:var(--testo)">${esc(mo.perche)}</span>` : ''}`;
+      riga3 = `<span class="riga3">${etichetta}${etichettaGiro(c)}</span>${mo.perche ? `<span class="riga2" style="color:var(--testo)">${esc(mo.perche)}</span>` : ''}`;
     } else if (conScadenza) {
-      riga3 = `<span class="riga3"><span class="etichetta ${s.classe}">${esc(s.testo)}</span>${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaChi(c)}</span>`;
+      riga3 = `<span class="riga3"><span class="etichetta ${s.classe}">${esc(s.testo)}</span>${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaGiro(c)}</span>`;
     }
     return `<button class="voce" data-codice="${esc(c.codice)}">
       <b>${esc(c.nome)}</b>
@@ -925,13 +924,11 @@
   // Distanza "a volo d'uccello" in gradi corretti: basta per confrontare.
   const distanza = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((a.lat + b.lat) * Math.PI / 360), b.lat - a.lat);
 
-  // Ordina le tappe come un giro che parte da `casa` e ci torna: prima la
-  // più vicina ogni volta, poi si sciolgono gli incroci (2-opt). Le tappe
-  // senza posizione restano in fondo.
-  function ordinaGiro(codici, casa = SEDE) {
-    const conPosto = codici.map(clienteDa).filter((c) => c && c.lat != null);
-    const senza = codici.filter((k) => !conPosto.some((c) => c.codice === k));
-    const resto = conPosto.slice();
+  // Ordina dei punti ({ lat, lng }) come un giro che parte da `casa` e ci
+  // torna: prima il più vicino ogni volta, poi si sciolgono gli incroci
+  // (2-opt). Si parte dal punto più vicino a casa.
+  function ordinaPunti(punti, casa = SEDE) {
+    const resto = punti.slice();
     const percorso = [casa];
     while (resto.length) {
       const qui = percorso[percorso.length - 1];
@@ -953,27 +950,106 @@
     // L'anello è lungo uguale nei due versi: si parte dalla tappa più vicina a casa.
     const tappe = percorso.slice(1, -1);
     if (tappe.length > 1 && distanza(casa, tappe[0]) > distanza(casa, tappe[tappe.length - 1])) tappe.reverse();
-    return [...tappe.map((c) => c.codice), ...senza];
+    return tappe;
   }
-  // I codici del giro di `p`, in ordine.
-  const giroDi = (p) => (p ? ordinaGiro(dati.clienti.filter((c) => c.chiVa === p).map((c) => c.codice), partenzaDi(p)) : []);
 
-  // Mette il cliente nel giro di `a` ('' = in nessuno), dalla mappa, dalla
-  // scheda o dalla pagina dei giri. Torna true se l'ha fatto.
-  async function spostaNelGiro(c, a) {
-    const prima = c.chiVa || '';
-    if (prima === a) return true;
-    if (a && dati.clienti.filter((x) => x.chiVa === a).length >= MAX_TAPPE) {
-      messaggio(`${a === io() ? 'Il tuo giro ha' : `Il giro di ${nomeChi(a)} ha`} già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
-      return false;
+  // ---------------------------------------------------------------------
+  //  Tappe dei giri (dal 20 ott 2026: lavori di ogni tipo, orari, giorni)
+  // ---------------------------------------------------------------------
+  // Una tappa è una riga della scheda "Giri" del foglio: giorno, ora
+  // (facoltativa), di chi è, che lavoro è, e chi si va a trovare (un cliente,
+  // un contatto o un indirizzo qualsiasi). Le tappe della colonna "Chi ci va"
+  // del 19 ott arrivano senza giorno: valgono per oggi.
+  const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
+  const oggiTesto = () => testoData(oggi());
+  const giornoDi = (t) => t.giorno || oggiTesto();
+  const serialeGiorno = (s) => { const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? serialeDa(+m[3], +m[2], +m[1]) : null; };
+  const testoGiorno = (ser) => testoData(daSeriale(ser));
+  // Le tappe da fare quel giorno; oggi anche quelle rimaste dai giorni prima.
+  function tappeDel(giorno, p) {
+    const s = serialeGiorno(giorno);
+    const oggiS = serialeOggi();
+    return (dati.tappe || []).filter((t) => {
+      if (t.stato || (p && t.chi !== p)) return false;
+      const g = serialeGiorno(giornoDi(t));
+      return s === oggiS ? g <= oggiS : g === s;
+    });
+  }
+  // Dove si va: il cliente (con la sua posizione e i suoi dati di oggi), o
+  // quello che è scritto nella tappa (contatto, indirizzo qualsiasi).
+  function luogoTappa(t) {
+    const c = t.codice && clienteIn(dati, t.codice);
+    if (c) return { nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, provincia: c.provincia, lat: c.lat, lng: c.lng, telefono: c.contatto, cliente: c };
+    return { nome: t.nome, indirizzo: t.indirizzo, citta: t.citta, provincia: '', lat: t.lat, lng: t.lng, telefono: t.telefono, cliente: null };
+  }
+  const puntoTappa = (t) => { const l = luogoTappa(t); return l.lat != null ? { lat: l.lat, lng: l.lng } : null; };
+  // Le tappe con l'ora vanno in fila per ora; quelle senza si infilano dove
+  // allungano meno il giro, da casa a casa; quelle senza posizione in fondo.
+  function ordinaTappe(lista, casa = SEDE) {
+    const conOra = lista.filter((t) => t.ora).sort((a, b) => a.ora.localeCompare(b.ora));
+    const senza = lista.filter((t) => !t.ora);
+    const libere = senza.filter(puntoTappa);
+    const inFondo = senza.filter((t) => !puntoTappa(t));
+    if (!conOra.length) return [...ordinaPunti(libere.map((t) => ({ t, ...puntoTappa(t) })), casa).map((x) => x.t), ...inFondo];
+    const seq = conOra.slice();
+    const d = (a, b) => (a && b ? distanza(a, b) : 0);
+    const punto = (i) => (i < 0 || i >= seq.length ? casa : puntoTappa(seq[i]));
+    // Prima le più lontane da casa: si mettono meglio quando il giro è ancora vuoto.
+    libere.sort((a, b) => distanza(casa, puntoTappa(b)) - distanza(casa, puntoTappa(a)));
+    // Prima di un appuntamento entro le 10 non c'è tempo per altro: lì non si infila niente.
+    const daQui = conOra[0].ora < '10:00' ? 1 : 0;
+    for (const t of libere) {
+      const p = puntoTappa(t);
+      let dove = daQui;
+      let costo = Infinity;
+      for (let i = daQui; i <= seq.length; i++) {
+        const c = d(punto(i - 1), p) + d(p, punto(i)) - d(punto(i - 1), punto(i));
+        if (c < costo) { costo = c; dove = i; }
+      }
+      seq.splice(dove, 0, t);
     }
-    const testo = a === io() ? 'Nel tuo giro' : a ? `Nel giro di ${nomeChi(a)}` : prima === io() ? 'Tolto dal tuo giro' : `Tolto dal giro di ${nomeChi(prima)}`;
+    return [...seq, ...inFondo];
+  }
+  // Il giro di `p` quel giorno (di default oggi), in ordine.
+  const giroDi = (p, giorno = oggiTesto()) => (p ? ordinaTappe(tappeDel(giorno, p), partenzaDi(p)) : []);
+  // Le tappe ancora da fare di un cliente o di un contatto, dalla più vicina.
+  const tappeDi = (filtro) => (dati.tappe || []).filter((t) => !t.stato && filtro(t))
+    .sort((a, b) => (serialeGiorno(giornoDi(a)) - serialeGiorno(giornoDi(b))) || a.ora.localeCompare(b.ora));
+  const chiaveLead = (l) => `${l.data}|${l.nome}`;
+  const nuovoId = () => `t${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  // «oggi», «domani», «lun 27/10», «rimasta dal 19/10».
+  const GIORNI = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+  function quandoTappa(t, conOra = true) {
+    const s = serialeGiorno(giornoDi(t));
+    const o = serialeOggi();
+    const g = daSeriale(s);
+    const giorno = s === o ? 'oggi' : s === o + 1 ? 'domani' : s < o ? `rimasta dal ${due(g.g)}/${due(g.m)}`
+      : `${GIORNI[new Date(Date.UTC(g.a, g.m - 1, g.g)).getUTCDay()]} ${due(g.g)}/${due(g.m)}`;
+    return conOra && t.ora ? `${giorno} alle ${t.ora}` : giorno;
+  }
+  const etichettaLavoro = (t) => `<span class="etichetta lavoro-${normalizza(t.lavoro || 'Altro')}">${esc(t.lavoro || 'Altro')}</span>`;
+  // «Nel tuo giro oggi alle 10:00» sulle voci dei clienti.
+  function etichettaGiro(c) {
+    const t = tappeDi((x) => x.codice === c.codice)[0];
+    if (!t) return '';
+    return `<span class="etichetta${t.chi === io() ? ' chi-mio' : ''}">${t.chi === io() ? 'Nel tuo giro' : `Giro di ${esc(nomeChi(t.chi))}`} ${esc(quandoTappa(t))}</span>`;
+  }
+
+  // Salva una tappa (nuova o cambiata) e lo dice, con «Annulla».
+  async function salvaLaTappa(t, testo) {
+    const prima = (dati.tappe || []).find((x) => x.id === t.id);
+    const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
     try {
-      const { r, voce } = await manda('assegna', { codice: c.codice, a }, `${testo}: ${c.nome}`);
-      if (r) { c.chiVa = r.chiVa; salvaDati(); }
-      messaggio(`${testo}: ${c.nome}` + (voce ? fuoriLinea(voce) : ''), {
-        durata: 8000,
-        azione: { testo: 'Annulla', fai: () => spostaNelGiro(clienteDa(c.codice) || c, prima).then(() => disegna(history.state)) },
+      const { r, voce } = await manda('tappa', t, testo);
+      if (r) { APPLICA.tappa(dati, r.tappa); salvaDati(); }
+      disegna(history.state);
+      const indietro = () => {
+        if (r.annulla && r.annulla.togli) return togliLaTappa(r.tappa, 'Annullato.');
+        return salvaLaTappa({ ...(prima || r.annulla) }, 'Annullato.');
+      };
+      messaggio(testo + (voce ? fuoriLinea(voce) : ''), {
+        durata: 10000,
+        azione: { testo: 'Annulla', fai: voce ? () => annullaInCoda(voce, () => { dati.tappe = fotoTappe; }) : indietro },
       });
       return true;
     } catch (err) {
@@ -981,24 +1057,42 @@
       return false;
     }
   }
+  async function togliLaTappa(t, testo = 'Tolta dal giro.') {
+    const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
+    try {
+      const { r, voce } = await manda('togliTappa', { id: t.id, codice: t.codice }, `Tolta dal giro: ${luogoTappa(t).nome}`);
+      if (r) { APPLICA.togliTappa(dati, { id: t.id, codice: t.codice }); salvaDati(); }
+      disegna(history.state);
+      const rimetti = voce ? () => annullaInCoda(voce, () => { dati.tappe = fotoTappe; })
+        : r.annulla ? () => salvaLaTappa({ ...r.annulla }, 'Rimessa nel giro.') : null;
+      messaggio(testo + (voce ? fuoriLinea(voce) : ''), { durata: 10000, azione: rimetti ? { testo: 'Annulla', fai: rimetti } : null });
+      return true;
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+      return false;
+    }
+  }
 
-  // «Svuota»: tutte le tappe di un giro fuori in una volta, dopo la conferma.
-  function chiediSvuota(p) {
-    const codici = dati.clienti.filter((c) => c.chiVa === p).map((c) => c.codice);
-    if (!codici.length) return;
+  // «Svuota»: tutte le tappe di quel giorno fuori, dopo la conferma.
+  function chiediSvuota(p, giorno) {
+    const lista = tappeDel(giorno, p);
+    if (!lista.length) return;
     apriFinestra(`
       <h3>Svuotare ${p === io() ? 'il tuo giro' : `il giro di ${esc(nomeChi(p))}`}?</h3>
-      <p>Tolgo ${codici.length === 1 ? 'la tappa' : `tutte le ${codici.length} tappe`}. I clienti restano fra le manutenzioni da fare.</p>
+      <p>Tolgo ${lista.length === 1 ? 'la tappa' : `tutte le ${lista.length} tappe`}. I clienti restano fra le manutenzioni da fare.</p>
       <button class="btn pieno grande" type="button" id="si">Sì, svuota</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     $('no').onclick = chiudiFinestra;
     $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
       try {
-        const { r, voce } = await manda('assegna', { codici, a: '' }, `Giro ${p === io() ? 'tuo' : `di ${nomeChi(p)}`} svuotato (${codici.length})`);
-        if (r) { APPLICA.assegna(dati, { codici, a: '' }); salvaDati(); }
+        for (const t of lista) {
+          const { r } = await manda('togliTappa', { id: t.id, codice: t.codice }, `Tolta dal giro: ${luogoTappa(t).nome}`);
+          if (r) APPLICA.togliTappa(dati, { id: t.id, codice: t.codice });
+        }
+        salvaDati();
         chiudiFinestra();
         disegna(history.state);
-        messaggio('Giro svuotato.' + (voce ? fuoriLinea(voce) : ''));
+        messaggio('Giro svuotato.');
       } catch (err) {
         messaggio(err.message, { errore: true, durata: 8000 });
       }
@@ -1010,9 +1104,12 @@
   // coordinate di OpenStreetMap); le coordinate se la posizione è segnata
   // sul posto («Sono qui»), o se l'indirizzo manca.
   function linkGiro(tappe) {
-    const dove = (c) => sulPosto(c) || (c.indirizzo
-      ? [c.indirizzo, senzaCap(c.citta) ? c.citta : '', c.provincia].filter(Boolean).join(', ')
-      : `${c.lat},${c.lng}`);
+    const dove = (t) => {
+      const l = luogoTappa(t);
+      return (l.cliente && sulPosto(l.cliente)) || (l.indirizzo
+        ? [l.indirizzo, senzaCap(l.citta) ? l.citta : '', l.provincia].filter(Boolean).join(', ')
+        : l.lat != null ? `${l.lat},${l.lng}` : senzaCap(l.citta));
+    };
     const q = new URLSearchParams({ api: '1', travelmode: 'driving', destination: dove(tappe[tappe.length - 1]) });
     if (tappe.length > 1) q.set('waypoints', tappe.slice(0, -1).map(dove).join('|'));
     return `https://www.google.com/maps/dir/?${q}`;
@@ -1044,21 +1141,25 @@
     const questa = ++turnoMappa;
     titolo('Mappa dei giri', true);
     const scelte = new Set(Array.isArray(stato.cat) ? stato.cat : CATEGORIE_DI_BASE);
-    // Il tuo giro (in ordine) e le tappe dei giri degli altri (codice → numero).
-    let giro = [];
-    let altrui = new Map();
-    const rileggiGiri = () => {
-      giro = giroDi(io());
-      altrui = new Map(altri().flatMap((p) => giroDi(p).map((k, i) => [k, i + 1])));
-    };
-    rileggiGiri();
+    // Le tappe di oggi: il tuo giro (in ordine) e quelle degli altri, ognuna
+    // col suo numero. Una tappa si riconosce dal cliente, o dal suo Id se è
+    // un contatto o un indirizzo qualsiasi.
+    const chiaveTappa = (t) => t.codice || t.id;
+    const giro = giroDi(io());
+    const numMio = new Map(giro.map((t, i) => [chiaveTappa(t), i + 1]));
+    const numSuo = new Map(altri().flatMap((p) => giroDi(p).map((t, i) => [chiaveTappa(t), i + 1])));
     const tutti = dati.clienti.map((c) => ({ c, cat: categoriaMappa(c) })).filter((x) => x.cat);
+    // Le tappe che non sono clienti (un contatto, un indirizzo) hanno un
+    // puntino loro, blu: un «cliente» finto con la tappa dentro.
+    [...giro, ...altri().flatMap((p) => giroDi(p))].filter((t) => !t.codice && t.lat != null).forEach((t) => {
+      tutti.push({ c: { codice: t.id, nome: t.nome, indirizzo: t.indirizzo, citta: t.citta, lat: t.lat, lng: t.lng, prec: 'via', finto: true, tappa: t }, cat: 'tappa' });
+    });
     // Il cliente aperto da «Sulla mappa» nella sua scheda (17 ott 2026) e le
     // tappe dei giri si vedono anche senza una manutenzione vicina: puntino
     // verde, «lontana». `centra` vale una volta sola (poi diventa `evid`), così
     // un aggiornamento in sottofondo non riporta la mappa su di lui.
     const evid = stato.centra || stato.evid || null;
-    [evid, ...dati.clienti.filter((c) => c.chiVa).map((c) => c.codice)].forEach((k) => {
+    [evid, ...[...numMio.keys(), ...numSuo.keys()].filter((k) => /^C\d+$/.test(k))].forEach((k) => {
       const c = k && clienteDa(k);
       if (c && !tutti.some((x) => x.c === c)) tutti.push({ c, cat: 'lontana' });
     });
@@ -1075,7 +1176,7 @@
 
     let L = null;
     let strato = null;
-    const nelGiro = (c) => giro.includes(c.codice);
+    const nelGiro = (c) => numMio.has(c.codice);
 
     function dimensiona() {
       const el = $('mappa');
@@ -1116,57 +1217,52 @@
     // L'elenco delle tappe sta chiuso (l'ordine si legge dai numeri sui
     // puntini): aperto ruberebbe mezza mappa.
     function disegnaGiro() {
-      const tappe = giro.map(clienteDa).filter(Boolean);
-      const nome = (c) => c.nome.split('/')[0].replace(/\(.*?\)/g, '').trim();
+      const tappe = giro;
+      const nome = (t) => luogoTappa(t).nome.split('/')[0].replace(/\(.*?\)/g, '').trim();
       // Una riga per il giro dell'altro (i suoi puntini sono chiari).
       const degliAltri = altri().map((p) => {
-        const n = dati.clienti.filter((c) => c.chiVa === p).length;
+        const n = tappeDel(oggiTesto(), p).length;
         return `<p class="giro-altro">Giro di ${esc(nomeChi(p))}: ${n === 1 ? '1 tappa' : `${n} tappe`}${n ? ' (puntini chiari)' : ''} · <button class="link" data-giri>Vedi i giri</button></p>`;
       }).join('');
       $('giro').innerHTML = (tappe.length
-        ? `<div class="giro-testa"><b>Il tuo giro: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
+        ? `<div class="giro-testa"><b>Il tuo giro di oggi: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
             <span><button class="link" id="elenco-giro">${elencoGiroAperto ? 'Chiudi elenco' : 'Elenco'}</button><button class="link" id="svuota-giro">Svuota</button></span></div>
-          ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((c, i) => `<span><b>${i + 1}</b>${esc(nome(c))} <i>${esc(titoloCitta(c.citta))}</i></span>`).join('')}</p>` : ''}
+          ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((t, i) => `<span><b>${i + 1}</b>${t.ora ? `${esc(t.ora)} ` : ''}${esc(nome(t))} <i>${esc(titoloCitta(luogoTappa(t).citta))}</i></span>`).join('')}</p>` : ''}
           <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il tuo giro in Google Maps</a>`
-        : `<p class="giro-vuoto">Tocca un puntino e poi «Nel mio giro». Le tappe si mettono in ordine da sole, partendo da ${esc(partenzaDi(io()).nome)}.</p>`) + degliAltri;
-      if ($('svuota-giro')) $('svuota-giro').onclick = () => chiediSvuota(io());
+        : `<p class="giro-vuoto">Tocca un puntino e poi «Aggiungi al giro». Le tappe senza ora si mettono in ordine da sole, partendo da ${esc(partenzaDi(io()).nome)}.</p>`) + degliAltri;
+      if ($('svuota-giro')) $('svuota-giro').onclick = () => chiediSvuota(io(), oggiTesto());
       if ($('elenco-giro')) $('elenco-giro').onclick = () => { elencoGiroAperto = !elencoGiroAperto; disegnaGiro(); };
       $('giro').querySelectorAll('[data-giri]').forEach((b) => { b.onclick = () => vai({ s: 'giri' }); });
       dimensiona();
     }
 
     function popup(c) {
+      // Una tappa che non è un cliente (contatto, indirizzo qualsiasi).
+      if (c.finto) {
+        const t = c.tappa;
+        return `<div class="popup-cliente">
+          <b>${esc(t.nome)}</b>
+          <span>${esc([t.indirizzo, titoloCitta(t.citta)].filter(Boolean).join(', '))}</span>
+          <span class="riga3">${etichettaLavoro(t)}<span class="etichetta${t.chi === io() ? ' chi-mio' : ''}">${t.chi === io() ? 'Nel tuo giro' : `Giro di ${esc(nomeChi(t.chi))}`} ${esc(quandoTappa(t))}</span></span>
+          <div class="popup-azioni"><button class="btn pieno" data-giro="modifica">Cambia la tappa</button>
+            ${t.contatto ? '<button class="btn" data-azione="contatto">Apri il contatto</button>' : ''}</div>
+        </div>`;
+      }
       const s = scadenza(c);
       const etichetta = c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>'
         : c.avviso === 'Sospesa' ? '<span class="etichetta grigio">Sospesa</span>'
         : `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>`;
+      const suaTappa = tappeDi((t) => t.codice === c.codice)[0];
       return `<div class="popup-cliente">
         <b>${esc(c.nome)}</b>
         <span>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', '))}</span>
-        <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaChi(c)}</span>
+        <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaGiro(c)}</span>
         ${c.tipo ? `<span class="tipo">${esc(c.tipo)}</span>` : ''}
         ${c.prec === 'paese' ? '<small>Posizione approssimativa: centro del paese. Quando sei lì, «Sono qui» nella scheda la sistema.</small>' : ''}
-        <div class="popup-azioni">${azioniGiro(c)}
+        <div class="popup-azioni">${!io() ? '' : suaTappa ? '<button class="btn" data-giro="modifica">Cambia la tappa</button>' : '<button class="btn pieno" data-giro="aggiungi">Aggiungi al giro</button>'}
           <button class="btn" data-azione="scheda">Apri la scheda</button>
         </div>
       </div>`;
-    }
-    // Nel tuo giro: toglierlo o passarlo all'altro. In quello dell'altro:
-    // prenderlo tu o toglierlo. In nessuno: nel tuo o in quello dell'altro.
-    function azioniGiro(c) {
-      const b = (a, testo, pieno) => `<button class="btn${pieno ? ' pieno' : ''}" data-giro="${esc(a)}">${esc(testo)}</button>`;
-      if (!io()) return '';
-      if (c.chiVa === io()) return b('', 'Togli dal mio giro') + altri().map((p) => b(p, `Passa a ${nomeChi(p)}`)).join('');
-      if (c.chiVa) return b(io(), 'Lo prendo io', true) + b('', `Togli dal giro di ${nomeChi(c.chiVa)}`);
-      return b(io(), 'Nel mio giro', true) + altri().map((p) => b(p, `Nel giro di ${nomeChi(p)}`)).join('');
-    }
-
-    async function cambiaGiro(c, a) {
-      mappaAttiva.closePopup();
-      if (!(await spostaNelGiro(c, a)) || !mappaAttiva) return;
-      rileggiGiri();
-      disegnaGiro();
-      disegnaPuntini();
     }
 
     function disegnaPuntini() {
@@ -1175,12 +1271,12 @@
       segni.clear();
       // Le tappe del giro e il cliente cercato si vedono sempre, anche se la
       // loro categoria è spenta.
-      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || nelGiro(x.c) || altrui.has(x.c.codice) || evidenziato(x.c))));
+      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || x.cat === 'tappa' || nelGiro(x.c) || numSuo.has(x.c.codice) || evidenziato(x.c))));
       visibili.forEach((x) => {
-        const n = giro.indexOf(x.c.codice);
+        const n = (numMio.get(x.c.codice) || 0) - 1;
         const ev = evidenziato(x.c);
         // Le tappe del giro dell'altro: col loro numero, ma più chiare.
-        const suo = altrui.get(x.c.codice);
+        const suo = n < 0 && numSuo.get(x.c.codice);
         const classi = ['pin', x.cat, x.c.prec === 'paese' ? 'circa' : '', n >= 0 ? 'nel-giro' : '', suo ? 'altrui' : '', ev ? 'evidenziato' : ''].filter(Boolean).join(' ');
         const testo = n >= 0 ? String(n + 1) : suo ? String(suo) : x.cat === 'urgenti' ? '!' : '';
         const lato = ev ? 36 : x.cat === 'urgenti' || n >= 0 || suo ? 32 : 26;
@@ -1194,8 +1290,18 @@
         segno.bindPopup(() => popup(x.c), { maxWidth: 280, minWidth: 220, autoPanPaddingTopLeft: [16, 64], autoPanPaddingBottomRight: [16, 16] });
         segno.on('popupopen', (e) => {
           const el = e.popup.getElement();
-          el.querySelectorAll('[data-giro]').forEach((b) => { b.onclick = () => cambiaGiro(x.c, b.dataset.giro); });
-          el.querySelector('[data-azione="scheda"]').onclick = () => vai({ s: 'cliente', codice: x.c.codice });
+          el.querySelectorAll('[data-giro]').forEach((b) => {
+            b.onclick = () => {
+              mappaAttiva.closePopup();
+              if (x.c.finto) chiediTappa({ tappa: x.c.tappa });
+              else if (b.dataset.giro === 'modifica') chiediTappa({ tappa: tappeDi((t) => t.codice === x.c.codice)[0] });
+              else chiediTappa({ cliente: x.c });
+            };
+          });
+          const scheda = el.querySelector('[data-azione="scheda"]');
+          if (scheda) scheda.onclick = () => vai({ s: 'cliente', codice: x.c.codice });
+          const contatto = el.querySelector('[data-azione="contatto"]');
+          if (contatto) contatto.onclick = () => apriLeadDaChiave(x.c.tappa.contatto);
         });
         segno.addTo(strato);
       });
@@ -1404,12 +1510,7 @@
         <div>Prossima manutenzione<br><span>${esc(c.prossima || 'non segnata')}</span></div>
         <div style="text-align:right">${esc(s.testo)}</div>
       </div>
-      ${io() ? `
-      <div class="chi-va">
-        <span>Nel giro di</span>
-        <div class="scelta scelta-chi">${[[io(), 'Il mio'], ...altri().map((p) => [p, `Di ${nomeChi(p)}`]), ['', 'Nessuno']]
-          .map(([k, t]) => `<button type="button" data-chi="${esc(k)}" aria-pressed="${(c.chiVa || '') === k}">${esc(t)}</button>`).join('')}</div>
-      </div>` : ''}
+      ${io() ? riquadroTappe(tappeDi((t) => t.codice === c.codice)) : ''}
       <button class="btn verde grande" id="fatta" style="width:100%">${icona('spunta')} Manutenzione fatta</button>
       ${daFare ? `<button class="btn" id="rimanda" style="width:100%;margin-top:10px">${icona('orologio')} Rimanda la manutenzione</button>` : ''}
       ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Ha un guasto: è urgente</button>` : ''}
@@ -1438,9 +1539,7 @@
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
     if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
-    schermo.querySelectorAll('.scelta-chi [data-chi]').forEach((b) => {
-      b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => { if (await spostaNelGiro(c, b.dataset.chi)) disegna(history.state); });
-    });
+    collegaTappe({ cliente: c });
     collegaInterventi();
   }
 
@@ -1576,6 +1675,15 @@
   const clienteIn = (d, codice) => d.clienti.find((x) => x.codice === codice) || (d.persi || []).find((x) => x.codice === codice);
   const leadIn = (d, x) => d.lead.find((l) => l.data === x.data && l.nome === x.nome) || d.lead.find((l) => String(l.riga) === String(x.riga));
   const conProssima = (c, g) => { c.prossima = testoData(g); c.prossimaSeriale = serialeDa(g.a, g.m, g.g); };
+  // Fatta la manutenzione, le tappe del cliente fino a quel giorno sono fatte (come fa il motore).
+  const chiudiTappe = (d, codice, g) => {
+    const fattaS = serialeDa(g.a, g.m, g.g);
+    (d.tappe || []).forEach((t) => {
+      if (t.codice !== codice || t.stato) return;
+      const s = t.giorno ? serialeGiorno(t.giorno) : serialeOggi();
+      if (s != null && s <= fattaS) t.stato = 'Fatta';
+    });
+  };
   // L'intervento appena segnato, nello storico del telefono (una volta sola).
   const nelloStorico = (d, x, c) => {
     const data = testoData(daIso(x.data));
@@ -1596,6 +1704,21 @@
       c.motivo = '';
       c.chiVa = '';
       nelloStorico(d, x, c);
+      chiudiTappe(d, x.codice, g);
+    },
+    tappa(d, x) {
+      d.tappe = d.tappe || [];
+      const giorno = daIso(x.giorno) ? testoData(daIso(x.giorno)) : x.giorno;
+      const t = { ...x, giorno, chi: String(x.chi || '').toLowerCase() };
+      delete t.vecchia;
+      const i = d.tappe.findIndex((y) => y.id === x.id);
+      if (i >= 0) d.tappe[i] = t; else d.tappe.push(t);
+      // Una tappa della colonna «Chi ci va» diventa una riga: la colonna si svuota.
+      if (String(x.id).startsWith('col-')) { const c = clienteIn(d, x.codice); if (c) c.chiVa = ''; }
+    },
+    togliTappa(d, x) {
+      d.tappe = (d.tappe || []).filter((t) => t.id !== x.id);
+      if (String(x.id).startsWith('col-')) { const c = clienteIn(d, x.codice); if (c) c.chiVa = ''; }
     },
     pagamento(d, x) {
       const s = (d.storico || []).find((v) => v.codice === x.codice && v.data === x.data);
@@ -1990,9 +2113,11 @@
       try {
         // Lo schermo torna com'era: il cliente e lo storico del telefono.
         const ripristinaCliente = fotografia(c);
+        const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
         const ripristina = () => {
           ripristinaCliente();
           dati.storico = (dati.storico || []).filter((s) => !(s.codice === c.codice && s.riga == null));
+          dati.tappe = fotoTappe;
         };
         // Sempre col giorno: se parte domani (senza campo) resta quello di oggi.
         const fattaIl = giorno || oggi();
@@ -2010,6 +2135,7 @@
           c.motivo = '';
           c.chiVa = '';
           if (!r.giaSegnata) nelloStorico(dati, datiFatta, c);
+          chiudiTappe(dati, c.codice, fattaIl);
           salvaDati();
         }
         disegna(history.state);
@@ -2048,60 +2174,266 @@
   // ---------------------------------------------------------------------
   //  Giro del giorno
   // ---------------------------------------------------------------------
-  // Il tuo giro e quello dell'altro, uno sotto l'altro, con un tasto per
-  // passare una tappa dall'uno all'altro (19 ott 2026, Matteo: «i clienti
+  // Il giro di ognuno, giorno per giorno (19 ott 2026, Matteo: «i clienti
   // che decido di fare io e quelli del babbo, e un pulsante per spostarli
-  // dalla mia alla sua lista e viceversa»). Le tappe si aggiungono dalla
-  // mappa o dalla scheda; fatta la manutenzione, la tappa esce dal giro e
-  // compare fra le «Fatte oggi».
-  function schermoGiri() {
+  // dalla mia alla sua lista e viceversa»; 20 ott: «anche lavori che non
+  // sono le manutenzioni scadute, tipo un guasto, una nuova installazione,
+  // un sopralluogo, e nel giro gli orari»). Oggi comprende anche le tappe
+  // rimaste dai giorni prima, finché non si fanno o si tolgono.
+  function schermoGiri(stato) {
     titolo('Giro del giorno', true);
-    const oggiTesto = testoData(oggi());
-    const fatteOggi = interventi().filter((x) => x.data === oggiTesto);
+    const o = serialeOggi();
+    const ser = serialeGiorno(stato.giorno) ?? o;
+    const giorno = testoGiorno(ser);
+    const g = daSeriale(ser);
+    const nomeGiorno = ser === o ? 'Oggi' : ser === o + 1 ? 'Domani' : ser === o - 1 ? 'Ieri'
+      : `${GIORNI[new Date(Date.UTC(g.a, g.m - 1, g.g)).getUTCDay()]} ${g.g} ${MESI[g.m - 1]}`;
+    const fatte = (dati.tappe || []).filter((t) => t.stato === 'Fatta' && giornoDi(t) === giorno);
+    // Le manutenzioni segnate quel giorno senza una tappa (dallo storico).
+    const fatteSenzaTappa = interventi().filter((x) => x.data === giorno && !fatte.some((t) => t.codice === x.codice));
     const sezione = (p) => {
-      const tappe = giroDi(p).map(clienteDa).filter(Boolean);
+      const tappe = giroDi(p, giorno);
       const mio = p === io();
       return `
         <div class="testa-giro"><h2 class="gruppo">${mio ? 'Il tuo giro' : `Giro di ${esc(nomeChi(p))}`} (${tappe.length})</h2>
           ${tappe.length ? `<button class="link" type="button" data-svuota="${esc(p)}">Svuota</button>` : ''}</div>
-        ${tappe.length ? `<div class="lista">${tappe.map((c, i) => voceTappa(c, i, p)).join('')}</div>
+        ${tappe.length ? `<div class="lista">${tappe.map((t, i) => voceTappa(t, i, p)).join('')}</div>
           <a class="btn${mio ? ' pieno' : ''} apri-giro" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} ${mio ? 'Apri il tuo giro in Google Maps' : `Apri il giro di ${esc(nomeChi(p))} in Google Maps`}</a>`
         : `<div class="vuoto">${mio ? 'Nessuna tappa nel tuo giro.' : `Nessuna tappa nel giro di ${esc(nomeChi(p))}.`}</div>`}`;
     };
     schermo.innerHTML = `
-      <p class="spiega">Le tappe si mettono in ordine da sole: ${[io(), ...altri()].map((p) => `${p === io() ? 'il tuo giro' : `quello di ${esc(nomeChi(p))}`} parte da ${esc(partenzaDi(p).nome)}`).join(', ')}. Fatta la manutenzione, la tappa esce dal giro.</p>
-      <button class="btn vai-mappa" id="vai-mappa" type="button">${icona('cartina')} Aggiungi tappe dalla mappa</button>
+      <div class="giorni">
+        <button class="btn" type="button" data-giorno="${ser - 1}" aria-label="Il giorno prima">${icona('frecciaSx')}</button>
+        <div class="giorno-scelto"><b>${esc(nomeGiorno)}</b><small>${esc(giorno)}</small></div>
+        <button class="btn" type="button" data-giorno="${ser + 1}" aria-label="Il giorno dopo">${icona('frecciaDx')}</button>
+      </div>
+      <div class="vai-giorno">
+        ${ser !== o ? `<button class="link" type="button" data-giorno="${o}">Torna a oggi</button>` : '<span></span>'}
+        <label>Vai al giorno <input type="date" id="vai-giorno" value="${isoDa(g)}"></label>
+      </div>
+      <button class="btn pieno" id="nuova-tappa" type="button" style="width:100%;margin:12px 0 4px">${icona('piu')} Aggiungi una tappa</button>
+      <p class="spiega">Le tappe con l'ora vanno in fila per ora; le altre si infilano dove allungano meno il giro, mai prima di un appuntamento entro le 10 (${[io(), ...altri()].map((p) => `${p === io() ? 'il tuo' : `quello di ${esc(nomeChi(p))}`} parte da ${esc(partenzaDi(p).nome)}`).join(', ')}).</p>
       ${[io(), ...altri()].map(sezione).join('')}
-      ${fatteOggi.length ? `<h2 class="gruppo">Fatte oggi (${fatteOggi.length})</h2><div class="lista">${fatteOggi.map((x) => voceIntervento(x)).join('')}</div>` : ''}`;
-    $('vai-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE });
-    collegaVoci();
+      ${fatte.length || fatteSenzaTappa.length ? `<h2 class="gruppo">Fatte ${ser === o ? 'oggi' : 'quel giorno'} (${fatte.length + fatteSenzaTappa.length})</h2>
+        <div class="lista">${fatte.map(voceFatta).join('')}${fatteSenzaTappa.map((x) => voceIntervento(x)).join('')}</div>` : ''}`;
+    const vaiAl = (s) => { history.replaceState({ s: 'giri', giorno: testoGiorno(s) }, '', location.pathname + location.hash); disegna(history.state); };
+    schermo.querySelectorAll('[data-giorno]').forEach((b) => { b.onclick = () => vaiAl(+b.dataset.giorno); });
+    $('vai-giorno').onchange = (e) => { const d = daIso(e.target.value); if (d) vaiAl(serialeDa(d.a, d.m, d.g)); };
+    $('nuova-tappa').onclick = () => chiediCosaAlGiro(giorno);
+    schermo.querySelectorAll('[data-svuota]').forEach((b) => { b.onclick = () => chiediSvuota(b.dataset.svuota, giorno); });
+    collegaTappe({});
     collegaInterventi();
-    schermo.querySelectorAll('[data-svuota]').forEach((b) => { b.onclick = () => chiediSvuota(b.dataset.svuota); });
-    schermo.querySelectorAll('[data-tappa]').forEach((b) => {
-      b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
-        const c = clienteDa(b.dataset.tappa);
-        if (c && await spostaNelGiro(c, b.dataset.sposta)) disegna(history.state);
-      });
-    });
   }
 
-  // Una tappa: tocchi il nome e apri la scheda; sotto, passarla all'altro
-  // (o prenderla tu) e toglierla.
-  function voceTappa(c, i, p) {
-    const s = scadenza(c);
-    const posto = [c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ');
-    const tasto = (a, testo, ico) => `<button class="btn" type="button" data-tappa="${esc(c.codice)}" data-sposta="${esc(a)}">${ico ? icona(ico) : ''} ${esc(testo)}</button>`;
-    const sposta = p === io()
-      ? altri().map((q) => tasto(q, `Passa a ${nomeChi(q)}`, 'frecciaGiu')).join('')
-      : tasto(io(), 'Lo prendo io', 'frecciaSu');
+  // Una tappa: tocchi il nome e apri la scheda; sotto, «Fatto», passarla
+  // all'altro (o prenderla tu) e cambiarla (giorno, ora, lavoro, togli).
+  function voceTappa(t, i, p) {
+    const l = luogoTappa(t);
+    const c = l.cliente;
+    const s = c ? scadenza(c) : null;
+    const posto = [l.indirizzo, titoloCitta(l.citta)].filter(Boolean).join(', ');
+    const mio = p === io();
+    const altro = altri()[0];
+    const rimasta = (serialeGiorno(giornoDi(t)) ?? 0) < serialeOggi();
+    const etichette = [
+      etichettaLavoro(t),
+      c && c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>' : '',
+      c && t.lavoro === 'Manutenzione' && !c.avviso ? `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>` : '',
+      !c && t.contatto ? '<span class="etichetta grigio">Contatto</span>' : '',
+      rimasta ? `<span class="etichetta arancio">${esc(quandoTappa(t, false))}</span>` : '',
+      l.lat == null ? '<span class="etichetta grigio">Non è sulla mappa</span>' : '',
+    ].join('');
     return `<div class="tappa">
-      <button class="voce" data-codice="${esc(c.codice)}">
-        <b><span class="numero${p === io() ? '' : ' suo'}">${i + 1}</span>${esc(c.nome)}</b>
-        <span class="riga2">${esc(posto || '—')}${c.tipo ? ' · ' + esc(c.tipo) : ''}</span>
-        <span class="riga3">${c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>' : `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>`}${c.lat == null ? '<span class="etichetta grigio">Non è sulla mappa</span>' : ''}</span>
+      <button class="voce" type="button" data-tappa-apri="${esc(t.id)}">
+        <b><span class="numero${mio ? '' : ' suo'}">${i + 1}</span>${t.ora ? `<span class="ora">${esc(t.ora)}</span>` : ''}${esc(l.nome)}</b>
+        <span class="riga2">${esc(posto || '—')}${c && c.tipo ? ' · ' + esc(c.tipo) : ''}</span>
+        <span class="riga3">${etichette}</span>
+        ${t.note ? `<span class="riga2 nota-tappa">${esc(t.note)}</span>` : ''}
       </button>
-      <div class="tappa-azioni">${sposta}${tasto('', 'Togli')}</div>
+      <div class="tappa-azioni${altro || !mio ? '' : ' senza-passa'}">
+        <button class="btn" type="button" data-tappa-fatta="${esc(t.id)}">${icona('spunta')} Fatto</button>
+        ${mio && altro ? `<button class="btn" type="button" data-tappa-passa="${esc(t.id)}" data-a="${esc(altro)}">${icona('frecciaGiu')} A ${esc(nomeChi(altro))}</button>` : ''}
+        ${!mio ? `<button class="btn" type="button" data-tappa-passa="${esc(t.id)}" data-a="${esc(io())}">${icona('frecciaSu')} Lo prendo io</button>` : ''}
+        <button class="btn" type="button" data-tappa-cambia="${esc(t.id)}" aria-label="Cambia la tappa">${icona('matita')}</button>
+      </div>
     </div>`;
+  }
+  function voceFatta(t) {
+    const l = luogoTappa(t);
+    return `<button class="voce" type="button" data-tappa-apri="${esc(t.id)}">
+      <b>${esc(l.nome)}</b>
+      <span class="riga2">${esc(t.lavoro || 'Altro')} · fatta ${esc(daChi(t.chi))}</span>
+      <span class="riga3"><span class="etichetta verde">Fatto ✓</span></span>
+    </button>`;
+  }
+
+  // Nella scheda del cliente o del contatto: in quali giri è, e il tasto per aggiungerlo.
+  function riquadroTappe(lista) {
+    return `<div class="tappe-scheda">
+      ${lista.map((t) => `<div class="tappa-riga">
+        <span>${icona('cartina')} ${t.chi === io() ? 'Nel tuo giro' : `Nel giro di ${esc(nomeChi(t.chi))}`} ${esc(quandoTappa(t))} · ${esc(t.lavoro || 'Altro')}</span>
+        <button class="link" type="button" data-tappa-cambia="${esc(t.id)}">Cambia</button>
+      </div>`).join('')}
+      <button class="btn" type="button" id="al-giro" style="width:100%">${icona('cartina')} ${lista.length ? 'Aggiungi un\'altra tappa' : 'Aggiungi al giro'}</button>
+    </div>`;
+  }
+
+  const leadDaChiave = (k) => dati.lead.find((l) => chiaveLead(l) === k);
+  function apriLeadDaChiave(k) {
+    const l = leadDaChiave(k);
+    if (l) vai({ s: 'schedaLead', id: idLead(l) });
+    else messaggio('Questo contatto non c\'è più fra i contatti.', { errore: true });
+  }
+  function apriTappa(t) {
+    if (!t) return;
+    if (t.codice && clienteIn(dati, t.codice)) vai({ s: 'cliente', codice: t.codice });
+    else if (t.contatto && leadDaChiave(t.contatto)) apriLeadDaChiave(t.contatto);
+    else chiediTappa({ tappa: t });
+  }
+  // Più di 10 tappe in un giorno Google Maps non le apre.
+  function troppe(chi, giorno, id) {
+    if (tappeDel(giorno, chi).filter((t) => t.id !== id).length < MAX_TAPPE) return false;
+    messaggio(`${chi === io() ? 'Il tuo giro' : `Il giro di ${nomeChi(chi)}`} di quel giorno ha già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
+    return true;
+  }
+
+  // «Fatto»: una manutenzione passa dalla solita domanda (data, pagamento),
+  // che chiude anche la tappa; gli altri lavori si segnano fatti e basta.
+  function segnaTappaFatta(t) {
+    const c = t.codice && clienteIn(dati, t.codice);
+    if (c && t.lavoro === 'Manutenzione' && !c.perso) { chiediFatta(c); return; }
+    salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`);
+  }
+
+  // I tasti delle tappe (pagina dei giri, scheda del cliente o del contatto).
+  function collegaTappe(perAggiungere) {
+    const trova = (id) => (dati.tappe || []).find((t) => t.id === id);
+    schermo.querySelectorAll('[data-tappa-apri]').forEach((b) => { b.onclick = () => apriTappa(trova(b.dataset.tappaApri)); });
+    schermo.querySelectorAll('[data-tappa-cambia]').forEach((b) => { b.onclick = () => { const t = trova(b.dataset.tappaCambia); if (t) chiediTappa({ tappa: t }); }; });
+    schermo.querySelectorAll('[data-tappa-fatta]').forEach((b) => { b.onclick = () => { const t = trova(b.dataset.tappaFatta); if (t) segnaTappaFatta(t); }; });
+    schermo.querySelectorAll('[data-tappa-passa]').forEach((b) => {
+      b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+        const t = trova(b.dataset.tappaPassa);
+        const a = b.dataset.a;
+        if (!t || troppe(a, giornoDi(t), t.id)) return;
+        await salvaLaTappa({ ...t, giorno: giornoDi(t), chi: a }, a === io() ? `Nel tuo giro: ${luogoTappa(t).nome}` : `Passata a ${nomeChi(a)}: ${luogoTappa(t).nome}`);
+      });
+    });
+    if ($('al-giro')) $('al-giro').onclick = () => chiediTappa(perAggiungere);
+  }
+
+  // «Aggiungi una tappa» dalla pagina dei giri: si cerca il cliente o il
+  // contatto, oppure si scrive un indirizzo qualsiasi.
+  function chiediCosaAlGiro(giorno) {
+    apriFinestra(`
+      <h3>Chi vai a trovare?</h3>
+      <label class="campo"><span>Cerca un cliente o un contatto</span>
+        <input id="cerca-tappa" autocomplete="off" placeholder="Nome, città o telefono"></label>
+      <div class="lista" id="trovati-tappa"></div>
+      <button class="btn" type="button" id="indirizzo-libero">${icona('mappa')} Un altro indirizzo</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    const mostra = () => {
+      const q = normalizza($('cerca-tappa').value);
+      const el = $('trovati-tappa');
+      if (q.length < 2) { el.innerHTML = ''; return; }
+      const cifre = q.replace(/\D/g, '');
+      const combacia = (testo) => normalizza(testo).includes(q) || (cifre.length >= 5 && String(testo).replace(/\D/g, '').includes(cifre));
+      const cl = dati.clienti.filter((c) => combacia([c.nome, c.citta, c.indirizzo, c.contatto, c.codice].join(' '))).slice(0, 6);
+      const le = dati.lead.filter((l) => statoLead(l) !== 'Cliente' && combacia([l.nome, l.contatto, l.note].join(' '))).slice(0, 4);
+      el.innerHTML = cl.map((c) => `<button class="voce" type="button" data-scelto-cliente="${esc(c.codice)}"><b>${esc(c.nome)}</b><span class="riga2">Cliente · ${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || '—')}</span></button>`).join('')
+        + le.map((l) => `<button class="voce" type="button" data-scelto-lead="${esc(chiaveLead(l))}"><b>${esc(l.nome || 'Senza nome')}</b><span class="riga2">Contatto · ${esc(ETICHETTE_STATO[statoLead(l)] || statoLead(l))}</span></button>`).join('')
+        || '<div class="vuoto">Nessuno con questo nome. Puoi scrivere «Un altro indirizzo».</div>';
+      el.querySelectorAll('[data-scelto-cliente]').forEach((b) => { b.onclick = () => chiediTappa({ cliente: clienteIn(dati, b.dataset.sceltoCliente), giorno }); });
+      el.querySelectorAll('[data-scelto-lead]').forEach((b) => { b.onclick = () => chiediTappa({ lead: leadDaChiave(b.dataset.sceltoLead), giorno }); });
+    };
+    $('cerca-tappa').oninput = mostra;
+    $('indirizzo-libero').onclick = () => chiediTappa({ giorno });
+    $('no').onclick = chiudiFinestra;
+    $('cerca-tappa').focus();
+  }
+
+  // Aggiungere o cambiare una tappa: di chi, che lavoro, quando, a che ora.
+  // Per un contatto o un indirizzo qualsiasi anche nome e indirizzo (la
+  // posizione la cerca il telefono su OpenStreetMap, se c'è campo).
+  function chiediTappa({ tappa = null, cliente = null, lead = null, giorno = null } = {}) {
+    const t0 = tappa;
+    const c = cliente || (t0 && t0.codice && clienteIn(dati, t0.codice)) || null;
+    const l = lead || (t0 && t0.contatto && leadDaChiave(t0.contatto)) || null;
+    const libero = !c;
+    const s = c && scadenza(c);
+    let lavoro = t0 ? (t0.lavoro || 'Altro')
+      : c ? (c.avviso === 'Urgente' ? 'Guasto' : s.giorni != null && s.giorni <= 60 ? 'Manutenzione' : 'Altro')
+        : l ? 'Sopralluogo' : 'Altro';
+    let chi = t0 ? t0.chi : io();
+    const o = serialeOggi();
+    let ser = Math.max(serialeGiorno(t0 ? giornoDi(t0) : giorno || oggiTesto()) ?? o, o);
+    const cittaLead = l ? ((String(l.note || '').match(/Città:\s*([^—]+)/) || [])[1] || '').trim() : '';
+    const v = (x) => esc(x || '');
+    const persone = [io(), ...altri()];
+    apriFinestra(`
+      <h3>${t0 ? 'Cambia la tappa' : 'Aggiungi al giro'}</h3>
+      ${c ? `<p><strong>${esc(c.nome)}</strong><br>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p>` : ''}
+      ${persone.length > 1 ? `<p class="domanda">Nel giro di</p>
+        <div class="scelta scelta-chi" id="t-chi">${persone.map((p) => `<button type="button" data-v="${esc(p)}" aria-pressed="${chi === p}">${p === io() ? 'Il mio' : `Di ${esc(nomeChi(p))}`}</button>`).join('')}</div>` : ''}
+      <p class="domanda">Che lavoro</p>
+      <div class="pillole pillole-lavoro" id="t-lavoro">${LAVORI.map((x) => `<button type="button" class="pillola" data-v="${x}" aria-pressed="${lavoro === x}">${x}</button>`).join('')}</div>
+      <p class="domanda">Quando</p>
+      <div class="scelta scelta-giorno" id="t-giorno">
+        <button type="button" data-v="${o}" aria-pressed="${ser === o}">Oggi</button>
+        <button type="button" data-v="${o + 1}" aria-pressed="${ser === o + 1}">Domani</button>
+        <button type="button" data-v="altro" aria-pressed="${ser > o + 1}">Altro giorno</button>
+      </div>
+      <input class="campo-data" type="date" id="t-data" min="${isoDa(daSeriale(o))}" value="${isoDa(daSeriale(ser))}" ${ser > o + 1 ? '' : 'hidden'}>
+      <label class="campo"><span>Ora <em>(facoltativa: con l'ora la tappa va in fila per ora)</em></span>
+        <input type="time" id="t-ora" value="${v(t0 && t0.ora)}"></label>
+      ${libero ? `
+        <label class="campo"><span>Nome</span><input id="t-nome" autocapitalize="words" value="${v((t0 && t0.nome) || (l && l.nome))}"></label>
+        <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
+        <label class="campo"><span>Città</span><input id="t-citta" value="${v((t0 && t0.citta) || cittaLead)}"></label>
+        <label class="campo"><span>Telefono <em>(facoltativo)</em></span><input id="t-tel" inputmode="tel" value="${v((t0 && t0.telefono) || (l && l.contatto))}"></label>` : ''}
+      <label class="campo"><span>Note <em>(facoltative)</em></span><input id="t-note" value="${v(t0 && t0.note)}" placeholder="Es. citofono, cosa portare"></label>
+      <button class="btn pieno grande" type="button" id="t-salva">${icona('cartina')} ${t0 ? 'Salva' : 'Metti nel giro'}</button>
+      ${t0 ? '<button class="btn btn-rosso" type="button" id="t-togli">Togli dal giro</button>' : ''}
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    const scegli = (id, fai) => {
+      $(id).querySelectorAll('[data-v]').forEach((b) => {
+        b.onclick = () => { $(id).querySelectorAll('[data-v]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); fai(b.dataset.v); };
+      });
+    };
+    if ($('t-chi')) scegli('t-chi', (x) => { chi = x; });
+    scegli('t-lavoro', (x) => { lavoro = x; });
+    scegli('t-giorno', (x) => {
+      if (x === 'altro') { $('t-data').hidden = false; const d = daIso($('t-data').value); if (d) ser = Math.max(serialeDa(d.a, d.m, d.g), o); $('t-data').focus(); return; }
+      ser = +x; $('t-data').hidden = true;
+    });
+    $('t-data').onchange = (e) => { const d = daIso(e.target.value); if (d) ser = Math.max(serialeDa(d.a, d.m, d.g), o); };
+    $('no').onclick = chiudiFinestra;
+    if ($('t-togli')) $('t-togli').onclick = (e) => conPulsante(e.currentTarget, 'Tolgo…', async () => { chiudiFinestra(); await togliLaTappa(t0); });
+    $('t-salva').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+      const nuovo = {
+        id: t0 ? t0.id : nuovoId(), giorno: testoGiorno(ser), ora: $('t-ora').value, chi, lavoro,
+        codice: c ? c.codice : '', contatto: l ? chiaveLead(l) : (t0 && t0.contatto) || '',
+        nome: c ? c.nome : $('t-nome').value.replace(/\s+/g, ' ').trim(),
+        indirizzo: c ? c.indirizzo : $('t-indirizzo').value.trim(), citta: c ? c.citta : $('t-citta').value.trim(),
+        telefono: c ? '' : $('t-tel').value.trim(), note: $('t-note').value.replace(/\s+/g, ' ').trim(),
+        lat: t0 && !c ? t0.lat : null, lng: t0 && !c ? t0.lng : null, stato: '',
+      };
+      if (!nuovo.nome) { messaggio('Scrivi il nome.', { errore: true }); return; }
+      if (libero && !nuovo.indirizzo && !nuovo.citta) { messaggio('Scrivi almeno la città: se no non so dove andare.', { errore: true }); return; }
+      if (troppe(chi, nuovo.giorno, nuovo.id)) return;
+      // Contatto o indirizzo qualsiasi: dove sta lo cerca il telefono (al
+      // massimo 8 secondi; senza campo la tappa resta fuori dalla mappa).
+      const cambiato = !t0 || t0.indirizzo !== nuovo.indirizzo || t0.citta !== nuovo.citta;
+      if (libero && (cambiato || nuovo.lat == null)) {
+        const p = await Promise.race([
+          cercaPosizione({ indirizzo: nuovo.indirizzo, citta: nuovo.citta, provincia: '' }).catch(() => null),
+          new Promise((ok) => setTimeout(() => ok(null), 8000)),
+        ]);
+        if (p && p.lat != null) { nuovo.lat = p.lat; nuovo.lng = p.lng; } else if (cambiato) { nuovo.lat = null; nuovo.lng = null; }
+      }
+      chiudiFinestra();
+      await salvaLaTappa(nuovo, `${chi === io() ? 'Nel tuo giro' : `Nel giro di ${nomeChi(chi)}`} ${quandoTappa(nuovo)}: ${nuovo.nome}`);
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -2368,6 +2700,7 @@
     schermo.innerHTML = `
       <div class="testa"><h2>${esc(l.nome || 'Senza nome')}</h2><p>Arrivato il ${esc(String(l.data).split(',')[0])}${l.provenienza ? ' da ' + esc(l.provenienza) : ''}</p></div>
       <div class="azioni">${pulsantiContatto(l.contatto, '')}</div>
+      ${io() ? riquadroTappe(tappeDi((t) => t.contatto === chiaveLead(l))) : ''}
       <h3 class="titoletto">Com'è andata?</h3>
       <div class="stati">${(dati.stati || Object.keys(ETICHETTE_STATO)).map((s) => `
         <button class="stato" data-stato="${esc(s)}" aria-pressed="${attuale === s}">
@@ -2385,6 +2718,7 @@
         ${riga('Note', note)}
       </dl>`;
 
+    collegaTappe({ lead: l });
     schermo.querySelectorAll('[data-stato]').forEach((b) => {
       b.onclick = () => {
         const nuovo = b.dataset.stato;
