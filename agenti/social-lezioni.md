@@ -11,3 +11,5 @@ dopo.** Se una riga contraddice una più vecchia, vale la più recente.
 - 2026-10-12 — la cucina disegnata delle grafiche "si vede che è fatta con IA" se l'impianto è collegato male: i tubi non si attaccano alla vasca del lavello, escono da dietro l'impianto e spariscono dietro il lavello, verso il miscelatore. Vale per ogni immagine nuova di un impianto.
 
 - 2026-10-17 — post «curiosità sull'acqua» da correggere: 1 vabbene ma cambia la frase "un'acqua che sa diversa" , i post 2 e 3 é vero che sono cose consigliate dall istituto superiore di sanità?
+
+- 2026-10-19 — post «curiosità sull'acqua» da correggere: 1 va bene ma cambia la frase “un’acqua che sa diversa”, i post 2 e 3 è vero che sono cose consigliate dall’Istituto Superiore di Sanità?
