@@ -597,13 +597,31 @@
       const iso = r.address['ISO3166-2-lvl6'];
       return !/^[A-Z]{2}$/.test(prov) || !iso || iso === `IT-${prov}`;
     };
-    const scegli = (lista, vaBene = () => true) => lista.find((r) => vaBene(r) && inProvincia(r)) || lista.find(vaBene);
+    // Poi si scartano quelli con un CAP diverso da quello scritto nella città
+    // (dal 18 ott 2026 quasi tutte ce l'hanno): «50013» dice Campi Bisenzio
+    // meglio della provincia. Il CAP conta solo se almeno un risultato ce
+    // l'ha uguale (un CAP generico, «50100», non toglie niente), un risultato
+    // senza CAP non è scartato, e non fa mai perdere un civico trovato: «Via
+    // Pisana 696, 50143 Firenze» per OpenStreetMap è nel 50142, e il civico
+    // giusto vale più del CAP scritto.
+    const capDi = (r) => String(r.address.postcode || '').split(/[;,\s]+/).filter(Boolean);
+    const nelCap = (r) => !!cap && capDi(r).includes(cap);
+    const scegli = (lista, vaBene = () => true) => {
+      const primo = lista.find((r) => vaBene(r) && inProvincia(r)) || lista.find(vaBene);
+      if (!primo || !lista.some((r) => vaBene(r) && nelCap(r))) return primo;
+      const colCap = lista.find((r) => vaBene(r) && (nelCap(r) || !capDi(r).length) && inProvincia(r));
+      return colCap && !(primo.civico && !colCap.civico) ? colCap : primo;
+    };
     const precisione = (r) => (r.civico ? 'civico' : r.via ? 'via' : 'paese');
     let strade = [];
     if (via && paese) {
       strade = await chiediNominatim({ q: `${via}, ${paese}` });
       const r = scegli(strade, nelPaese(paese));
       if (r) return { lat: r.lat, lng: r.lng, prec: precisione(r) };
+      // La via nella sua zona postale, senza il nome del paese (la frazione
+      // che OpenStreetMap chiama in un altro modo): vale solo se poi sta
+      // vicino al paese, come le altre strade trovate qui (sotto, 4 km).
+      if (cap) strade = strade.concat((await chiediNominatim({ street: via, postalcode: cap })).filter(nelCap));
     }
     // Una parola sola è rischiosa («vicino» porterebbe nel senese un cliente
     // di Prato): lì il risultato DEVE stare nella provincia del foglio.

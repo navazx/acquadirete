@@ -343,11 +343,14 @@ export async function leggiTutto(foglio) {
     if (c.nome || c.codice) clienti.push(c);
   }
   // Una posizione vale solo se l'indirizzo è ancora quello cercato; se no
-  // il cliente risulta "da cercare" e il telefono la ricerca.
+  // il cliente risulta "da cercare" e il telefono la ricerca. Quella segnata
+  // sul posto vale finché il paese è lo stesso (gpsNelPaese).
   const pos = await posizioni;
   for (const c of clienti) {
     const p = pos.get(c.codice.toUpperCase());
-    if (!p || normalizza(p.cercato) !== normalizza(indirizzoCercato(c.indirizzo, c.citta))) continue;
+    if (!p) continue;
+    if (normalizza(p.cercato) !== normalizza(indirizzoCercato(c.indirizzo, c.citta))
+      && !(p.prec === 'gps' && gpsNelPaese(p.cercato, c.citta))) continue;
     c.prec = p.prec;
     if (p.lat != null) { c.lat = p.lat; c.lng = p.lng; }
   }
@@ -891,12 +894,28 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
 // scritta meglio, il civico, la città aggiunta a chi non l'aveva) resta
 // buona, e qui si aggiorna l'indirizzo a cui è legata. Se cambia il paese
 // il cliente ha traslocato: la posizione decade e il telefono la ricerca.
-// Vale per le modifiche fatte dall'app; a mano nel foglio la posizione decade.
+// Per le correzioni fatte a mano nel foglio vale gpsNelPaese, in lettura.
 async function tieniPosizioneSulPosto(foglio, codice, prima, dopo) {
   if (chiaveCitta(prima.citta) && chiaveCitta(prima.citta) !== chiaveCitta(dopo.citta)) return;
   const p = (await leggiCoordinate(foglio)).get(codice);
-  if (!p || p.prec !== 'gps' || normalizza(p.cercato) !== normalizza(indirizzoCercato(prima.indirizzo, prima.citta))) return;
+  if (!p || p.prec !== 'gps' || !gpsNelPaese(p.cercato, prima.citta)) return;
   await foglio.scrivi([{ range: `'${TAB_COORDINATE}'!E${p.riga}`, values: [[indirizzoCercato(dopo.indirizzo, dopo.citta)]] }], 'RAW');
+}
+
+// La posizione «Sono qui» legata a quell'indirizzo è ancora nello stesso
+// paese della città scritta oggi? Il 18 ott 2026 Matteo ha aggiunto a mano
+// nel foglio i CAP a quasi tutte le città, e 8 posizioni segnate sul posto
+// risultavano «da ricercare»: il telefono le avrebbe sovrascritte con quelle
+// di OpenStreetMap. Il CAP non conta; senza indirizzo (o senza città) vale.
+// "Indirizzo cercato" è «indirizzo, città»: la città è la coda dopo una
+// virgola (dopo l'ultima, o prima: «Le Valli, Figline»), mai un pezzo di
+// parola («Lastra a Signa» non è «Signa»).
+function gpsNelPaese(cercato, citta) {
+  const paese = chiaveCitta(citta);
+  const pezzi = String(cercato ?? '').replace(/\b\d{5}\b/g, ' ').split(',');
+  if (!paese || !normalizza(pezzi.join(' '))) return true;
+  return pezzi.some((_, i) => i > 0 && chiaveCitta(pezzi.slice(i).join(',')) === paese)
+    || chiaveCitta(pezzi.join(',')) === paese;
 }
 
 // ---------------------------------------------------------------------------
@@ -1064,7 +1083,8 @@ export async function notaLead(foglio, { riga, data, nome, nota, giorno }) {
 // cercato" è l'indirizzo com'era quando si è cercato: se poi nel foglio
 // cambia, la posizione non vale più e il telefono la ricerca. Precisione:
 // "gps" (segnata sul posto col pulsante «Sono qui», dal 6 ott 2026: la più
-// giusta, non si ricerca mai), "civico", "via", "paese" (centro del paese:
+// giusta, non si ricerca mai e regge l'indirizzo corretto nello stesso
+// paese, vedi gpsNelPaese), "civico", "via", "paese" (centro del paese:
 // posizione approssimativa) o "nessuna" (cercato e non trovato: non si
 // riprova finché l'indirizzo non cambia). Nessuna automazione del foglio
 // legge questa scheda.
@@ -1106,10 +1126,13 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
   if (posizioni.length > 50) throw problema('Troppe posizioni in una volta.');
   const [{ griglia, mappa }, esistenti] = await Promise.all([leggiClienti(foglio), leggiCoordinate(foglio)]);
   const cercatoOra = new Map();
+  const cittaOra = new Map();
   for (let i = mappa.riga; i < griglia.length; i++) {
     const r = griglia[i] || [];
     const codice = testo(r[mappa.col.CODICE - 1]).toUpperCase();
-    if (codice) cercatoOra.set(codice, indirizzoCercato(r[mappa.col.INDIRIZZO - 1], r[mappa.col.CITTA - 1]));
+    if (!codice) continue;
+    cercatoOra.set(codice, indirizzoCercato(r[mappa.col.INDIRIZZO - 1], r[mappa.col.CITTA - 1]));
+    cittaOra.set(codice, r[mappa.col.CITTA - 1]);
   }
 
   const quando = testoData(oggi());
@@ -1121,7 +1144,10 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
     const codice = testo(p?.codice).toUpperCase();
     const cercato = cercatoOra.get(codice);
     const prec = PRECISIONI.includes(p?.prec) ? p.prec : null;
-    if (cercato == null || (!cercato && prec !== 'gps') || !prec || visti.has(codice) || normalizza(p?.cercato) !== normalizza(cercato)) { saltate++; continue; }
+    // «Sono qui» segnato senza campo arriva dopo: se intanto l'indirizzo è
+    // stato scritto meglio a mano nello stesso paese, vale lo stesso.
+    const stesso = normalizza(p?.cercato) === normalizza(cercato) || (prec === 'gps' && gpsNelPaese(p?.cercato, cittaOra.get(codice)));
+    if (cercato == null || (!cercato && prec !== 'gps') || !prec || visti.has(codice) || !stesso) { saltate++; continue; }
     visti.add(codice);
     let lat = '';
     let lng = '';
