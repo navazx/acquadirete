@@ -1,33 +1,101 @@
 {
-  "letto": "2026-10-12T17:55:31.868Z",
-  "periodo": "2026-09-12 → 2026-10-09",
+  "letto": "2026-10-19T07:16:06.167Z",
+  "periodo": "2026-09-19 → 2026-10-16",
   "segnalati": [
+    "concorrenza|depuratori acqua firenze",
+    "prima-pagina|bando regionale depuratori acqua domestici",
     "soglia|depuratore acqua casa gratis",
-    "soglia|depuratore acqua gratis province",
+    "concorrenza|depuratore acqua gratis province",
+    "prima-pagina|depuratore acqua gratis toscana",
+    "concorrenza|depuratore acqua gratis toscana",
     "prima-pagina|depuratore acqua gratuito",
     "soglia|depuratore acqua osmosi inversa gratis",
     "concorrenza|depuratore acqua prato",
     "prima-pagina|depuratore d'acqua gratis",
-    "prima-pagina|depuratore gratis",
-    "concorrenza|depuratori acqua firenze",
-    "concorrenza|depuratori acqua prato"
+    "soglia|depuratore gratis",
+    "prima-pagina|purificatore d'acqua gratis"
   ],
   "segnali": [
+    {
+      "tipo": "concorrenza",
+      "ricerca": "depuratori acqua firenze",
+      "pagina": null,
+      "pagine": [
+        {
+          "pagina": "/",
+          "posizione": 13.1,
+          "viste": 18,
+          "clic": 1
+        },
+        {
+          "pagina": "/depuratore-acqua-firenze/",
+          "posizione": 31.2,
+          "viste": 5,
+          "clic": 0
+        },
+        {
+          "pagina": "/osmosi-inversa-firenze/",
+          "posizione": 73.5,
+          "viste": 6,
+          "clic": 0
+        }
+      ]
+    },
+    {
+      "tipo": "prima-pagina",
+      "ricerca": "bando regionale depuratori acqua domestici",
+      "pagina": "/blog/truffa-bonus-regione-depuratore/"
+    },
     {
       "tipo": "soglia",
       "ricerca": "depuratore acqua casa gratis",
       "pagina": "/blog/depuratore-acqua-gratis-contratti/",
-      "viste": 63,
+      "viste": 65,
       "clic": 0,
-      "posizione": 9.9
+      "posizione": 10
     },
     {
-      "tipo": "soglia",
+      "tipo": "concorrenza",
       "ricerca": "depuratore acqua gratis province",
-      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
-      "viste": 40,
-      "clic": 0,
-      "posizione": 9.2
+      "pagina": null,
+      "pagine": [
+        {
+          "pagina": "/blog/truffa-bonus-regione-depuratore/",
+          "posizione": 5.1,
+          "viste": 11,
+          "clic": 0
+        },
+        {
+          "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+          "posizione": 8.9,
+          "viste": 27,
+          "clic": 0
+        }
+      ]
+    },
+    {
+      "tipo": "prima-pagina",
+      "ricerca": "depuratore acqua gratis toscana",
+      "pagina": "/blog/truffa-bonus-regione-depuratore/"
+    },
+    {
+      "tipo": "concorrenza",
+      "ricerca": "depuratore acqua gratis toscana",
+      "pagina": null,
+      "pagine": [
+        {
+          "pagina": "/blog/truffa-bonus-regione-depuratore/",
+          "posizione": 5.1,
+          "viste": 14,
+          "clic": 0
+        },
+        {
+          "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+          "posizione": 10.4,
+          "viste": 9,
+          "clic": 0
+        }
+      ]
     },
     {
       "tipo": "prima-pagina",
@@ -38,7 +106,7 @@
       "tipo": "soglia",
       "ricerca": "depuratore acqua osmosi inversa gratis",
       "pagina": "/blog/depuratore-acqua-gratis-contratti/",
-      "viste": 71,
+      "viste": 75,
       "clic": 0,
       "posizione": 9.1
     },
@@ -67,53 +135,17 @@
       "pagina": "/blog/depuratore-acqua-gratis-contratti/"
     },
     {
-      "tipo": "prima-pagina",
+      "tipo": "soglia",
       "ricerca": "depuratore gratis",
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 31,
+      "clic": 0,
+      "posizione": 9.8
+    },
+    {
+      "tipo": "prima-pagina",
+      "ricerca": "purificatore d'acqua gratis",
       "pagina": "/blog/depuratore-acqua-gratis-contratti/"
-    },
-    {
-      "tipo": "concorrenza",
-      "ricerca": "depuratori acqua firenze",
-      "pagina": null,
-      "pagine": [
-        {
-          "pagina": "/",
-          "posizione": 14.4,
-          "viste": 20,
-          "clic": 0
-        },
-        {
-          "pagina": "/depuratore-acqua-firenze/",
-          "posizione": 31.8,
-          "viste": 6,
-          "clic": 0
-        },
-        {
-          "pagina": "/osmosi-inversa-firenze/",
-          "posizione": 73.5,
-          "viste": 6,
-          "clic": 0
-        }
-      ]
-    },
-    {
-      "tipo": "concorrenza",
-      "ricerca": "depuratori acqua prato",
-      "pagina": null,
-      "pagine": [
-        {
-          "pagina": "/",
-          "posizione": 17.8,
-          "viste": 9,
-          "clic": 0
-        },
-        {
-          "pagina": "/depuratore-acqua-prato/",
-          "posizione": 23,
-          "viste": 7,
-          "clic": 0
-        }
-      ]
     }
   ]
 }

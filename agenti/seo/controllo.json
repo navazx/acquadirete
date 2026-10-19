@@ -1,14 +1,28 @@
 {
-  "controllato": "2026-10-12T17:55:31.869Z",
-  "pagine": 27,
-  "linkInterni": 30,
+  "controllato": "2026-10-19T07:16:06.167Z",
+  "pagine": 28,
+  "linkInterni": 31,
   "problemi": [
+    {
+      "gravita": "da sistemare",
+      "chiave": "titolo-lungo",
+      "pagina": "/chi-siamo/",
+      "testo": "titolo di 62 caratteri, oltre 60: \"Chi Siamo: Stefano e Matteo, Depuratori dal 2005 | Acquadirete\"",
+      "primaVolta": "2026-10-19"
+    },
+    {
+      "gravita": "da sistemare",
+      "chiave": "description-lunga",
+      "pagina": "/chi-siamo/",
+      "testo": "description di 164 caratteri, oltre 160",
+      "primaVolta": "2026-10-19"
+    },
     {
       "gravita": "rotto",
       "chiave": "link-0",
-      "pagina": "/cookie-policy/",
-      "testo": "link interno che risponde The operation was aborted due to timeout (linkata da /, /depuratore-acqua-firenze/, /depuratore-acqua-prato/ e altre 24)",
-      "primaVolta": "2026-10-12"
+      "pagina": "/note-legali/",
+      "testo": "link interno che risponde The operation was aborted due to timeout (linkata da /, /depuratore-acqua-firenze/, /depuratore-acqua-prato/ e altre 25)",
+      "primaVolta": "2026-10-19"
     }
   ]
 }
