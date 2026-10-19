@@ -457,7 +457,7 @@
     const { scadute, presto, urgenti } = contaScadenze();
     // Le tappe dei giri: le tue e quelle dell'altro.
     const tappe = (p) => dati.clienti.filter((c) => c.chiVa === p).length;
-    const quante = (n) => (n === 1 ? '1 tappa' : `${n} tappe`);
+    const quante = (n) => (n === 0 ? 'nessuna tappa' : n === 1 ? '1 tappa' : `${n} tappe`);
     const giri = io() ? [`${quante(tappe(io()))} per te`, ...altri().map((p) => `${quante(tappe(p))} per ${nomeChi(p)}`)] : [];
     const qualcuna = io() && [io(), ...altri()].some((p) => tappe(p));
     const daRichiamare = dati.lead.filter((l) => statoLead(l) === 'Da richiamare').length;
@@ -632,10 +632,19 @@
     if (!res.ok) throw new Error(`Nominatim ${res.status}`);
     // Civico anche un negozio o un albergo col numero: «Via del Trebbio 4»
     // per OpenStreetMap è prima di tutto un ostello (19 ott 2026).
-    return (await res.json()).map((r) => ({
-      lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building' || !!(r.address && r.address.house_number),
-      via: r.category === 'highway', address: r.address || {},
-    }));
+    // via: una strada, una piazza (place/square), o un posto che sta su una via
+    // (l'albergo di «Viale Lavagnini» trovato al posto della strada).
+    // bbox: il riquadro del luogo [sud, nord, ovest, est]; luogo: una frazione o località.
+    return (await res.json()).map((r) => {
+      const a = r.address || {};
+      const piazza = r.category === 'place' && r.type === 'square';
+      return {
+        lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building' || !!a.house_number,
+        via: r.category === 'highway' || piazza || (!!a.road && !['place', 'boundary'].includes(r.category)),
+        luogo: r.category === 'place' && r.type !== 'house' && !piazza, address: a,
+        bbox: Array.isArray(r.boundingbox) ? r.boundingbox.map(Number) : null,
+      };
+    });
   }
   const kmFra = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((a.lat + b.lat) * Math.PI / 360), b.lat - a.lat) * 111.32;
   // Il risultato sta davvero in quel paese? «Firenze», «Prato», «Pistoia» sono
@@ -651,13 +660,18 @@
       return v && nomi.some((n) => ` ${n} `.includes(` ${v} `) || ` ${v} `.startsWith(` ${n} `));
     });
   };
+  const SANTE = /^(croce|maria|lucia|caterina|chiara|margherita|reparata|felicita|trinita|elisabetta|anna|agata|marta|cristina|giustina|apollonia|verdiana|brigida|orsola|monica|rosa|teresa|cecilia)$/i;
   async function cercaPosizione(c) {
     // Abbreviazioni sciolte; le iniziali dei nomi si tolgono invece di
     // indovinarle: «Via Balbo» trova anche «Via Cesare Balbo».
+    // «S.» davanti a un nome è un santo, non un'iniziale (19 ott 2026: «Via S.
+    // Michele delle Campora» diventava «Via Michele…» e non si trovava).
+    const santo = (_, n) => `${SANTE.test(n) ? 'Santa ' : /^[aeiou]/i.test(n) ? 'Sant\'' : 'San '}${n}`;
     const via = String(c.indirizzo || '')
       .replace(/\(.*?\)/g, ' ')
       .replace(/\bL\.go\b/gi, 'Largo').replace(/\bV\.le\b/gi, 'Viale').replace(/\bP\.?zz?a\b/gi, 'Piazza').replace(/\bC\.so\b/gi, 'Corso')
-      .replace(/\b(Loc|Fraz)\.\s*/gi, '')
+      .replace(/\bS\.\s*M\.\s*/gi, 'Santa Maria ').replace(/\bS\.\s*(\p{L}+)/giu, santo)
+      .replace(/\b(Loc|Fraz)\.\s*/gi, '').replace(/(^|\s)(Localit[aà]|Frazione|Loc|Fraz)\s+/gi, ' ')
       .replace(/(^|\s)[A-Za-z]\.\s*/g, ' ')
       .replace(/\s+/g, ' ').trim();
     const paese = senzaCap(c.citta).replace(/\b(Loc|Fraz)\.\s*/gi, '').replace(/\s+/g, ' ').trim();
@@ -690,10 +704,46 @@
       return colCap && !(primo.civico && !colCap.civico) ? colCap : primo;
     };
     const precisione = (r) => (r.civico ? 'civico' : r.via ? 'via' : 'paese');
+    // Un posto (negozio, albergo) vale solo se sta sulla via cercata: «Via
+    // Pellicceria 1» trovava una pellicceria in Via Melchiorre Gioia.
+    const PICCOLE = /^(via|viale|piazza|piazzale|largo|corso|vicolo|strada|localita|di|del|della|dello|dei|degli|delle|da|de|la|le|il|lo|san|santa|santo|sant|al|alla|in)$/;
+    const paroleDi = (s) => normalizza(s).split(' ').filter((w) => w.length >= 3 && !PICCOLE.test(w) && !/^\d/.test(w));
+    const paroleVia = paroleDi(via);
+    const sullaVia = (r) => !paroleVia.length || !r.address.road || paroleDi(r.address.road).some((w) => paroleVia.includes(w));
+    // Trovato il paese, la via si cerca solo lì dentro, senza il suo nome (19
+    // ott 2026, 15 clienti di Firenze in Piazza della Signoria): «Firenze»,
+    // «Prato», «Pistoia» sono anche province, e «Via Galliano, Firenze» dava
+    // solo le vie omonime di Sesto e di Fiesole, scartate. Si prova anche con
+    // Via e Viale scambiati («Viale Gramsci» scritto «Via Gramsci»). Vale una
+    // via nel paese o entro 4 km dal suo centro; se non c'è, la frazione o la
+    // località scritta («San Piero in Mercato»), sempre come «paese».
+    async function dentroIlPaese(centro) {
+      const bb = centro.bbox;
+      const [s, n, w, e] = bb && bb.length === 4 && bb[1] - bb[0] >= 0.02 && bb[1] - bb[0] <= 0.4
+        ? bb : [centro.lat - 0.045, centro.lat + 0.045, centro.lng - 0.06, centro.lng + 0.06];
+      const viewbox = `${w - 0.01},${n + 0.01},${e + 0.01},${s - 0.01}`;
+      const varianti = [via];
+      if (/^Via\s/i.test(via)) varianti.push(via.replace(/^Via\s/i, 'Viale '));
+      else if (/^Viale\s/i.test(via)) varianti.push(via.replace(/^Viale\s/i, 'Via '));
+      // Senza «del», «della»…: «Via del Belvedere» per OpenStreetMap è «Via di Belvedere».
+      const senzaArticolo = via.replace(/^(\p{L}+)\s+(?:di|del|dello|della|dei|degli|delle|de')\s+/iu, '$1 ');
+      if (senzaArticolo !== via) varianti.push(senzaArticolo);
+      // Una frazione col numero («San Piero in Mercato 218»): il nome da solo.
+      const senzaNumero = via.replace(/[\s,]+\d+\s*\S*$/, '');
+      if (senzaNumero !== via && senzaNumero.length >= 4) varianti.push(senzaNumero);
+      let luogo = null;
+      for (const v of varianti) {
+        const lista = await chiediNominatim({ q: v, viewbox, bounded: '1' });
+        const r = scegli(lista.filter((x) => (x.civico || x.via) && sullaVia(x) && inProvincia(x) && (nelPaese(paese)(x) || kmFra(centro, x) <= 4)));
+        if (r) return { lat: r.lat, lng: r.lng, prec: precisione(r) };
+        luogo = luogo || lista.find((x) => x.luogo && inProvincia(x) && kmFra(centro, x) <= 12);
+      }
+      return luogo ? { lat: luogo.lat, lng: luogo.lng, prec: 'paese' } : null;
+    }
     let strade = [];
     if (via && paese) {
       strade = await chiediNominatim({ q: `${via}, ${paese}` });
-      const r = scegli(strade, nelPaese(paese));
+      const r = scegli(strade, (x) => nelPaese(paese)(x) && sullaVia(x));
       if (r) return { lat: r.lat, lng: r.lng, prec: precisione(r) };
       // La via nella sua zona postale, senza il nome del paese (la frazione
       // che OpenStreetMap chiama in un altro modo): vale solo se poi sta
@@ -725,8 +775,12 @@
       // del Castagno «a San Donnino» per lui è a San Piero a Ponti, a 900
       // metri): vale se sta entro 4 km dal centro del paese. Più lontano è
       // la via omonima di un altro comune.
-      const vicina = strade.filter((s) => s.civico || s.via).map((s) => ({ s, km: kmFra(r, s) })).filter((x) => x.km <= 4).sort((a, b) => a.km - b.km)[0];
+      const vicina = strade.filter((s) => (s.civico || s.via) && sullaVia(s)).map((s) => ({ s, km: kmFra(r, s) })).filter((x) => x.km <= 4).sort((a, b) => a.km - b.km)[0];
       if (vicina) return { lat: vicina.s.lat, lng: vicina.s.lng, prec: precisione(vicina.s) };
+      if (via) {
+        const dentro = await dentroIlPaese(r);
+        if (dentro) return dentro;
+      }
       return { lat: r.lat, lng: r.lng, prec: 'paese' };
     }
     return { prec: 'nessuna' };
