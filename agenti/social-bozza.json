@@ -57,5 +57,18 @@
       "fatto": "Post 1: \"un’acqua che sa diversa\" diventa \"un’acqua diversa\", come nella grafica. Post 2 e 3: verificato, entrambi i consigli sono nella pagina «Cosa fare in casa» dell’ISS (iss.it/acqua-cosa-fare-in-casa); nel testo ora c’è scritto da dove vengono. Grafica invariata: il consiglio che riporta è vero."
     }
   ],
-  "inviato": "2026-10-19T16:20:02.164Z"
+  "inviato": "2026-10-19T16:20:02.164Z",
+  "pubblicato": "2026-10-19T16:46:01.891Z",
+  "variantePubblicata": 1,
+  "esiti": {
+    "facebook": {
+      "id": "1164447766749757_122124177837366858",
+      "url": "https://www.facebook.com/1164447766749757_122124177837366858"
+    },
+    "instagram": {
+      "id": "18016049438959517",
+      "url": "https://www.instagram.com/p/18016049438959517/"
+    }
+  },
+  "graficaTolta": true
 }
