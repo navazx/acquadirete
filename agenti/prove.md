@@ -40,3 +40,10 @@ il repository è pubblico.
 - Come si misura: contatore del sito, viste della pagina dei prezzi che non sono ingressi e moduli partiti da prezzi e servizi; contatti per pagina nel controllo SEO di dicembre. Sotto i 3-4 contatti di differenza è rumore.
 - Si controlla dal: 2026-11-14
 - Esito: da vedere
+
+## 2026-10-19 · META · torna l'inserzione di luglio
+- Cosa è cambiato: spento lo spot, riaccesa "Nuova inserzione Contatti" (video di Stefano), la stessa che a giugno-luglio ha dato 3 clienti su 17 contatti. Stesso pubblico, stesso budget giornaliero, stesso modulo di adesso (zone Z1-ZX): Matteo ha scelto di non cambiarlo.
+- Cosa ci si aspetta: almeno un preventivo vero (stato "Preventivo inviato" o "Cliente") da un contatto Meta, e meno contatti fuori zona o col depuratore già in casa rispetto a settembre (13 e 11 su 28).
+- Come si misura: contatti Meta nel Gestionale dal 19 ottobre, con zona, risposta "possiedi già un depuratore" e stato; costo per contatto da Gestione inserzioni. Regola già decisa: se non c'è nessun preventivo vero, si propone di fermare Meta e spostare il budget su Google.
+- Si controlla dal: 2026-11-02
+- Esito: da vedere
