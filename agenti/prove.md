@@ -11,7 +11,7 @@ il repository è pubblico.
 - Cosa ci si aspetta: contatti Meta allo stesso costo o più bassi, meno fuori zona, e almeno un cliente.
 - Come si misura: contatti Meta nel Gestionale (zona e stato) dal 14 al 24 ottobre, contro il 2-13 ottobre; costo per contatto da Gestione inserzioni.
 - Si controlla dal: 2026-10-24
-- Esito: da vedere
+- Esito: non ha funzionato (19 ott, chiuso prima da Matteo): dal 14 al 18 ottobre lo spot da solo non ha portato nessun contatto. Spento il 19 ottobre: Meta resta senza inserzioni attive. Lezione: lo spot prendeva contatti a buon prezzo solo finché Meta gli dava poco budget; da solo non regge. E il problema di Meta da settembre non è l'inserzione: la stessa inserzione a luglio ha dato 3 clienti su 17 contatti, da settembre 0 su 28 (13 fuori zona, 11 col depuratore già in casa).
 
 ## 2026-10-14 · ADS · la pagina d'arrivo /sopralluogo-gratuito
 - Cosa è cambiato: tre annunci su cinque (Gruppo di annunci 1, Prezzi, Confronto) mandano alla pagina nuova /sopralluogo-gratuito/, con prezzo in alto, modulo corto e Chiama/WhatsApp. Osmosi Inversa e Prato restano sulle loro pagine e fanno da confronto. Prima: 513 clic in quattro settimane e 2 contatti, entrambi da Osmosi e Prato.
