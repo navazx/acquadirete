@@ -89,7 +89,7 @@ export default async (req) => {
   // colonna I di Lead-Contatti: "gclid=… · cookie accettati". Servono per dire a
   // Google Ads quali clic hanno portato un cliente, e si carica solo per chi ha
   // accettato i cookie. Solo forme note, mai testo libero.
-  const codice = /^(gclid|gbraid|wbraid)=[w-]{10,200}$/.test(String(clicGoogle ?? '')) ? String(clicGoogle) : '';
+  const codice = /^(gclid|gbraid|wbraid)=[\w-]{10,200}$/.test(String(clicGoogle ?? '')) ? String(clicGoogle) : '';
   const sceltaCookie = consenso === 'accepted' ? 'cookie accettati' : consenso === 'rejected' ? 'cookie rifiutati' : 'cookie non scelti';
   const colonnaClic = codice ? `${codice} · ${sceltaCookie}` : '';
 
