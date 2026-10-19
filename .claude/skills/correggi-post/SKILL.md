@@ -73,6 +73,9 @@ In `agenti/social-bozza.json`:
   a Matteo;
 - aggiungi in fondo all'elenco `correzioni` (crealo se manca) una voce
   `{ "quando": "<ora ISO>", "note": "<le note di Matteo>", "fatto": "<cosa hai cambiato, una riga>" }`.
+  **Matteo legge `fatto` in cima al messaggio Telegram** (dal 19 ott 2026): se nelle
+  note ti ha fatto una domanda ("è vero che…?"), la risposta va lì, chiara, con la
+  fonte che hai controllato. Una domanda senza risposta è una correzione non fatta.
 
 Controlla che il file sia JSON valido: `node -e "JSON.parse(require('fs').readFileSync('agenti/social-bozza.json','utf8'))"`.
 

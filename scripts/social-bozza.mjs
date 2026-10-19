@@ -49,9 +49,14 @@ async function main() {
   const urlFoto = b.foto ? `${SITO}/${b.foto.replace(/^\/+/, '')}` : null;
 
   const corretta = Array.isArray(b.correzioni) && b.correzioni.length > 0;
+  // Cosa ha fatto l'agente con l'ultimo CORREGGI POST, comprese le risposte alle
+  // domande di Matteo: il 19 ott 2026 aveva chiesto se un consiglio era davvero
+  // dell'Istituto Superiore di Sanita', l'agente l'aveva verificato ma la risposta
+  // restava nel file e a lui arrivava solo la bozza.
+  const fatto = corretta ? String(b.correzioni.at(-1).fatto || '').trim() : '';
 
   const testo = [
-    corretta ? 'Corretto con le tue note:' : undefined,
+    corretta ? (fatto ? `Corretto con le tue note. Cosa ho fatto:\n${fatto}\n` : 'Corretto con le tue note:') : undefined,
     rimandi
       ? `Post social — tema: ${b.tema} (rimandato ${rimandi === 1 ? 'una volta' : `${rimandi} volte`})`
       : `Post social — tema: ${b.tema}`,
