@@ -20,7 +20,19 @@ import { etichettaZona } from './zone.mjs';
 export const TAB_CLIENTI = 'Clienti-Impianti';
 export const TAB_LEAD = 'Lead-Contatti';
 export const TAB_STORICO = 'Storico-Interventi';
-const INTESTAZIONI_STORICO = ['Data', 'Codice', 'Cliente', 'Prossima manutenzione', 'Segnata da'];
+const INTESTAZIONI_STORICO = ['Data', 'Codice', 'Cliente', 'Prossima manutenzione', 'Segnata da', 'Pagamento'];
+// Come ha pagato il cliente (dal 19 ott 2026, richiesta di Matteo): l'app lo
+// chiede subito dopo «Manutenzione fatta». «Da risentire» = non ha ancora
+// pagato, va richiamato; si cambia dopo dallo storico. Vuoto = segnata prima
+// di allora, o da una versione vecchia dell'app.
+export const PAGAMENTI = ['Contanti', 'POS', 'Fattura e poi bonifico', 'Da risentire'];
+const pagamentoDa = (v) => {
+  const p = testo(v);
+  if (!p) return '';
+  const trovato = PAGAMENTI.find((x) => normalizza(x) === normalizza(p));
+  if (!trovato) throw problema('Pagamento non valido.');
+  return trovato;
+};
 
 // Stessa mappa di COLONNE_CLIENTI in gestionale-lead-a-cliente.gs, più
 // indirizzo e città che servono all'app.
@@ -216,6 +228,13 @@ const INTESTAZIONE_AVVISO = 'Sospesa / Urgente';
 const INTESTAZIONE_MOTIVO = 'Motivo';
 const AVVISI = ['Sospesa', 'Urgente'];
 const avvisoDa = (v) => (/urgent/i.test(String(v ?? '')) ? 'Urgente' : /sospes/i.test(String(v ?? '')) ? 'Sospesa' : '');
+// Colonna "Chi ci va" (dal 19 ott 2026): in quale giro del giorno sta il
+// cliente, quello di Matteo o quello di babbo (vedi assegnaManutenzione).
+// Contiene il nome della chiave con la maiuscola ("Matteo", "Babbo"); vuota
+// = in nessun giro. Si svuota con «Manutenzione fatta»: fatta la tappa, esce
+// dal giro. Anche questo nome evita le parole delle automazioni.
+const INTESTAZIONE_CHI = 'Chi ci va';
+const nomePersona = (k) => (k ? k.charAt(0).toUpperCase() + k.slice(1) : '');
 
 async function leggiClienti(foglio) {
   const griglia = await foglio.leggi(`'${TAB_CLIENTI}'!A1:Z1500`, 'UNFORMATTED_VALUE');
@@ -224,10 +243,15 @@ async function leggiClienti(foglio) {
   const intestazioni = (griglia[mappa.riga - 1] || []).map(normalizza);
   const iA = intestazioni.indexOf(normalizza(INTESTAZIONE_AVVISO));
   const iM = intestazioni.indexOf(normalizza(INTESTAZIONE_MOTIVO));
+  const iC = intestazioni.indexOf(normalizza(INTESTAZIONE_CHI));
   if (iA !== -1) mappa.col.AVVISO = iA + 1;
   if (iM !== -1) mappa.col.MOTIVO = iM + 1;
+  if (iC !== -1) mappa.col.CHI = iC + 1;
   return { griglia, mappa };
 }
+
+// Prima colonna libera dopo l'ultima intestazione (comprese quelle aggiunte dall'app).
+const colonnaLibera = (mappa) => Math.max(mappa.larghezza, mappa.col.AVVISO || 0, mappa.col.MOTIVO || 0, mappa.col.CHI || 0) + 1;
 
 // Crea le due intestazioni se mancano (subito dopo l'ultima colonna, con lo
 // stesso aspetto delle altre) e restituisce le loro colonne.
@@ -235,7 +259,7 @@ async function colonneAvviso(foglio, mappa) {
   const scritture = [];
   for (const [campo, titolo] of [['AVVISO', INTESTAZIONE_AVVISO], ['MOTIVO', INTESTAZIONE_MOTIVO]]) {
     if (mappa.col[campo]) continue;
-    const c = Math.max(mappa.larghezza, mappa.col.AVVISO || 0, mappa.col.MOTIVO || 0) + 1;
+    const c = colonnaLibera(mappa);
     await foglio.copiaCella(TAB_CLIENTI, mappa.riga, mappa.larghezza, mappa.riga, c).catch(() => {});
     scritture.push({ range: `'${TAB_CLIENTI}'!${lettera(c)}${mappa.riga}`, values: [[titolo]] });
     mappa.col[campo] = c;
@@ -251,6 +275,16 @@ async function scriviAvviso(foglio, mappa, riga, avviso, motivo) {
     { range: `'${TAB_CLIENTI}'!${lettera(cA)}${riga}`, values: [[avviso]] },
     { range: `'${TAB_CLIENTI}'!${lettera(cM)}${riga}`, values: [[motivo]] },
   ], 'RAW');
+}
+
+// La colonna "Chi ci va", creata in fondo se manca.
+async function colonnaChi(foglio, mappa) {
+  if (mappa.col.CHI) return mappa.col.CHI;
+  const c = colonnaLibera(mappa);
+  await foglio.copiaCella(TAB_CLIENTI, mappa.riga, mappa.larghezza, mappa.riga, c).catch(() => {});
+  await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(c)}${mappa.riga}`, values: [[INTESTAZIONE_CHI]] }], 'RAW');
+  mappa.col.CHI = c;
+  return c;
 }
 
 // Se la riga ha uno degli avvisi in `quali`, lo toglie e restituisce cosa
@@ -323,6 +357,8 @@ function clienteDaRiga(r, col, numeroRiga) {
     // 'Sospesa' | 'Urgente' | '' e il suo motivo ("01/10/2026 — perde acqua").
     avviso: col.AVVISO ? avvisoDa(v('AVVISO')) : '',
     motivo: col.MOTIVO ? testo(v('MOTIVO')) : '',
+    // In quale giro del giorno sta, come nome di chiave ("matteo"); '' = in nessuno.
+    chiVa: col.CHI ? testo(v('CHI')).toLowerCase() : '',
   };
 }
 
@@ -331,6 +367,11 @@ export async function leggiTutto(foglio) {
   const posizioni = leggiCoordinate(foglio).catch((err) => {
     console.error('Coordinate non lette:', err);
     return new Map();
+  });
+  // Lo storico degli interventi (e come hanno pagato): idem.
+  const storico = leggiStorico(foglio).catch((err) => {
+    console.error('Storico non letto:', err);
+    return [];
   });
   const [{ griglia: gc, mappa: mc }, { griglia: gl, mappa: ml }] = await Promise.all([
     leggiClienti(foglio),
@@ -391,7 +432,7 @@ export async function leggiTutto(foglio) {
     console.error('Clienti persi non letti:', err);
   }
 
-  return { oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD };
+  return { oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD, storico: await storico, pagamenti: PAGAMENTI };
 }
 
 // Le righe si spostano (gli ordinamenti del menu "Foglio di lavoro"): un
@@ -406,6 +447,108 @@ function trovaCliente(griglia, mappa, codice) {
 }
 
 // ---------------------------------------------------------------------------
+//  Storico interventi
+// ---------------------------------------------------------------------------
+// Scheda "Storico-Interventi": una riga per ogni «Manutenzione fatta» segnata
+// dall'app (la scrive segnaFatta, l'annulla la svuota). Riga 1 = intestazioni,
+// trovate per nome. Le automazioni del foglio non la leggono. Dal 19 ott 2026
+// l'app la mostra («Interventi fatti») e ci scrive come ha pagato il cliente.
+async function leggiGrigliaStorico(foglio, celle = 'A1:J5000') {
+  try {
+    return await foglio.leggi(`'${TAB_STORICO}'!${celle}`, 'FORMATTED_VALUE');
+  } catch (err) {
+    if (err.status === 400) return null; // scheda non ancora creata
+    throw err;
+  }
+}
+const colonneStorico = (griglia) => {
+  const testa = ((griglia && griglia[0]) || []).map(normalizza);
+  const c = (nome) => testa.indexOf(normalizza(nome));
+  return { data: c('Data'), codice: c('Codice'), nome: c('Cliente'), prossima: c('Prossima manutenzione'), da: c('Segnata da'), pagamento: c('Pagamento'), larghezza: testa.length };
+};
+// "App (matteo)" → "matteo".
+const chiDaSegnata = (s) => ((String(s).match(/\(([^)]+)\)\s*$/) || [])[1] || '').trim().toLowerCase();
+
+async function leggiStorico(foglio) {
+  const g = await leggiGrigliaStorico(foglio);
+  if (!g || !g.length) return [];
+  const k = colonneStorico(g);
+  if (k.codice < 0 || k.data < 0) return [];
+  const v = (r, i) => (i < 0 ? '' : testo(r[i]));
+  const lista = [];
+  for (let i = 1; i < g.length; i++) {
+    const r = g[i] || [];
+    const codice = v(r, k.codice).toUpperCase();
+    if (!codice) continue; // riga svuotata da un annulla
+    lista.push({ riga: i + 1, data: v(r, k.data), codice, nome: v(r, k.nome), prossima: v(r, k.prossima), chi: chiDaSegnata(v(r, k.da)), pagamento: v(r, k.pagamento) });
+  }
+  return lista;
+}
+
+// La colonna "Pagamento". La scheda nata prima del 19 ott 2026 ne ha cinque:
+// l'intestazione si aggiunge in fondo, con l'aspetto delle altre. null = la
+// scheda non c'è ancora (la crea accoda, già con "Pagamento").
+async function colonnaPagamento(foglio) {
+  const g = await leggiGrigliaStorico(foglio, 'A1:J1');
+  if (!g || !g.length) return null;
+  const k = colonneStorico(g);
+  if (k.pagamento >= 0) return k.pagamento + 1;
+  const c = k.larghezza + 1;
+  await foglio.copiaCella(TAB_STORICO, 1, k.larghezza, 1, c).catch(() => {});
+  await foglio.scrivi([{ range: `'${TAB_STORICO}'!${lettera(c)}1`, values: [['Pagamento']] }], 'RAW');
+  return c;
+}
+
+// Cambia come ha pagato un intervento già nello storico («Da risentire» che
+// poi paga, o un pagamento segnato sbagliato). L'intervento si riconosce da
+// codice + data, non dal numero di riga visto dal telefono (che vale solo se
+// combacia ancora). Si annulla rimettendo il pagamento di prima.
+export async function cambiaPagamento(foglio, { riga, codice, data, pagamento }) {
+  const pag = pagamentoDa(pagamento);
+  const cod = testo(codice).toUpperCase();
+  const g = await leggiGrigliaStorico(foglio);
+  if (!g || !g.length) throw problema('Non trovo lo storico degli interventi. Chiedi a Matteo.', 409);
+  const k = colonneStorico(g);
+  const combacia = (n) => { const r = g[n - 1] || []; return testo(r[k.codice]).toUpperCase() === cod && testo(r[k.data]) === testo(data); };
+  let n = Number(riga);
+  if (!(n > 1 && combacia(n))) {
+    n = 0;
+    for (let i = g.length; i > 1 && !n; i--) if (combacia(i)) n = i;
+  }
+  if (!n) throw problema('Non trovo più questo intervento nello storico. Riapri l\'app e riprova.', 409);
+  const prima = k.pagamento >= 0 ? testo((g[n - 1] || [])[k.pagamento]) : '';
+  const c = k.pagamento >= 0 ? k.pagamento + 1 : await colonnaPagamento(foglio);
+  await foglio.scrivi([{ range: `'${TAB_STORICO}'!${lettera(c)}${n}`, values: [[pag]] }], 'RAW');
+  return { ok: true, riga: n, pagamento: pag, annulla: { riga: n, codice: cod, data: testo(data), pagamento: prima } };
+}
+
+// ---------------------------------------------------------------------------
+//  Giri del giorno («Chi ci va»)
+// ---------------------------------------------------------------------------
+// I giri di Matteo e di babbo, condivisi fra i due telefoni (19 ott 2026,
+// Matteo: «un gestore della gita giornaliera con i clienti che decido di fare
+// io e quelli del babbo, e un pulsante per spostarli dalla mia alla sua
+// lista»). Un cliente sta nel giro di `a` (nome della chiave), o in nessuno
+// (''). Le persone possibili sono quelle di GESTIONE_CHIAVE. `codici` (al
+// massimo 20) per spostarne tanti insieme («Svuota il giro»).
+export async function assegnaManutenzione(foglio, { codice, codici, a = '' }, { persone = [] } = {}) {
+  const chi = testo(a).toLowerCase();
+  if (chi && !persone.includes(chi)) throw problema('Scelta non valida.');
+  const lista = Array.isArray(codici) ? codici : [codice];
+  if (!lista.length || lista.length > 20) throw problema('Scelta non valida.');
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const righe = lista.map((k) => ({ codice: testo(k).toUpperCase(), riga: trovaCliente(griglia, mappa, k) }));
+  const prima = righe.map(({ codice: k, riga }) => ({ codice: k, a: mappa.col.CHI ? testo((griglia[riga - 1] || [])[mappa.col.CHI - 1]).toLowerCase() : '' }));
+  if (chi || mappa.col.CHI) {
+    const c = await colonnaChi(foglio, mappa);
+    await foglio.scrivi(righe.map(({ riga }) => ({ range: `'${TAB_CLIENTI}'!${lettera(c)}${riga}`, values: [[nomePersona(chi)]] })), 'RAW');
+  }
+  const nome = testo((griglia[righe[0].riga - 1] || [])[mappa.col.NOME - 1]);
+  // Per uno solo, l'annulla rimette il giro di prima. «Svuota» chiede conferma prima.
+  return { ok: true, nome, chiVa: chi, annulla: Array.isArray(codici) ? null : prima[0] };
+}
+
+// ---------------------------------------------------------------------------
 //  Manutenzione fatta
 // ---------------------------------------------------------------------------
 
@@ -413,9 +556,10 @@ function trovaCliente(griglia, mappa, codice) {
 // manutenzione" diventa data + frequenza, come chiede il foglio stesso
 // ("Aggiornala quando fai l'intervento"). Restituisce quel che serve per
 // annullare.
-export async function segnaFatta(foglio, { codice, data, frequenza }, { chi = 'app' } = {}) {
+export async function segnaFatta(foglio, { codice, data, frequenza, pagamento }, { chi = 'app' } = {}) {
   const quando = data ? leggiDataUtente(data) : oggi();
   if (!quando) throw problema('Data non valida.');
+  const pag = pagamentoDa(pagamento);
   const serQuando = serialeDa(quando.a, quando.m, quando.g);
   const serOggi = serialeDa(...Object.values(oggi()));
   if (serQuando > serOggi) throw problema('La data è nel futuro: scegli oggi o un giorno passato.');
@@ -457,22 +601,29 @@ export async function segnaFatta(foglio, { codice, data, frequenza }, { chi = 'a
 
   let storico = null;
   try {
-    storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO,
-      [testoData(quando), testo(codice).toUpperCase(), nome, testoData(prossima), `App (${chi})`]);
+    const rigaStorico = [testoData(quando), testo(codice).toUpperCase(), nome, testoData(prossima), `App (${chi})`];
+    // Il pagamento nella sua colonna (la sesta, se la scheda nasce adesso).
+    const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.length;
+    while (rigaStorico.length < cP) rigaStorico.push('');
+    rigaStorico[cP - 1] = pag;
+    storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO, rigaStorico);
   } catch (err) {
     // Lo storico è un di più: se non si scrive, la manutenzione è segnata lo stesso.
     console.error('Storico interventi non scritto:', err);
   }
 
-  // Fatta la manutenzione, non è più né sospesa né urgente.
+  // Fatta la manutenzione, non è più né sospesa né urgente, ed esce dal giro.
   const avvisoPrima = await togliAvviso(foglio, mappa, riga, r, AVVISI);
+  const chiPrima = col.CHI ? testo(r[col.CHI - 1]) : '';
+  if (chiPrima) await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(col.CHI)}${riga}`, values: [['']] }], 'RAW');
 
   return {
     ok: true,
     nome,
     fatta: testoData(quando),
     prossima: testoData(prossima),
-    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico, avvisoPrima },
+    pagamento: pag,
+    annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico, avvisoPrima, chiPrima },
   };
 }
 
@@ -539,7 +690,7 @@ export async function impostaAvviso(foglio, { codice, avviso = '', motivo = '', 
   };
 }
 
-export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima }) {
+export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima, chiPrima }) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const riga = trovaCliente(griglia, mappa, codice);
   const { col } = mappa;
@@ -571,6 +722,11 @@ export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaSc
   // Rimette sospesa/urgente se la manutenzione li aveva tolti.
   if (avvisoPrima && AVVISI.includes(avvisoPrima.avviso)) {
     await scriviAvviso(foglio, mappa, riga, avvisoPrima.avviso, testo(avvisoPrima.motivo).slice(0, 600));
+  }
+  // E chi ci doveva andare (solo un nome, niente formule dal telefono).
+  const chiRimesso = testo(chiPrima).slice(0, 40);
+  if (chiRimesso && mappa.col.CHI && /^[\p{L} ]+$/u.test(chiRimesso)) {
+    await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(mappa.col.CHI)}${riga}`, values: [[chiRimesso]] }], 'RAW');
   }
   return { ok: true };
 }

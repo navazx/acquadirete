@@ -17,7 +17,7 @@ import { timingSafeEqual, createHash } from 'node:crypto';
 import {
   leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
-  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, creaFoglioGoogle,
+  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -56,6 +56,11 @@ function chiDellaChiave(data) {
   return chi;
 }
 
+// Le persone che usano l'app (i nomi delle chiavi): ognuna ha il suo giro
+// del giorno («Chi ci va»). «app» è la chiave senza nome.
+const persone = () => [...new Set(String(process.env.GESTIONE_CHIAVE || '').split(',')
+  .map((v) => (v.includes(':') ? v.split(':')[0].trim().toLowerCase() : '')).filter((n) => n && n !== 'app'))];
+
 const risposta = (corpo, status = 200) =>
   Response.json(corpo, { status, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 
@@ -72,6 +77,8 @@ const AZIONI = {
   stato: cambiaStatoLead,
   nota: notaLead,
   posizioni: salvaPosizioni,
+  pagamento: cambiaPagamento,
+  assegna: assegnaManutenzione,
 };
 
 // creaFoglio è un parametro solo per il server di prova in locale
@@ -93,14 +100,15 @@ export const creaGestore = (creaFoglio) => async (req) => {
   const foglio = creaFoglio(sheetId);
 
   try {
-    if (req.method === 'GET') return risposta({ ok: true, ...(await leggiTutto(foglio)) });
+    // io: chi sta usando l'app; persone: fra chi si dividono le manutenzioni.
+    if (req.method === 'GET') return risposta({ ok: true, ...(await leggiTutto(foglio)), io: chi, persone: persone() });
     if (req.method !== 'POST') return risposta({ ok: false, errore: 'Metodo non ammesso' }, 405);
 
     let body;
     try { body = await req.json(); } catch { return risposta({ ok: false, errore: 'Richiesta non valida' }, 400); }
     const azione = AZIONI[body?.azione];
     if (!azione) return risposta({ ok: false, errore: 'Azione sconosciuta' }, 400);
-    return risposta(await azione(foglio, body.dati ?? {}, { chi }));
+    return risposta(await azione(foglio, body.dati ?? {}, { chi, persone: persone() }));
   } catch (err) {
     if (err.perUtente) return risposta({ ok: false, errore: err.message }, err.status || 400);
     console.error('Gestione:', err);

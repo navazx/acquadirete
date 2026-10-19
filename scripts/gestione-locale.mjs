@@ -23,11 +23,13 @@ const VERO = process.argv.includes('--vero');
 
 process.env.GSC_KEY_JSON = readFileSync(join(QUI, '..', 'seo-report', 'gsc-key-readonly.json'), 'utf8');
 process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
-// "matteo" serve a provare le operazioni riservate a lui (importaPersi).
-process.env.GESTIONE_CHIAVE = 'prova:provalocale-0000-0000,matteo:provalocale-matteo-0000';
+// Gli stessi nomi del sito vero: la chiave di prova è quella di "babbo" (si
+// vede l'app come la vede lui, «Chi ci va» compreso); "matteo" serve a
+// provare le operazioni riservate a lui (importaPersi).
+process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
-const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE } =
+const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO } =
   await import('../netlify/functions/_shared/gestionale.mjs');
 
 // ---------------------------------------------------------------------------
@@ -56,6 +58,11 @@ async function creaFoglioFinto() {
   try {
     const coordinate = await vero.leggi(`'${TAB_COORDINATE}'!A1:F3000`, 'UNFORMATTED_VALUE');
     if (coordinate.length) schede[TAB_COORDINATE] = coordinate;
+  } catch { /* scheda non ancora creata */ }
+  // Lo storico degli interventi, per la pagina «Interventi fatti».
+  try {
+    const storico = await vero.leggi(`'${TAB_STORICO}'!A1:J5000`, 'FORMATTED_VALUE');
+    if (storico.length) schede[TAB_STORICO] = storico;
   } catch { /* scheda non ancora creata */ }
   console.log(`Copia in memoria: ${schede[TAB_CLIENTI].length} righe clienti, ${schede[TAB_LEAD].length} righe lead, ${Math.max((schede[TAB_COORDINATE] || []).length - 1, 0)} posizioni`);
 

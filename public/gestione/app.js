@@ -87,6 +87,10 @@
     personaPiu: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
     mirino: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
     cartina: '<path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
+    registro: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>',
+    euro: '<path d="M17.5 6.5a6.5 6.5 0 1 0 0 11M4 10h9M4 14h9"/>',
+    frecciaGiu: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+    frecciaSu: '<path d="M12 19V5M6 11l6-6 6 6"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -209,7 +213,10 @@
         });
         // E quelle segnate col «Sono qui» senza campo: c'è linea, partono.
         applicaInAttesa(r.clienti);
-        const nuovi = { oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati };
+        const nuovi = {
+          oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati,
+          storico: r.storico || [], io: r.io || '', persone: r.persone || [],
+        };
         // Le azioni ancora in coda: il foglio non le ha, lo schermo sì.
         for (const v of leggiLista(K_CODA)) if (APPLICA[v.azione]) APPLICA[v.azione](nuovi, v.dati);
         dati = nuovi;
@@ -278,7 +285,7 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
@@ -364,6 +371,37 @@
     return { scadute, presto, urgenti, sospese };
   }
 
+  // ---------------------------------------------------------------------
+  //  Giri del giorno, e come hanno pagato (19 ott 2026, richieste di Matteo)
+  // ---------------------------------------------------------------------
+  // Due giri condivisi fra i telefoni: quello di chi usa l'app («tu») e
+  // quello dell'altro (i nomi delle chiavi, "babbo" e "matteo"). Il foglio
+  // li tiene nella colonna "Chi ci va" di ogni cliente.
+  const io = () => (dati && dati.io) || '';
+  const altri = () => ((dati && dati.persone) || []).filter((p) => p !== io());
+  const nomeChi = (k) => (k ? k.charAt(0).toUpperCase() + k.slice(1) : '');
+  const daChi = (k) => (k === io() ? 'da te' : `da ${nomeChi(k)}`);
+  const etichettaChi = (c) => (!c.chiVa ? ''
+    : c.chiVa === io() ? '<span class="etichetta chi-mio">Nel tuo giro</span>'
+      : `<span class="etichetta">Nel giro di ${esc(nomeChi(c.chiVa))}</span>`);
+
+  // Dopo «Manutenzione fatta» l'app chiede come ha pagato. «Da risentire» =
+  // non ha ancora pagato: si ritrova negli Interventi fatti, e quando paga si
+  // cambia da lì. Il primo valore è quello che va nel foglio.
+  const DA_RISENTIRE = 'Da risentire';
+  const PAGAMENTI = [
+    ['Contanti', 'Contanti', 'Contanti'],
+    ['POS', 'POS (carta o bancomat)', 'POS'],
+    ['Fattura e poi bonifico', 'Fattura, poi bonifico', 'Fattura, poi bonifico'],
+    [DA_RISENTIRE, 'Da risentire per il pagamento', 'Da risentire per il pagamento'],
+  ];
+  const breve = (p) => (PAGAMENTI.find((x) => x[0] === p) || [p, p, p])[2];
+  const etichettaPagamento = (p) => (p === DA_RISENTIRE ? `<span class="etichetta arancio">${esc(breve(p))}</span>`
+    : p ? `<span class="etichetta verde">${esc(breve(p))}</span>` : '<span class="etichetta grigio">Pagamento non segnato</span>');
+  // "19/10/2026" → numero ordinabile.
+  const quandoFatto = (s) => { const m = String(s.data).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0; };
+  const daPagare = () => (dati.storico || []).filter((s) => s.pagamento === DA_RISENTIRE);
+
   // "01/10/2026 — perde acqua" → { quando: "01/10/2026", perche: "perde acqua", t: ordinabile }
   function leggiMotivo(c) {
     const s = String(c.motivo || '');
@@ -417,8 +455,14 @@
   function schermoHome() {
     titolo('Acquadirete', false);
     const { scadute, presto, urgenti } = contaScadenze();
+    // Le tappe dei giri: le tue e quelle dell'altro.
+    const tappe = (p) => dati.clienti.filter((c) => c.chiVa === p).length;
+    const quante = (n) => (n === 1 ? '1 tappa' : `${n} tappe`);
+    const giri = io() ? [`${quante(tappe(io()))} per te`, ...altri().map((p) => `${quante(tappe(p))} per ${nomeChi(p)}`)] : [];
+    const qualcuna = io() && [io(), ...altri()].some((p) => tappe(p));
     const daRichiamare = dati.lead.filter((l) => statoLead(l) === 'Da richiamare').length;
     const risentire = daRisentire().length;
+    const pagare = daPagare().length;
     const alle = aggiornatoAlle ? new Date(aggiornatoAlle).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
     schermo.innerHTML = `
       ${riquadroCoda()}
@@ -432,6 +476,11 @@
           <span><b>Manutenzioni da fare</b>
           <small>${scadute ? `<span class="n-rosso">${scadute} scadute</span> · ` : ''}${presto} nei prossimi 2 mesi</small></span>
         </button>
+        ${io() ? `<button class="tessera" data-vai="giri">
+          <span class="ico">${icona('cartina')}</span>
+          <span><b>Giro del giorno</b>
+          <small>${qualcuna ? giri.join(' · ') : `Prepara il tuo giro${altri().length ? ` e quello di ${esc(altri().map(nomeChi).join(', '))}` : ''}`}</small></span>
+        </button>` : ''}
         <button class="tessera" data-vai="lead">
           <span class="ico">${icona('telefono')}</span>
           <span><b>Contatti da chiamare</b>
@@ -441,19 +490,41 @@
           <span class="ico">${icona('cerca')}</span>
           <span><b>Cerca clienti e contatti</b><small>Per nome, città o telefono</small></span>
         </button>
-        <button class="tessera" data-vai="nuovo">
-          <span class="ico">${icona('piu')}</span>
-          <span><b>Nuovo cliente</b><small>Aggiungi un cliente all'elenco</small></span>
+        <button class="tessera" data-vai="storico">
+          <span class="ico">${icona('registro')}</span>
+          <span><b>Interventi fatti</b>
+          <small>${pagare ? `<span class="n-rosso">${pagare} da risentire per il pagamento</span>` : 'Storico e pagamenti'}</small></span>
         </button>
-        <button class="tessera" data-vai="nuovoLead">
-          <span class="ico">${icona('personaPiu')}</span>
-          <span><b>Nuovo contatto</b><small>Chi ha telefonato o scritto per informazioni</small></span>
+        <button class="tessera" id="aggiungi">
+          <span class="ico">${icona('piu')}</span>
+          <span><b>Aggiungi</b><small>Un cliente nuovo o un contatto</small></span>
         </button>
       </div>
       <p class="aggiornato">${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button></p>`;
     schermo.querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai, vista: b.dataset.vista }); });
+    $('aggiungi').onclick = chiediCosaAggiungere;
     $('ricarica').onclick = (e) => conPulsante(e.target, 'Aggiorno…', () => carica().then(() => disegna(history.state)).catch((err) => messaggio(err.message, { errore: true })));
     collegaRiquadroCoda();
+  }
+
+  // Una tessera sola per «Nuovo cliente» e «Nuovo contatto» (19 ott 2026,
+  // Matteo: una voce in meno nella schermata iniziale): si sceglie dopo.
+  function chiediCosaAggiungere() {
+    apriFinestra(`
+      <h3>Chi vuoi aggiungere?</h3>
+      <div class="tessere">
+        <button class="tessera" type="button" data-vai="nuovo">
+          <span class="ico">${icona('piu')}</span>
+          <span><b>Un cliente</b><small>Ha l'impianto: entra nelle manutenzioni</small></span>
+        </button>
+        <button class="tessera" type="button" data-vai="nuovoLead">
+          <span class="ico">${icona('personaPiu')}</span>
+          <span><b>Un contatto</b><small>Ha telefonato o scritto per informazioni</small></span>
+        </button>
+      </div>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('finestra').querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai }); });
+    $('no').onclick = chiudiFinestra;
   }
 
   // ---------------------------------------------------------------------
@@ -469,9 +540,9 @@
     } else if (c.avviso) {
       const mo = leggiMotivo(c);
       const etichetta = c.avviso === 'Urgente' ? `<span class="etichetta rosso">Urgente${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>` : `<span class="etichetta grigio">Sospesa${mo.quando ? ' dal ' + esc(mo.quando) : ''}</span>`;
-      riga3 = `<span class="riga3">${etichetta}</span>${mo.perche ? `<span class="riga2" style="color:var(--testo)">${esc(mo.perche)}</span>` : ''}`;
+      riga3 = `<span class="riga3">${etichetta}${etichettaChi(c)}</span>${mo.perche ? `<span class="riga2" style="color:var(--testo)">${esc(mo.perche)}</span>` : ''}`;
     } else if (conScadenza) {
-      riga3 = `<span class="riga3"><span class="etichetta ${s.classe}">${esc(s.testo)}</span>${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}</span>`;
+      riga3 = `<span class="riga3"><span class="etichetta ${s.classe}">${esc(s.testo)}</span>${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaChi(c)}</span>`;
     }
     return `<button class="voce" data-codice="${esc(c.codice)}">
       <b>${esc(c.nome)}</b>
@@ -774,16 +845,22 @@
     return s.giorni < 0 ? 'scadute' : s.giorni <= 30 ? 'mese' : 'due';
   }
 
-  // Il giro: i codici dei clienti scelti, nell'ordine in cui farli. Resta
-  // nel telefono, così si prepara la sera e si parte la mattina.
-  const K_GIRO = 'gestione-giro';
+  // I giri: i clienti scelti, nell'ordine in cui farli. Fino al 19 ott 2026
+  // il giro stava solo nel telefono; ora sta nel foglio (colonna "Chi ci
+  // va"), uno per persona, e ognuno vede anche quello dell'altro. L'ordine
+  // non si salva: si ricalcola dalle posizioni.
+  memoria.togli('gestione-giro'); // il vecchio giro del telefono
   const MAX_TAPPE = 10; // Google Maps apre al massimo 10 tappe
   // Da dove parte babbo (sede, Via 1° Maggio a Montespertoli): serve solo a
   // mettere le tappe in un ordine sensato.
   const SEDE = { lat: 43.6436, lng: 11.0756 };
-  let giro = (() => {
-    try { const g = JSON.parse(memoria.leggi(K_GIRO) || '[]'); return Array.isArray(g) ? g.filter((k) => typeof k === 'string').slice(0, MAX_TAPPE) : []; } catch { return []; }
-  })();
+  // Ognuno parte da casa sua: Matteo da San Donnino, 50013 Campi Bisenzio
+  // (19 ott 2026, sua richiesta); chi non è qui parte dalla sede.
+  const PARTENZE = {
+    babbo: { ...SEDE, nome: 'Montespertoli' },
+    matteo: { lat: 43.7956, lng: 11.1502, nome: 'San Donnino' },
+  };
+  const partenzaDi = (p) => PARTENZE[p] || { ...SEDE, nome: 'Montespertoli' };
   let elencoGiroAperto = false;
   let mappaAttiva = null;   // la mappa Leaflet mostrata adesso
   let vistaMappa = null;    // centro e zoom, per ritrovarla uguale tornando indietro
@@ -794,21 +871,21 @@
   // Distanza "a volo d'uccello" in gradi corretti: basta per confrontare.
   const distanza = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((a.lat + b.lat) * Math.PI / 360), b.lat - a.lat);
 
-  // Ordina le tappe come un giro che parte dalla sede e ci torna: prima la
+  // Ordina le tappe come un giro che parte da `casa` e ci torna: prima la
   // più vicina ogni volta, poi si sciolgono gli incroci (2-opt). Le tappe
   // senza posizione restano in fondo.
-  function ordinaGiro(codici) {
+  function ordinaGiro(codici, casa = SEDE) {
     const conPosto = codici.map(clienteDa).filter((c) => c && c.lat != null);
     const senza = codici.filter((k) => !conPosto.some((c) => c.codice === k));
     const resto = conPosto.slice();
-    const percorso = [SEDE];
+    const percorso = [casa];
     while (resto.length) {
       const qui = percorso[percorso.length - 1];
       let i = 0;
       resto.forEach((t, j) => { if (distanza(qui, t) < distanza(qui, resto[i])) i = j; });
       percorso.push(resto.splice(i, 1)[0]);
     }
-    percorso.push(SEDE);
+    percorso.push(casa);
     for (let meglio = true, giri = 0; meglio && giri < 50; giri++) {
       meglio = false;
       for (let i = 1; i < percorso.length - 2; i++) {
@@ -821,10 +898,58 @@
     }
     // L'anello è lungo uguale nei due versi: si parte dalla tappa più vicina a casa.
     const tappe = percorso.slice(1, -1);
-    if (tappe.length > 1 && distanza(SEDE, tappe[0]) > distanza(SEDE, tappe[tappe.length - 1])) tappe.reverse();
+    if (tappe.length > 1 && distanza(casa, tappe[0]) > distanza(casa, tappe[tappe.length - 1])) tappe.reverse();
     return [...tappe.map((c) => c.codice), ...senza];
   }
-  function salvaGiro() { memoria.scrivi(K_GIRO, JSON.stringify(giro)); }
+  // I codici del giro di `p`, in ordine.
+  const giroDi = (p) => (p ? ordinaGiro(dati.clienti.filter((c) => c.chiVa === p).map((c) => c.codice), partenzaDi(p)) : []);
+
+  // Mette il cliente nel giro di `a` ('' = in nessuno), dalla mappa, dalla
+  // scheda o dalla pagina dei giri. Torna true se l'ha fatto.
+  async function spostaNelGiro(c, a) {
+    const prima = c.chiVa || '';
+    if (prima === a) return true;
+    if (a && dati.clienti.filter((x) => x.chiVa === a).length >= MAX_TAPPE) {
+      messaggio(`${a === io() ? 'Il tuo giro ha' : `Il giro di ${nomeChi(a)} ha`} già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
+      return false;
+    }
+    const testo = a === io() ? 'Nel tuo giro' : a ? `Nel giro di ${nomeChi(a)}` : prima === io() ? 'Tolto dal tuo giro' : `Tolto dal giro di ${nomeChi(prima)}`;
+    try {
+      const { r, voce } = await manda('assegna', { codice: c.codice, a }, `${testo}: ${c.nome}`);
+      if (r) { c.chiVa = r.chiVa; salvaDati(); }
+      messaggio(`${testo}: ${c.nome}` + (voce ? fuoriLinea(voce) : ''), {
+        durata: 8000,
+        azione: { testo: 'Annulla', fai: () => spostaNelGiro(clienteDa(c.codice) || c, prima).then(() => disegna(history.state)) },
+      });
+      return true;
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+      return false;
+    }
+  }
+
+  // «Svuota»: tutte le tappe di un giro fuori in una volta, dopo la conferma.
+  function chiediSvuota(p) {
+    const codici = dati.clienti.filter((c) => c.chiVa === p).map((c) => c.codice);
+    if (!codici.length) return;
+    apriFinestra(`
+      <h3>Svuotare ${p === io() ? 'il tuo giro' : `il giro di ${esc(nomeChi(p))}`}?</h3>
+      <p>Tolgo ${codici.length === 1 ? 'la tappa' : `tutte le ${codici.length} tappe`}. I clienti restano fra le manutenzioni da fare.</p>
+      <button class="btn pieno grande" type="button" id="si">Sì, svuota</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+      try {
+        const { r, voce } = await manda('assegna', { codici, a: '' }, `Giro ${p === io() ? 'tuo' : `di ${nomeChi(p)}`} svuotato (${codici.length})`);
+        if (r) { APPLICA.assegna(dati, { codici, a: '' }); salvaDati(); }
+        chiudiFinestra();
+        disegna(history.state);
+        messaggio('Giro svuotato.' + (voce ? fuoriLinea(voce) : ''));
+      } catch (err) {
+        messaggio(err.message, { errore: true, durata: 8000 });
+      }
+    });
+  }
 
   // Il link che apre Google Maps col percorso: si parte da dove si è, l'ultima
   // tappa è l'arrivo. Indirizzi scritti (Google li trova meglio delle
@@ -865,14 +990,21 @@
     const questa = ++turnoMappa;
     titolo('Mappa dei giri', true);
     const scelte = new Set(Array.isArray(stato.cat) ? stato.cat : CATEGORIE_DI_BASE);
-    giro = giro.filter((k) => clienteDa(k));
+    // Il tuo giro (in ordine) e le tappe dei giri degli altri (codice → numero).
+    let giro = [];
+    let altrui = new Map();
+    const rileggiGiri = () => {
+      giro = giroDi(io());
+      altrui = new Map(altri().flatMap((p) => giroDi(p).map((k, i) => [k, i + 1])));
+    };
+    rileggiGiri();
     const tutti = dati.clienti.map((c) => ({ c, cat: categoriaMappa(c) })).filter((x) => x.cat);
     // Il cliente aperto da «Sulla mappa» nella sua scheda (17 ott 2026) e le
-    // tappe del giro si vedono anche senza una manutenzione vicina: puntino
+    // tappe dei giri si vedono anche senza una manutenzione vicina: puntino
     // verde, «lontana». `centra` vale una volta sola (poi diventa `evid`), così
     // un aggiornamento in sottofondo non riporta la mappa su di lui.
     const evid = stato.centra || stato.evid || null;
-    [evid, ...giro].forEach((k) => {
+    [evid, ...dati.clienti.filter((c) => c.chiVa).map((c) => c.codice)].forEach((k) => {
       const c = k && clienteDa(k);
       if (c && !tutti.some((x) => x.c === c)) tutti.push({ c, cat: 'lontana' });
     });
@@ -932,14 +1064,20 @@
     function disegnaGiro() {
       const tappe = giro.map(clienteDa).filter(Boolean);
       const nome = (c) => c.nome.split('/')[0].replace(/\(.*?\)/g, '').trim();
-      $('giro').innerHTML = tappe.length
-        ? `<div class="giro-testa"><b>Giro: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
+      // Una riga per il giro dell'altro (i suoi puntini sono chiari).
+      const degliAltri = altri().map((p) => {
+        const n = dati.clienti.filter((c) => c.chiVa === p).length;
+        return `<p class="giro-altro">Giro di ${esc(nomeChi(p))}: ${n === 1 ? '1 tappa' : `${n} tappe`}${n ? ' (puntini chiari)' : ''} · <button class="link" data-giri>Vedi i giri</button></p>`;
+      }).join('');
+      $('giro').innerHTML = (tappe.length
+        ? `<div class="giro-testa"><b>Il tuo giro: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
             <span><button class="link" id="elenco-giro">${elencoGiroAperto ? 'Chiudi elenco' : 'Elenco'}</button><button class="link" id="svuota-giro">Svuota</button></span></div>
           ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((c, i) => `<span><b>${i + 1}</b>${esc(nome(c))} <i>${esc(titoloCitta(c.citta))}</i></span>`).join('')}</p>` : ''}
-          <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro in Google Maps</a>`
-        : '<p class="giro-vuoto">Tocca un puntino e poi «Aggiungi al giro». Le tappe si mettono in ordine da sole, partendo da Montespertoli.</p>';
-      if ($('svuota-giro')) $('svuota-giro').onclick = () => { giro = []; salvaGiro(); disegnaGiro(); disegnaPuntini(); };
+          <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il tuo giro in Google Maps</a>`
+        : `<p class="giro-vuoto">Tocca un puntino e poi «Nel mio giro». Le tappe si mettono in ordine da sole, partendo da ${esc(partenzaDi(io()).nome)}.</p>`) + degliAltri;
+      if ($('svuota-giro')) $('svuota-giro').onclick = () => chiediSvuota(io());
       if ($('elenco-giro')) $('elenco-giro').onclick = () => { elencoGiroAperto = !elencoGiroAperto; disegnaGiro(); };
+      $('giro').querySelectorAll('[data-giri]').forEach((b) => { b.onclick = () => vai({ s: 'giri' }); });
       dimensiona();
     }
 
@@ -951,25 +1089,28 @@
       return `<div class="popup-cliente">
         <b>${esc(c.nome)}</b>
         <span>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', '))}</span>
-        <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}</span>
+        <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaChi(c)}</span>
         ${c.tipo ? `<span class="tipo">${esc(c.tipo)}</span>` : ''}
         ${c.prec === 'paese' ? '<small>Posizione approssimativa: centro del paese. Quando sei lì, «Sono qui» nella scheda la sistema.</small>' : ''}
-        <div class="popup-azioni">
-          <button class="btn ${nelGiro(c) ? '' : 'pieno'}" data-azione="giro">${nelGiro(c) ? 'Togli dal giro' : 'Aggiungi al giro'}</button>
+        <div class="popup-azioni">${azioniGiro(c)}
           <button class="btn" data-azione="scheda">Apri la scheda</button>
         </div>
       </div>`;
     }
+    // Nel tuo giro: toglierlo o passarlo all'altro. In quello dell'altro:
+    // prenderlo tu o toglierlo. In nessuno: nel tuo o in quello dell'altro.
+    function azioniGiro(c) {
+      const b = (a, testo, pieno) => `<button class="btn${pieno ? ' pieno' : ''}" data-giro="${esc(a)}">${esc(testo)}</button>`;
+      if (!io()) return '';
+      if (c.chiVa === io()) return b('', 'Togli dal mio giro') + altri().map((p) => b(p, `Passa a ${nomeChi(p)}`)).join('');
+      if (c.chiVa) return b(io(), 'Lo prendo io', true) + b('', `Togli dal giro di ${nomeChi(c.chiVa)}`);
+      return b(io(), 'Nel mio giro', true) + altri().map((p) => b(p, `Nel giro di ${nomeChi(p)}`)).join('');
+    }
 
-    function cambiaGiro(c) {
-      if (nelGiro(c)) {
-        giro = giro.filter((k) => k !== c.codice);
-      } else {
-        if (giro.length >= MAX_TAPPE) { messaggio(`In un giro ci stanno al massimo ${MAX_TAPPE} tappe.`, { errore: true }); return; }
-        giro = ordinaGiro([...giro, c.codice]);
-      }
-      salvaGiro();
+    async function cambiaGiro(c, a) {
       mappaAttiva.closePopup();
+      if (!(await spostaNelGiro(c, a)) || !mappaAttiva) return;
+      rileggiGiri();
       disegnaGiro();
       disegnaPuntini();
     }
@@ -980,24 +1121,26 @@
       segni.clear();
       // Le tappe del giro e il cliente cercato si vedono sempre, anche se la
       // loro categoria è spenta.
-      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || nelGiro(x.c) || evidenziato(x.c))));
+      const visibili = sparpaglia(tutti.filter((x) => x.c.lat != null && (scelte.has(x.cat) || nelGiro(x.c) || altrui.has(x.c.codice) || evidenziato(x.c))));
       visibili.forEach((x) => {
         const n = giro.indexOf(x.c.codice);
         const ev = evidenziato(x.c);
-        const classi = ['pin', x.cat, x.c.prec === 'paese' ? 'circa' : '', n >= 0 ? 'nel-giro' : '', ev ? 'evidenziato' : ''].filter(Boolean).join(' ');
-        const testo = n >= 0 ? String(n + 1) : x.cat === 'urgenti' ? '!' : '';
-        const lato = ev ? 36 : x.cat === 'urgenti' || n >= 0 ? 32 : 26;
+        // Le tappe del giro dell'altro: col loro numero, ma più chiare.
+        const suo = altrui.get(x.c.codice);
+        const classi = ['pin', x.cat, x.c.prec === 'paese' ? 'circa' : '', n >= 0 ? 'nel-giro' : '', suo ? 'altrui' : '', ev ? 'evidenziato' : ''].filter(Boolean).join(' ');
+        const testo = n >= 0 ? String(n + 1) : suo ? String(suo) : x.cat === 'urgenti' ? '!' : '';
+        const lato = ev ? 36 : x.cat === 'urgenti' || n >= 0 || suo ? 32 : 26;
         const segno = L.marker([x.lat, x.lng], {
           icon: L.divIcon({ className: 'pin-mappa', html: `<span class="${classi}">${testo}</span>`, iconSize: [lato, lato], iconAnchor: [lato / 2, lato / 2], popupAnchor: [0, -lato / 2] }),
           keyboard: false,
           // Il cliente cercato, le tappe del giro e gli urgenti sopra gli altri puntini.
-          zIndexOffset: ev ? 3000 : n >= 0 ? 2000 : x.cat === 'urgenti' ? 1000 : x.cat === 'scadute' ? 500 : 0,
+          zIndexOffset: ev ? 3000 : n >= 0 ? 2000 : suo ? 1500 : x.cat === 'urgenti' ? 1000 : x.cat === 'scadute' ? 500 : 0,
         });
         segni.set(x.c.codice, segno);
         segno.bindPopup(() => popup(x.c), { maxWidth: 280, minWidth: 220, autoPanPaddingTopLeft: [16, 64], autoPanPaddingBottomRight: [16, 16] });
         segno.on('popupopen', (e) => {
           const el = e.popup.getElement();
-          el.querySelector('[data-azione="giro"]').onclick = () => cambiaGiro(x.c);
+          el.querySelectorAll('[data-giro]').forEach((b) => { b.onclick = () => cambiaGiro(x.c, b.dataset.giro); });
           el.querySelector('[data-azione="scheda"]').onclick = () => vai({ s: 'cliente', codice: x.c.codice });
         });
         segno.addTo(strato);
@@ -1187,6 +1330,8 @@
     // (e non già sospesa: lì c'è "Riattiva").
     const daFare = s.giorni != null && s.giorni <= 60 && c.avviso !== 'Sospesa';
     const mo = leggiMotivo(c);
+    // I suoi interventi, dal più recente (anche come ha pagato).
+    const fatti = interventi().filter((x) => x.codice === c.codice);
     const riquadroAvviso = !c.avviso ? '' : `
       <div class="avviso-cliente ${c.avviso === 'Urgente' ? 'rosso' : 'grigio'}">
         <div><b>${icona(c.avviso === 'Urgente' ? 'allarme' : 'pausa')} ${c.avviso === 'Urgente' ? 'URGENTE' : 'MANUTENZIONE SOSPESA'}</b>
@@ -1205,6 +1350,12 @@
         <div>Prossima manutenzione<br><span>${esc(c.prossima || 'non segnata')}</span></div>
         <div style="text-align:right">${esc(s.testo)}</div>
       </div>
+      ${io() ? `
+      <div class="chi-va">
+        <span>Nel giro di</span>
+        <div class="scelta scelta-chi">${[[io(), 'Il mio'], ...altri().map((p) => [p, `Di ${nomeChi(p)}`]), ['', 'Nessuno']]
+          .map(([k, t]) => `<button type="button" data-chi="${esc(k)}" aria-pressed="${(c.chiVa || '') === k}">${esc(t)}</button>`).join('')}</div>
+      </div>` : ''}
       <button class="btn verde grande" id="fatta" style="width:100%">${icona('spunta')} Manutenzione fatta</button>
       ${daFare ? `<button class="btn" id="rimanda" style="width:100%;margin-top:10px">${icona('orologio')} Rimanda la manutenzione</button>` : ''}
       ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Ha un guasto: è urgente</button>` : ''}
@@ -1212,6 +1363,8 @@
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
+      ${fatti.length ? `<h3 class="titoletto">Interventi fatti</h3>
+      <div class="lista">${fatti.map((x) => voceIntervento(x, false)).join('')}</div>` : ''}
       <h3 class="titoletto">Dati del cliente</h3>
       <dl class="dati">
         ${riga('Impianto', c.tipo)}
@@ -1231,6 +1384,10 @@
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
     if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
+    schermo.querySelectorAll('.scelta-chi [data-chi]').forEach((b) => {
+      b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => { if (await spostaNelGiro(c, b.dataset.chi)) disegna(history.state); });
+    });
+    collegaInterventi();
   }
 
   // «Sono qui»: dal cliente, il punto dove sta il telefono diventa la sua
@@ -1365,6 +1522,13 @@
   const clienteIn = (d, codice) => d.clienti.find((x) => x.codice === codice) || (d.persi || []).find((x) => x.codice === codice);
   const leadIn = (d, x) => d.lead.find((l) => l.data === x.data && l.nome === x.nome) || d.lead.find((l) => String(l.riga) === String(x.riga));
   const conProssima = (c, g) => { c.prossima = testoData(g); c.prossimaSeriale = serialeDa(g.a, g.m, g.g); };
+  // L'intervento appena segnato, nello storico del telefono (una volta sola).
+  const nelloStorico = (d, x, c) => {
+    const data = testoData(daIso(x.data));
+    d.storico = d.storico || [];
+    if (d.storico.some((s) => s.codice === x.codice && s.data === data)) return;
+    d.storico.push({ riga: null, data, codice: x.codice, nome: c.nome, prossima: c.prossima, chi: d.io || '', pagamento: x.pagamento || '' });
+  };
   // Come cambiano i dati per ogni azione, finché il foglio non risponde.
   const APPLICA = {
     fatta(d, x) {
@@ -1376,6 +1540,15 @@
       if (!c.frequenza) c.frequenza = mesi;
       c.avviso = '';
       c.motivo = '';
+      c.chiVa = '';
+      nelloStorico(d, x, c);
+    },
+    pagamento(d, x) {
+      const s = (d.storico || []).find((v) => v.codice === x.codice && v.data === x.data);
+      if (s) s.pagamento = x.pagamento || '';
+    },
+    assegna(d, x) {
+      (x.codici || [x.codice]).forEach((k) => { const c = clienteIn(d, k); if (c) c.chiVa = x.a || ''; });
     },
     rimanda(d, x) {
       const c = clienteIn(d, x.codice);
@@ -1726,17 +1899,20 @@
     confermaFatta(c, null);
   }
 
+  // «Come ha pagato?» (19 ott 2026, Matteo) sta nella stessa finestra: la
+  // risposta toccata è anche il «sì, fatta». Così resta un tocco solo.
   function confermaFatta(c, frequenzaNuova) {
     const mesi = c.frequenza || frequenzaNuova;
     const o = oggi();
     const f = apriFinestra(`
       <h3>Manutenzione fatta oggi?</h3>
       <p><strong>${esc(c.nome)}</strong><br>La prossima sarà il <strong id="anteprima">${testoData(piuMesi(o, mesi))}</strong></p>
-      <button class="btn verde grande" type="button" id="si">${icona('spunta')} Sì, fatta oggi</button>
       <div id="altro-giorno" hidden>
-        <label class="campo" style="margin-top:14px"><span>Che giorno l'hai fatta?</span>
+        <label class="campo"><span>Che giorno l'hai fatta?</span>
           <input type="date" id="giorno" max="${isoDa(o)}" value="${isoDa(o)}"></label>
       </div>
+      <p class="domanda">Come ha pagato?</p>
+      ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(v === DA_RISENTIRE ? 'orologio' : 'euro')} ${esc(t)}</button>`).join('')}
       <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     let giorno = null;
@@ -1752,16 +1928,22 @@
       giorno = g;
       $('anteprima').textContent = testoData(piuMesi(g, mesi));
       f.querySelector('h3').textContent = `Manutenzione fatta il ${dataLunga(g)}?`;
-      $('si').innerHTML = `${icona('spunta')} Sì, fatta il ${due(g.g)}/${due(g.m)}`;
     }
     $('giorno').onchange = aggiornaGiorno;
     $('no').onclick = chiudiFinestra;
-    $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+    f.querySelectorAll('[data-pag]').forEach((b) => { b.onclick = (e) => salva(e.currentTarget, b.dataset.pag); });
+    const salva = (btn, pagamento) => conPulsante(btn, 'Salvo…', async () => {
       try {
-        const ripristina = fotografia(c);
+        // Lo schermo torna com'era: il cliente e lo storico del telefono.
+        const ripristinaCliente = fotografia(c);
+        const ripristina = () => {
+          ripristinaCliente();
+          dati.storico = (dati.storico || []).filter((s) => !(s.codice === c.codice && s.riga == null));
+        };
         // Sempre col giorno: se parte domani (senza campo) resta quello di oggi.
         const fattaIl = giorno || oggi();
-        const { r, voce } = await manda('fatta', { codice: c.codice, data: isoDa(fattaIl), frequenza: frequenzaNuova || undefined }, `Manutenzione fatta il ${testoData(fattaIl)}: ${c.nome}`);
+        const datiFatta = { codice: c.codice, data: isoDa(fattaIl), frequenza: frequenzaNuova || undefined, pagamento };
+        const { r, voce } = await manda('fatta', datiFatta, `Manutenzione fatta il ${testoData(fattaIl)}: ${c.nome}`);
         chiudiFinestra();
         if (r) {
           // Aggiorna subito lo schermo, poi rilegge il foglio in sottofondo.
@@ -1769,14 +1951,17 @@
           c.prossima = r.prossima;
           c.prossimaSeriale = serialeDa(+x[2], +x[1], +x[0]);
           if (frequenzaNuova) c.frequenza = frequenzaNuova;
-          // Il motore toglie sospesa/urgente quando la manutenzione è fatta.
+          // Il motore toglie sospesa/urgente e «chi ci va» quando la manutenzione è fatta.
           c.avviso = '';
           c.motivo = '';
+          c.chiVa = '';
+          if (!r.giaSegnata) nelloStorico(dati, datiFatta, c);
+          salvaDati();
         }
         disegna(history.state);
         // Senza «Annulla» solo se il foglio l'aveva già segnata (richiesta doppia).
         const puoiAnnullare = voce || (r && r.annulla);
-        messaggio(`Segnata ✓ Prossima: ${c.prossima}` + (voce ? fuoriLinea(voce) : ''), {
+        messaggio(`Segnata ✓ ${breve(pagamento)} · Prossima: ${c.prossima}` + (voce ? fuoriLinea(voce) : ''), {
           durata: 15000,
           azione: puoiAnnullare ? { testo: 'Annulla', fai: voce ? () => annullaInCoda(voce, ripristina) : () => annulla(r.annulla, c, ripristina) } : null,
         });
@@ -1801,6 +1986,167 @@
       messaggio('Annullato: la data è tornata com\'era.');
       await carica();
       disegna(history.state);
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  //  Giro del giorno
+  // ---------------------------------------------------------------------
+  // Il tuo giro e quello dell'altro, uno sotto l'altro, con un tasto per
+  // passare una tappa dall'uno all'altro (19 ott 2026, Matteo: «i clienti
+  // che decido di fare io e quelli del babbo, e un pulsante per spostarli
+  // dalla mia alla sua lista e viceversa»). Le tappe si aggiungono dalla
+  // mappa o dalla scheda; fatta la manutenzione, la tappa esce dal giro e
+  // compare fra le «Fatte oggi».
+  function schermoGiri() {
+    titolo('Giro del giorno', true);
+    const oggiTesto = testoData(oggi());
+    const fatteOggi = interventi().filter((x) => x.data === oggiTesto);
+    const sezione = (p) => {
+      const tappe = giroDi(p).map(clienteDa).filter(Boolean);
+      const mio = p === io();
+      return `
+        <div class="testa-giro"><h2 class="gruppo">${mio ? 'Il tuo giro' : `Giro di ${esc(nomeChi(p))}`} (${tappe.length})</h2>
+          ${tappe.length ? `<button class="link" type="button" data-svuota="${esc(p)}">Svuota</button>` : ''}</div>
+        ${tappe.length ? `<div class="lista">${tappe.map((c, i) => voceTappa(c, i, p)).join('')}</div>
+          <a class="btn${mio ? ' pieno' : ''} apri-giro" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} ${mio ? 'Apri il tuo giro in Google Maps' : `Apri il giro di ${esc(nomeChi(p))} in Google Maps`}</a>`
+        : `<div class="vuoto">${mio ? 'Nessuna tappa nel tuo giro.' : `Nessuna tappa nel giro di ${esc(nomeChi(p))}.`}</div>`}`;
+    };
+    schermo.innerHTML = `
+      <p class="spiega">Le tappe si mettono in ordine da sole: ${[io(), ...altri()].map((p) => `${p === io() ? 'il tuo giro' : `quello di ${esc(nomeChi(p))}`} parte da ${esc(partenzaDi(p).nome)}`).join(', ')}. Fatta la manutenzione, la tappa esce dal giro.</p>
+      <button class="btn vai-mappa" id="vai-mappa" type="button">${icona('cartina')} Aggiungi tappe dalla mappa</button>
+      ${[io(), ...altri()].map(sezione).join('')}
+      ${fatteOggi.length ? `<h2 class="gruppo">Fatte oggi (${fatteOggi.length})</h2><div class="lista">${fatteOggi.map((x) => voceIntervento(x)).join('')}</div>` : ''}`;
+    $('vai-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE });
+    collegaVoci();
+    collegaInterventi();
+    schermo.querySelectorAll('[data-svuota]').forEach((b) => { b.onclick = () => chiediSvuota(b.dataset.svuota); });
+    schermo.querySelectorAll('[data-tappa]').forEach((b) => {
+      b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+        const c = clienteDa(b.dataset.tappa);
+        if (c && await spostaNelGiro(c, b.dataset.sposta)) disegna(history.state);
+      });
+    });
+  }
+
+  // Una tappa: tocchi il nome e apri la scheda; sotto, passarla all'altro
+  // (o prenderla tu) e toglierla.
+  function voceTappa(c, i, p) {
+    const s = scadenza(c);
+    const posto = [c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ');
+    const tasto = (a, testo, ico) => `<button class="btn" type="button" data-tappa="${esc(c.codice)}" data-sposta="${esc(a)}">${ico ? icona(ico) : ''} ${esc(testo)}</button>`;
+    const sposta = p === io()
+      ? altri().map((q) => tasto(q, `Passa a ${nomeChi(q)}`, 'frecciaGiu')).join('')
+      : tasto(io(), 'Lo prendo io', 'frecciaSu');
+    return `<div class="tappa">
+      <button class="voce" data-codice="${esc(c.codice)}">
+        <b><span class="numero${p === io() ? '' : ' suo'}">${i + 1}</span>${esc(c.nome)}</b>
+        <span class="riga2">${esc(posto || '—')}${c.tipo ? ' · ' + esc(c.tipo) : ''}</span>
+        <span class="riga3">${c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>' : `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>`}${c.lat == null ? '<span class="etichetta grigio">Non è sulla mappa</span>' : ''}</span>
+      </button>
+      <div class="tappa-azioni">${sposta}${tasto('', 'Togli')}</div>
+    </div>`;
+  }
+
+  // ---------------------------------------------------------------------
+  //  Interventi fatti (storico) e pagamenti
+  // ---------------------------------------------------------------------
+  // Dalla scheda Storico-Interventi del foglio: una voce per ogni
+  // «Manutenzione fatta», dalla più recente, con come ha pagato. Un
+  // intervento si riconosce da codice + data (19 ott 2026, Matteo: «una voce
+  // per vedere lo storico degli interventi fatti, e come hanno pagato»).
+  const interventi = () => (dati.storico || []).slice()
+    .sort((a, b) => quandoFatto(b) - quandoFatto(a) || (b.riga || Infinity) - (a.riga || Infinity));
+  const idIntervento = (x) => `${x.codice}|${x.data}`;
+  // conNome: nella pagina degli interventi; senza, nella scheda del cliente.
+  function voceIntervento(x, conNome = true) {
+    const riga2 = conNome ? [`Fatta il ${x.data}`, x.chi && daChi(x.chi)] : [x.chi && `Fatta ${daChi(x.chi)}`];
+    return `<button class="voce" data-intervento="${esc(idIntervento(x))}">
+      <b>${esc(conNome ? x.nome || x.codice : x.data)}</b>
+      ${riga2.filter(Boolean).length ? `<span class="riga2">${esc(riga2.filter(Boolean).join(' · '))}</span>` : ''}
+      <span class="riga3">${etichettaPagamento(x.pagamento)}</span>
+    </button>`;
+  }
+  function collegaInterventi() {
+    schermo.querySelectorAll('[data-intervento]').forEach((b) => {
+      b.onclick = () => {
+        const x = (dati.storico || []).find((s) => idIntervento(s) === b.dataset.intervento);
+        if (x) chiediPagamento(x);
+      };
+    });
+  }
+
+  function schermoStorico(stato) {
+    titolo('Interventi fatti', true);
+    const tutti = interventi();
+    // Da risentire: chi aspetta da più tempo in cima.
+    const pagare = tutti.filter((x) => x.pagamento === DA_RISENTIRE).reverse();
+    const filtro = stato.filtro === 'pagare' ? 'pagare' : 'tutti';
+    const lista = filtro === 'pagare' ? pagare : tutti;
+    // A gruppi per mese: «Ottobre 2026 (12)».
+    const gruppi = [];
+    for (const x of lista) {
+      const m = String(x.data).match(/\d{1,2}\/(\d{1,2})\/(\d{4})/);
+      const nome = m ? `${MESI[+m[1] - 1]} ${m[2]}` : 'Senza data';
+      if (!gruppi.length || gruppi[gruppi.length - 1].nome !== nome) gruppi.push({ nome, voci: [] });
+      gruppi[gruppi.length - 1].voci.push(x);
+    }
+    schermo.innerHTML = `
+      <div class="pillole">
+        <button class="pillola" data-filtro="tutti" aria-pressed="${filtro === 'tutti'}">Tutti (${tutti.length})</button>
+        <button class="pillola${pagare.length ? ' pillola-rossa' : ''}" data-filtro="pagare" aria-pressed="${filtro === 'pagare'}">Da risentire (${pagare.length})</button>
+      </div>
+      ${filtro === 'pagare' && pagare.length ? '<p class="spiega">Da risentire per il pagamento: hanno avuto la manutenzione ma non hanno ancora pagato. Quando pagano, tocca il nome e scegli come.</p>' : ''}
+      ${gruppi.map((g) => `<h2 class="gruppo">${esc(g.nome)} (${g.voci.length})</h2><div class="lista">${g.voci.map((x) => voceIntervento(x)).join('')}</div>`).join('')
+        || `<div class="vuoto">${filtro === 'pagare' ? 'Nessuno da risentire per il pagamento 👍' : 'Ancora nessun intervento segnato.<br><br>Ogni volta che tocchi «Manutenzione fatta» nella scheda di un cliente, compare qui con come ha pagato.'}</div>`}`;
+    schermo.querySelectorAll('[data-filtro]').forEach((b) => {
+      b.onclick = () => { history.replaceState({ s: 'storico', filtro: b.dataset.filtro }, '', location.pathname + location.hash); disegna(history.state); };
+    });
+    collegaInterventi();
+  }
+
+  // Un intervento toccato: com'è andata, e si cambia il pagamento (chi era
+  // «da risentire» e poi paga, o un pagamento segnato sbagliato).
+  function chiediPagamento(x) {
+    const c = clienteIn(dati, x.codice);
+    const tel = c && x.pagamento === DA_RISENTIRE ? telefoni(c.contatto)[0] : null;
+    const f = apriFinestra(`
+      <h3>${esc(x.nome || x.codice)}</h3>
+      <p>Manutenzione del <strong>${esc(x.data)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}.<br>Pagamento: <strong>${esc(x.pagamento ? breve(x.pagamento) : 'non segnato')}</strong></p>
+      ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
+      <p class="domanda">Come ha pagato?</p>
+      ${PAGAMENTI.map(([v, t]) => `<button class="btn${v === x.pagamento ? ' scelto' : ''}" type="button" data-pag="${esc(v)}">${v === x.pagamento ? `${icona('spunta')} ` : ''}${esc(t)}</button>`).join('')}
+      ${c && !(history.state && history.state.s === 'cliente' && history.state.codice === x.codice) ? '<button class="btn" type="button" id="apri-scheda">Apri la scheda del cliente</button>' : ''}
+      <button class="btn leggero" type="button" id="no">Chiudi</button>`);
+    f.querySelectorAll('[data-pag]').forEach((b) => {
+      b.onclick = (e) => (b.dataset.pag === x.pagamento ? chiudiFinestra() : conPulsante(e.currentTarget, 'Salvo…', () => salvaPagamento(x, b.dataset.pag)));
+    });
+    if ($('apri-scheda')) $('apri-scheda').onclick = () => vai({ s: 'cliente', codice: x.codice });
+    $('no').onclick = chiudiFinestra;
+  }
+
+  async function salvaPagamento(x, pagamento) {
+    const prima = x.pagamento || '';
+    const quale = { codice: x.codice, data: x.data };
+    const metti = (p) => { APPLICA.pagamento(dati, { ...quale, pagamento: p }); salvaDati(); };
+    try {
+      const { r, voce } = await manda('pagamento', { riga: x.riga, ...quale, pagamento }, `Pagamento (${breve(pagamento)}): ${x.nome || x.codice}`);
+      if (r) metti(r.pagamento);
+      chiudiFinestra();
+      disegna(history.state);
+      messaggio(`Segnato: ${breve(pagamento)}` + (voce ? fuoriLinea(voce) : ''), {
+        durata: 10000,
+        azione: {
+          testo: 'Annulla',
+          fai: voce
+            ? () => annullaInCoda(voce, () => APPLICA.pagamento(dati, { ...quale, pagamento: prima }))
+            : () => manda('pagamento', r.annulla, `Pagamento rimesso com'era: ${x.nome || x.codice}`)
+              .then(({ r: r2 }) => { if (r2) metti(prima); disegna(history.state); messaggio('Annullato.'); })
+              .catch((err) => messaggio(err.message, { errore: true, durata: 8000 })),
+        },
+      });
     } catch (err) {
       messaggio(err.message, { errore: true, durata: 8000 });
     }
