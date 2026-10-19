@@ -559,8 +559,11 @@
     });
     const res = await fetch(`${NOMINATIM}?${q}`);
     if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+    // Civico anche un negozio o un albergo col numero: «Via del Trebbio 4»
+    // per OpenStreetMap è prima di tutto un ostello (19 ott 2026).
     return (await res.json()).map((r) => ({
-      lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building', via: r.category === 'highway', address: r.address || {},
+      lat: +r.lat, lng: +r.lon, civico: r.type === 'house' || r.category === 'building' || !!(r.address && r.address.house_number),
+      via: r.category === 'highway', address: r.address || {},
     }));
   }
   const kmFra = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((a.lat + b.lat) * Math.PI / 360), b.lat - a.lat) * 111.32;
@@ -604,8 +607,11 @@
     // senza CAP non è scartato, e non fa mai perdere un civico trovato: «Via
     // Pisana 696, 50143 Firenze» per OpenStreetMap è nel 50142, e il civico
     // giusto vale più del CAP scritto.
+    // Il CAP «di tutta la città» delle città che ne hanno tanti non dice
+    // la zona: per Firenze, Pisa, Livorno e La Spezia non conta.
+    const capVero = cap && !['50100', '56100', '57100', '19100'].includes(cap) ? cap : null;
     const capDi = (r) => String(r.address.postcode || '').split(/[;,\s]+/).filter(Boolean);
-    const nelCap = (r) => !!cap && capDi(r).includes(cap);
+    const nelCap = (r) => !!capVero && capDi(r).includes(capVero);
     const scegli = (lista, vaBene = () => true) => {
       const primo = lista.find((r) => vaBene(r) && inProvincia(r)) || lista.find(vaBene);
       if (!primo || !lista.some((r) => vaBene(r) && nelCap(r))) return primo;
@@ -621,7 +627,7 @@
       // La via nella sua zona postale, senza il nome del paese (la frazione
       // che OpenStreetMap chiama in un altro modo): vale solo se poi sta
       // vicino al paese, come le altre strade trovate qui (sotto, 4 km).
-      if (cap) strade = strade.concat((await chiediNominatim({ street: via, postalcode: cap })).filter(nelCap));
+      if (capVero) strade = strade.concat((await chiediNominatim({ street: via, postalcode: capVero })).filter(nelCap));
     }
     // Una parola sola è rischiosa («vicino» porterebbe nel senese un cliente
     // di Prato): lì il risultato DEVE stare nella provincia del foglio.
