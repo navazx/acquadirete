@@ -8,9 +8,9 @@ import { ROUTES } from '../../lib/routes';
 import { REVIEW_RATING_TESTO } from '../../lib/reviews';
 
 export const metadata: Metadata = {
-  title: 'Chi Siamo: Stefano e Matteo, Depuratori dal 2005 | Acquadirete',
+  title: 'Chi Siamo: Stefano e Matteo, Depuratori | Acquadirete',
   description:
-    'Acquadirete è Stefano Piconese e suo figlio Matteo: depuratori d’acqua installati e seguiti da noi dal 2005, con sede a Montespertoli, tra Firenze, Prato e Pistoia.',
+    'Acquadirete è Stefano Piconese e suo figlio Matteo: depuratori d’acqua installati e seguiti dal 2005, con sede a Montespertoli, tra Firenze, Prato e Pistoia.',
   alternates: { canonical: '/chi-siamo' },
   openGraph: { ...OG_DEFAULTS, url: '/chi-siamo' },
 };
