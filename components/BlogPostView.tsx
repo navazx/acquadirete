@@ -72,10 +72,17 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
     ],
   };
 
+  // timeZone fisso: "2026-06-25" è la mezzanotte UTC, e senza fuso dichiarato
+  // ogni browser la formatta col suo. Il robot di Google gira sul fuso della
+  // California e leggeva "24 giugno" dove il server aveva scritto "25 giugno":
+  // React andava in errore (#418), ridisegnava la pagina e ricopiava in fondo
+  // la scheda azienda del layout. Due schede con lo stesso @id = "La recensione
+  // ha più valutazioni aggregate" in Search Console (ottobre 2026).
   const publishedDate = new Date(post.publishedAt).toLocaleDateString('it-IT', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 
   return (
