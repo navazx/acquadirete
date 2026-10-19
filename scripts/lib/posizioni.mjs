@@ -130,7 +130,7 @@ function chiCiPensa(tipo, pagine) {
   if (tipo === 'vetrina') return '→ Ci pensa l\'agente SEO: al suo prossimo giro del lunedì ti propone titolo e descrizione nuovi.';
   if (tipo === 'soglia') {
     const articoli = pagine.filter(blog).length;
-    if (articoli === pagine.length) return '→ Ci pensa l\'agente Contenuti: il 5 del mese ti propone l\'articolo arricchito al posto di uno nuovo.';
+    if (articoli === pagine.length) return '→ Ci pensa l\'agente Contenuti: il 5 del mese ti propone l\'articolo arricchito insieme a quello nuovo.';
     // Le pagine dei servizi portano i contatti: non si riscrivono, si rinforzano
     // (una domanda in piu', collegamenti da altre pagine) e Matteo approva. Fino al
     // 13 ott 2026 qui c'era scritto "si decidono insieme a Claude dal PC".

@@ -9,16 +9,46 @@ Direttore e approvate da Matteo. Se una riguarda i contenuti, quel lavoro viene
 prima dell'elenco qui sotto. Se in cima c'è scritto "in attesa di Matteo", non
 sono ancora approvate: tienine conto, ma non sono un ordine.
 
+## Ogni mese due lavori: uno nuovo e uno vecchio (dal 19 ott 2026)
+
+Matteo vuole che gli articoli portino clienti, non solo visite (16 ott 2026). Fino a
+ottobre il blog portava più della metà dei clic da Google e nessun contatto: chi
+cerca "si può bere l'acqua del rubinetto" si informa, non compra. Per questo ogni
+mese, nella **stessa proposta** (un ramo, un APPROVA):
+
+1. **un articolo nuovo**, scelto con l'ordine qui sotto;
+2. **un articolo vecchio rinforzato**, scelto come dice "Arricchire un articolo che
+   c'è già". Se non ce n'è nessuno che lo meriti, lo dici nell'anteprima e fai solo
+   il nuovo.
+
+## Il metro: cosa vende
+
+Un argomento vale per quanto è vicino all'acquisto, non per quante viste promette.
+
+- **Vicine all'acquisto**: prezzi e costi (senza cifre inventate), confronti fra
+  impianti o fra acquisto e contratti "gratis", problemi concreti in casa (calcare,
+  sapore, bottiglie da portare su), le città e le zone, l'assistenza e i guasti.
+- **Lontane**: curiosità sull'acqua, salute in generale, notizie. Si scrivono solo se
+  portano chiaramente verso una pagina che vende, e mai due mesi di fila.
+
+Per misurare guarda `agenti/seo/mese.json` (il controllo SEO del mese): per ogni
+articolo ci sono i clic da Google (`google`), i contatti nati lì (`contatti90`) e
+le visite contate dal sito (`visite`, dal 16 ott 2026: quante volte da lì parte un
+modulo, una chiamata, un WhatsApp). Un articolo con tanti clic e niente contatti non
+va copiato: va capito perché la gente non prosegue.
+
 ## Cosa scrivere, in ordine di preferenza
 
-1. **Una domanda vera di un cliente**, se ce n'è una nella sezione qui sotto. Vale
+1. **Gli ordini del mese** (`agenti/ordini.md`), se uno riguarda i contenuti.
+2. **Una domanda vera di un cliente**, se ce n'è una nella sezione qui sotto. Vale
    più di qualsiasi argomento pensato a tavolino.
-2. **Un articolo che sta a un passo dalla prima pagina**: vedi "Arricchire un articolo
-   che c'è già" qui sotto. Se ce n'è uno, questo mese si lavora quello **al posto** di
-   un articolo nuovo: un articolo che Google già mostra cento volte al mese vale più
-   di uno che parte da zero.
-3. **Il primo argomento della coda** che non sia già un articolo.
-4. Se la coda è finita: **un tema legato a una pagina servizio che nessun articolo
+3. **Gli argomenti della coda decisi da Matteo** (quelli con scritto "deciso da
+   Matteo"): li ha scelti lui, vengono prima delle idee degli agenti.
+4. **I buchi della mappa ricerche → pagine**: la sezione "Per l'agente Contenuti" di
+   `agenti/seo/mese.md`. Ricerche che vendono senza una pagina adatta, coi numeri.
+   Fra più buchi, quello più vicino all'acquisto (vedi "Il metro" qui sopra).
+5. **Il resto della coda**, nell'ordine.
+6. Se non c'è altro: **un tema legato a una pagina servizio che nessun articolo
    copre ancora**. Per capire quali sono scoperte, guardare i `relatedServices` degli
    articoli esistenti. Nella proposta va detto chiaramente che l'argomento l'ha
    scelto l'agente, così Matteo lo sa.
@@ -27,6 +57,16 @@ Mai due articoli sullo stesso tema. Prima di scegliere si leggono titoli e slug 
 tutti gli articoli in `lib/blogPosts.ts`.
 
 ## Arricchire un articolo che c'è già
+
+Ogni mese, insieme all'articolo nuovo. Quale, in quest'ordine:
+
+1. quello indicato in `agenti/seo/mese.md` ("Per l'agente Contenuti", articoli da
+   rinforzare);
+2. uno in **soglia** (qui sotto);
+3. l'articolo con più clic da Google negli ultimi 90 giorni (`agenti/seo/mese.json`)
+   che non porta mai verso i prezzi o i servizi: lo si rinforza **nella parte che
+   vende** (un collegamento nel testo verso la pagina giusta, una domanda frequente
+   che risponde a "e quindi, cosa faccio?"), non nelle curiosità.
 
 Il controllo SEO del lunedì scrive `agenti/seo/posizioni.json`. Fra i `segnali`
 guarda quelli con **`tipo: "soglia"`** e una `pagina` che comincia con `/blog/`:
@@ -48,13 +88,15 @@ nessuno, e **il titolo non c'entra**: l'articolo deve salire.
 - **Collegamenti verso l'articolo**: 2-3 articoli correlati che non lo linkano ancora
   lo aggiungono ai loro `relatedPosts`. È la parte che lo fa salire di più.
 - Non cambiare `publishedAt`. Aggiorna `readingMinutes` se il testo è cresciuto.
-- Ramo `proposta/articolo-<slug esistente>`. Anteprima in
-  `agenti/anteprime/<slug esistente>.md`, scritta per chi l'articolo non l'ha
-  davanti: **perché** lo si arricchisce (ricerche, viste, posizione, zero clic, in
+- Va sullo **stesso ramo** dell'articolo nuovo (`proposta/articolo-<slug nuovo>`) e
+  nella stessa anteprima, in una parte sua dopo l'articolo nuovo. Solo se questo mese
+  non c'è un articolo nuovo il ramo prende lo slug di quello rinforzato. La parte del
+  rinforzo è scritta per chi l'articolo non l'ha davanti: **perché** lo si arricchisce (ricerche, viste, posizione, zero clic, in
   italiano: *"quando cercano «depuratore acqua gratis» l'articolo esce all'11° posto,
   105 volte in un mese, e nessuno clicca"*), poi **solo le parti nuove o cambiate**
   per intero, poi i collegamenti aggiunti.
-- Commit: prima riga `Articolo: arricchito «<titolo>»`.
+- Commit: se c'è anche il nuovo, prima riga `Articolo: <titolo nuovo> (e arricchito
+  «<titolo vecchio>»)`; da solo, `Articolo: arricchito «<titolo>»`.
 - Aggiungi una riga in `agenti/seo/posizioni-lavorate.md` sul ramo della proposta.
 
 ## Domande dei clienti
