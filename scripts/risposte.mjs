@@ -61,8 +61,8 @@ const NOTE_FOTO = 'agenti/social-foto-note.json';
 const AIUTO =
   'Non ho capito, e non ho fatto niente.\n' +
   'Gli ordini che riconosco sono questi:\n\n' +
-  'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · CORREGGI e cosa cambiare · RIMANDA · SCARTA\n' +
-  'Per le proposte: APPROVA ARTICOLO · CORREGGI ARTICOLO e cosa cambiare · RIFIUTA ARTICOLO e il motivo\n' +
+  'Per il post: PUBBLICA (oppure PUBBLICA 2, PUBBLICA 3) · CORREGGI POST e cosa cambiare · RIMANDA · SCARTA\n' +
+  'Per le proposte: APPROVA, CORREGGI o RIFIUTA col tipo scritto nel messaggio (ARTICOLO, SEO, RECENSIONI, RIPARAZIONE, ORDINI), es. CORREGGI ARTICOLO e cosa cambiare\n' +
   'Per la pubblicità: APPROVA ADS (oppure APPROVA ADS 1 3) · RIFIUTA ADS e il motivo · ANNULLA ADS\n' +
   'Per i post: mandami una foto e la metto fra quelle da usare';
 
@@ -157,7 +157,7 @@ async function eseguiSocial(o) {
       'Bozza scartata, non ho pubblicato niente. Sabato te ne preparo una nuova.' +
       (o.motivo
         ? '\nIl motivo l\'ho segnato: l\'agente lo rilegge prima di ogni post.'
-        : '\nSe invece vuoi che la sistemi, la prossima volta scrivi CORREGGI e cosa cambiare.'),
+        : '\nSe invece vuoi che la sistemi, la prossima volta scrivi CORREGGI POST e cosa cambiare.'),
     );
     return;
   }
@@ -236,7 +236,7 @@ async function eseguiSocial(o) {
  */
 async function correggiPost(bozza, note) {
   if (!note) {
-    await messaggio('Cosa devo cambiare nel post? Scrivi CORREGGI e subito dopo le correzioni, nello stesso messaggio.');
+    await messaggio('Cosa devo cambiare nel post? Scrivi CORREGGI POST e subito dopo le correzioni, nello stesso messaggio.');
     return;
   }
   lezione('POST', `post «${bozza.tema}» da correggere: ${note}`);

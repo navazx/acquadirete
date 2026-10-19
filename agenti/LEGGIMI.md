@@ -67,6 +67,12 @@ e il sito cambia solo se Matteo dice di sì.
      correggere o riproporre vale come `CORREGGI` (dal 5 ott 2026)
    - con una sola proposta aperta basta `APPROVA`, `CORREGGI` o `RIFIUTA`
 
+**Ogni messaggio a Matteo scrive il comando completo** (dal 19 ott 2026, chiesto da
+lui): `CORREGGI POST`, `APPROVA SEO`, `CORREGGI ARTICOLO`, `RIFIUTA RECENSIONI`…,
+mai `APPROVA` o `CORREGGI` da soli. Nella chat arrivano i messaggi di tutti gli
+agenti, e Matteo copia la parola che legge: se è generica, il lettore delle
+risposte deve chiedergli a chi era rivolta.
+
 Una proposta per tipo alla volta: finché ce n'è una in attesa, l'agente non ne
 prepara un'altra dello stesso tipo.
 

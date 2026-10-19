@@ -190,7 +190,7 @@ export async function controlla(adesso = new Date()) {
   // 5. Cosa aspetta Matteo.
   for (const p of proposte) {
     if (p.stato === 'in attesa') {
-      attese.push({ giorni: Math.floor((adesso - new Date(p.creata)) / GIORNO), testo: `Proposta ${p.tipo} «${p.titolo}»: rispondi APPROVA, CORREGGI o RIFIUTA.` });
+      attese.push({ giorni: Math.floor((adesso - new Date(p.creata)) / GIORNO), testo: `Proposta ${p.tipo} «${p.titolo}»: rispondi APPROVA ${p.tipo}, CORREGGI ${p.tipo} o RIFIUTA ${p.tipo}.` });
     }
     const ultima = (p.correzioni || []).at(-1);
     if (p.stato === 'da correggere' && ultima && adesso - new Date(ultima.chiesta) > 2 * ORA) {
@@ -207,7 +207,7 @@ export async function controlla(adesso = new Date()) {
   }
   const bozza = leggi('agenti/social-bozza.json', null);
   if (bozza && bozza.inviato && !bozza.pubblicato && !bozza.scartato) {
-    attese.push({ giorni: Math.floor((adesso - new Date(bozza.inviato)) / GIORNO), testo: `Post social (${bozza.tema}): rispondi PUBBLICA, CORREGGI, RIMANDA o SCARTA.` });
+    attese.push({ giorni: Math.floor((adesso - new Date(bozza.inviato)) / GIORNO), testo: `Post social (${bozza.tema}): rispondi PUBBLICA, CORREGGI POST, RIMANDA o SCARTA.` });
   }
   const segnali = leggi('agenti/seo/posizioni.json', {}).segnali || [];
   const lavorate = existsSync('agenti/seo/posizioni-lavorate.md') ? readFileSync('agenti/seo/posizioni-lavorate.md', 'utf8') : '';

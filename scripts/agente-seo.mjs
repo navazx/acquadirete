@@ -461,7 +461,7 @@ export function lasciaNotaDaDecidere(tutti, nuovi, lavorate = '') {
   const elenco = aperte.map((s) => `"${s.ricerca}"${nuove.has(s.ricerca) ? ' (nuova)' : ''}`).join(', ');
   const testo =
     `${aperte.length === 1 ? 'Su una ricerca' : `Su ${aperte.length} ricerche`} più pagine del sito si fanno concorrenza e nessuna sale: ${elenco}. ` +
-    'Scelgo io la pagina da far vincere e mando la proposta a Matteo su Telegram: a lui basta APPROVA. Finché non è approvata, questa nota torna ogni lunedì.';
+    'Scelgo io la pagina da far vincere e mando la proposta a Matteo su Telegram: a lui basta APPROVA SEO. Finché non è approvata, questa nota torna ogni lunedì.';
   lasciaNota('seo', testo, ['direttore']);
   return testo;
 }

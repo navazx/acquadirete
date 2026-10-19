@@ -64,7 +64,7 @@ async function main() {
     ]),
     'Rispondi:',
     'PUBBLICA 1 (oppure 2, 3) — va su Facebook e Instagram',
-    'CORREGGI e cosa cambiare — lo sistemo e te lo rimando',
+    'CORREGGI POST e cosa cambiare — lo sistemo e te lo rimando',
     'RIMANDA — salti la settimana, le idee te le ripropongo sabato prossimo',
     'SCARTA — non se ne fa nulla e la prossima e\' nuova',
     '',

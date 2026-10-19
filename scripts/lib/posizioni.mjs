@@ -134,11 +134,11 @@ function chiCiPensa(tipo, pagine) {
     // Le pagine dei servizi portano i contatti: non si riscrivono, si rinforzano
     // (una domanda in piu', collegamenti da altre pagine) e Matteo approva. Fino al
     // 13 ott 2026 qui c'era scritto "si decidono insieme a Claude dal PC".
-    const rinforzo = 'l\'agente SEO: le rinforza senza riscriverle (una domanda e risposta in più, collegamenti da altre pagine) e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA, CORREGGI o RIFIUTA.';
+    const rinforzo = 'l\'agente SEO: le rinforza senza riscriverle (una domanda e risposta in più, collegamenti da altre pagine) e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA SEO, CORREGGI SEO o RIFIUTA SEO.';
     if (articoli) return `→ Gli articoli li arricchisce l'agente Contenuti il 5 del mese. Alle pagine dei servizi ci pensa ${rinforzo}`;
     return `→ Sono pagine dei servizi. Ci pensa ${rinforzo}`;
   }
-  if (tipo === 'concorrenza') return '→ Ci pensa l\'agente SEO: sceglie la pagina da far vincere e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA, CORREGGI o RIFIUTA.';
+  if (tipo === 'concorrenza') return '→ Ci pensa l\'agente SEO: sceglie la pagina da far vincere e ti manda la proposta qui su Telegram. A te basta rispondere APPROVA SEO, CORREGGI SEO o RIFIUTA SEO.';
   return null;
 }
 
