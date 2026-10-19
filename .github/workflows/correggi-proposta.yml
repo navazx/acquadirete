@@ -60,6 +60,9 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Gli agenti si fanno partire fra loro (attore github-actions[bot]):
+          # dal 17 ott 2026 l'azione rifiuta i bot non elencati qui.
+          allowed_bots: "github-actions[bot]"
           prompt: '/correggi-proposta'
           claude_args: |
             --model claude-opus-5-5
