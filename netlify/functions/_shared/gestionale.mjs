@@ -955,9 +955,12 @@ export async function nuovoCliente(foglio, dati) {
 }
 
 // Città scritta come la scrivono già gli altri clienti ("50025 MONTESPERTOLI"),
-// altrimenti in maiuscolo come l'ha scritta babbo.
+// altrimenti in maiuscolo come l'ha scritta babbo. Se c'è il CAP davanti si
+// tiene quello (19 ott 2026: Firenze ne ha tanti, e «50142 FIRENZE» sarebbe
+// diventato il «50127 FIRENZE» più usato); del nome, la grafia più usata.
 function cittaComeNelFoglio(dati, col, scritta) {
   const chiave = chiaveCitta(scritta);
+  const cap = (testo(scritta).match(/^(\d{5})\s+/) || [])[1];
   const conta = {};
   if (chiave) {
     for (const r of dati) {
@@ -966,7 +969,11 @@ function cittaComeNelFoglio(dati, col, scritta) {
       conta[v] = (conta[v] || 0) + 1;
     }
   }
-  return Object.keys(conta).sort((x, y) => conta[y] - conta[x])[0] || testo(scritta).toUpperCase();
+  const ordinate = Object.keys(conta).sort((x, y) => conta[y] - conta[x]);
+  if (!cap) return ordinate[0] || testo(scritta).toUpperCase();
+  const conQuelCap = ordinate.find((v) => v.startsWith(`${cap} `));
+  if (conQuelCap) return conQuelCap;
+  return `${cap} ${(ordinate[0] || testo(scritta).toUpperCase()).replace(/^\s*\d{4,5}\s+/, '')}`;
 }
 
 // Modifica i dati di un cliente esistente. Scrive solo i campi arrivati;
