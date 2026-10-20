@@ -26,9 +26,8 @@
 // ============================================================================
 
 import { getAccessToken } from './gsc.mjs';
-import { CLIENTE } from './ads.mjs';
+import { CLIENTE, VERSIONE } from './ads.mjs';
 
-const VERSIONE = process.env.GOOGLE_ADS_API_VERSION || 'v22';
 export const AZIONE = 'Cliente (dal Gestionale)';
 export const GIORNI_VALIDO = 90; // oltre, Google non accetta più il clic
 

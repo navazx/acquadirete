@@ -68,3 +68,39 @@ se il commit cambiava il sito.
 **Una routine su claude.ai si ferma a metà** — il controllo di sicurezza delle
 routine blocca i comandi che cancellano o riscrivono (`git checkout -B`, `git rm`,
 `rm`). Le cancellazioni vanno dentro uno script del repo.
+
+**Google Ads rifiuta la versione dell'API** — 18 ott 2026. La revisione Ads del
+mese è fallita al primo passo: «Google Ads ha rifiutato la richiesta (HTTP 400):
+Version v22 is deprecated. Requests to this version will be blocked.» Causa: Google
+spegne ogni versione circa un anno dopo l'uscita (date in
+developers.google.com/google-ads/api/docs/sunset-dates). All'inizio il blocco va a
+tratti: il 19 ott il cruscotto ha letto la spesa con la v22 senza errori. Rimedio:
+`VERSIONE` in `scripts/lib/ads.mjs` portata a v26 (vale fino a novembre 2027), in un
+posto solo (la usa anche `ads-conversioni.mjs`). Prima di cambiarla: le "breaking
+changes" delle note di rilascio contro i campi che usiamo, e l'indirizzo che senza
+credenziali risponde 401 (404 = versione che non esiste). *Come riconoscerlo prima
+che fallisca la revisione:* nel log del cruscotto «Spesa Google non letta: …
+deprecated» (il cruscotto non fallisce, scrive la spesa vuota). Dopo la riparazione
+la revisione del mese non riparte da sola: va avviata una volta `agente-ads.yml`.
+
+**Il passo con l'IA si ferma in mezzo secondo** — 19 ott 2026, correzioni SEO. Nel
+log: `"is_error": true`, `duration_ms` 508, `num_turns` 1, `total_cost_usd` 0,
+`modelUsage` vuoto: l'IA non ha neanche cominciato, e il testo dell'errore il log
+non lo mostra (l'azione lo nasconde). Danno questo quadro il limite d'uso
+dell'abbonamento Claude raggiunto o un accesso rifiutato. Una configurazione
+sbagliata si esclude con un altro giro con l'IA dello stesso giorno, stessa versione
+di Claude Code, stesso modello e stessi parametri (il 19 ott Correggi-post alle 16:16
+UTC ha lavorato 37 turni); un errore del servizio (500/529) no, perché Claude Code
+riprova per minuti, non mezzo secondo. Rimedio: rilancio del solo lavoro fallito
+(`rilancia`: rifà solo il job caduto; nel rilancio l'azione vede come attore chi
+aveva avviato il giro la prima volta, quindi passa il controllo dei bot). Se
+ricapita spesso serve vedere il testo dell'errore: un passo che, se l'IA fallisce,
+stampa il campo `result` di `claude-execution-output.json` (tocca i workflow).
+
+**Un guasto si perde se il Meccanico salta un giro** — 19-20 ott 2026. Il controllo
+del Direttore dice un guasto solo per 48 ore dall'appuntamento (`DA_DIRE`). Il 19 il
+Meccanico non ha lavorato (l'azione rifiutava i bot, sistemato la sera) e il 20 la
+revisione Ads, con appuntamento il 18 alle 07:00 UTC, era già oltre: non è stata
+ripassata, anche se il messaggio di riserva del Meccanico lo promette. A ogni giro
+guarda anche i giri falliti in `giri-recenti.json` e le tue note «mi sono fermato
+prima di finire» sulla bacheca: lì stanno i guasti rimasti senza risposta.
