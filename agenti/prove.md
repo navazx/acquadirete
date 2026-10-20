@@ -47,3 +47,17 @@ il repository è pubblico.
 - Come si misura: contatti Meta nel Gestionale dal 19 ottobre, con zona, risposta "possiedi già un depuratore" e stato; costo per contatto da Gestione inserzioni. Regola già decisa: se non c'è nessun preventivo vero, si propone di fermare Meta e spostare il budget su Google.
 - Si controlla dal: 2026-11-02
 - Esito: da vedere
+
+## 2026-10-20 · RIPARAZIONE · «Google Ads non accettava più la versione vecchia»
+- Cosa è cambiato: approvata da Matteo su Telegram (proposta/riparazione-2026-10-20)
+- Cosa ci si aspetta: nessun messaggio di Google sulla versione vecchia. Revisione
+- Come si misura: lunedì 26 ottobre nella riga del cruscotto c'è la spesa Google; il
+- Si controlla dal: 2026-11-17
+- Esito: da vedere
+
+## 2026-10-20 · SEO · «1 correzione»
+- Cosa è cambiato: approvata da Matteo su Telegram (proposta/seo-2026-10-20)
+- Cosa ci si aspetta: per «depuratore acqua gratis toscana» e «depuratore acqua gratis province» Google mostra soprattutto l'articolo sul bonus, che sale sopra il 5° posto e prende i primi clic; l'articolo sui contratti non perde posizioni su «depuratore acqua gratis» (oggi 9°).
+- Come si misura: in Search Console dal 17 novembre, per le due ricerche: quali pagine compaiono, con posizione e clic dell'articolo sul bonus. I numeri sono piccoli (62 volte in un mese), quindi conta quale pagina compare, non le percentuali.
+- Si controlla dal: 2026-11-17
+- Esito: da vedere
