@@ -91,5 +91,14 @@
     "stato": "in attesa",
     "sha": "08c0966b43c4ea6d11f5cdc99a419cd5136182ab",
     "url": null
+  },
+  {
+    "ramo": "proposta/seo-2026-10-20",
+    "tipo": "SEO",
+    "titolo": "1 correzione",
+    "creata": "2026-10-20T08:25:36.921Z",
+    "stato": "in attesa",
+    "sha": "2b32623648202613099d352dadb034921a0ffc00",
+    "url": null
   }
 ]
