@@ -115,6 +115,7 @@ export const BLOG_POSTS: BlogPost[] = [
           '• Nessun documento scritto chiaro su durata del contratto e penali di recesso prima della firma.',
           '• Il venditore non sa o non vuole dire chi farà la manutenzione e con quali tempi di intervento.',
           '• Nessun referente locale rintracciabile in caso di problemi, solo un numero verde o un call center.',
+          '• Ti dicono che il depuratore è gratis grazie a un [bonus della Regione Toscana](/blog/truffa-bonus-regione-depuratore/): quel bonus non esiste.',
         ],
       },
       {
