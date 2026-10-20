@@ -29,7 +29,7 @@ process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
-const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI } =
+const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI, TAB_MAGAZZINO, TAB_MOVIMENTI } =
   await import('../netlify/functions/_shared/gestionale.mjs');
 
 // ---------------------------------------------------------------------------
@@ -68,6 +68,13 @@ async function creaFoglioFinto() {
     const giri = await vero.leggi(`'${TAB_GIRI}'!A1:P3000`, 'UNFORMATTED_VALUE');
     if (giri.length) schede[TAB_GIRI] = giri;
   } catch { /* scheda non ancora creata */ }
+  // Il magazzino (dal 20 ott 2026), se nel foglio c'è già.
+  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:M1000'], [TAB_MOVIMENTI, 'A1:K6000']]) {
+    try {
+      const g = await vero.leggi(`'${tab}'!${celle}`, 'FORMULA');
+      if (g.length) schede[tab] = g;
+    } catch { /* scheda non ancora creata */ }
+  }
   console.log(`Copia in memoria: ${schede[TAB_CLIENTI].length} righe clienti, ${schede[TAB_LEAD].length} righe lead, ${Math.max((schede[TAB_COORDINATE] || []).length - 1, 0)} posizioni`);
 
   const cella = (tab, r, c) => ((schede[tab] || [])[r - 1] || [])[c - 1];
@@ -81,6 +88,9 @@ async function creaFoglioFinto() {
   // Solo la formula che usano le automazioni: EDATE su installazione e frequenza.
   const calcola = (tab, v) => {
     if (typeof v !== 'string' || !v.startsWith('=')) return v;
+    // L'intestazione fatta di formula del magazzino ({"Valore";ARRAYFORMULA(…)}).
+    const intestazione = v.match(/^={"([^"]+)"/);
+    if (intestazione) return intestazione[1];
     const m = v.match(/EDATE\(\$([A-Z]+)(\d+);\$([A-Z]+)(\d+)\)/);
     if (!m) return '#FORMULA?';
     const inst = cella(tab, +m[2], numeroColonna(m[1]));
@@ -111,8 +121,9 @@ async function creaFoglioFinto() {
       for (const { range, values } of data) {
         const { tab, r1, c1 } = leggiRange(range);
         console.log(`  scrivo ${opzione.padEnd(12)} ${range} = ${JSON.stringify(values[0].length > 1 ? values[0] : values[0][0])}`);
-        // Una riga intera (es. il cliente spostato fra i persi) parte da c1.
-        values[0].forEach((v, i) => metti(tab, r1, c1 + i, v));
+        // Una riga intera (es. il cliente spostato fra i persi) parte da c1;
+        // più righe (il magazzino nuovo) scendono da r1.
+        values.forEach((riga, j) => riga.forEach((v, i) => metti(tab, r1 + j, c1 + i, v)));
       }
     },
     async svuota(range) {
@@ -123,6 +134,8 @@ async function creaFoglioFinto() {
     async copiaFormato(tab, da, a) { console.log(`  formato riga ${da} → ${a} (${tab})`); },
     async copiaCella(tab, r1, c1, r2, c2) { console.log(`  formato cella ${r1},${c1} → ${r2},${c2} (${tab})`); },
     async copiaFormatoTra(tabDa, da, tabA, a) { console.log(`  formato riga ${tabDa}:${da} → ${tabA}:${a}`); },
+    async leggiInsieme(ranges, render) { return Promise.all(ranges.map((r) => this.leggi(r, render))); },
+    async aspetto(tab, richieste) { console.log(`  aspetto di ${tab}: ${richieste(0).length} richieste`); },
     async creaScheda(tab) { schede[tab] ||= []; console.log(`  creo la scheda ${tab}`); },
     // Come Google: la riga sparisce e quelle sotto salgono di una.
     async eliminaRiga(tab, riga) { (schede[tab] || []).splice(riga - 1, 1); console.log(`  elimino ${tab} riga ${riga}`); },

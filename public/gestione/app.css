@@ -351,3 +351,47 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .finestra .campo-data { width: 100%; margin: 10px 0 0; min-height: 52px; padding: 0 14px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-size: 18px; }
 .finestra .campo { margin: 14px 0 0; }
 .vai-giorno label, .vai-giorno .link { white-space: nowrap; }
+
+/* ---- Magazzino (20 ott 2026) ---- */
+.voce.articolo { display: flex; align-items: center; gap: 12px; }
+.articolo-testo { flex: 1; min-width: 0; }
+.pezzi { flex: none; display: grid; place-items: center; min-width: 66px; padding: 6px 8px; border-radius: 14px; background: var(--blu-chiaro); color: var(--blu-scuro); line-height: 1.1; text-align: center; }
+.voce .pezzi b { font-size: 24px; }
+.pezzi small { font-size: 13px; font-weight: 600; }
+.pezzi.arancio, .quanti-grande.arancio { background: var(--arancio-chiaro); color: var(--arancio); }
+.pezzi.grigio, .quanti-grande.grigio { background: #edf0f3; color: var(--grigio); }
+.pezzi.rosso, .quanti-grande.rosso { background: var(--rosso-chiaro); color: var(--rosso); }
+.azioni-magazzino { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 12px; }
+.azioni-magazzino .btn { min-height: 56px; padding: 8px 10px; font-size: 17px; gap: 6px; }
+.voce .riga2 svg { font-size: 16px; vertical-align: -2px; }
+/* La finestra dei materiali: una riga per articolo con − e +. */
+.cerca-finestra { display: block; width: 100%; min-height: 54px; padding: 10px 14px; margin: 0 0 4px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-size: 19px; }
+.cerca-finestra:focus { outline: none; border-color: var(--blu); box-shadow: 0 0 0 3px rgba(15,108,189,.2); }
+.finestra .gruppo { margin: 16px 0 8px; font-size: 15px; }
+.lista-materiali { display: grid; gap: 8px; }
+.materiale { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--carta); box-shadow: inset 0 0 0 2px var(--linea); }
+.materiale.scelto { background: var(--blu-chiaro); box-shadow: inset 0 0 0 2px var(--blu); }
+.mat-testo { flex: 1; min-width: 0; }
+.mat-testo b { display: block; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.mat-testo small { display: block; margin-top: 2px; color: var(--grigio); font-size: 15px; }
+.contatore { flex: none; display: flex; align-items: center; gap: 4px; }
+.contatore button { width: 46px; height: 46px; border: 0; border-radius: 12px; background: var(--blu-chiaro); color: var(--blu); font-size: 28px; font-weight: 700; line-height: 1; }
+.materiale.scelto .contatore button { background: #fff; }
+.contatore output { min-width: 30px; text-align: center; font-size: 21px; font-weight: 800; }
+.contatore.grande { justify-content: center; gap: 12px; margin: 6px 0 4px; }
+.contatore.grande button { width: 66px; height: 66px; font-size: 36px; }
+.contatore.grande input { width: 130px; min-height: 66px; padding: 0 8px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-size: 30px; font-weight: 800; text-align: center; }
+.finestra #mat-nuovo { display: block; margin: 12px auto 0; font-size: 17px; }
+/* «Salva» sempre in vista in fondo alla finestra, anche con la lista lunga. */
+.piede-finestra { position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); z-index: 1; margin: 8px -16px calc(-16px - env(safe-area-inset-bottom)); padding: 4px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--carta); box-shadow: 0 -8px 12px -10px rgba(16, 32, 47, .35); }
+.piede-finestra .btn.leggero { min-height: 48px; margin-top: 2px; }
+/* La scheda dell'articolo. */
+.quanti-grande { display: flex; align-items: baseline; gap: 10px; margin: 0 0 6px; padding: 12px 16px; border-radius: 16px; background: var(--blu-chiaro); color: var(--blu-scuro); font-weight: 700; }
+.quanti-grande b { font-size: 34px; line-height: 1; }
+.movimenti { margin: 6px 0 0; padding: 0; list-style: none; }
+.movimenti li { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--linea); font-size: 16px; color: var(--testo); }
+.movimenti li:last-child { border-bottom: 0; }
+.movimenti .q { flex: none; min-width: 42px; font-weight: 800; text-align: right; }
+.movimenti .q.piu { color: var(--verde); }
+.movimenti .q.meno { color: var(--rosso); }
+.movimenti small { display: block; color: var(--grigio); font-size: 14px; }

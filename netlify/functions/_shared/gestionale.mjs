@@ -378,6 +378,11 @@ export async function leggiTutto(foglio) {
     console.error('Giri non letti:', err);
     return { tappe: [] };
   });
+  // Il magazzino (dal 20 ott 2026): idem. null = non c'è ancora.
+  const magazzino = leggiMagazzino(foglio, { completa: true }).then(magazzinoPerApp).catch((err) => {
+    console.error('Magazzino non letto:', err);
+    return null;
+  });
   const [{ griglia: gc, mappa: mc }, { griglia: gl, mappa: ml }] = await Promise.all([
     leggiClienti(foglio),
     leggiLead(foglio),
@@ -449,7 +454,7 @@ export async function leggiTutto(foglio) {
 
   return {
     oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD, storico: await storico, pagamenti: PAGAMENTI,
-    tappe, lavori: LAVORI,
+    tappe, lavori: LAVORI, magazzino: await magazzino,
   };
 }
 
@@ -1491,6 +1496,362 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
 }
 
 // ---------------------------------------------------------------------------
+//  Magazzino
+// ---------------------------------------------------------------------------
+// Dal 20 ott 2026 (Matteo: «questo è il file del magazzino, creane uno
+// migliore nel gestionale e fai in modo che le quantità si aggiornino anche
+// dall'app: quando si fa un lavoro si devono poter inserire le quantità dei
+// materiali usati»). Prima era Magazzino.xlsx sul PC: due fogli (Impianti e
+// Miscelatori), i totali a formula, nessuna traccia di cosa entrava e usciva.
+//
+// Due schede:
+// - "Magazzino": un articolo per riga, col codice M001… La quantità è un
+//   numero scritto, non una formula: si può correggere anche a mano nel
+//   foglio, e l'app riparte da lì. "Valore" è una formula sola, nella sua
+//   intestazione (ARRAYFORMULA): l'app non ci scrive mai.
+// - "Movimenti-Magazzino": ogni cambio fatto dall'app (merce arrivata, usata
+//   in un lavoro, tolta, contata), con chi e per quale cliente. Si accoda e
+//   basta; l'annulla svuota le sue righe e rimette la quantità.
+// L'Id dei movimenti lo sceglie il telefono (come per le tappe): la stessa
+// richiesta arrivata due volte (senza campo) non scala due volte. Due
+// telefoni che scalano lo stesso articolo nello stesso secondo possono
+// perdere un conto: con due persone succede di rado, e «Ho contato» rimette
+// il numero giusto. Nessuna automazione del foglio legge queste schede.
+export const TAB_MAGAZZINO = 'Magazzino';
+export const TAB_MOVIMENTI = 'Movimenti-Magazzino';
+const INTESTAZIONI_MAGAZZINO = ['Codice', 'Categoria', 'Descrizione', 'Codice fornitore', 'Quantità', 'Scorta minima', 'Costo', 'Note', 'Aggiornato il'];
+const INTESTAZIONI_MOVIMENTI = ['Id', 'Data', 'Articolo', 'Descrizione', 'Quantità', 'Causale', 'Cliente', 'Nome', 'Lavoro', 'Fatto da', 'Note'];
+export const CATEGORIE = ['Filtri e ricambi', 'Impianti', 'Impianti usati', 'Miscelatori e rubinetti', 'Altro'];
+// Il nome nell'app → l'intestazione della colonna.
+const CAMPI_ARTICOLO = { codice: 'Codice', categoria: 'Categoria', descrizione: 'Descrizione', fornitore: 'Codice fornitore', quantita: 'Quantità', scorta: 'Scorta minima', costo: 'Costo', note: 'Note', aggiornato: 'Aggiornato il' };
+const CAMPI_MOVIMENTO = { id: 'Id', data: 'Data', articolo: 'Articolo', descrizione: 'Descrizione', quantita: 'Quantità', causale: 'Causale', cliente: 'Cliente', nome: 'Nome', lavoro: 'Lavoro', chi: 'Fatto da', note: 'Note' };
+// Cosa chiede il telefono → cosa si scrive nel foglio.
+const CAUSALI = { carico: 'Arrivata merce', lavoro: 'Usato in un lavoro', tolto: 'Tolto', correzione: 'Contati' };
+const CAUSALE_INIZIALE = 'Carico iniziale';
+// Gli Id dei movimenti scritti dal motore («inizio-M001», «nuovo-M087»): il
+// telefono non li usa e non li annulla (un «inizio» li prenderebbe tutti).
+const ID_DEL_MOTORE = /^(inizio|nuovo)(-|$)/i;
+const categoriaDa = (v) => CATEGORIE.find((c) => normalizza(c) === normalizza(v)) || 'Altro';
+const arrotonda = (n) => Math.round(n * 100) / 100;
+// "2", "2,5", 2.5 → numero; vuoto o non un numero → null.
+const numeroDa = (v) => {
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  const s = testo(v).replace(/[\s€]/g, '').replace(',', '.');
+  if (!s) return null;
+  const n = Number(s);
+  return isFinite(n) ? n : null;
+};
+// Una data scritta come testo dall'app, o come data a mano nel foglio.
+const dataCella = (v) => (typeof v === 'number' ? testoData(dataDaSeriale(v)) : testo(v));
+const colonneDa = (griglia, nomi) => {
+  const testa = ((griglia && griglia[0]) || []).map(normalizza);
+  return Object.fromEntries(Object.entries(nomi).map(([k, h]) => [k, testa.indexOf(normalizza(h))]));
+};
+const cellaMag = (tab, col, riga) => `'${tab}'!${lettera(col + 1)}${riga}`;
+
+// Le due schede in una lettura sola (se ci sono tutte e due). null = il
+// magazzino non c'è ancora. `completa`: le righe scritte a mano nel foglio
+// senza codice ricevono il loro M0xx (come farebbe un'automazione).
+async function leggiMagazzino(foglio, { completa = false } = {}) {
+  const intervalli = [`'${TAB_MAGAZZINO}'!A1:L1000`, `'${TAB_MOVIMENTI}'!A1:K6000`];
+  let griglie;
+  try {
+    griglie = await foglio.leggiInsieme(intervalli, 'UNFORMATTED_VALUE');
+  } catch (err) {
+    if (err.status !== 400) throw err;
+    // Una delle due schede non c'è (ancora): si leggono una per una.
+    const una = (r) => foglio.leggi(r, 'UNFORMATTED_VALUE').catch((e) => { if (e.status === 400) return null; throw e; });
+    griglie = await Promise.all(intervalli.map(una));
+  }
+  const [gm, gv] = griglie;
+  if (!gm || !gm.length) return null;
+  const col = colonneDa(gm, CAMPI_ARTICOLO);
+  if (col.codice < 0 || col.descrizione < 0 || col.quantita < 0) {
+    throw problema('Nel foglio Magazzino mancano le colonne Codice, Descrizione o Quantità. Chiedi a Matteo.', 500);
+  }
+  const articoli = [];
+  for (let i = 1; i < gm.length; i++) {
+    const r = gm[i] || [];
+    const v = (k) => (col[k] < 0 ? '' : r[col[k]]);
+    const a = {
+      riga: i + 1, codice: testo(v('codice')).toUpperCase(), categoria: testo(v('categoria')), descrizione: testo(v('descrizione')).replace(/\s+/g, ' '),
+      fornitore: testo(v('fornitore')), quantita: numeroDa(v('quantita')) ?? 0, scorta: numeroDa(v('scorta')), costo: numeroDa(v('costo')),
+      note: testo(v('note')), aggiornato: dataCella(v('aggiornato')),
+    };
+    if (a.codice || a.descrizione) articoli.push(a);
+  }
+  if (completa) {
+    const senza = articoli.filter((a) => !a.codice && a.descrizione);
+    if (senza.length) {
+      senza.forEach((a) => { a.codice = prossimoArticolo(articoli); });
+      await foglio.scrivi(senza.map((a) => ({ range: cellaMag(TAB_MAGAZZINO, col.codice, a.riga), values: [[a.codice]] })), 'RAW')
+        .catch((err) => { console.error('Codici del magazzino non scritti:', err); senza.forEach((a) => { a.codice = ''; }); });
+    }
+  }
+  const movimenti = [];
+  const cv = colonneDa(gv, CAMPI_MOVIMENTO);
+  for (let i = 1; i < (gv || []).length; i++) {
+    const r = gv[i] || [];
+    const v = (k) => (cv[k] < 0 ? '' : r[cv[k]]);
+    const id = testo(v('id'));
+    if (!id) continue; // movimento annullato
+    movimenti.push({
+      riga: i + 1, id, data: dataCella(v('data')), articolo: testo(v('articolo')).toUpperCase(), descrizione: testo(v('descrizione')),
+      quantita: numeroDa(v('quantita')) ?? 0, causale: testo(v('causale')), cliente: testo(v('cliente')).toUpperCase(), nome: testo(v('nome')),
+      lavoro: testo(v('lavoro')), chi: testo(v('chi')).toLowerCase(), note: testo(v('note')),
+    });
+  }
+  return { col, colMov: cv, articoli, movimenti };
+}
+// Il codice dopo il più alto: M001, M002… (M1000 dopo M999).
+function prossimoArticolo(articoli) {
+  const n = Math.max(0, ...articoli.map((a) => +((a.codice.match(/^M(\d+)$/) || [])[1] || 0)));
+  return `M${String(n + 1).padStart(3, '0')}`;
+}
+// Per l'app: senza i numeri di riga, e solo i movimenti dell'ultimo anno.
+function magazzinoPerApp(m) {
+  if (!m) return null;
+  const limite = serialeDa(...Object.values(oggi())) - 400;
+  const recente = (x) => { const d = leggiDataUtente(x.data); return !d || serialeDa(d.a, d.m, d.g) >= limite; };
+  return {
+    articoli: m.articoli.filter((a) => a.codice).map(({ riga, ...a }) => a),
+    movimenti: m.movimenti.filter(recente).slice(-3000).map(({ riga, ...x }) => x),
+    categorie: CATEGORIE,
+  };
+}
+
+const rigaMovimento = (x) => INTESTAZIONI_MOVIMENTI.map((h) => {
+  const k = Object.keys(CAMPI_MOVIMENTO).find((c) => CAMPI_MOVIMENTO[c] === h);
+  const v = k === 'chi' ? nomePersona(x.chi) : x[k];
+  return v == null ? '' : v;
+});
+// Accoda i movimenti nelle colonne della scheda (che Matteo potrebbe aver
+// spostato): la riga si costruisce sulle intestazioni che ci sono.
+async function accodaMovimenti(foglio, m, lista) {
+  if (!lista.length) return;
+  const cv = m.colMov;
+  const conIntestazioni = Object.values(cv).some((c) => c >= 0);
+  const righe = lista.map((x) => {
+    if (!conIntestazioni) return rigaMovimento(x);
+    const r = [];
+    for (const [k, c] of Object.entries(cv)) {
+      if (c < 0) continue;
+      while (r.length <= c) r.push('');
+      r[c] = k === 'chi' ? nomePersona(x.chi) : x[k] ?? '';
+    }
+    return r;
+  });
+  await foglio.accodaRighe(TAB_MOVIMENTI, INTESTAZIONI_MOVIMENTI, righe);
+}
+
+// Aggiunge un articolo nuovo (senza `codice`) o cambia i dati di uno che
+// c'è (con `codice`). La quantità di un articolo che c'è non si cambia da
+// qui: passa dai movimenti («È arrivata merce», «Ho contato»…).
+export async function salvaArticolo(foglio, dati, { chi = 'app' } = {}) {
+  const m = await leggiMagazzino(foglio);
+  if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
+  const descrizione = testo(dati.descrizione).replace(/\s+/g, ' ').slice(0, 200);
+  if (!descrizione) throw problema('Scrivi cos\'è l\'articolo.');
+  const numero = (v, max) => {
+    if (v === '' || v == null) return '';
+    const n = numeroDa(v);
+    if (n == null || n < 0 || n > max) throw problema('Controlla i numeri: uno non va bene.');
+    return arrotonda(n);
+  };
+  const campi = {
+    categoria: categoriaDa(dati.categoria), descrizione, fornitore: testo(dati.fornitore).slice(0, 60),
+    scorta: numero(dati.scorta, 10000), costo: numero(dati.costo, 100000), note: testo(dati.note).replace(/\s+/g, ' ').slice(0, 300),
+    aggiornato: testoData(oggi()),
+  };
+  const daApp = (a) => ({ ...a, riga: undefined, scorta: a.scorta === '' ? null : a.scorta, costo: a.costo === '' ? null : a.costo });
+  const scrivi = (riga, valori) => foglio.scrivi(Object.entries(valori).filter(([k]) => m.col[k] >= 0)
+    .map(([k, v]) => ({ range: cellaMag(TAB_MAGAZZINO, m.col[k], riga), values: [[v]] })), 'RAW');
+
+  const codice = testo(dati.codice).toUpperCase();
+  if (codice) {
+    const a = m.articoli.find((x) => x.codice === codice);
+    if (!a) throw problema('Non trovo più questo articolo nel magazzino. Riapri l\'app e riprova.', 409);
+    await scrivi(a.riga, campi);
+    const prima = { codice, categoria: a.categoria, descrizione: a.descrizione, fornitore: a.fornitore, scorta: a.scorta ?? '', costo: a.costo ?? '', note: a.note };
+    return { ok: true, articolo: daApp({ ...a, ...campi }), annulla: prima };
+  }
+
+  // Nuovo. Lo stesso articolo c'è già (richiesta arrivata due volte, o
+  // scritto due volte): non si raddoppia.
+  const uguale = m.articoli.find((x) => normalizza(x.descrizione) === normalizza(descrizione) && normalizza(x.fornitore) === normalizza(campi.fornitore));
+  if (uguale) return { ok: true, giaPresente: true, articolo: daApp(uguale), annulla: null };
+  const quantita = numero(dati.quantita, 100000) || 0;
+  const nuovo = { codice: prossimoArticolo(m.articoli), ...campi, quantita };
+  const riga = Math.max(1, ...m.articoli.map((a) => a.riga)) + 1;
+  await scrivi(riga, nuovo);
+  if (quantita) {
+    await accodaMovimenti(foglio, m, [{ id: `nuovo-${nuovo.codice}`, data: testoData(oggi()), articolo: nuovo.codice, descrizione, quantita, causale: CAUSALE_INIZIALE, chi, note: 'Articolo nuovo' }])
+      .catch((err) => console.error('Movimento iniziale non scritto:', err));
+  }
+  return { ok: true, articolo: daApp({ ...nuovo, riga }), annulla: null };
+}
+
+// Un movimento del magazzino: merce arrivata (`carico`), usata in un lavoro
+// (`lavoro`, col cliente), tolta per altro (`tolto`: rotta, resa…) o contata
+// (`correzione`: la quantità giusta, non la differenza). `righe` =
+// [{ articolo, quantita }]. Ogni riga diventa un movimento con Id
+// "<id>-<n>". Restituisce le quantità nuove.
+export async function muoviMagazzino(foglio, dati, { chi = 'app' } = {}) {
+  const id = testo(dati.id);
+  if (!/^[\w-]{6,40}$/.test(id) || ID_DEL_MOTORE.test(id)) throw problema('Richiesta non valida.');
+  const tipo = testo(dati.causale);
+  const causale = CAUSALI[tipo];
+  if (!causale) throw problema('Richiesta non valida.');
+  const righe = Array.isArray(dati.righe) ? dati.righe : [];
+  if (!righe.length || righe.length > 40) throw problema('Scegli almeno un articolo.');
+  const quando = dati.data ? leggiDataUtente(dati.data) : oggi();
+  if (!quando) throw problema('Data non valida.');
+  const serQuando = serialeDa(quando.a, quando.m, quando.g);
+  const serOggi = serialeDa(...Object.values(oggi()));
+  if (serQuando > serOggi + 1 || serQuando < serOggi - 730) throw problema('Controlla la data: è troppo lontana.');
+
+  const m = await leggiMagazzino(foglio);
+  if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
+  // La stessa richiesta arrivata due volte: è già fatta.
+  if (m.movimenti.some((x) => x.id.startsWith(`${id}-`))) return { ok: true, giaFatto: true, articoli: [], annulla: { id } };
+
+  const finali = new Map(); // codice → { a, dopo }
+  const movimenti = [];
+  righe.forEach((r, n) => {
+    const codice = testo(r && r.articolo).toUpperCase();
+    const a = m.articoli.find((x) => x.codice === codice);
+    if (!a) throw problema('Un articolo non c\'è più nel magazzino. Riapri l\'app e riprova.', 409);
+    const q = numeroDa(r.quantita);
+    if (q == null || q < 0 || q > 100000 || (tipo !== 'correzione' && q === 0)) throw problema('Controlla le quantità: una non va bene.');
+    const prima = finali.has(codice) ? finali.get(codice).dopo : a.quantita;
+    const dopo = arrotonda(tipo === 'correzione' ? q : tipo === 'carico' ? prima + q : prima - q);
+    finali.set(codice, { a, dopo });
+    const delta = arrotonda(dopo - prima);
+    if (!delta) return; // contati ed erano giusti: niente da scrivere
+    movimenti.push({
+      id: `${id}-${n + 1}`, data: testoData(quando), articolo: codice, descrizione: a.descrizione, quantita: delta, causale,
+      cliente: testo(dati.codice).toUpperCase().slice(0, 10), nome: testo(dati.nome).slice(0, 120), lavoro: testo(dati.lavoro).slice(0, 40),
+      chi, note: testo(dati.note).replace(/\s+/g, ' ').slice(0, 300),
+    });
+  });
+  const articoli = [...finali.values()].map(({ a, dopo }) => ({ codice: a.codice, quantita: dopo }));
+  if (!movimenti.length) return { ok: true, articoli, movimenti: [], annulla: null };
+
+  const quantita = (lista) => lista.flatMap(({ a, q }) => [
+    { range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[q]] },
+    ...(m.col.aggiornato >= 0 ? [{ range: cellaMag(TAB_MAGAZZINO, m.col.aggiornato, a.riga), values: [[testoData(oggi())]] }] : []),
+  ]);
+  const cambiati = [...finali.values()].filter(({ a, dopo }) => dopo !== a.quantita);
+  await foglio.scrivi(quantita(cambiati.map(({ a, dopo }) => ({ a, q: dopo }))), 'RAW');
+  try {
+    await accodaMovimenti(foglio, m, movimenti);
+  } catch (err) {
+    // Senza movimenti la stessa richiesta, riprovata, scalerebbe di nuovo:
+    // le quantità tornano com'erano (le date no: non contano).
+    await foglio.scrivi(cambiati.map(({ a }) => ({ range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[a.quantita]] })), 'RAW')
+      .catch((e) => console.error('Quantità non rimesse:', e));
+    throw err;
+  }
+  return { ok: true, articoli, movimenti: movimenti.map((x) => ({ ...x, chi: testo(chi).toLowerCase() })), annulla: { id } };
+}
+
+// Annulla un movimento (tutte le sue righe): le quantità tornano indietro
+// della stessa differenza, anche se intanto sono cambiate per altro, e le
+// righe dei movimenti si svuotano. Arrivato due volte, la seconda non fa niente.
+export async function annullaMagazzino(foglio, { id }) {
+  const k = testo(id);
+  if (!/^[\w-]{6,40}$/.test(k) || ID_DEL_MOTORE.test(k)) throw problema('Questo movimento non si annulla dall\'app.');
+  const m = await leggiMagazzino(foglio);
+  if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
+  const suoi = m.movimenti.filter((x) => x.id.startsWith(`${k}-`));
+  if (!suoi.length) return { ok: true, giaAnnullato: true, articoli: [] };
+  const finali = new Map();
+  for (const x of suoi) {
+    const a = m.articoli.find((y) => y.codice === x.articolo);
+    if (!a) continue; // articolo tolto dal foglio: il movimento si svuota e basta
+    finali.set(a.codice, { a, dopo: arrotonda((finali.has(a.codice) ? finali.get(a.codice).dopo : a.quantita) - x.quantita) });
+  }
+  const larghezza = Math.max(INTESTAZIONI_MOVIMENTI.length, ...Object.values(m.colMov).map((c) => c + 1));
+  await foglio.scrivi([
+    ...[...finali.values()].flatMap(({ a, dopo }) => [
+      { range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[dopo]] },
+      ...(m.col.aggiornato >= 0 ? [{ range: cellaMag(TAB_MAGAZZINO, m.col.aggiornato, a.riga), values: [[testoData(oggi())]] }] : []),
+    ]),
+    ...suoi.map((x) => ({ range: `'${TAB_MOVIMENTI}'!A${x.riga}:${lettera(larghezza)}${x.riga}`, values: [Array(larghezza).fill('')] })),
+  ], 'RAW');
+  return { ok: true, articoli: [...finali.values()].map(({ a, dopo }) => ({ codice: a.codice, quantita: dopo })) };
+}
+
+// L'aspetto delle due schede, dato una volta sola quando nascono: testata
+// in grassetto, larghezze, euro, e i colori di chi è da riordinare (sotto
+// la scorta minima: arancio), finito (0: grigio) o sotto zero (da contare:
+// rosso). Le formule dei colori non hanno separatori: valgono in ogni lingua.
+function aspettoMagazzino(id) {
+  const rgb = (h) => ({ red: parseInt(h.slice(1, 3), 16) / 255, green: parseInt(h.slice(3, 5), 16) / 255, blue: parseInt(h.slice(5, 7), 16) / 255 });
+  const colonne = (da, a) => ({ sheetId: id, startRowIndex: 1, startColumnIndex: da, endColumnIndex: a });
+  const regola = (indice, formula, format) => ({ addConditionalFormatRule: { index: indice, rule: { ranges: [colonne(0, 10)], booleanRule: { condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: formula }] }, format } } } });
+  const euro = (c) => ({ repeatCell: { range: colonne(c, c + 1), cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '"€" #,##0.00' } } }, fields: 'userEnteredFormat.numberFormat' } });
+  const larghezze = [70, 160, 440, 150, 90, 110, 90, 220, 110, 100, 30, 300, 180];
+  return [
+    { repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 13 }, cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: rgb('#eaf4fe') } }, fields: 'userEnteredFormat(textFormat,backgroundColor)' } },
+    ...larghezze.map((px, i) => ({ updateDimensionProperties: { range: { sheetId: id, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 }, properties: { pixelSize: px }, fields: 'pixelSize' } })),
+    euro(6), euro(9),
+    { repeatCell: { range: colonne(4, 6), cell: { userEnteredFormat: { horizontalAlignment: 'CENTER', textFormat: { bold: true } } }, fields: 'userEnteredFormat(horizontalAlignment,textFormat)' } },
+    regola(0, '=($A2<>"")*($E2<0)', { backgroundColor: rgb('#fde7e5'), textFormat: { foregroundColor: rgb('#b3261e') } }),
+    regola(1, '=($A2<>"")*($F2<>"")*($E2<=$F2)', { backgroundColor: rgb('#fff1d6') }),
+    regola(2, '=($A2<>"")*($E2=0)', { textFormat: { foregroundColor: rgb('#8a97a5') } }),
+  ];
+}
+function aspettoMovimenti(id) {
+  const larghezze = [150, 95, 75, 380, 85, 150, 75, 220, 110, 90, 260];
+  return [
+    { repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11 }, cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.918, green: 0.957, blue: 0.996 } } }, fields: 'userEnteredFormat(textFormat,backgroundColor)' } },
+    ...larghezze.map((px, i) => ({ updateDimensionProperties: { range: { sheetId: id, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 }, properties: { pixelSize: px }, fields: 'pixelSize' } })),
+    { repeatCell: { range: { sheetId: id, startRowIndex: 1, startColumnIndex: 4, endColumnIndex: 5 }, cell: { userEnteredFormat: { numberFormat: { type: 'NUMBER', pattern: '+0.##;-0.##;0' }, horizontalAlignment: 'CENTER', textFormat: { bold: true } } }, fields: 'userEnteredFormat(numberFormat,horizontalAlignment,textFormat)' } },
+  ];
+}
+
+// Crea il magazzino nel foglio dagli articoli del vecchio Magazzino.xlsx
+// (una volta sola, solo la chiave di Matteo): codici M001…, quantità, e un
+// movimento «Carico iniziale» per ogni articolo che c'è. Se il magazzino ha
+// già degli articoli si ferma: non riscrive niente.
+export async function importaMagazzino(foglio, { articoli = [] }, { chi } = {}) {
+  if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
+  if (!Array.isArray(articoli) || !articoli.length || articoli.length > 500) throw problema('Articoli non validi.');
+  const prima = await leggiMagazzino(foglio).catch(() => null);
+  if (prima && prima.articoli.length) throw problema('Il magazzino nel foglio ha già degli articoli: non lo riscrivo.', 409);
+  const giorno = testoData(oggi());
+  const righe = articoli.map((x, i) => {
+    const descrizione = testo(x.descrizione).replace(/\s+/g, ' ').slice(0, 200);
+    if (!descrizione) throw problema(`Articolo ${i + 1} senza descrizione.`);
+    const q = numeroDa(x.quantita) ?? 0;
+    const costo = numeroDa(x.costo);
+    return { codice: `M${String(i + 1).padStart(3, '0')}`, categoria: categoriaDa(x.categoria), descrizione, fornitore: testo(x.fornitore).slice(0, 60),
+      quantita: arrotonda(q), scorta: '', costo: costo == null ? '' : arrotonda(costo), note: testo(x.note).slice(0, 300), aggiornato: giorno };
+  });
+  await foglio.creaScheda(TAB_MAGAZZINO);
+  await foglio.creaScheda(TAB_MOVIMENTI);
+  const valori = (o) => Object.keys(CAMPI_ARTICOLO).map((k) => o[k]);
+  await foglio.scrivi([
+    { range: `'${TAB_MAGAZZINO}'!A1:${lettera(INTESTAZIONI_MAGAZZINO.length)}${righe.length + 1}`, values: [INTESTAZIONI_MAGAZZINO, ...righe.map(valori)] },
+    { range: `'${TAB_MOVIMENTI}'!A1:${lettera(INTESTAZIONI_MOVIMENTI.length)}1`, values: [INTESTAZIONI_MOVIMENTI] },
+  ], 'RAW');
+  // Il valore di ogni riga e, in testata, il totale e quanti sono da riordinare.
+  await foglio.scrivi([
+    { range: `'${TAB_MAGAZZINO}'!J1`, values: [['={"Valore";ARRAYFORMULA(IF(LEN(A2:A);IFERROR(E2:E*G2:G;0);""))}']] },
+    { range: `'${TAB_MAGAZZINO}'!L1`, values: [['="Valore del magazzino: € "&FIXED(SUM(J2:J);2)']] },
+    { range: `'${TAB_MAGAZZINO}'!M1`, values: [['="Da riordinare: "&SUMPRODUCT((A2:A<>"")*(F2:F<>"")*(E2:E<=F2:F))']] },
+  ], 'USER_ENTERED');
+  const m = { colMov: Object.fromEntries(Object.keys(CAMPI_MOVIMENTO).map((k, i) => [k, i])) };
+  await accodaMovimenti(foglio, m, righe.filter((a) => a.quantita).map((a) => ({
+    id: `inizio-${a.codice}`, data: giorno, articolo: a.codice, descrizione: a.descrizione, quantita: a.quantita, causale: CAUSALE_INIZIALE, chi, note: 'Dal file Magazzino.xlsx',
+  })));
+  await foglio.aspetto(TAB_MAGAZZINO, aspettoMagazzino).catch((err) => console.error('Aspetto del magazzino non dato:', err));
+  await foglio.aspetto(TAB_MOVIMENTI, aspettoMovimenti).catch((err) => console.error('Aspetto dei movimenti non dato:', err));
+  return { ok: true, articoli: righe.length, movimenti: righe.filter((a) => a.quantita).length };
+}
+
+// ---------------------------------------------------------------------------
 //  Adattatore verso Google Sheets
 // ---------------------------------------------------------------------------
 
@@ -1521,6 +1882,18 @@ export function creaFoglioGoogle(sheetId) {
     async leggi(range, render) {
       const q = `valueRenderOption=${render}&dateTimeRenderOption=SERIAL_NUMBER`;
       return (await chiama(`/values/${encodeURIComponent(range)}?${q}`)).values ?? [];
+    },
+    // Più intervalli in una lettura sola (conta una volta per i limiti di Google).
+    async leggiInsieme(ranges, render) {
+      const q = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
+      const r = await chiama(`/values:batchGet?${q}&valueRenderOption=${render}&dateTimeRenderOption=SERIAL_NUMBER`);
+      return (r.valueRanges || []).map((v) => v.values ?? []);
+    },
+    // Formattazione di una scheda: `richieste(sheetId)` dà le richieste di batchUpdate.
+    async aspetto(tab, richieste) {
+      const sheetId = await idScheda(tab);
+      if (sheetId == null) return;
+      await chiama(':batchUpdate', { method: 'POST', body: JSON.stringify({ requests: richieste(sheetId) }) });
     },
     async scrivi(data, inputOption) {
       await chiama('/values:batchUpdate', {

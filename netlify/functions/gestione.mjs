@@ -17,7 +17,8 @@ import { timingSafeEqual, createHash } from 'node:crypto';
 import {
   leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
-  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa, creaFoglioGoogle,
+  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
+  salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -81,6 +82,10 @@ const AZIONI = {
   assegna: assegnaManutenzione, // il giro del 19 ott, per i telefoni con l'app vecchia
   tappa: salvaTappa,
   togliTappa,
+  articolo: salvaArticolo,
+  magazzino: muoviMagazzino,
+  annullaMagazzino,
+  importaMagazzino, // una volta sola, dal vecchio Magazzino.xlsx (solo Matteo)
 };
 
 // creaFoglio è un parametro solo per il server di prova in locale

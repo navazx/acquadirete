@@ -93,6 +93,7 @@
     frecciaSu: '<path d="M12 19V5M6 11l6-6 6 6"/>',
     frecciaSx: '<path d="M15 5l-7 7 7 7"/>',
     frecciaDx: '<path d="M9 5l7 7-7 7"/>',
+    scatola: '<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -202,6 +203,10 @@
   }
   const salvaDati = () => memoria.scrivi(K_DATI, JSON.stringify({ dati, quando: aggiornatoAlle }));
 
+  // Movimenti del magazzino appena arrivati al foglio: una rilettura partita
+  // prima potrebbe non averli ancora, e si rimettono sopra (come la coda).
+  // APPLICA li riconosce dall'Id, così non contano due volte.
+  const appenaArrivati = [];
   let caricando = null;
   function carica() {
     if (!caricando) {
@@ -218,8 +223,10 @@
         const nuovi = {
           oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati,
           storico: r.storico || [], io: r.io || '', persone: r.persone || [], tappe: r.tappe || [],
+          magazzino: r.magazzino || null,
         };
         // Le azioni ancora in coda: il foglio non le ha, lo schermo sì.
+        for (const v of appenaArrivati) if (Date.now() - v.quando < 120000) APPLICA[v.azione](nuovi, v.dati);
         for (const v of leggiLista(K_CODA)) if (APPLICA[v.azione]) APPLICA[v.azione](nuovi, v.dati);
         dati = nuovi;
         aggiornatoAlle = Date.now();
@@ -287,14 +294,19 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri, magazzino: schermoMagazzino };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
   // ---------------------------------------------------------------------
   //  Finestra di conferma e messaggi
   // ---------------------------------------------------------------------
+  // Chi aspetta che la finestra si chiuda, comunque si chiuda (tocco fuori,
+  // tasto indietro): la domanda dei materiali dopo un lavoro, che solo
+  // allora mostra il messaggio con «Annulla». Una finestra nuova lo azzera.
+  let alChiudere = null;
   function apriFinestra(html) {
+    alChiudere = null;
     // Il messaggio in basso (es. "Annulla" dell'azione prima) coprirebbe i
     // pulsanti della finestra: si chiude.
     $('messaggio').hidden = true;
@@ -309,6 +321,9 @@
     $('velo').hidden = true;
     $('finestra').innerHTML = '';
     document.body.style.overflow = '';
+    const poi = alChiudere;
+    alChiudere = null;
+    if (poi) poi();
   }
   $('velo').addEventListener('click', chiudiFinestra);
 
@@ -494,6 +509,16 @@
           <span><b>Interventi fatti</b>
           <small>${pagare ? `<span class="n-rosso">${pagare} da risentire per il pagamento</span>` : 'Storico e pagamenti'}</small></span>
         </button>
+        ${mag() ? `<button class="tessera" data-vai="magazzino">
+          <span class="ico">${icona('scatola')}</span>
+          <span><b>Magazzino</b>
+          <small>${(() => {
+            const riordinare = articoliMag().filter(daRiordinare).length;
+            const ricontare = articoliMag().filter((a) => a.quantita < 0).length;
+            return [riordinare && `<span class="n-rosso">${riordinare} da riordinare</span>`, ricontare && `<span class="n-rosso">${ricontare} da ricontare</span>`]
+              .filter(Boolean).join(' · ') || `${articoliMag().length} articoli`;
+          })()}</small></span>
+        </button>` : ''}
         <button class="tessera" id="aggiungi">
           <span class="ico">${icona('piu')}</span>
           <span><b>Aggiungi</b><small>Un cliente nuovo o un contatto</small></span>
@@ -1036,7 +1061,9 @@
   }
 
   // Salva una tappa (nuova o cambiata) e lo dice, con «Annulla».
-  async function salvaLaTappa(t, testo) {
+  // `materiali`: dopo «Fatto» chiede che materiali sono stati usati (dal 20
+  // ott 2026), e il messaggio con «Annulla» arriva dopo.
+  async function salvaLaTappa(t, testo, { materiali = null } = {}) {
     const prima = (dati.tappe || []).find((x) => x.id === t.id);
     const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
     try {
@@ -1047,10 +1074,16 @@
         if (r.annulla && r.annulla.togli) return togliLaTappa(r.tappa, 'Annullato.');
         return salvaLaTappa({ ...(prima || r.annulla) }, 'Annullato.');
       };
-      messaggio(testo + (voce ? fuoriLinea(voce) : ''), {
-        durata: 10000,
-        azione: { testo: 'Annulla', fai: voce ? () => annullaInCoda(voce, () => { dati.tappe = fotoTappe; }) : indietro },
-      });
+      const annullaTappa = voce ? () => annullaInCoda(voce, () => { dati.tappe = fotoTappe; }) : indietro;
+      const avvisa = (mov) => {
+        if (mov) disegna(history.state);
+        messaggio(testo + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+          durata: 10000,
+          azione: { testo: 'Annulla', fai: async () => { if (mov) await annullaMovimento(mov, { zitto: true }); annullaTappa(); } },
+        });
+      };
+      if (materiali && mag()) chiediMateriali({ ...materiali, dopo: avvisa });
+      else avvisa(null);
       return true;
     } catch (err) {
       messaggio(err.message, { errore: true, durata: 8000 });
@@ -1520,6 +1553,9 @@
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
       ${fatti.length ? `<h3 class="titoletto">Interventi fatti</h3>
       <div class="lista">${fatti.map((x) => voceIntervento(x, false)).join('')}</div>` : ''}
+      ${mag() ? `<h3 class="titoletto">Materiali usati</h3>
+      ${lottiDi(c.codice).length ? `<div class="lista">${lottiDi(c.codice).map(voceLotto).join('')}</div>` : ''}
+      <button class="btn" id="materiali" style="width:100%;margin-top:10px">${icona('scatola')} Segna materiali usati</button>` : ''}
       <h3 class="titoletto">Dati del cliente</h3>
       <dl class="dati">
         ${riga('Impianto', c.tipo)}
@@ -1539,8 +1575,10 @@
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
     if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
+    if ($('materiali')) $('materiali').onclick = () => chiediMateriali({ codice: c.codice, nome: c.nome, data: oggi(), dopo: avvisaMovimento });
     collegaTappe({ cliente: c });
     collegaInterventi();
+    collegaLotti();
   }
 
   // «Sono qui»: dal cliente, il punto dove sta il telefono diventa la sua
@@ -1723,6 +1761,44 @@
     pagamento(d, x) {
       const s = (d.storico || []).find((v) => v.codice === x.codice && v.data === x.data);
       if (s) s.pagamento = x.pagamento || '';
+    },
+    // Come muoviMagazzino nel motore: stessi Id dei movimenti, così non si
+    // conta due volte una voce già arrivata e riletta dal foglio.
+    magazzino(d, x) {
+      const m = d.magazzino;
+      if (!m) return;
+      m.movimenti = m.movimenti || [];
+      if (m.movimenti.some((v) => String(v.id).startsWith(`${x.id}-`))) return;
+      (x.righe || []).forEach((r, n) => {
+        const a = m.articoli.find((y) => y.codice === r.articolo);
+        if (!a) return;
+        const q = Number(r.quantita) || 0;
+        const prima = a.quantita;
+        a.quantita = arrotonda(x.causale === 'correzione' ? q : x.causale === 'carico' ? prima + q : prima - q);
+        const delta = arrotonda(a.quantita - prima);
+        if (!delta) return;
+        m.movimenti.push({
+          id: `${x.id}-${n + 1}`, data: testoData(daIso(x.data) || oggi()), articolo: a.codice, descrizione: a.descrizione, quantita: delta,
+          causale: CAUSALI_MAG[x.causale], cliente: x.codice || '', nome: x.nome || '', lavoro: x.lavoro || '', chi: d.io || '', note: x.note || '',
+        });
+      });
+    },
+    annullaMagazzino(d, x) {
+      const m = d.magazzino;
+      if (!m) return;
+      const suo = (v) => String(v.id).startsWith(`${x.id}-`);
+      (m.movimenti || []).filter(suo).forEach((v) => {
+        const a = m.articoli.find((y) => y.codice === v.articolo);
+        if (a) a.quantita = arrotonda(a.quantita - v.quantita);
+      });
+      m.movimenti = (m.movimenti || []).filter((v) => !suo(v));
+    },
+    // Un articolo nuovo compare quando arriva al foglio: il codice lo dà il foglio.
+    articolo(d, x) {
+      const a = x.codice && d.magazzino && d.magazzino.articoli.find((y) => y.codice === x.codice);
+      if (!a) return;
+      const numero = (v) => (v === '' || v == null ? null : Number(v));
+      Object.assign(a, { categoria: x.categoria, descrizione: x.descrizione, fornitore: x.fornitore || '', scorta: numero(x.scorta), costo: numero(x.costo), note: x.note || '' });
     },
     assegna(d, x) {
       (x.codici || [x.codice]).forEach((k) => { const c = clienteIn(d, k); if (c) c.chiVa = x.a || ''; });
@@ -2141,11 +2217,19 @@
         disegna(history.state);
         // Senza «Annulla» solo se il foglio l'aveva già segnata (richiesta doppia).
         const puoiAnnullare = voce || (r && r.annulla);
-        messaggio(`Segnata ✓ ${breve(pagamento)} · Prossima: ${c.prossima}` + (voce ? fuoriLinea(voce) : ''), {
-          durata: 15000,
-          azione: puoiAnnullare ? { testo: 'Annulla', fai: voce ? () => annullaInCoda(voce, ripristina) : () => annulla(r.annulla, c, ripristina) } : null,
-        });
+        const annullaFatta = voce ? () => annullaInCoda(voce, ripristina) : () => annulla(r.annulla, c, ripristina);
+        // Poi i materiali usati (dal 20 ott 2026); il messaggio con «Annulla»
+        // arriva quando quella finestra si chiude, e annulla tutte e due.
+        const avvisa = (mov) => {
+          disegna(history.state);
+          messaggio(`Segnata ✓ ${breve(pagamento)} · Prossima: ${c.prossima}` + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+            durata: 15000,
+            azione: puoiAnnullare || mov ? { testo: 'Annulla', fai: async () => { if (mov) await annullaMovimento(mov, { zitto: puoiAnnullare }); if (puoiAnnullare) annullaFatta(); } } : null,
+          });
+        };
         if (r) aggiornaInSottofondo();
+        if (mag()) chiediMateriali({ codice: c.codice, nome: c.nome, lavoro: 'Manutenzione', data: fattaIl, dopo: avvisa });
+        else avvisa(null);
       } catch (err) {
         messaggio(err.message, { errore: true, durata: 8000 });
       }
@@ -2302,7 +2386,9 @@
   function segnaTappaFatta(t) {
     const c = t.codice && clienteIn(dati, t.codice);
     if (c && t.lavoro === 'Manutenzione' && !c.perso) { chiediFatta(c); return; }
-    salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`);
+    salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`, {
+      materiali: { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
+    });
   }
 
   // I tasti delle tappe (pagina dei giri, scheda del cliente o del contatto).
@@ -2449,9 +2535,11 @@
   // conNome: nella pagina degli interventi; senza, nella scheda del cliente.
   function voceIntervento(x, conNome = true) {
     const riga2 = conNome ? [`Fatta il ${x.data}`, x.chi && daChi(x.chi)] : [x.chi && `Fatta ${daChi(x.chi)}`];
+    const usati = materialiDi(x.codice, x.data);
     return `<button class="voce" data-intervento="${esc(idIntervento(x))}">
       <b>${esc(conNome ? x.nome || x.codice : x.data)}</b>
       ${riga2.filter(Boolean).length ? `<span class="riga2">${esc(riga2.filter(Boolean).join(' · '))}</span>` : ''}
+      ${usati ? `<span class="riga2">${icona('scatola')} ${esc(usati)}</span>` : ''}
       <span class="riga3">${etichettaPagamento(x.pagamento)}</span>
     </button>`;
   }
@@ -2536,6 +2624,442 @@
     } catch (err) {
       messaggio(err.message, { errore: true, durata: 8000 });
     }
+  }
+
+  // ---------------------------------------------------------------------
+  //  Magazzino (20 ott 2026)
+  // ---------------------------------------------------------------------
+  // Matteo: «questo è il file del magazzino, creane uno migliore nel
+  // gestionale e fai in modo che le quantità si aggiornino anche dall'app:
+  // quando si fa un lavoro si devono poter inserire le quantità dei
+  // materiali usati». Gli articoli stanno nella scheda "Magazzino" del
+  // foglio, ogni cambio in "Movimenti-Magazzino" (vedi muoviMagazzino in
+  // _shared/gestionale.mjs). Dopo «Manutenzione fatta» e dopo «Fatto» di una
+  // tappa l'app chiede che materiali sono stati usati; nella pagina
+  // Magazzino si segna la merce arrivata, si corregge un numero contato, si
+  // aggiunge un articolo.
+  const mag = () => (dati && dati.magazzino) || null;
+  const articoliMag = () => (mag() ? mag().articoli : []);
+  const articoloDa = (k) => articoliMag().find((a) => a.codice === k);
+  const CAUSALI_MAG = { carico: 'Arrivata merce', lavoro: 'Usato in un lavoro', tolto: 'Tolto', correzione: 'Contati' };
+  const arrotonda = (n) => Math.round(n * 100) / 100;
+  const numeroIt = (n) => String(arrotonda(n)).replace('.', ',');
+  const daRiordinare = (a) => a.scorta != null && a.quantita <= a.scorta;
+  const categorieMag = () => (mag() && mag().categorie) || ['Filtri e ricambi', 'Impianti', 'Impianti usati', 'Miscelatori e rubinetti', 'Altro'];
+  const categoriaDi = (a) => (categorieMag().includes(a.categoria) ? a.categoria : 'Altro');
+  const coloreQuantita = (a) => (a.quantita < 0 ? 'rosso' : a.quantita === 0 ? 'grigio' : daRiordinare(a) ? 'arancio' : '');
+  // I movimenti salvati insieme hanno lo stesso Id col numero in fondo: «t…-1», «t…-2».
+  const lotto = (x) => String(x.id).replace(/-\d+$/, '');
+  // Un numero scritto da babbo: «28,50», «€ 28.50», «3 » → "28.50", "28.50", "3"; vuoto → ''.
+  const numeroScritto = (v) => String(v == null ? '' : v).replace(/[\s€]/g, '').replace(',', '.');
+  const pezziTesto = (n) => `${numeroIt(n)} ${n === 1 ? 'pezzo' : 'pezzi'}`;
+
+  // I materiali usati per un cliente quel giorno: «1 × Filtro …, 2 × …».
+  function materialiDi(codice, data) {
+    if (!mag() || !codice) return '';
+    return (mag().movimenti || []).filter((x) => x.cliente === codice && x.data === data && x.causale === CAUSALI_MAG.lavoro)
+      .map((x) => `${numeroIt(-x.quantita)} × ${x.descrizione}`).join(', ');
+  }
+  // I materiali usati per un cliente, a gruppi (uno per volta che sono stati segnati), dal più recente.
+  function lottiDi(codice) {
+    const gruppi = new Map();
+    for (const x of (mag() ? mag().movimenti || [] : [])) {
+      if (x.cliente !== codice || x.causale !== CAUSALI_MAG.lavoro) continue;
+      if (!gruppi.has(lotto(x))) gruppi.set(lotto(x), { id: lotto(x), data: x.data, lavoro: x.lavoro, chi: x.chi, nome: x.nome, righe: [] });
+      gruppi.get(lotto(x)).righe.push(x);
+    }
+    return [...gruppi.values()].reverse().sort((a, b) => quandoFatto(b) - quandoFatto(a));
+  }
+  const elencoRighe = (righe) => righe.map((x) => `${numeroIt(Math.abs(x.quantita))} × ${x.descrizione}`).join(', ');
+  function voceLotto(g) {
+    return `<button class="voce" type="button" data-lotto="${esc(g.id)}">
+      <b>${esc(g.data)}${g.lavoro ? ` · ${esc(g.lavoro)}` : ''}</b>
+      <span class="riga2">${esc(elencoRighe(g.righe))}</span>
+      ${g.chi ? `<span class="riga2">Segnati ${esc(daChi(g.chi))}</span>` : ''}
+    </button>`;
+  }
+  // Un gruppo di materiali toccato nella scheda del cliente: si può togliere
+  // (segnato per sbaglio): i pezzi tornano in magazzino.
+  function collegaLotti() {
+    schermo.querySelectorAll('[data-lotto]').forEach((b) => {
+      b.onclick = () => {
+        const righe = (mag() ? mag().movimenti || [] : []).filter((x) => lotto(x) === b.dataset.lotto);
+        if (!righe.length) return;
+        const x = righe[0];
+        apriFinestra(`
+          <h3>Materiali usati il ${esc(x.data)}</h3>
+          <p>${x.nome ? `<strong>${esc(x.nome)}</strong>${x.lavoro ? ` · ${esc(x.lavoro)}` : ''}<br>` : ''}${x.chi ? `Segnati ${esc(daChi(x.chi))}.` : ''}</p>
+          <ul class="movimenti">${righe.map(rigaMovimento).join('')}</ul>
+          <button class="btn btn-rosso" type="button" id="togli-lotto">Segnati per sbaglio: rimettili in magazzino</button>
+          <button class="btn leggero" type="button" id="no">Chiudi</button>`);
+        $('no').onclick = chiudiFinestra;
+        $('togli-lotto').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => { chiudiFinestra(); await annullaMovimento({ id: b.dataset.lotto }); });
+      };
+    });
+  }
+  // Una riga dell'elenco dei movimenti: «−1 Usato in un lavoro — Rossi», sotto data e chi.
+  const rigaMovimento = (x) => `<li><span class="q ${x.quantita > 0 ? 'piu' : 'meno'}">${x.quantita > 0 ? '+' : '−'}${numeroIt(Math.abs(x.quantita))}</span>
+    <span>${esc(x.causale === CAUSALI_MAG.lavoro ? x.descrizione : x.causale)}${x.causale === CAUSALI_MAG.lavoro && x.nome ? '' : x.nome ? ` — ${esc(x.nome)}` : ''}${x.note ? ` (${esc(x.note)})` : ''}
+    <small>${esc(x.data)}${x.causale === CAUSALI_MAG.lavoro && x.nome ? ` · per ${esc(x.nome)}` : ''}${x.chi ? ` · ${esc(nomeChi(x.chi))}` : ''}</small></span></li>`;
+
+  // Manda un movimento; torna quel che serve per annullarlo (o null se il foglio l'ha rifiutato).
+  async function mandaMovimento(datiMov, testo) {
+    try {
+      const { r, voce } = await manda('magazzino', datiMov, testo);
+      if (r) {
+        APPLICA.magazzino(dati, datiMov);
+        appenaArrivati.push({ azione: 'magazzino', dati: datiMov, quando: Date.now() });
+        salvaDati();
+        aggiornaInSottofondo();
+      }
+      return { id: datiMov.id, r, voce };
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+      return null;
+    }
+  }
+  // Annulla un movimento (tutte le sue righe): le quantità tornano com'erano.
+  // Se è ancora nel telefono (senza campo) si toglie dalla coda; se forse è
+  // già arrivato, si chiede anche al foglio di toglierlo. `zitto`: il
+  // messaggio lo dà chi annulla anche il lavoro.
+  async function annullaMovimento(mov, { zitto = false } = {}) {
+    const inCoda = leggiLista(K_CODA).find((v) => v.azione === 'magazzino' && v.dati && v.dati.id === mov.id && !inVoloOra.has(v.id));
+    if (inCoda) {
+      scriviLista(K_CODA, leggiLista(K_CODA).filter((v) => v.id !== inCoda.id));
+      APPLICA.annullaMagazzino(dati, { id: mov.id });
+      salvaDati();
+      if (!inCoda.forse) {
+        disegna(history.state);
+        if (!zitto) messaggio('Annullato: le quantità sono tornate com\'erano.');
+        return;
+      }
+    }
+    try {
+      const { r, voce } = await manda('annullaMagazzino', { id: mov.id }, 'Annullato un movimento del magazzino');
+      if (r) {
+        APPLICA.annullaMagazzino(dati, { id: mov.id });
+        appenaArrivati.push({ azione: 'annullaMagazzino', dati: { id: mov.id }, quando: Date.now() });
+        salvaDati();
+      }
+      disegna(history.state);
+      if (!zitto) messaggio('Annullato: le quantità sono tornate com\'erano.' + (voce ? fuoriLinea(voce) : ''));
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+    }
+  }
+  // Il messaggio dopo un movimento salvato da solo, con «Annulla».
+  function avvisaMovimento(mov) {
+    disegna(history.state);
+    if (!mov) return;
+    messaggio(mov.testo.charAt(0).toUpperCase() + mov.testo.slice(1) + (mov.voce ? fuoriLinea(mov.voce) : ''), {
+      durata: 10000,
+      azione: { testo: 'Annulla', fai: () => annullaMovimento(mov) },
+    });
+  }
+
+  // «Che materiali hai usato?» (dopo un lavoro) o «Cos'è arrivato?» (merce
+  // arrivata): si tocca + sugli articoli e si salva tutto insieme. `dopo(mov)`
+  // riceve il movimento salvato, o null se non si è usato niente, comunque
+  // si chiuda la finestra. Le righe non si spostano mentre si tocca.
+  function chiediMateriali({ codice = '', nome = '', lavoro = '', data = null, carico = false, scelti = new Map(), dopo = () => {} }) {
+    if (!mag()) { dopo(null); return; }
+    let finito = false;
+    const fine = (mov) => { if (!finito) { finito = true; dopo(mov); } };
+    // In cima i più usati nei lavori (per lo stesso lavoro contano doppio).
+    const punti = new Map();
+    if (!carico) {
+      for (const x of mag().movimenti || []) {
+        if (x.causale === CAUSALI_MAG.lavoro) punti.set(x.articolo, (punti.get(x.articolo) || 0) + (lavoro && x.lavoro === lavoro ? 2 : 1));
+      }
+    }
+    const soliti = [...punti].sort((a, b) => b[1] - a[1]).map(([k]) => articoloDa(k)).filter(Boolean).slice(0, 8);
+    // Poi le categorie che servono a quel lavoro.
+    const primi = carico ? [] : lavoro === 'Installazione' ? ['Impianti', 'Miscelatori e rubinetti'] : ['Filtri e ricambi'];
+    const ordine = [...primi, ...categorieMag().filter((x) => !primi.includes(x))];
+    // Le altre restano chiuse in un tasto (sono tante: 80 fra impianti e miscelatori).
+    const aperte = new Set(carico ? ['Filtri e ricambi'] : primi);
+    apriFinestra(`
+      <h3>${carico ? 'Cos\'è arrivato?' : 'Che materiali hai usato?'}</h3>
+      <p>${carico ? 'Tocca + sugli articoli arrivati: si aggiungono al magazzino.'
+        : `${nome ? `<strong>${esc(nome)}</strong>${lavoro ? ` · ${esc(lavoro)}` : ''}<br>` : ''}Tocca + su quello che hai usato: si toglie dal magazzino.`}</p>
+      <input class="cerca-finestra" id="cerca-mat" type="search" autocomplete="off" placeholder="Cerca un articolo">
+      <div id="lista-mat"></div>
+      <button class="link" type="button" id="mat-nuovo">Non c'è? Aggiungi un articolo</button>
+      <div class="piede-finestra">
+        <button class="btn pieno grande" type="button" id="mat-salva"></button>
+        <button class="btn leggero" type="button" id="mat-niente">${carico ? 'Lascia stare' : 'Niente dal magazzino'}</button>
+      </div>`);
+    const aggiornaSalva = () => {
+      const n = [...scelti.values()].filter((x) => x > 0);
+      const pezzi = n.reduce((s, x) => s + x, 0);
+      $('mat-salva').disabled = !n.length;
+      $('mat-salva').textContent = !n.length ? (carico ? 'Tocca + sugli articoli arrivati' : 'Tocca + su quello che hai usato')
+        : `${carico ? 'Aggiungi' : 'Togli'} ${pezziTesto(pezzi)}${n.length > 1 ? ` (${n.length} articoli)` : ''}`;
+    };
+    const rigaMateriale = (a) => {
+      const n = scelti.get(a.codice) || 0;
+      return `<div class="materiale${n ? ' scelto' : ''}" data-mat="${esc(a.codice)}">
+        <div class="mat-testo"><b>${esc(a.descrizione)}</b><small>${a.fornitore ? `${esc(a.fornitore)} · ` : ''}${a.quantita < 0 ? 'sotto zero: da ricontare' : `ne hai ${numeroIt(a.quantita)}`}</small></div>
+        <div class="contatore"><button type="button" data-d="-1" aria-label="Uno in meno">−</button><output>${numeroIt(n)}</output><button type="button" data-d="1" aria-label="Uno in più">+</button></div>
+      </div>`;
+    };
+    const gruppo = (t, lista) => (lista.length ? `<h4 class="gruppo">${esc(t)}</h4><div class="lista-materiali">${lista.map(rigaMateriale).join('')}</div>` : '');
+    const disegnaLista = () => {
+      const q = normalizza($('cerca-mat').value);
+      const tutti = articoliMag();
+      let html;
+      if (q) {
+        const trovati = tutti.filter((a) => normalizza([a.descrizione, a.fornitore, a.codice, a.categoria].join(' ')).includes(q)).slice(0, 40);
+        html = trovati.length ? gruppo(`Trovati (${trovati.length})`, trovati) : '<div class="vuoto">Nessun articolo con questo nome.</div>';
+      } else {
+        html = gruppo('Usati di solito', soliti) + ordine.map((cat) => {
+          // In un lavoro prima quelli che ci sono (si usa quello che si ha), poi i finiti.
+          const lista = tutti.filter((a) => categoriaDi(a) === cat && !soliti.includes(a));
+          if (!carico) lista.sort((a, b) => (b.quantita > 0) - (a.quantita > 0));
+          if (!lista.length || aperte.has(cat)) return gruppo(cat, lista);
+          const presi = lista.filter((a) => scelti.get(a.codice)).length;
+          return `<button class="mostra-altri" type="button" data-apri="${esc(cat)}">${esc(cat)} (${lista.length})${presi ? ` · ${presi} ${presi === 1 ? 'scelto' : 'scelti'}` : ''}</button>`;
+        }).join('');
+        if (!carico && !tutti.some((a) => categoriaDi(a) === 'Filtri e ricambi')) {
+          html = '<p class="spiega">Filtri e ricambi non sono ancora nel magazzino: aggiungili con «Non c\'è? Aggiungi un articolo», in fondo.</p>' + html;
+        }
+      }
+      $('lista-mat').innerHTML = html;
+      $('lista-mat').querySelectorAll('[data-apri]').forEach((b) => { b.onclick = () => { aperte.add(b.dataset.apri); disegnaLista(); }; });
+      $('lista-mat').querySelectorAll('[data-mat]').forEach((riga) => {
+        riga.querySelectorAll('[data-d]').forEach((b) => {
+          b.onclick = () => {
+            const k = riga.dataset.mat;
+            const n = Math.max(0, (scelti.get(k) || 0) + Number(b.dataset.d));
+            scelti.set(k, n);
+            riga.classList.toggle('scelto', n > 0);
+            riga.querySelector('output').textContent = numeroIt(n);
+            aggiornaSalva();
+          };
+        });
+      });
+    };
+    $('cerca-mat').oninput = disegnaLista;
+    disegnaLista();
+    aggiornaSalva();
+    alChiudere = () => fine(null);
+    $('mat-niente').onclick = chiudiFinestra;
+    // L'articolo nuovo, se è per un lavoro, è già scelto (uno).
+    $('mat-nuovo').onclick = () => chiediDatiArticolo(null, {
+      perLavoro: !carico,
+      poi: (nuovo) => {
+        if (nuovo && !carico) scelti.set(nuovo.codice, (scelti.get(nuovo.codice) || 0) + 1);
+        chiediMateriali({ codice, nome, lavoro, data, carico, scelti, dopo });
+      },
+    });
+    $('mat-salva').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+      const righe = [...scelti].filter(([, n]) => n > 0).map(([articolo, quantita]) => ({ articolo, quantita }));
+      if (!righe.length) return;
+      const pezzi = righe.reduce((s, r) => s + r.quantita, 0);
+      const datiMov = { id: nuovoId(), causale: carico ? 'carico' : 'lavoro', data: isoDa(data || oggi()), codice, nome, lavoro, righe };
+      const mov = await mandaMovimento(datiMov, carico ? `Arrivata merce (${pezziTesto(pezzi)})` : `Materiali usati (${pezziTesto(pezzi)}): ${nome || 'senza nome'}`);
+      if (!mov) return;
+      mov.testo = `${carico ? 'aggiunti al magazzino' : 'tolti dal magazzino'} ${pezziTesto(pezzi)}`;
+      alChiudere = null;
+      chiudiFinestra();
+      fine(mov);
+    });
+  }
+
+  // Una finestra per un numero: − e + grandi, oppure lo si scrive.
+  function chiediNumero({ titolo: t, testo: p = '', valore = 1, positivo = false, pulsante, nota = '', fai }) {
+    apriFinestra(`
+      <h3>${esc(t)}</h3>
+      ${p ? `<p>${p}</p>` : ''}
+      <div class="contatore grande"><button type="button" data-d="-1" aria-label="Uno in meno">−</button>
+        <input id="n-val" type="text" inputmode="decimal" autocomplete="off" value="${esc(numeroIt(valore))}">
+        <button type="button" data-d="1" aria-label="Uno in più">+</button></div>
+      ${nota ? `<label class="campo"><span>${esc(nota)} <em>(facoltativo)</em></span><input id="n-nota"></label>` : ''}
+      <button class="btn pieno grande" type="button" id="n-salva">${pulsante}</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    const leggi = () => (numeroScritto($('n-val').value) === '' ? NaN : Number(numeroScritto($('n-val').value)));
+    $('finestra').querySelectorAll('[data-d]').forEach((b) => {
+      b.onclick = () => { const n = leggi(); $('n-val').value = numeroIt(Math.max(0, (isFinite(n) ? n : 0) + Number(b.dataset.d))); };
+    });
+    $('no').onclick = chiudiFinestra;
+    $('n-salva').onclick = (e) => {
+      const n = leggi();
+      if (!isFinite(n) || n < 0 || (positivo && n === 0)) { messaggio(positivo ? 'Scrivi quanti.' : 'Scrivi un numero.', { errore: true }); return; }
+      conPulsante(e.currentTarget, 'Salvo…', () => fai(arrotonda(n), $('n-nota') ? $('n-nota').value.replace(/\s+/g, ' ').trim() : ''));
+    };
+  }
+
+  // Un articolo toccato: quanti ce ne sono, e cosa si può fare.
+  function chiediArticolo(a) {
+    const movimenti = (mag().movimenti || []).filter((x) => x.articolo === a.codice).slice(-8).reverse();
+    apriFinestra(`
+      <h3>${esc(a.descrizione)}</h3>
+      <p>${esc([a.fornitore, categoriaDi(a)].filter(Boolean).join(' · '))}</p>
+      <div class="quanti-grande ${coloreQuantita(a)}"><b>${numeroIt(a.quantita)}</b>
+        <span>in magazzino${a.quantita < 0 ? ': sotto zero, ricontali' : daRiordinare(a) ? ' · da riordinare' : ''}</span></div>
+      <p class="spiega">${esc([a.scorta != null ? `Scorta minima: ${numeroIt(a.scorta)}` : 'Scorta minima non segnata', a.costo != null ? `costo € ${numeroIt(a.costo)}` : '', a.note].filter(Boolean).join(' · '))}</p>
+      <button class="btn pieno" type="button" id="a-arrivati">${icona('frecciaGiu')} Ne sono arrivati</button>
+      <button class="btn" type="button" id="a-tolti">Ne ho tolti (rotti, resi…)</button>
+      <button class="btn" type="button" id="a-contati">${icona('spunta')} Ho contato: correggi il numero</button>
+      <button class="btn" type="button" id="a-modifica">${icona('matita')} Modifica i dati</button>
+      ${movimenti.length ? `<p class="domanda">Ultimi movimenti</p><ul class="movimenti">${movimenti.map(rigaMovimento).join('')}</ul>` : ''}
+      <button class="btn leggero" type="button" id="no">Chiudi</button>`);
+    // Un movimento di un articolo solo, poi il messaggio con «Annulla».
+    const salvaUno = async (causale, quantita, note, testo, fatto) => {
+      const mov = await mandaMovimento({ id: nuovoId(), causale, data: isoDa(oggi()), righe: [{ articolo: a.codice, quantita }], note }, testo);
+      if (!mov) return;
+      mov.testo = fatto;
+      chiudiFinestra();
+      avvisaMovimento(mov);
+    };
+    $('no').onclick = chiudiFinestra;
+    $('a-arrivati').onclick = () => chiediNumero({
+      titolo: 'Quanti ne sono arrivati?', testo: esc(a.descrizione), positivo: true, pulsante: `${icona('frecciaGiu')} Aggiungi al magazzino`,
+      fai: (n) => salvaUno('carico', n, '', `Arrivati ${numeroIt(n)}: ${a.descrizione}`, `aggiunti al magazzino ${pezziTesto(n)}`),
+    });
+    $('a-tolti').onclick = () => chiediNumero({
+      titolo: 'Quanti ne hai tolti?', testo: `${esc(a.descrizione)}<br>Se li hai usati per un cliente, segnali dalla sua scheda.`, positivo: true, nota: 'Perché',
+      pulsante: 'Togli dal magazzino', fai: (n, nota) => salvaUno('tolto', n, nota, `Tolti ${numeroIt(n)}: ${a.descrizione}`, `tolti dal magazzino ${pezziTesto(n)}`),
+    });
+    $('a-contati').onclick = () => chiediNumero({
+      titolo: 'Quanti ne hai contati?', testo: `${esc(a.descrizione)}<br>Per l'app sono <strong>${numeroIt(a.quantita)}</strong>.`, valore: Math.max(0, a.quantita),
+      pulsante: `${icona('spunta')} Sono questi`,
+      fai: (n) => {
+        if (n === a.quantita) { chiudiFinestra(); messaggio('Il numero era già giusto ✓'); return null; }
+        return salvaUno('correzione', n, '', `Contati ${numeroIt(n)}: ${a.descrizione}`, `corretto: ora sono ${numeroIt(n)}`);
+      },
+    });
+    $('a-modifica').onclick = () => chiediDatiArticolo(a);
+  }
+
+  // Articolo nuovo (a = null) o i suoi dati da cambiare. `poi(nuovo)`: dalla
+  // finestra dei materiali, che si riapre dopo (anche con «Lascia stare»).
+  function chiediDatiArticolo(a, { poi = null, perLavoro = false } = {}) {
+    let categoria = a ? categoriaDi(a) : 'Filtri e ricambi';
+    const v = (x) => esc(x == null ? '' : x);
+    apriFinestra(`
+      <h3>${a ? 'Modifica l\'articolo' : 'Nuovo articolo'}</h3>
+      <label class="campo"><span>Cos'è</span><input id="ar-desc" value="${v(a && a.descrizione)}" placeholder="Es. Cartuccia carboni 10 pollici"></label>
+      <p class="domanda">Che tipo</p>
+      <div class="pillole pillole-lavoro" id="ar-cat">${categorieMag().map((x) => `<button type="button" class="pillola" data-v="${esc(x)}" aria-pressed="${x === categoria}">${esc(x)}</button>`).join('')}</div>
+      <label class="campo"><span>Codice del fornitore <em>(facoltativo)</em></span><input id="ar-forn" value="${v(a && a.fornitore)}" autocomplete="off"></label>
+      ${a ? '' : `<label class="campo"><span>Quanti ne hai in magazzino${perLavoro ? ' <em>(contando anche quelli appena usati)</em>' : ''}</span>
+        <input id="ar-q" type="text" inputmode="decimal" autocomplete="off" value="0"></label>`}
+      <label class="campo"><span>Scorta minima <em>(facoltativa: quando ne restano così pochi è «da riordinare»)</em></span>
+        <input id="ar-scorta" type="text" inputmode="decimal" autocomplete="off" value="${a && a.scorta != null ? numeroIt(a.scorta) : ''}"></label>
+      <label class="campo"><span>Costo d'acquisto in euro <em>(facoltativo)</em></span>
+        <input id="ar-costo" type="text" inputmode="decimal" autocomplete="off" value="${a && a.costo != null ? numeroIt(a.costo) : ''}"></label>
+      <label class="campo"><span>Note <em>(facoltative)</em></span><input id="ar-note" value="${v(a && a.note)}"></label>
+      <button class="btn pieno grande" type="button" id="ar-salva">${icona('spunta')} ${a ? 'Salva' : 'Aggiungi al magazzino'}</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('ar-cat').querySelectorAll('[data-v]').forEach((b) => {
+      b.onclick = () => { categoria = b.dataset.v; $('ar-cat').querySelectorAll('[data-v]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); };
+    });
+    if (poi) alChiudere = () => poi(null);
+    $('no').onclick = chiudiFinestra;
+    if (!a) $('ar-desc').focus();
+    $('ar-salva').onclick = (e) => {
+      const campi = {
+        codice: a ? a.codice : '', categoria, descrizione: $('ar-desc').value.replace(/\s+/g, ' ').trim(), fornitore: $('ar-forn').value.trim(),
+        scorta: numeroScritto($('ar-scorta').value), costo: numeroScritto($('ar-costo').value), note: $('ar-note').value.replace(/\s+/g, ' ').trim(),
+      };
+      if (!a) campi.quantita = numeroScritto($('ar-q').value) || '0';
+      if (!campi.descrizione) { messaggio('Scrivi cos\'è l\'articolo.', { errore: true }); return; }
+      if ([campi.scorta, campi.costo, campi.quantita].some((x) => x && !(Number(x) >= 0))) {
+        messaggio('Controlla i numeri: solo cifre, per esempio 28,50.', { errore: true });
+        return;
+      }
+      conPulsante(e.currentTarget, 'Salvo…', async () => {
+        const prima = a ? { ...a } : null;
+        try {
+          const { r, voce } = await manda('articolo', campi, `${a ? 'Articolo cambiato' : 'Articolo nuovo'}: ${campi.descrizione}`);
+          let nuovo = null;
+          if (r && r.articolo) {
+            const m = mag();
+            const c = m.articoli.find((x) => x.codice === r.articolo.codice);
+            if (c) Object.assign(c, r.articolo); else m.articoli.push(r.articolo);
+            nuovo = r.articolo;
+            salvaDati();
+          }
+          alChiudere = null;
+          chiudiFinestra();
+          if (poi) poi(a ? null : nuovo); else disegna(history.state);
+          if (a) {
+            messaggio('Salvato ✓' + (voce ? fuoriLinea(voce) : ''), {
+              durata: 10000,
+              azione: {
+                testo: 'Annulla',
+                fai: voce ? () => annullaInCoda(voce, () => APPLICA.articolo(dati, prima))
+                  : () => manda('articolo', r.annulla, `Articolo rimesso com'era: ${prima.descrizione}`)
+                    .then(({ r: r2 }) => { if (r2) APPLICA.articolo(dati, prima); salvaDati(); disegna(history.state); messaggio('Annullato.'); })
+                    .catch((err) => messaggio(err.message, { errore: true, durata: 8000 })),
+              },
+            });
+          } else if (voce) {
+            messaggio(`Lo aggiungo al magazzino appena c'è campo: fino ad allora non compare.${voce.dietro ? ' È in fila dopo le altre.' : ''}`, { durata: 10000 });
+          } else {
+            messaggio(r.giaPresente ? `C'era già: ${r.articolo.descrizione}` : `Aggiunto al magazzino ✓ ${r.articolo.descrizione}`, { durata: 8000 });
+          }
+        } catch (err) {
+          messaggio(err.message, { errore: true, durata: 8000 });
+        }
+      });
+    };
+  }
+
+  function voceArticolo(a) {
+    const etichetta = a.quantita < 0 ? '<span class="etichetta rosso">Sotto zero: ricontali</span>'
+      : daRiordinare(a) ? '<span class="etichetta arancio">Da riordinare</span>' : '';
+    return `<button class="voce articolo" type="button" data-articolo="${esc(a.codice)}">
+      <span class="articolo-testo"><b>${esc(a.descrizione)}</b>
+        ${a.fornitore || a.note ? `<span class="riga2">${esc([a.fornitore, a.note].filter(Boolean).join(' · '))}</span>` : ''}
+        ${etichetta ? `<span class="riga3">${etichetta}</span>` : ''}</span>
+      <span class="pezzi ${coloreQuantita(a)}"><b>${numeroIt(a.quantita)}</b><small>${a.quantita === 1 ? 'pezzo' : 'pezzi'}</small></span>
+    </button>`;
+  }
+
+  function schermoMagazzino(stato) {
+    titolo('Magazzino', true);
+    if (!mag()) { schermo.innerHTML = '<div class="vuoto">Il magazzino non è ancora nel foglio. Chiedi a Matteo.</div>'; return; }
+    const tutti = articoliMag();
+    const filtro = ['riordinare', 'finiti'].includes(stato.filtro) ? stato.filtro : 'tutti';
+    const finiti = tutti.filter((a) => a.quantita <= 0);
+    const riordinare = tutti.filter(daRiordinare);
+    const pezzi = tutti.reduce((s, a) => s + Math.max(0, a.quantita), 0);
+    const valore = tutti.reduce((s, a) => s + Math.max(0, a.quantita) * (a.costo || 0), 0);
+    schermo.innerHTML = `
+      <div class="cerca"><input id="cerca-mag" type="search" autocomplete="off" placeholder="Cerca un articolo" value="${esc(stato.q || '')}"></div>
+      <div class="pillole">
+        <button class="pillola" data-filtro="tutti" aria-pressed="${filtro === 'tutti'}">Tutti (${tutti.length})</button>
+        <button class="pillola${riordinare.length ? ' pillola-rossa' : ''}" data-filtro="riordinare" aria-pressed="${filtro === 'riordinare'}">Da riordinare (${riordinare.length})</button>
+        <button class="pillola" data-filtro="finiti" aria-pressed="${filtro === 'finiti'}">Finiti (${finiti.length})</button>
+      </div>
+      <div class="azioni-magazzino">
+        <button class="btn pieno" type="button" id="arrivata">${icona('frecciaGiu')} È arrivata merce</button>
+        <button class="btn" type="button" id="nuovo-articolo">${icona('piu')} Nuovo articolo</button>
+      </div>
+      <p class="spiega">${pezziTesto(pezzi)} in magazzino${valore ? `, per € ${Math.round(valore).toLocaleString('it-IT')} al prezzo d'acquisto` : ''}. Tocca un articolo per segnare quelli arrivati, correggere il numero o cambiarne i dati.</p>
+      <div id="lista-mag"></div>`;
+    const disegnaLista = () => {
+      const q = normalizza($('cerca-mag').value);
+      let lista = filtro === 'riordinare' ? riordinare : filtro === 'finiti' ? finiti : tutti;
+      if (q) lista = lista.filter((a) => normalizza([a.descrizione, a.fornitore, a.codice, a.categoria, a.note].join(' ')).includes(q));
+      const html = categorieMag().map((cat) => {
+        const l = lista.filter((a) => categoriaDi(a) === cat);
+        return l.length ? `<h2 class="gruppo">${esc(cat)} (${l.length})</h2><div class="lista">${l.map(voceArticolo).join('')}</div>` : '';
+      }).join('');
+      $('lista-mag').innerHTML = html || `<div class="vuoto">${q ? 'Nessun articolo con questo nome.'
+        : filtro === 'riordinare' ? 'Niente da riordinare.<br><br>Un articolo è «da riordinare» quando ne restano quanti dice la sua scorta minima: la scegli toccandolo, in «Modifica i dati».'
+          : filtro === 'finiti' ? 'Nessun articolo finito.' : 'Il magazzino è vuoto.'}</div>`;
+      $('lista-mag').querySelectorAll('[data-articolo]').forEach((b) => { b.onclick = () => { const a = articoloDa(b.dataset.articolo); if (a) chiediArticolo(a); }; });
+    };
+    $('cerca-mag').oninput = () => { history.replaceState({ ...history.state, q: $('cerca-mag').value }, '', location.pathname + location.hash); disegnaLista(); };
+    schermo.querySelectorAll('[data-filtro]').forEach((b) => {
+      b.onclick = () => { history.replaceState({ s: 'magazzino', filtro: b.dataset.filtro, q: $('cerca-mag').value }, '', location.pathname + location.hash); disegna(history.state); };
+    });
+    $('arrivata').onclick = () => chiediMateriali({ carico: true, dopo: avvisaMovimento });
+    $('nuovo-articolo').onclick = () => chiediDatiArticolo(null);
+    disegnaLista();
   }
 
   // ---------------------------------------------------------------------
