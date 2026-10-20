@@ -25,7 +25,12 @@
 import { getAccessToken } from './gsc.mjs';
 
 export const CLIENTE = process.env.GOOGLE_ADS_CUSTOMER_ID || '1999168790';
-const VERSIONE = process.env.GOOGLE_ADS_API_VERSION || 'v22';
+// Google spegne ogni versione dell'API circa un anno dopo l'uscita: la v22 dal
+// 18 ott 2026 rispondeva "Version v22 is deprecated" e la revisione Ads e'
+// saltata. La v26 (uscita il 14 ott 2026) vale fino a novembre 2027; elenco in
+// developers.google.com/google-ads/api/docs/sunset-dates. Unico punto da
+// cambiare: la usa anche lib/ads-conversioni.mjs.
+export const VERSIONE = process.env.GOOGLE_ADS_API_VERSION || 'v26';
 
 let token;
 
