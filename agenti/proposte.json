@@ -82,5 +82,14 @@
     "sha": "c56cec33e56a6c8a3f9a8385d925cefec371bd91",
     "url": null,
     "decisa": "2026-10-12T18:15:45.336Z"
+  },
+  {
+    "ramo": "proposta/riparazione-2026-10-20",
+    "tipo": "RIPARAZIONE",
+    "titolo": "Google Ads non accettava più la versione vecchia",
+    "creata": "2026-10-20T08:15:57.514Z",
+    "stato": "in attesa",
+    "sha": "08c0966b43c4ea6d11f5cdc99a419cd5136182ab",
+    "url": null
   }
 ]
