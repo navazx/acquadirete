@@ -100,6 +100,7 @@ async function creaFoglioFinto() {
     return serialeDa(d.a, d.m, d.g);
   };
 
+  const aggiunte = {};
   const finto = {
     schede,
     async leggi(range, render) {
@@ -135,7 +136,17 @@ async function creaFoglioFinto() {
     async copiaCella(tab, r1, c1, r2, c2) { console.log(`  formato cella ${r1},${c1} → ${r2},${c2} (${tab})`); },
     async copiaFormatoTra(tabDa, da, tabA, a) { console.log(`  formato riga ${tabDa}:${da} → ${tabA}:${a}`); },
     async leggiInsieme(ranges, render) { return Promise.all(ranges.map((r) => this.leggi(r, render))); },
-    async aspetto(tab, richieste) { console.log(`  aspetto di ${tab}: ${richieste(0).length} richieste`); },
+    async aspetto(tab, richieste) {
+      const r = richieste(0);
+      const m = (aggiunte[tab] ||= { slicers: [], filterViews: [] });
+      r.forEach((x) => { if (x.addSlicer) m.slicers.push(x.addSlicer.slicer.spec.title); if (x.addFilterView) m.filterViews.push(x.addFilterView.filter.title); });
+      console.log(`  aspetto di ${tab}: ${r.length} richieste (${r.map((x) => Object.keys(x)[0]).join(', ')})`);
+    },
+    // Filtri dati e visualizzazioni filtro aggiunti qui, come li darebbe Google.
+    async infoScheda(tab) {
+      if (!schede[tab]) return null;
+      return { sheetId: 0, righe: 1000, ...(aggiunte[tab] || { slicers: [], filterViews: [] }) };
+    },
     async creaScheda(tab) { schede[tab] ||= []; console.log(`  creo la scheda ${tab}`); },
     // Come Google: la riga sparisce e quelle sotto salgono di una.
     async eliminaRiga(tab, riga) { (schede[tab] || []).splice(riga - 1, 1); console.log(`  elimino ${tab} riga ${riga}`); },

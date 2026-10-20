@@ -1811,6 +1811,59 @@ function aspettoMovimenti(id) {
   ];
 }
 
+// Le categorie dal PC (20 ott 2026, Matteo: «se uno usa il foglio dal PC non
+// c'è modo di dividere le categorie?»). La scheda resta una sola (l'app legge
+// e scrive lì), ma si guarda una categoria alla volta:
+// - il riquadro «Filtra per categoria» (filtro dati / slicer) accanto al totale;
+// - una visualizzazione filtro per categoria, più «Da riordinare» e «Finiti»
+//   (Dati → Visualizzazioni filtro: valgono solo per chi le apre);
+// - il menu a tendina nella colonna Categoria, così a mano non si sbaglia a
+//   scriverla (un nome diverso finirebbe in «Altro»).
+// Le righe nascoste dal filtro l'app le legge e le scrive lo stesso. Rifatta
+// una seconda volta non raddoppia niente: salta quello che c'è già.
+const TITOLO_RIQUADRO = 'Filtra per categoria';
+const VISTE_EXTRA = [
+  ['Da riordinare', 4, '=($A2<>"")*($F2<>"")*($E2<=$F2)'],
+  ['Finiti', 4, '=($A2<>"")*($E2<=0)'],
+];
+export async function vistePerCategoria(foglio, _dati, { chi } = {}) {
+  if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
+  const info = await foglio.infoScheda(TAB_MAGAZZINO);
+  if (!info) throw problema('Il magazzino non c\'è ancora nel foglio.', 409);
+  const { sheetId: id, righe, slicers, filterViews } = info;
+  const tabella = { sheetId: id, startRowIndex: 0, endRowIndex: righe, startColumnIndex: 0, endColumnIndex: 10 };
+  const richieste = [{
+    setDataValidation: {
+      range: { sheetId: id, startRowIndex: 1, endRowIndex: Math.min(righe, 500), startColumnIndex: 1, endColumnIndex: 2 },
+      rule: { condition: { type: 'ONE_OF_LIST', values: CATEGORIE.map((c) => ({ userEnteredValue: c })) }, strict: true, showCustomUi: true },
+    },
+  }];
+  if (!slicers.includes(TITOLO_RIQUADRO)) {
+    richieste.push({
+      addSlicer: {
+        slicer: {
+          spec: { dataRange: tabella, columnIndex: 1, title: TITOLO_RIQUADRO, applyToPivotTables: false },
+          position: { overlayPosition: { anchorCell: { sheetId: id, rowIndex: 2, columnIndex: 11 }, offsetXPixels: 8, offsetYPixels: 0, widthPixels: 280, heightPixels: 56 } },
+        },
+      },
+    });
+  }
+  const viste = [
+    ...CATEGORIE.map((c) => [c, 1, { condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: c }] } }]),
+    ...VISTE_EXTRA.map(([t, col, formula]) => [t, col, { condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: formula }] } }]),
+  ];
+  for (const [titolo, col, filterCriteria] of viste) {
+    if (filterViews.includes(titolo)) continue;
+    richieste.push({ addFilterView: { filter: { title: titolo, range: tabella, filterSpecs: [{ columnIndex: col, filterCriteria }] } } });
+  }
+  // Tutto o niente (un batchUpdate solo). Se Google rifiuta, il motivo torna
+  // a chi l'ha chiesto (solo Matteo): serve a correggere la richiesta.
+  await foglio.aspetto(TAB_MAGAZZINO, () => richieste).catch((err) => {
+    throw problema(`Google non l'accetta: ${String(err.testo || err.message).replace(/\s+/g, ' ').slice(0, 400)}`, 502);
+  });
+  return { ok: true, richieste: richieste.length, riquadro: !slicers.includes(TITOLO_RIQUADRO), viste: richieste.filter((r) => r.addFilterView).length };
+}
+
 // Crea il magazzino nel foglio dagli articoli del vecchio Magazzino.xlsx
 // (una volta sola, solo la chiave di Matteo): codici M001…, quantità, e un
 // movimento «Carico iniziale» per ogni articolo che c'è. Se il magazzino ha
@@ -1888,6 +1941,16 @@ export function creaFoglioGoogle(sheetId) {
       const q = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
       const r = await chiama(`/values:batchGet?${q}&valueRenderOption=${render}&dateTimeRenderOption=SERIAL_NUMBER`);
       return (r.valueRanges || []).map((v) => v.values ?? []);
+    },
+    // Id, righe, filtri dati (slicer) e visualizzazioni filtro di una scheda (null = non c'è).
+    async infoScheda(tab) {
+      const meta = await chiama(`?fields=${encodeURIComponent('sheets(properties(sheetId,title,gridProperties(rowCount)),slicers(spec(title)),filterViews(title))')}`);
+      const s = (meta.sheets || []).find((x) => x.properties.title === tab);
+      if (!s) return null;
+      return {
+        sheetId: s.properties.sheetId, righe: s.properties.gridProperties?.rowCount || 1000,
+        slicers: (s.slicers || []).map((x) => x.spec?.title || ''), filterViews: (s.filterViews || []).map((x) => x.title || ''),
+      };
     },
     // Formattazione di una scheda: `richieste(sheetId)` dà le richieste di batchUpdate.
     async aspetto(tab, richieste) {

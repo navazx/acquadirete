@@ -18,7 +18,7 @@ import {
   leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
   nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
-  salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, creaFoglioGoogle,
+  salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, vistePerCategoria, creaFoglioGoogle,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -86,6 +86,7 @@ const AZIONI = {
   magazzino: muoviMagazzino,
   annullaMagazzino,
   importaMagazzino, // una volta sola, dal vecchio Magazzino.xlsx (solo Matteo)
+  vistaMagazzino: vistePerCategoria, // filtri per categoria nel foglio (solo Matteo)
 };
 
 // creaFoglio è un parametro solo per il server di prova in locale
