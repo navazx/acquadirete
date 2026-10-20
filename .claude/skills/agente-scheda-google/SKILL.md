@@ -1,6 +1,6 @@
 ---
 name: agente-scheda-google
-description: L'agente della scheda Google di Acquadirete. il 15 del mese prepara il promemoria coi post pronti da pubblicare sul profilo Google dell'attività. Lo lancia la routine agente-scheda-google su claude.ai.
+description: L'agente della scheda Google di Acquadirete. il 15 del mese prepara il promemoria coi post pronti da pubblicare sul profilo Google dell'attività, le foto vere da aggiungere e, ogni tre mesi, il controllo della scheda. Lo lancia la routine agente-scheda-google su claude.ai.
 ---
 
 # Agente della scheda Google
@@ -78,9 +78,50 @@ Se per un'idea lo stampo dà un errore che non riesci a sistemare accorciando i
 testi, non aggirarlo e non mandarla senza immagine: cambia idea, oppure, se
 proprio non si riesce, scrivi in cima al messaggio quale immagine manca e perché.
 
+## Le foto vere (ogni mese, dal 20 ott 2026)
+
+Google premia le schede che ricevono foto nuove con regolarità, e fra le foto della
+scheda vanno foto vere, non grafiche. Le foto vere sono quelle che Matteo manda al
+bot: stanno in `public/assets/social/`, e in `agenti/social-foto-note.json` c'è
+cosa mostrano.
+
+1. Leggi `agenti/promemoria/foto-scheda.json` (se non c'è, è vuoto): le foto già
+   proposte per la scheda. Non si ripropongono.
+2. Fra le altre scegline **una o due**, aprendole col tool Read: un impianto
+   installato, un lavoro, il furgone. Scarta quelle dove si vede una persona che non
+   è Stefano o Matteo, una targa, un numero civico, un viso di cliente, o che sono
+   storte e scure.
+3. Copiale in `agenti/promemoria/immagini/foto-scheda-1.jpg` (e `-2`), dopo aver
+   tolto le `foto-scheda-*.jpg` del mese prima, e aggiungi i loro nomi a
+   `foto-scheda.json` (`{ "tg-2026-09-27-200": "2026-10-15" }`, nome senza .jpg →
+   giorno in cui l'hai proposta).
+4. Nel promemoria, dopo le idee dei post, una parte **"Foto da aggiungere alla
+   scheda"**: per ognuna cosa mostra in una riga e "dal profilo: Foto → Aggiungi foto".
+5. Se non ci sono foto nuove, scrivi nel promemoria una riga sola: "Questo mese non
+   ho foto nuove da metterti sulla scheda: quando installi un impianto, fai una foto
+   e mandala al bot."
+
+## Il controllo della scheda (gennaio, aprile, luglio, ottobre)
+
+Ogni tre mesi, oltre al promemoria, scrivi `agenti/promemoria/scheda-controllo.md`:
+un secondo messaggio a Matteo, che lo controlla in cinque minuti dal telefono. Gli
+altri mesi non toccare quel file (parte solo se il commit lo cambia).
+
+1. Rileggi `agenti/promemoria/scheda-come-deve-essere.md` e confrontalo col sito vero
+   (`lib/siteConfig.ts`, `public/llms.txt`, la pagina `/chi-siamo/`): se il sito è
+   cambiato (telefono, orari, garanzia, servizi), correggi prima quel file.
+2. Il messaggio, in testo normale: in cima "Controllo della scheda Google (ogni tre
+   mesi)"; poi "Apri il profilo → Modifica profilo, e guarda che sia così:" e, voce
+   per voce, nome, categoria, descrizione (pronta da copiare), servizi, zone, orari,
+   telefono, sito. In fondo: "Se una voce è diversa, copia questa. Se è tutto uguale,
+   non devi fare niente."
+3. Aggiungi le cose che hai visto nel mese e che riguardano la scheda: una domanda
+   frequente dei clienti da mettere fra le "Domande e risposte", una zona da cui sono
+   arrivati più contatti (`agenti/seo/mese.json`, `agenti/seo/ricerche.json`).
+
 PASSO 3 - Scrivi il testo in agenti/promemoria/google-business.md, sovrascrivendo quello del mese prima.
 
-PASSO 4 - Committa su main, in UN SOLO commit, quel file insieme a agenti/promemoria/google-business-grafica.json e alla cartella agenti/promemoria/immagini/ (il workflow manda a Matteo solo le immagini arrivate nello stesso commit del testo). Messaggio: "Promemoria scheda Google di <mese> [skip netlify]". Prima del push esegui git pull --rebase origin main, poi git push origin main.
+PASSO 4 - Committa su main, in UN SOLO commit, quel file insieme a agenti/promemoria/google-business-grafica.json, alla cartella agenti/promemoria/immagini/, a agenti/promemoria/foto-scheda.json e, nei mesi del controllo, a agenti/promemoria/scheda-controllo.md (il workflow manda a Matteo solo le immagini e il controllo arrivati nello stesso commit del testo). Messaggio: "Promemoria scheda Google di <mese> [skip netlify]". Prima del push esegui git pull --rebase origin main, poi git push origin main.
 Se il push fallisce, NON provare altre strade: mostrami l'errore per intero e fermati.
 
 ULTIMO PASSO - La nota sulla bacheca. Vale anche quando un passo qui sopra ti dice di fermarti o il push fallisce: prima di chiudere, lascia da 1 a 3 note sulla bacheca degli agenti, come spiega la sezione "Routine su claude.ai" di agenti/bacheca/LEGGIMI.md (se ti sei fermato prima di leggerlo, leggilo adesso). In breve: carica ArtifactData con ToolSearch (select:ArtifactData) e fai un set con url https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL, collection note, doc_id = l'ora ISO con - al posto di : e . seguita da "-scheda", data = { "quando": <ora ISO>, "agente": "scheda", "testo": ..., "per": ["tutti"] oppure gli agenti a cui serve }. Scrivi cosa hai fatto o perche' ti sei fermato, e cosa puo' servire agli altri agenti: per esempio le idee di post che hai proposto, cosi' Social e Contenuti non le ripetono uguali. Una o due frasi a nota. Niente nomi di clienti, telefoni, email o cifre in euro: la bacheca viene copiata anche nel repo, che e' pubblico. Se la scrittura fallisce non insistere e non provare altre strade: il tuo lavoro vero e' gia' fatto.

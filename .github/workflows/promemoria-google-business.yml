@@ -44,5 +44,6 @@ jobs:
         run: >-
           node scripts/promemoria.mjs agenti/promemoria/google-business.md
           --foto agenti/promemoria/immagini
+          --controllo agenti/promemoria/scheda-controllo.md
           --link-testo "Scrivi il post qui (si apre già la finestra):"
           --link "https://www.google.com/search?q=Acquadirete+di+Stefano+Piconese#mpd=promote/updates/add"

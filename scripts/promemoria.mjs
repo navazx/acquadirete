@@ -32,6 +32,19 @@ const opzione = (nome) => {
 const link = opzione('--link');
 const linkTesto = opzione('--link-testo') || 'Apri qui:';
 const cartellaFoto = opzione('--foto');
+// --controllo <file>: un secondo messaggio, mandato solo se l'ultimo commit l'ha
+// toccato. Lo usa la scheda Google per il controllo ogni tre mesi (dal 20 ott 2026),
+// che non sta nello stesso messaggio perché Telegram taglia a 4096 caratteri.
+const fileControllo = opzione('--controllo');
+
+/** Il file è stato toccato dall'ultimo commit? */
+function cambiato(f) {
+  try {
+    return execSync(`git diff --name-only HEAD~1 HEAD -- "${f}"`, { encoding: 'utf8' }).trim() !== '';
+  } catch {
+    return false;
+  }
+}
 
 /** Le immagini delle idee toccate dall'ultimo commit, in ordine. */
 function fotoNuove() {
@@ -40,7 +53,9 @@ function fotoNuove() {
     return execSync(`git diff --name-only HEAD~1 HEAD -- "${cartellaFoto}"`, { encoding: 'utf8' })
       .split('\n')
       .map((f) => f.trim())
-      .filter((f) => /\/idea-\d+\.jpg$/.test(f) && existsSync(f))
+      // idea-<n>.jpg: le grafiche dei post; foto-scheda-<n>.jpg: foto vere di
+      // impianti da caricare fra le foto della scheda (dal 20 ott 2026).
+      .filter((f) => /\/(idea|foto-scheda)-\d+\.jpg$/.test(f) && existsSync(f))
       .sort();
   } catch {
     return [];
@@ -68,15 +83,24 @@ async function main() {
   if (prova) {
     console.log(`(prova: niente Telegram, ${testo.length} caratteri)\n\n${testo}`);
     if (cartellaFoto) console.log(`\nImmagini che partirebbero: ${immagini.join(', ') || 'nessuna'}`);
+    if (fileControllo) console.log(`Controllo della scheda: ${existsSync(fileControllo) && cambiato(fileControllo) ? 'partirebbe' : 'no, non è cambiato'}`);
     return;
   }
   const { messaggio, fotoDaFile, firmato } = await import('./lib/telegram.mjs');
   await messaggio(testo);
   console.log(`Promemoria inviato: ${file}`);
   for (const f of immagini) {
-    const n = f.match(/idea-(\d+)\.jpg$/)[1];
-    await fotoDaFile(f, firmato(`Immagine pronta per l'idea ${n}: salvala e mettila nel post.`));
+    const [, tipo, n] = f.match(/(idea|foto-scheda)-(\d+)\.jpg$/);
+    const didascalia = tipo === 'idea'
+      ? `Immagine pronta per l'idea ${n}: salvala e mettila nel post.`
+      : `Foto vera ${n} da aggiungere alle foto della scheda (Foto → Aggiungi foto), non a un post.`;
+    await fotoDaFile(f, firmato(didascalia));
     console.log(`Immagine inviata: ${f}`);
+  }
+  if (fileControllo && existsSync(fileControllo) && cambiato(fileControllo)) {
+    const controllo = readFileSync(fileControllo, 'utf8').trim();
+    for (let i = 0; i < controllo.length; i += 4000) await messaggio(controllo.slice(i, i + 4000));
+    console.log(`Controllo della scheda inviato: ${fileControllo}`);
   }
 }
 
