@@ -27,6 +27,7 @@ import { getAccessToken, query, ymd } from './lib/gsc.mjs';
 import { sheetsToken, leggi, leggiLead } from './lib/gestionale.mjs';
 import { valoreCliente, visitePerPagina, contattiPerPagina } from './lib/visite.mjs';
 import { daControllare } from './lib/prove.mjs';
+import { imbuto } from './lib/imbuto.mjs';
 
 process.env.TZ = 'Europe/Rome';
 
@@ -134,6 +135,14 @@ async function main() {
   };
   const posizioni = leggiJson('agenti/seo/posizioni.json', {});
 
+  // --- L'imbuto canale per canale (dal 20 ott 2026): il mese e gli ultimi 90 giorni ---
+  const tetto = Number(valoreCliente()?.tettoCostoPerCliente) || null;
+  const da90 = new Date(fine.getFullYear(), fine.getMonth(), fine.getDate() - 89);
+  const imbutoDati = {
+    mese: imbuto({ lead, settimane, visite: pagine.visite, da: inizio, a: fine, tetto }),
+    ultimi90giorni: imbuto({ lead, settimane, visite: await visitePerPagina(token, ymd(da90), ymd(fine)), da: da90, a: fine, tetto }),
+  };
+
   const dati = {
     mese: etichetta,
     preparato: new Date().toISOString(),
@@ -152,6 +161,8 @@ async function main() {
     recensioni: { totale: recensioni.totale, media: recensioni.media },
     ordiniPrecedenti: existsSync('agenti/ordini.md') ? readFileSync('agenti/ordini.md', 'utf8') : null,
     pagine,
+    // Riservato: dentro ci sono spesa e costo per cliente.
+    imbuto: imbutoDati,
     // Cifre riservate (secret VALORE_CLIENTE): margine di un cliente e tetto del
     // costo per cliente. Mai nel repo, nei commit o sulla bacheca.
     valoreCliente: valoreCliente(),

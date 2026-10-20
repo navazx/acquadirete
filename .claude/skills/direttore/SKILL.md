@@ -65,10 +65,53 @@ l'esito nel registro, al posto di "Esito: da vedere":
 
 Non inventare un esito: "troppo presto" è una risposta seria.
 
+## PASSO 2 bis — L'imbuto, canale per canale (dal 20 ott 2026)
+
+In `imbuto` dei dati, per il mese e per gli ultimi 90 giorni, ogni canale (Google
+Ads, sito gratuito, Meta, altro) ha i suoi passi: visite → contatti → sentiti →
+preventivi → clienti, e per Google Ads e Meta la spesa, il costo per contatto e per
+cliente e se sta sotto o sopra il tetto. Leggi `come_si_legge`: Google Ads conta
+solo i moduli con l'annuncio segnato, quindi i suoi clienti sono un minimo.
+
+Per ogni canale trova **il passo dove si perde di più**, e scrivilo in una riga:
+
+- tante visite e pochi contatti → la pagina non convince (lavoro per il sito o per
+  la pagina d'arrivo degli annunci);
+- tanti contatti e pochi sentiti → si risponde tardi o non si richiama (lavoro di
+  Matteo e babbo: lo dici, l'app Gestione li mostra);
+- tanti sentiti e pochi preventivi → arriva gente sbagliata (fuori zona, già col
+  depuratore, curiosi: lavoro per chi porta quel canale, Ads o Meta);
+- tanti preventivi e pochi clienti → il prezzo o l'offerta non convincono
+  (decisione di Matteo: lo dici coi numeri, non proponi prezzi).
+
+Il canale e il passo dove si perde di più, coi numeri più grossi, sono il primo
+candidato per una priorità. Giudica sui 90 giorni; il mese da solo è troppo piccolo.
+
+## Il budget fra Google e Meta
+
+Ogni mese proponi come dividere i soldi della pubblicità fra Google Ads e Meta. Lo
+decide e lo fa Matteo (semaforo rosso): tu porti la proposta coi numeri.
+
+- Si guarda il **costo per cliente sui 90 giorni** di ogni canale contro il tetto.
+  Sotto il tetto con clienti veri: può crescere. Sopra il tetto, o nessun cliente da
+  più di un mese con spesa vera: va ridotto o fermato.
+- Si guardano anche le **prove in corso** (`agenti/prove.md`): un canale con una
+  prova aperta non si giudica prima della sua data di controllo. Puoi però dire cosa
+  farai dopo, a seconda dell'esito.
+- La proposta è **uno spostamento, non un aumento**: il totale resta quello di oggi,
+  a meno che un canale non stia sotto il tetto con margine largo e numeri sopra le
+  soglie di `agenti/AUTONOMIA.md`.
+- **Nel repo** (ordini, anteprima, commit) la scrivi in proporzione e senza cifre:
+  "spostare circa metà del budget di Meta su Google". **Gli euro** (oggi al mese, dopo
+  al mese, per canale, e quanti contatti o clienti in più o in meno ci si aspetta)
+  vanno solo in `/tmp/direttore-numeri.txt`.
+- Se i dati non bastano per decidere, la proposta è "lasciare com'è fino al …" con
+  la data e il numero che si aspetta: è una proposta seria.
+
 ## PASSO 3 — Scegli 3 priorità, non di più
 
-Guarda dove si perdono più clienti o più soldi, e dove c'è più da guadagnare con
-meno lavoro. Regole:
+Guarda dove si perdono più clienti o più soldi (l'imbuto qui sopra), e dove c'è più
+da guadagnare con meno lavoro. Regole:
 
 - **Ogni priorità nasce da un numero** che si legge nei dati. Niente intuizioni
   senza un fatto sotto.
@@ -118,8 +161,11 @@ Crea da `main` il ramo `proposta/ordini-<AAAA-MM del mese che comincia>`.
    di file del progetto.
 3. **`/tmp/direttore-numeri.txt`** — una pagina sola, solo per Matteo: i numeri
    del mese **con gli euro** (spesa Google e Meta, costo per cliente per canale),
-   contatti, clienti, Google gratuito, post e articoli usciti. Testo semplice,
-   niente markdown: va su Telegram così com'è. Questo file NON va nel repo.
+   contatti, clienti, Google gratuito, post e articoli usciti. Poi l'imbuto dei 90
+   giorni in una riga per canale ("Meta: 29 contatti, 28 sentiti, 3 preventivi, 0
+   clienti, tot euro") con il passo dove si perde di più, e la proposta sul budget
+   con gli euro prima e dopo. Testo semplice, niente markdown: va su Telegram così
+   com'è. Questo file NON va nel repo.
 
 **Mai una cifra in euro nei file del repo e nel messaggio di commit**: il repo è
 pubblico. Nel repo scrivi "Meta costa più di Google per cliente", "la spesa è
