@@ -81,6 +81,15 @@ function registra(voce) {
   }
 }
 
+// Le righe sotto "Cosa ho fatto:" nel corpo del commit: tornano nella conferma
+// dopo APPROVA, cosi' Matteo rilegge cosa va online senza riaprire la proposta
+// (sua richiesta del 21/10/2026: "dimmi cosa hai fatto nel concreto").
+function cosaHoFatto(note) {
+  const m = String(note || '').match(/^cosa ho fatto\s*:[ \t]*\n?([\s\S]*?)(?:\n[ \t]*\n|(?![\s\S]))/im);
+  const righe = m ? m[1].trim() : '';
+  return righe ? righe.slice(0, 900) : null;
+}
+
 async function main() {
   if (!tipo) {
     console.log(`Il ramo ${ramo} non e' una proposta che conosco: non lo presento.`);
@@ -130,7 +139,7 @@ async function main() {
   const slug = anteprima ? anteprima.split('/').pop().replace(/\.md$/, '') : null;
   const url = tipo === 'ARTICOLO' && slug ? `${SITO}/blog/${slug}/` : null;
 
-  registra({ ramo, tipo, titolo: titolo.slice(0, 120), creata: new Date().toISOString(), stato: 'in attesa', sha: git('rev-parse', 'HEAD'), url });
+  registra({ ramo, tipo, titolo: titolo.slice(0, 120), creata: new Date().toISOString(), stato: 'in attesa', sha: git('rev-parse', 'HEAD'), url, fatto: cosaHoFatto(note) || undefined });
 
   const testa = tipo === 'ARTICOLO'
     ? `Articolo proposto: «${titolo}»`

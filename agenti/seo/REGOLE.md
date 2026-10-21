@@ -268,3 +268,24 @@ Gli altri tipi di segnale (prima pagina, sale, scende, fuori) sono solo notizie.
   altro. Quella riga diventa il titolo del messaggio che arriva a Matteo: se ci
   infili dentro tutta la correzione, diventa illeggibile. Il dettaglio va nelle righe
   sotto, una per correzione, e nell'anteprima.
+- **Cosa hai fatto, nel concreto (Matteo, 21 ott 2026: "mi deve dire anche cosa ha
+  fatto nel concreto, tipo «ho cambiato la frase nell'articolo»").** Le spiegazioni
+  sulle ricerche vanno bene, ma da sole non gli dicono cosa è cambiato sul sito. Il
+  corpo del commit si apre con la riga `Cosa ho fatto:` e sotto una riga per ogni
+  modifica, in prima persona: quale pagina (col nome che si legge sul sito, non il
+  file), in che punto, e le parole esatte tolte o messe. Poi una riga vuota, e solo
+  dopo il perché. Per esempio:
+
+  ```
+  Cosa ho fatto:
+  - Nell'articolo «Depuratore gratis: cosa c'è dietro i contratti», nell'elenco
+    "I segnali da non ignorare", ho aggiunto la frase «Ti dicono che il depuratore
+    è gratis grazie a un bonus della Regione Toscana: quel bonus non esiste», con
+    "bonus della Regione Toscana" collegato all'articolo sul bonus.
+  - Nella home ho cambiato il collegamento "a Prato" in "Depuratore acqua a Prato".
+  ```
+
+  Quelle righe tornano da sole nel messaggio di conferma dopo APPROVA. Lo stesso
+  elenco apre l'anteprima, sotto il titolo, col titoletto "Cosa ho fatto". Se la
+  scelta è di non cambiare niente, scrivilo lì: "Nella pagina di Firenze non ho
+  cambiato niente: vince già la home."

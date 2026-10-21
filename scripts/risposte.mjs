@@ -335,7 +335,8 @@ async function approva(p) {
   segnaProvaApprovata(p);
 
   await messaggio(
-    `Approvato: «${p.titolo}» va online fra un paio di minuti.` + (p.url ? `\n${p.url}` : ''),
+    `Approvato: «${p.titolo}» va online fra un paio di minuti.` + (p.url ? `\n${p.url}` : '')
+    + (p.fatto ? `\n\nCosa cambia sul sito:\n${p.fatto}` : ''),
   );
 }
 

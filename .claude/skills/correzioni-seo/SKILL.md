@@ -131,7 +131,8 @@ del segnale, anche quando la scelta è di non cambiare niente).
 ## PASSO 5 — L'anteprima
 
 Scrivi l'anteprima in `agenti/anteprime/seo-<data>.md`, nel formato che trovi in
-`REGOLE.md`: per ogni correzione la pagina, cosa si legge oggi su Google, cosa diventa
+`REGOLE.md`. Subito sotto il titolo metti "Cosa ho fatto": lo stesso elenco concreto
+del messaggio di commit (PASSO 7). Poi, per ogni correzione la pagina, cosa si legge oggi su Google, cosa diventa
 e perché conta (per quelle dalle posizioni: la ricerca, le viste, la posizione, zero
 clic; per una scelta fra pagine in concorrenza: la ricerca, le pagine e le
 posizioni, quale vince, perché e cosa cambia), e in fondo una riga su cosa non
@@ -166,8 +167,12 @@ fermati, scrivi l'errore e **non spingere niente**.
 
 Committa sul ramo. **La prima riga del messaggio di commit deve essere esattamente
 `SEO: <quante> correzioni` e nient'altro**: diventa il titolo del messaggio che arriva
-a Matteo. Il dettaglio va nelle righe sotto, una per correzione (pagina, com'era, come
-diventa).
+a Matteo. Il corpo **si apre con la riga `Cosa ho fatto:`** e sotto una riga per ogni
+modifica, in prima persona e nel concreto: quale pagina (col nome che si legge sul
+sito), in che punto, le parole esatte tolte o messe ("Nell'articolo «…», sotto «…»,
+ho aggiunto la frase «…»"). Poi una riga vuota e il perché. Esempio e regola in
+`REGOLE.md`, sezione "La proposta": quelle righe tornano nella conferma che Matteo
+riceve dopo APPROVA.
 
 Poi:
 
@@ -181,7 +186,7 @@ fermati.
 ## Ultimo passo — La nota sulla bacheca
 
 La bacheca è dove gli agenti si dicono cosa hanno visto (regole in
-`agenti/bacheca/LEGGIMI.md`). Se hai preparato una proposta, lascia una nota: quante correzioni, su quali pagine, e se c'era un segnale "vetrina" quale ricerca. Se ti sei fermato al PASSO 2 o 3 non serve: la nota della settimana l'ha già lasciata il controllo. Scrivila così, **anche se il push è
+`agenti/bacheca/LEGGIMI.md`). Se hai preparato una proposta, lascia una nota che dica **cosa hai cambiato nel concreto** ("nell'articolo sui contratti gratis ho aggiunto una frase che porta all'articolo sul bonus"), su quali pagine, e se c'era un segnale "vetrina" quale ricerca. Se ti sei fermato al PASSO 2 o 3 non serve: la nota della settimana l'ha già lasciata il controllo. Scrivila così, **anche se il push è
 fallito** (in quel caso la nota dice che è fallito):
 
 ```bash
