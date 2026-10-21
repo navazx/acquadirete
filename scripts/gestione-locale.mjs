@@ -18,15 +18,18 @@ import { fileURLToPath } from 'node:url';
 
 const QUI = fileURLToPath(new URL('..', import.meta.url));
 const PUBBLICA = join(QUI, 'public');
-const PORTA = 3005;
+// --porta=3007: un secondo server, se un'altra seduta ha già il 3005.
+const PORTA = Number((process.argv.find((a) => a.startsWith('--porta=')) || '').slice(8)) || 3005;
 const VERO = process.argv.includes('--vero');
 
 process.env.GSC_KEY_JSON = readFileSync(join(QUI, '..', 'seo-report', 'gsc-key-readonly.json'), 'utf8');
 process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 // Gli stessi nomi del sito vero: la chiave di prova è quella di "babbo" (si
 // vede l'app come la vede lui, «Chi ci va» compreso); "matteo" serve a
-// provare le operazioni riservate a lui (importaPersi).
-process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000';
+// provare le operazioni riservate a lui (importaPersi, le Impostazioni);
+// "segretaria" e "dipendente" i permessi degli Accessi (21 ott 2026: la
+// segretaria non ha il giro, il dipendente non cancella gli interventi).
+process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000,segretaria:provalocale-segre-0000,dipendente:provalocale-dipen-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
 const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI, TAB_MAGAZZINO, TAB_MOVIMENTI } =
@@ -65,11 +68,11 @@ async function creaFoglioFinto() {
     if (storico.length) schede[TAB_STORICO] = storico;
   } catch { /* scheda non ancora creata */ }
   try {
-    const giri = await vero.leggi(`'${TAB_GIRI}'!A1:P3000`, 'UNFORMATTED_VALUE');
+    const giri = await vero.leggi(`'${TAB_GIRI}'!A1:Q3000`, 'UNFORMATTED_VALUE');
     if (giri.length) schede[TAB_GIRI] = giri;
   } catch { /* scheda non ancora creata */ }
   // Il magazzino (dal 20 ott 2026), se nel foglio c'è già.
-  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:M1000'], [TAB_MOVIMENTI, 'A1:K6000']]) {
+  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000']]) {
     try {
       const g = await vero.leggi(`'${tab}'!${celle}`, 'FORMULA');
       if (g.length) schede[tab] = g;
@@ -136,16 +139,34 @@ async function creaFoglioFinto() {
     async copiaCella(tab, r1, c1, r2, c2) { console.log(`  formato cella ${r1},${c1} → ${r2},${c2} (${tab})`); },
     async copiaFormatoTra(tabDa, da, tabA, a) { console.log(`  formato riga ${tabDa}:${da} → ${tabA}:${a}`); },
     async leggiInsieme(ranges, render) { return Promise.all(ranges.map((r) => this.leggi(r, render))); },
+    // Della formattazione si tiene il conto (riquadri, visualizzazioni filtro
+    // con un id, regole dei colori); le colonne inserite (21 ott 2026) si
+    // inseriscono davvero nella copia, così le intestazioni si spostano. Le
+    // formule NON si spostano: qui contano solo le intestazioni.
     async aspetto(tab, richieste) {
       const r = richieste(0);
-      const m = (aggiunte[tab] ||= { slicers: [], filterViews: [] });
-      r.forEach((x) => { if (x.addSlicer) m.slicers.push(x.addSlicer.slicer.spec.title); if (x.addFilterView) m.filterViews.push(x.addFilterView.filter.title); });
-      console.log(`  aspetto di ${tab}: ${r.length} richieste (${r.map((x) => Object.keys(x)[0]).join(', ')})`);
+      const m = (aggiunte[tab] ||= { slicers: [], viste: [], regole: 0 });
+      r.forEach((x) => {
+        if (x.addSlicer) m.slicers.push(x.addSlicer.slicer.spec.title);
+        if (x.addFilterView) m.viste.push({ title: x.addFilterView.filter.title, id: 1000 + m.viste.length + Math.floor(Math.random() * 1e6) });
+        if (x.deleteFilterView) m.viste = m.viste.filter((v) => v.id !== x.deleteFilterView.filterId);
+        if (x.addConditionalFormatRule) m.regole += 1;
+        if (x.deleteConditionalFormatRule) m.regole = Math.max(0, m.regole - 1);
+        if (x.insertDimension && x.insertDimension.range.dimension === 'COLUMNS') {
+          const { startIndex: da, endIndex: a } = x.insertDimension.range;
+          (schede[tab] || []).forEach((riga) => { if (riga.length > da) riga.splice(da, 0, ...Array(a - da).fill('')); });
+        }
+      });
+      console.log(`  aspetto di ${tab}: ${r.length} richieste (${[...new Set(r.map((x) => Object.keys(x)[0]))].join(', ')})`);
     },
     // Filtri dati e visualizzazioni filtro aggiunti qui, come li darebbe Google.
     async infoScheda(tab) {
       if (!schede[tab]) return null;
-      return { sheetId: 0, righe: 1000, ...(aggiunte[tab] || { slicers: [], filterViews: [] }) };
+      const m = aggiunte[tab] || { slicers: [], viste: [], regole: 0 };
+      return {
+        sheetId: 0, righe: 1000, slicers: m.slicers, filterViews: m.viste.map((v) => v.title),
+        idViste: Object.fromEntries(m.viste.map((v) => [v.title, v.id])), regole: m.regole,
+      };
     },
     async creaScheda(tab) { schede[tab] ||= []; console.log(`  creo la scheda ${tab}`); },
     // Come Google: la riga sparisce e quelle sotto salgono di una.

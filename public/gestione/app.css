@@ -111,6 +111,12 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .etichetta.arancio { background: var(--arancio-chiaro); color: var(--arancio); }
 .etichetta.verde { background: var(--verde-chiaro); color: var(--verde); }
 .etichetta.grigio { background: #edf0f3; color: var(--grigio); }
+.etichetta.blu { background: var(--blu-chiaro); color: var(--blu-scuro); }
+/* Fascia oraria della tappa (21 ott 2026): «Alle, o dalle» e «Fino alle» affiancati. */
+.finestra .orari { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.finestra .orari .campo { margin-top: 8px; }
+.finestra .orari .campo > span { font-size: 16px; }
+.finestra .domanda em { font-style: normal; font-weight: 400; color: var(--grigio); font-size: 16px; }
 
 /* ---- Scheda ---- */
 .testa h2 { margin: 0; font-size: 26px; line-height: 1.2; }
@@ -326,6 +332,16 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .numero.suo { background: var(--grigio); }
 .tappa-azioni { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; padding: 0 12px 12px; }
 .tappa-azioni.senza-passa { grid-template-columns: 1fr auto; }
+/* Con tre giri (un dipendente col giro) i tasti per passare sono due: due righe. */
+.tappa-azioni.piu-passa { grid-template-columns: 1fr 1fr; }
+/* Impostazioni (21 ott 2026): una scheda per persona, coi permessi Sì/No. */
+.riquadro-accesso { margin: 0 0 18px; padding: 4px 14px 14px; border-radius: 16px; background: var(--carta); box-shadow: var(--ombra); }
+.riquadro-accesso .gruppo { margin: 12px 0 10px; }
+.permesso { display: grid; gap: 8px; margin: 0 0 14px; }
+.permesso b { display: block; font-size: 18px; }
+.permesso small { display: block; color: var(--grigio); font-size: 15px; margin-top: 2px; }
+.scelta.scelta-si-no button { min-height: 48px; font-size: 18px; }
+.riquadro-accesso .btn { width: 100%; }
 .tappa-azioni .btn { min-height: 48px; padding: 6px 12px; font-size: 17px; white-space: nowrap; box-shadow: inset 0 0 0 2px var(--linea); }
 .apri-giro { width: 100%; margin-top: 10px; }
 .giro-altro { margin: 8px 0 0; color: var(--grigio); font-size: 15px; }
@@ -395,3 +411,33 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .movimenti .q.piu { color: var(--verde); }
 .movimenti .q.meno { color: var(--rosso); }
 .movimenti small { display: block; color: var(--grigio); font-size: 14px; }
+
+/* «Cosa hai fatto?» dopo un urgente o una tappa Guasto (21 ott 2026): una riga in grande e sotto cosa succede. */
+.btn.scelta-lavoro { justify-content: flex-start; text-align: left; padding: 12px 16px; }
+.btn.scelta-lavoro span { flex: 1; }
+.btn.scelta-lavoro small { display: block; margin-top: 3px; font-size: 15px; font-weight: 500; opacity: .85; }
+
+/* Magazzino, 21 ott 2026: un colore per categoria (gli stessi del foglio, più
+   carichi per il bordo), e i tre numeri di un articolo. */
+.cat-filtri-e-ricambi { --cat: #0891b2; --cat-chiaro: #cffafe; }
+.cat-impianti { --cat: #2563eb; --cat-chiaro: #dbeafe; }
+.cat-impianti-usati { --cat: #7c3aed; --cat-chiaro: #ede9fe; }
+.cat-miscelatori-e-rubinetti { --cat: #16a34a; --cat-chiaro: #dcfce7; }
+.cat-altro { --cat: #64748b; --cat-chiaro: #f1f5f9; }
+.voce.articolo[class*="cat-"] { border-left: 7px solid var(--cat); }
+.gruppo[class*="cat-"]::before, .pillola[class*="cat-"]::before, .mostra-altri[class*="cat-"]::before {
+  content: ''; display: inline-block; width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; background: var(--cat); vertical-align: 0;
+}
+.pillola[class*="cat-"][aria-pressed="true"] { background: var(--cat-chiaro); border-color: var(--cat); color: var(--testo); }
+.mostra-altri[class*="cat-"] { border-color: var(--cat); }
+.pillole-categorie { margin-top: -4px; }
+.pallino { display: inline-block; width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; background: var(--cat); vertical-align: 0; }
+.voce .riga2.attesa { color: var(--blu-scuro); font-weight: 600; }
+.tre-numeri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 4px; }
+.tre-numeri > * { display: grid; place-items: center; gap: 2px; padding: 10px 6px; border: 0; border-radius: 14px; background: #f1f4f7; color: var(--testo); font: inherit; }
+.tre-numeri button { box-shadow: inset 0 0 0 2px var(--linea); }
+.tre-numeri b { font-size: 24px; line-height: 1; }
+.tre-numeri small { font-size: 14px; color: var(--grigio); font-weight: 600; }
+.tre-numeri .totale { background: var(--blu-chiaro); color: var(--blu-scuro); }
+.tre-numeri .totale.arancio { background: var(--arancio-chiaro); color: var(--arancio); }
+.tre-numeri .totale.rosso { background: var(--rosso-chiaro); color: var(--rosso); }

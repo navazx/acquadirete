@@ -5,8 +5,10 @@
 // Accesso: ogni richiesta porta la chiave dell'app nell'header X-Chiave, che
 // deve essere una di quelle nella variabile GESTIONE_CHIAVE su Netlify
 // (non-secret e scope "all", come le altre: vedi CLAUDE.md). Una chiave per
-// persona, nel formato "babbo:chiave1,matteo:chiave2": il nome finisce nello
-// storico interventi. La chiave si mette sul telefono una volta sola, col
+// persona, nel formato "babbo:chiave1,matteo:chiave2,segretaria:chiave3": il
+// nome finisce nello storico interventi. Cosa può fare ognuno (giro,
+// cancellare interventi, togliere clienti) sta nella scheda "Accessi" del
+// foglio, che cambia solo Matteo dalle Impostazioni dell'app. La chiave si mette sul telefono una volta sola, col
 // link di attivazione. Se un telefono si perde: si toglie o si cambia la sua
 // chiave su Netlify, si rifà il deploy, e quella non apre più niente (le
 // altre continuano a funzionare).
@@ -19,6 +21,8 @@ import {
   nuovoCliente, modificaCliente,
   nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
   salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, vistePerCategoria, creaFoglioGoogle,
+  cancellaIntervento, annullaCancellazione, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
+  cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -57,9 +61,10 @@ function chiDellaChiave(data) {
   return chi;
 }
 
-// Le persone che usano l'app (i nomi delle chiavi): ognuna ha il suo giro
-// del giorno («Chi ci va»). «app» è la chiave senza nome.
-const persone = () => [...new Set(String(process.env.GESTIONE_CHIAVE || '').split(',')
+// Le persone che usano l'app (i nomi delle chiavi). «app» è la chiave senza
+// nome. Chi ha un giro del giorno e cosa può fare ognuno sta negli Accessi
+// del foglio (dal 21 ott 2026: leggiAccessi).
+const persone = () =>[...new Set(String(process.env.GESTIONE_CHIAVE || '').split(',')
   .map((v) => (v.includes(':') ? v.split(':')[0].trim().toLowerCase() : '')).filter((n) => n && n !== 'app'))];
 
 const risposta = (corpo, status = 200) =>
@@ -68,6 +73,8 @@ const risposta = (corpo, status = 200) =>
 const AZIONI = {
   fatta: segnaFatta,
   annulla: annullaFatta,
+  riparazione: segnaRiparazione, // un guasto riparato senza la manutenzione (21 ott 2026)
+  annullaRiparazione,
   rimanda: rimandaManutenzione,
   avviso: impostaAvviso,
   sposta: spostaCliente,
@@ -85,9 +92,24 @@ const AZIONI = {
   articolo: salvaArticolo,
   magazzino: muoviMagazzino,
   annullaMagazzino,
+  materiali: cambiaMateriali, // i materiali di un intervento fatto, segnati o corretti dopo
   importaMagazzino, // una volta sola, dal vecchio Magazzino.xlsx (solo Matteo)
   vistaMagazzino: vistePerCategoria, // filtri per categoria nel foglio (solo Matteo)
+  aggiornaMagazzino, // In consegna, Da montare, Totale e colori delle categorie (21 ott 2026, solo Matteo)
+  cancellaIntervento,
+  annullaCancellazione,
+  accessi: salvaAccessi, // le impostazioni (solo Matteo)
 };
+
+// Le azioni che chiedono un permesso degli Accessi. Le altre le può fare
+// chiunque abbia una chiave.
+const PERMESSO_PER = {
+  cancellaIntervento: () => 'cancellaInterventi',
+  annullaCancellazione: () => 'cancellaInterventi',
+  sposta: (d) => (d.verso === 'persi' ? 'togliClienti' : null),
+};
+// Quelle per cui servono gli Accessi: i permessi, e chi ha un giro (le tappe).
+const CON_ACCESSI = new Set([...Object.keys(PERMESSO_PER), 'tappa', 'assegna', 'accessi']);
 
 // creaFoglio è un parametro solo per il server di prova in locale
 // (scripts/gestione-locale.mjs), che scrive su una copia in memoria.
@@ -107,16 +129,45 @@ export const creaGestore = (creaFoglio) => async (req) => {
   if (!sheetId) return risposta({ ok: false, errore: 'Foglio non configurato. Chiedi a Matteo.' }, 500);
   const foglio = creaFoglio(sheetId);
 
+  const tutti = persone();
+  const giranti = (acc) => acc.filter((a) => a.giro).map((a) => a.persona);
   try {
-    // io: chi sta usando l'app; persone: fra chi si dividono le manutenzioni.
-    if (req.method === 'GET') return risposta({ ok: true, ...(await leggiTutto(foglio)), io: chi, persone: persone() });
+    // io: chi sta usando l'app; persone: chi ha un giro (fra chi si dividono
+    // le manutenzioni); nomi: come si chiama ognuno («babbo» → «Stefano»);
+    // permessi: cosa può fare io. Il titolare riceve anche tutti gli accessi,
+    // per le impostazioni.
+    if (req.method === 'GET') {
+      const [tutto, acc] = await Promise.all([
+        leggiTutto(foglio),
+        leggiAccessi(foglio, tutti).catch((err) => { console.error('Accessi non letti:', err); return accessiDiBase(tutti); }),
+      ]);
+      const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
+      const titolare = chi === TITOLARE;
+      return risposta({
+        ok: true, ...tutto, io: chi, persone: giranti(acc),
+        nomi: Object.fromEntries(acc.map((a) => [a.persona, a.nome])),
+        permessi: Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]])),
+        titolare,
+        ...(titolare ? { accessi: acc, elencoPermessi: PERMESSI } : {}),
+      });
+    }
     if (req.method !== 'POST') return risposta({ ok: false, errore: 'Metodo non ammesso' }, 405);
 
     let body;
     try { body = await req.json(); } catch { return risposta({ ok: false, errore: 'Richiesta non valida' }, 400); }
     const azione = AZIONI[body?.azione];
     if (!azione) return risposta({ ok: false, errore: 'Azione sconosciuta' }, 400);
-    return risposta(await azione(foglio, body.dati ?? {}, { chi, persone: persone() }));
+    const dati = body.dati ?? {};
+    let ctx = { chi, persone: tutti, tutti };
+    if (CON_ACCESSI.has(body.azione)) {
+      // Qui gli Accessi si devono leggere: se il foglio non risponde, niente.
+      const acc = await leggiAccessi(foglio, tutti);
+      const serve = PERMESSO_PER[body.azione] && PERMESSO_PER[body.azione](dati);
+      const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
+      if (serve && !mio[serve]) return risposta({ ok: false, errore: 'Non hai il permesso per farlo. Chiedi a Matteo.' }, 403);
+      ctx = { ...ctx, persone: giranti(acc) };
+    }
+    return risposta(await azione(foglio, dati, ctx));
   } catch (err) {
     if (err.perUtente) return risposta({ ok: false, errore: err.message }, err.status || 400);
     console.error('Gestione:', err);

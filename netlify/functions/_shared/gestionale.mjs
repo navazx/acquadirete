@@ -20,12 +20,13 @@ import { etichettaZona } from './zone.mjs';
 export const TAB_CLIENTI = 'Clienti-Impianti';
 export const TAB_LEAD = 'Lead-Contatti';
 export const TAB_STORICO = 'Storico-Interventi';
-const INTESTAZIONI_STORICO = ['Data', 'Codice', 'Cliente', 'Prossima manutenzione', 'Segnata da', 'Pagamento'];
+const INTESTAZIONI_STORICO = ['Data', 'Codice', 'Cliente', 'Prossima manutenzione', 'Segnata da', 'Pagamento', 'Scadenza prima', 'Lavoro'];
 // Come ha pagato il cliente (dal 19 ott 2026, richiesta di Matteo): l'app lo
 // chiede subito dopo «Manutenzione fatta». «Da risentire» = non ha ancora
 // pagato, va richiamato; si cambia dopo dallo storico. Vuoto = segnata prima
 // di allora, o da una versione vecchia dell'app.
-export const PAGAMENTI = ['Contanti', 'POS', 'Fattura e poi bonifico', 'Da risentire'];
+// «Gratis in garanzia» dal 21 ott 2026 (Matteo): fatta senza far pagare.
+export const PAGAMENTI = ['Contanti', 'POS', 'Fattura e poi bonifico', 'Gratis in garanzia', 'Da risentire'];
 const pagamentoDa = (v) => {
   const p = testo(v);
   if (!p) return '';
@@ -219,8 +220,9 @@ function valoreConcorde(righe, colCitta, colValore, citta, maiuscolo = true) {
 
 // Colonne "Sospesa / Urgente" e "Motivo" di Clienti-Impianti (dal 1 ott
 // 2026), in fondo alla tabella. "Sospesa" = la manutenzione non si fa finché
-// non si riattiva (non compare più fra le scadute); "Urgente" = ha chiamato
-// per un guasto. Il Motivo comincia con il giorno ("01/10/2026 — perde
+// non si riattiva (non compare più fra le scadute); "Urgente" = va fatto in
+// fretta: un guasto, ma anche una manutenzione di chi ha fretta (21 ott
+// 2026). Il Motivo comincia con il giorno ("01/10/2026 — perde
 // acqua"). Facoltative: le crea l'app la prima volta che servono. Nomi scelti
 // apposta senza parole che usano le altre automazioni per trovare le loro
 // colonne (manutenzione, note, zona, …): niente scambi di colonna.
@@ -449,7 +451,7 @@ export async function leggiTutto(foglio) {
   const tappe = righeGiri.map(({ riga, ...t }) => t);
   for (const c of clienti) {
     if (!c.chiVa || tappe.some((t) => t.codice === c.codice && !t.stato)) continue;
-    tappe.push({ id: idDaColonna(c.codice), giorno: '', ora: '', chi: c.chiVa, lavoro: 'Manutenzione', codice: c.codice, contatto: '', nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, telefono: '', note: '', lat: null, lng: null, stato: '', vecchia: true });
+    tappe.push({ id: idDaColonna(c.codice), giorno: '', ora: '', oraFine: '', chi: c.chiVa, lavoro: 'Manutenzione', codice: c.codice, contatto: '', nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, telefono: '', note: '', lat: null, lng: null, stato: '', vecchia: true });
   }
 
   return {
@@ -473,7 +475,8 @@ function trovaCliente(griglia, mappa, codice) {
 //  Storico interventi
 // ---------------------------------------------------------------------------
 // Scheda "Storico-Interventi": una riga per ogni «Manutenzione fatta» segnata
-// dall'app (la scrive segnaFatta, l'annulla la svuota). Riga 1 = intestazioni,
+// dall'app (la scrive segnaFatta, l'annulla la svuota) e, dal 21 ott 2026,
+// per ogni guasto riparato (segnaRiparazione, colonna "Lavoro" = "Guasto"). Riga 1 = intestazioni,
 // trovate per nome. Le automazioni del foglio non la leggono. Dal 19 ott 2026
 // l'app la mostra («Interventi fatti») e ci scrive come ha pagato il cliente.
 async function leggiGrigliaStorico(foglio, celle = 'A1:J5000') {
@@ -487,8 +490,11 @@ async function leggiGrigliaStorico(foglio, celle = 'A1:J5000') {
 const colonneStorico = (griglia) => {
   const testa = ((griglia && griglia[0]) || []).map(normalizza);
   const c = (nome) => testa.indexOf(normalizza(nome));
-  return { data: c('Data'), codice: c('Codice'), nome: c('Cliente'), prossima: c('Prossima manutenzione'), da: c('Segnata da'), pagamento: c('Pagamento'), larghezza: testa.length };
+  return { data: c('Data'), codice: c('Codice'), nome: c('Cliente'), prossima: c('Prossima manutenzione'), da: c('Segnata da'), pagamento: c('Pagamento'), prima: c('Scadenza prima'), lavoro: c('Lavoro'), larghezza: testa.length };
 };
+// La colonna "Lavoro" (dal 21 ott 2026): "Manutenzione" o "Guasto" (una
+// riparazione, segnaRiparazione). Vuota = manutenzione, le righe di prima.
+const lavoroStorico = (v) => (normalizza(v) === 'guasto' ? 'Guasto' : '');
 // "App (matteo)" → "matteo".
 const chiDaSegnata = (s) => ((String(s).match(/\(([^)]+)\)\s*$/) || [])[1] || '').trim().toLowerCase();
 
@@ -503,35 +509,37 @@ async function leggiStorico(foglio) {
     const r = g[i] || [];
     const codice = v(r, k.codice).toUpperCase();
     if (!codice) continue; // riga svuotata da un annulla
-    lista.push({ riga: i + 1, data: v(r, k.data), codice, nome: v(r, k.nome), prossima: v(r, k.prossima), chi: chiDaSegnata(v(r, k.da)), pagamento: v(r, k.pagamento) });
+    lista.push({ riga: i + 1, data: v(r, k.data), codice, nome: v(r, k.nome), prossima: v(r, k.prossima), chi: chiDaSegnata(v(r, k.da)), pagamento: v(r, k.pagamento), prima: v(r, k.prima), lavoro: lavoroStorico(v(r, k.lavoro)) });
   }
   return lista;
 }
 
-// La colonna "Pagamento". La scheda nata prima del 19 ott 2026 ne ha cinque:
-// l'intestazione si aggiunge in fondo, con l'aspetto delle altre. null = la
-// scheda non c'è ancora (la crea accoda, già con "Pagamento").
-async function colonnaPagamento(foglio) {
+// Una colonna dello storico aggiunta dopo: "Pagamento" (la scheda nata
+// prima del 19 ott 2026 ne ha cinque) e "Scadenza prima" (dal 21 ott 2026:
+// la prossima manutenzione com'era prima dell'intervento, per rimetterla
+// giusta se l'intervento si cancella). L'intestazione si aggiunge in fondo,
+// con l'aspetto delle altre. null = la scheda non c'è ancora (la crea
+// accoda, già con tutte le colonne).
+async function colonnaStorico(foglio, nome) {
   const g = await leggiGrigliaStorico(foglio, 'A1:J1');
   if (!g || !g.length) return null;
-  const k = colonneStorico(g);
-  if (k.pagamento >= 0) return k.pagamento + 1;
-  const c = k.larghezza + 1;
-  await foglio.copiaCella(TAB_STORICO, 1, k.larghezza, 1, c).catch(() => {});
-  await foglio.scrivi([{ range: `'${TAB_STORICO}'!${lettera(c)}1`, values: [['Pagamento']] }], 'RAW');
+  const testa = (g[0] || []).map(normalizza);
+  const i = testa.indexOf(normalizza(nome));
+  if (i >= 0) return i + 1;
+  const c = testa.length + 1;
+  await foglio.copiaCella(TAB_STORICO, 1, testa.length, 1, c).catch(() => {});
+  await foglio.scrivi([{ range: `'${TAB_STORICO}'!${lettera(c)}1`, values: [[nome]] }], 'RAW');
   return c;
 }
+const colonnaPagamento = (foglio) => colonnaStorico(foglio, 'Pagamento');
 
 // Cambia come ha pagato un intervento già nello storico («Da risentire» che
 // poi paga, o un pagamento segnato sbagliato). L'intervento si riconosce da
 // codice + data, non dal numero di riga visto dal telefono (che vale solo se
 // combacia ancora). Si annulla rimettendo il pagamento di prima.
-export async function cambiaPagamento(foglio, { riga, codice, data, pagamento }) {
-  const pag = pagamentoDa(pagamento);
-  const cod = testo(codice).toUpperCase();
-  const g = await leggiGrigliaStorico(foglio);
-  if (!g || !g.length) throw problema('Non trovo lo storico degli interventi. Chiedi a Matteo.', 409);
-  const k = colonneStorico(g);
+// La riga di un intervento: quella vista dal telefono se combacia ancora
+// (codice + data), se no l'ultima che combacia.
+function rigaIntervento(g, k, riga, cod, data) {
   const combacia = (n) => { const r = g[n - 1] || []; return testo(r[k.codice]).toUpperCase() === cod && testo(r[k.data]) === testo(data); };
   let n = Number(riga);
   if (!(n > 1 && combacia(n))) {
@@ -539,10 +547,244 @@ export async function cambiaPagamento(foglio, { riga, codice, data, pagamento })
     for (let i = g.length; i > 1 && !n; i--) if (combacia(i)) n = i;
   }
   if (!n) throw problema('Non trovo più questo intervento nello storico. Riapri l\'app e riprova.', 409);
+  return n;
+}
+
+export async function cambiaPagamento(foglio, { riga, codice, data, pagamento }) {
+  const pag = pagamentoDa(pagamento);
+  const cod = testo(codice).toUpperCase();
+  const g = await leggiGrigliaStorico(foglio);
+  if (!g || !g.length) throw problema('Non trovo lo storico degli interventi. Chiedi a Matteo.', 409);
+  const k = colonneStorico(g);
+  const n = rigaIntervento(g, k, riga, cod, data);
   const prima = k.pagamento >= 0 ? testo((g[n - 1] || [])[k.pagamento]) : '';
   const c = k.pagamento >= 0 ? k.pagamento + 1 : await colonnaPagamento(foglio);
   await foglio.scrivi([{ range: `'${TAB_STORICO}'!${lettera(c)}${n}`, values: [[pag]] }], 'RAW');
   return { ok: true, riga: n, pagamento: pag, annulla: { riga: n, codice: cod, data: testo(data), pagamento: prima } };
+}
+
+// Cancellare un intervento fatto (21 ott 2026, Matteo: a lui, a babbo e alla
+// segretaria sì, a un dipendente no: il permesso sta negli Accessi). Prima la
+// riga si copia nella scheda "Interventi-Cancellati", con quando e chi, poi
+// si svuota nello storico: così non si perde niente e si può annullare.
+// `rimetti`: se è stato questo intervento a spostare la prossima
+// manutenzione, la riporta indietro: alla "Scadenza prima" scritta nella
+// riga (dal 21 ott 2026), se no alla scadenza dell'intervento prima, se no
+// al giorno dell'intervento (la manutenzione torna da fare). Non la tocca se nel frattempo è cambiata, o se un altro intervento
+// dello stesso cliente la tiene lì (un doppione segnato due volte).
+// I materiali usati restano: si tolgono dalla scheda del cliente.
+export const TAB_CANCELLATI = 'Interventi-Cancellati';
+const scadenzaDopoCancellazione = (g, k, n, cod) => {
+  const r = g[n - 1] || [];
+  const sua = serialeDaCella(testo(r[k.prossima]));
+  const fattaIl = serialeDaCella(testo(r[k.data]));
+  const altre = [];
+  for (let i = 2; i <= g.length; i++) {
+    const x = g[i - 1] || [];
+    if (i === n || testo(x[k.codice]).toUpperCase() !== cod) continue;
+    const s = serialeDaCella(testo(x[k.prossima]));
+    if (s != null) altre.push(s);
+  }
+  if (sua == null || altre.some((s) => s >= sua)) return { sua, nuova: null };
+  // Segnata dal 21 ott 2026: la scadenza di prima è scritta nella riga.
+  const prima = k.prima >= 0 ? serialeDaCella(testo(r[k.prima])) : null;
+  if (prima != null) return { sua, nuova: prima };
+  return { sua, nuova: altre.length ? Math.max(...altre) : fattaIl };
+};
+
+export async function cancellaIntervento(foglio, { riga, codice, data, rimetti = false }, { chi = 'app' } = {}) {
+  const cod = testo(codice).toUpperCase();
+  const g = await leggiGrigliaStorico(foglio);
+  if (!g || !g.length) throw problema('Non trovo lo storico degli interventi.', 409);
+  const k = colonneStorico(g);
+  const n = rigaIntervento(g, k, riga, cod, data);
+  const valori = Array.from({ length: k.larghezza }, (_, i) => testo((g[n - 1] || [])[i]));
+  const testa = (g[0] || []).slice(0, k.larghezza).map(testo);
+
+  // Prima la copia (se qualcosa va storto qui, l'intervento è ancora al suo posto).
+  const cancellato = await foglio.accoda(TAB_CANCELLATI, [...testa, 'Cancellato il', 'Cancellato da'],
+    [...valori, testoData(oggi()), `App (${chi})`]);
+  const larghezza = `'${TAB_STORICO}'!A${n}:${lettera(k.larghezza)}${n}`;
+  await foglio.svuota(larghezza);
+
+  let scadenza = null;
+  if (rimetti) {
+    const { sua, nuova } = scadenzaDopoCancellazione(g, k, n, cod);
+    try {
+      const { griglia, mappa } = await leggiClienti(foglio);
+      const rc = trovaCliente(griglia, mappa, cod);
+      const cella = `'${TAB_CLIENTI}'!${lettera(mappa.col.MANUTENZIONE)}${rc}`;
+      const attuale = serialeDaCella((griglia[rc - 1] || [])[mappa.col.MANUTENZIONE - 1]);
+      if (nuova != null && attuale === sua) {
+        const [[prima = '']] = (await foglio.leggi(cella, 'FORMULA')).concat([['']]);
+        await foglio.scrivi([{ range: cella, values: [[nuova]] }], 'RAW');
+        scadenza = { prima, scritto: nuova, prossima: testoData(dataDaSeriale(nuova)) };
+      }
+    } catch (err) {
+      // Il cliente può essere fra i persi: l'intervento è cancellato lo stesso.
+      if (!err.perUtente) throw err;
+    }
+  }
+  return {
+    ok: true, nome: valori[k.nome] || cod, prossima: scadenza ? scadenza.prossima : '',
+    annulla: { riga: n, codice: cod, data: testo(data), valori, cancellato, scadenza },
+  };
+}
+
+// «Annulla» della cancellazione: la riga torna nello storico (al suo posto,
+// se è ancora vuoto), sparisce dai cancellati e la scadenza torna com'era.
+export async function annullaCancellazione(foglio, { riga, codice, valori, cancellato, scadenza }) {
+  const cod = testo(codice).toUpperCase();
+  if (!Array.isArray(valori) || !valori.length || valori.length > 12) throw problema('Non riesco ad annullare.', 422);
+  const righe = valori.map((v) => testo(v).slice(0, 300));
+  const g = await leggiGrigliaStorico(foglio);
+  if (!g || !g.length) throw problema('Non trovo lo storico degli interventi.', 409);
+  const k = colonneStorico(g);
+  if (testo(righe[k.codice]).toUpperCase() !== cod) throw problema('Non riesco ad annullare.', 422);
+  const n = Number(riga);
+  if (n > 1 && !(g[n - 1] || []).some((v) => testo(v))) {
+    await foglio.scrivi([{ range: `'${TAB_STORICO}'!A${n}`, values: [righe] }], 'RAW');
+  } else {
+    await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO, righe);
+  }
+  if (typeof cancellato === 'string' && /^'?Interventi-Cancellati'?!A\d+:[A-Z]+\d+$/.test(cancellato)) {
+    await foglio.svuota(cancellato).catch((err) => console.error('Cancellati non svuotati:', err));
+  }
+  // La scadenza: con le stesse regole dell'annulla di «fatta».
+  if (scadenza && typeof scadenza.scritto === 'number') {
+    await annullaFatta(foglio, { codice: cod, prima: scadenza.prima, scritto: scadenza.scritto })
+      .catch((err) => { if (!err.perUtente) throw err; });
+  }
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+//  Chi usa l'app e cosa può fare (21 ott 2026)
+// ---------------------------------------------------------------------------
+// Matteo: «fai un profilo di accesso per la segretaria; a me, babbo e alla
+// segretaria fai cancellare gli interventi fatti ma non a un futuro
+// dipendente, e imposta già il modo di dare le autorizzazioni dalle
+// impostazioni, che posso vedere solo io». Le persone sono i nomi delle
+// chiavi di GESTIONE_CHIAVE (babbo, matteo, segretaria…): una persona nuova
+// si aggiunge lì, con la sua chiave. Il nome mostrato e i permessi stanno
+// nella scheda "Accessi" del foglio, una riga per persona («Sì»/«No»); chi
+// non ha la riga ha quelli di base qui sotto, e un dipendente nuovo ha il
+// giro ma non cancella niente. Il titolare (matteo) può sempre tutto ed è
+// l'unico che vede le impostazioni e cambia gli accessi. Nessuna
+// automazione del foglio legge questa scheda.
+export const TAB_ACCESSI = 'Accessi';
+export const TITOLARE = 'matteo';
+export const PERMESSI = [
+  { id: 'giro', colonna: 'Ha un giro', nome: 'Ha un suo giro del giorno', spiega: 'Va dai clienti: gli si possono dare delle tappe.' },
+  { id: 'cancellaInterventi', colonna: 'Cancella interventi', nome: 'Cancella gli interventi fatti', spiega: 'Dalla pagina «Interventi fatti».' },
+  { id: 'togliClienti', colonna: 'Toglie clienti', nome: 'Toglie i clienti (fra i persi)', spiega: '«Non è più nostro cliente», nella scheda del cliente.' },
+];
+const COLONNE_ACCESSI = ['Persona', 'Nome', ...PERMESSI.map((p) => p.colonna), 'Cambiato il'];
+const ACCESSI_DI_BASE = {
+  matteo: { nome: 'Matteo', giro: true, cancellaInterventi: true, togliClienti: true },
+  babbo: { nome: 'Stefano', giro: true, cancellaInterventi: true, togliClienti: true },
+  segretaria: { nome: 'Segretaria', giro: false, cancellaInterventi: true, togliClienti: true },
+};
+const ACCESSI_NUOVO = { giro: true, cancellaInterventi: false, togliClienti: false };
+const accessoDiBase = (p) => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), ...ACCESSI_NUOVO, ...ACCESSI_DI_BASE[p] });
+const siNo = (v) => {
+  const n = normalizza(v);
+  return ['si', 'x', 'vero', 'true', '1'].includes(n) ? true : ['no', 'falso', 'false', '0'].includes(n) ? false : null;
+};
+
+async function leggiGrigliaAccessi(foglio) {
+  try {
+    return await foglio.leggi(`'${TAB_ACCESSI}'!A1:J100`, 'FORMATTED_VALUE');
+  } catch (err) {
+    if (err.status === 400) return null; // scheda non ancora creata
+    throw err;
+  }
+}
+const colonneAccessi = (g) => {
+  const testa = ((g && g[0]) || []).map(normalizza);
+  return Object.fromEntries(COLONNE_ACCESSI.map((n) => [n, testa.indexOf(normalizza(n))]));
+};
+
+// Gli accessi delle persone `persone` (in quell'ordine). Se la scheda non si
+// legge l'errore sale: chi controlla un permesso non deve tirare a indovinare.
+export async function leggiAccessi(foglio, persone) {
+  const g = await leggiGrigliaAccessi(foglio);
+  const k = colonneAccessi(g);
+  const righe = new Map();
+  if (g && k.Persona >= 0) {
+    for (let i = 1; i < g.length; i++) {
+      const p = normalizza((g[i] || [])[k.Persona]).replace(/ /g, '');
+      if (p && !righe.has(p)) righe.set(p, { r: g[i] || [], riga: i + 1 });
+    }
+  }
+  return persone.map((p) => {
+    const a = { persona: p, ...accessoDiBase(p), titolare: p === TITOLARE, scritto: false };
+    const x = righe.get(p);
+    if (x) {
+      a.scritto = true;
+      const nome = k.Nome >= 0 ? testo(x.r[k.Nome]) : '';
+      if (nome) a.nome = nome.slice(0, 30);
+      for (const pe of PERMESSI) {
+        const v = k[pe.colonna] >= 0 ? siNo(x.r[k[pe.colonna]]) : null;
+        if (v != null) a[pe.id] = v;
+      }
+    }
+    if (a.titolare) PERMESSI.forEach((pe) => { a[pe.id] = true; });
+    return a;
+  });
+}
+// Quando la scheda non si legge e serve solo per mostrare (la GET).
+export const accessiDiBase = (persone) => persone.map((p) => {
+  const a = { persona: p, ...accessoDiBase(p), titolare: p === TITOLARE, scritto: false };
+  if (a.titolare) PERMESSI.forEach((pe) => { a[pe.id] = true; });
+  return a;
+});
+
+// Le impostazioni di Matteo: il nome mostrato e i permessi di una persona.
+// Al titolare si cambia solo il nome. Si annulla rimandando quelli di prima.
+export async function salvaAccessi(foglio, { persona, nome, permessi = {} }, { chi, tutti = [] } = {}) {
+  if (chi !== TITOLARE) throw problema('Le impostazioni le può cambiare solo Matteo.', 403);
+  const p = testo(persona).toLowerCase();
+  if (!tutti.includes(p)) throw problema('Questa persona non ha l\'app.', 400);
+  const n = testo(nome).replace(/\s+/g, ' ');
+  if (!n || n.length > 30 || !/^[\p{L}' .-]+$/u.test(n)) throw problema('Scrivi il nome con sole lettere (al massimo 30).');
+
+  const [prima] = await leggiAccessi(foglio, [p]);
+  let g = await leggiGrigliaAccessi(foglio);
+  if (!g || !g.length) {
+    await foglio.creaScheda(TAB_ACCESSI);
+    await foglio.scrivi([{ range: `'${TAB_ACCESSI}'!A1`, values: [COLONNE_ACCESSI] }], 'RAW');
+    g = [COLONNE_ACCESSI];
+  }
+  // Le colonne che mancano (un permesso aggiunto dopo) si aggiungono in fondo.
+  const k = colonneAccessi(g);
+  let larghezza = (g[0] || []).length;
+  const scritture = [];
+  for (const c of COLONNE_ACCESSI) {
+    if (k[c] >= 0) continue;
+    k[c] = larghezza++;
+    scritture.push({ range: `'${TAB_ACCESSI}'!${lettera(k[c] + 1)}1`, values: [[c]] });
+  }
+  let riga = 0;
+  let ultima = 1;
+  for (let i = 1; i < g.length; i++) {
+    const r = g[i] || [];
+    if (r.some((v) => testo(v))) ultima = i + 1;
+    if (!riga && normalizza(r[k.Persona]).replace(/ /g, '') === p) riga = i + 1;
+  }
+  if (!riga) riga = ultima + 1;
+  const vale = (pe) => (p === TITOLARE ? true : typeof permessi[pe.id] === 'boolean' ? permessi[pe.id] : prima[pe.id]);
+  const cella = (c, v) => scritture.push({ range: `'${TAB_ACCESSI}'!${lettera(k[c] + 1)}${riga}`, values: [[v]] });
+  cella('Persona', p);
+  cella('Nome', n);
+  PERMESSI.forEach((pe) => cella(pe.colonna, vale(pe) ? 'Sì' : 'No'));
+  cella('Cambiato il', testoData(oggi()));
+  await foglio.scrivi(scritture, 'RAW');
+  const [dopo] = await leggiAccessi(foglio, [p]);
+  return {
+    ok: true, accesso: dopo,
+    annulla: { persona: p, nome: prima.nome, permessi: Object.fromEntries(PERMESSI.map((pe) => [pe.id, prima[pe.id]])) },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -586,16 +828,21 @@ export async function assegnaManutenzione(foglio, { codice, codici, a = '' }, { 
 // Le tappe tolte si svuotano (le righe non si spostano mai). La colonna
 // "Chi ci va" di Clienti-Impianti (19 ott) resta letta come «tappa di oggi
 // senza ora» finché quella tappa non si tocca: allora diventa una riga qui.
-// Nessuna automazione del foglio legge questa scheda.
+// Nessuna automazione del foglio legge questa scheda. Dal 21 ott 2026 (Matteo:
+// «nel caso che il cliente ci dica una fascia oraria») la colonna Q «Fino
+// alle» chiude la fascia: «Ora» 09:00 e «Fino alle» 11:00 = fra le 9 e le 11.
+// Vuota = un orario solo (o nessuno). La scheda nata prima ne ha 16: la
+// diciassettesima intestazione la scrive salvaTappa la prima volta che serve.
 export const TAB_GIRI = 'Giri';
-const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il'];
+const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle'];
+const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // Q
 export const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
 const G = Object.fromEntries(INTESTAZIONI_GIRI.map((h, i) => [h, i]));
 
 async function leggiGiri(foglio) {
   let griglia;
   try {
-    griglia = await foglio.leggi(`'${TAB_GIRI}'!A1:P3000`, 'UNFORMATTED_VALUE');
+    griglia = await foglio.leggi(`'${TAB_GIRI}'!A1:${ULTIMA_GIRI}3000`, 'UNFORMATTED_VALUE');
   } catch (err) {
     if (err.status === 400) return { griglia: null, tappe: [] }; // scheda non ancora creata
     throw err;
@@ -608,7 +855,7 @@ async function leggiGiri(foglio) {
     const lat = Number(r[G.Lat]);
     const lng = Number(r[G.Lng]);
     tappe.push({
-      riga: i + 1, id, giorno: testo(r[G.Giorno]), ora: testo(r[G.Ora]), chi: testo(r[G.Chi]).toLowerCase(),
+      riga: i + 1, id, giorno: testo(r[G.Giorno]), ora: testo(r[G.Ora]), oraFine: testo(r[G['Fino alle']]), chi: testo(r[G.Chi]).toLowerCase(),
       lavoro: testo(r[G.Lavoro]), codice: testo(r[G.Codice]).toUpperCase(), contatto: testo(r[G.Contatto]),
       nome: testo(r[G.Nome]), indirizzo: testo(r[G.Indirizzo]), citta: testo(r[G.Città]), telefono: testo(r[G.Telefono]),
       note: testo(r[G.Note]), lat: r[G.Lat] === '' || !isFinite(lat) ? null : lat, lng: r[G.Lng] === '' || !isFinite(lng) ? null : lng,
@@ -628,9 +875,10 @@ async function togliDaColonna(foglio, codice) {
   await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(mappa.col.CHI)}${riga}`, values: [['']] }], 'RAW');
 }
 
-const riga16 = (t) => INTESTAZIONI_GIRI.map((h) => {
+const rigaGiro = (t) => INTESTAZIONI_GIRI.map((h) => {
   const v = { Id: t.id, Giorno: t.giorno, Ora: t.ora, Chi: nomePersona(t.chi), Lavoro: t.lavoro, Codice: t.codice, Contatto: t.contatto, Nome: t.nome,
-    Indirizzo: t.indirizzo, 'Città': t.citta, Telefono: t.telefono, Note: t.note, Lat: t.lat ?? '', Lng: t.lng ?? '', Stato: t.stato, 'Aggiunta il': t.aggiunta }[h];
+    Indirizzo: t.indirizzo, 'Città': t.citta, Telefono: t.telefono, Note: t.note, Lat: t.lat ?? '', Lng: t.lng ?? '', Stato: t.stato, 'Aggiunta il': t.aggiunta,
+    'Fino alle': t.oraFine }[h];
   return v == null ? '' : v;
 });
 
@@ -647,9 +895,19 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   const serG = serialeDa(giorno.a, giorno.m, giorno.g);
   const serOggi = serialeDa(...Object.values(oggi()));
   if (serG < serOggi - 400 || serG > serOggi + 400) throw problema('Il giorno è troppo lontano: controlla la data.');
-  const ora = testo(dati.ora);
-  const oraOk = ora.match(/^(\d{1,2})[:.](\d{2})$/);
-  if (ora && !(oraOk && +oraOk[1] < 24 && +oraOk[2] < 60)) throw problema('Orario non valido.');
+  // "9:00" → "09:00"; vuoto → ''; altro → errore.
+  const orario = (v) => {
+    const s = testo(v);
+    if (!s) return '';
+    const m = s.match(/^(\d{1,2})[:.](\d{2})$/);
+    if (!(m && +m[1] < 24 && +m[2] < 60)) throw problema('Orario non valido.');
+    return `${m[1].padStart(2, '0')}:${m[2]}`;
+  };
+  const ora = orario(dati.ora);
+  let oraFine = orario(dati.oraFine);
+  if (oraFine && !ora) throw problema('Scrivi da che ora: la fascia comincia da lì.');
+  if (oraFine && oraFine <= ora) throw problema('La fascia deve finire dopo che comincia: controlla gli orari.');
+  if (oraFine === ora) oraFine = '';
   const codice = testo(dati.codice).toUpperCase();
   if (codice && !/^C\d+$/.test(codice)) throw problema('Codice cliente non valido.');
   const nome = testo(dati.nome).slice(0, 120);
@@ -658,7 +916,7 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   const lat = numero(dati.lat);
   const lng = numero(dati.lng);
   const tappa = {
-    id, giorno: testoData(giorno), ora: oraOk ? `${oraOk[1].padStart(2, '0')}:${oraOk[2]}` : '', chi, lavoro, codice,
+    id, giorno: testoData(giorno), ora, oraFine, chi, lavoro, codice,
     contatto: testo(dati.contatto).slice(0, 120), nome, indirizzo: testo(dati.indirizzo).slice(0, 200), citta: testo(dati.citta).slice(0, 80),
     telefono: testo(dati.telefono).slice(0, 80), note: testo(dati.note).slice(0, 300),
     lat: lat != null && lat > 35 && lat < 48 ? lat : null, lng: lng != null && lng > 6 && lng < 19 ? lng : null,
@@ -666,11 +924,16 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   };
   const { griglia, tappe } = await leggiGiri(foglio);
   const prima = tappe.find((t) => t.id === id) || null;
+  // La scheda nata con 16 colonne: l'intestazione «Fino alle», con l'aspetto delle altre.
+  if (griglia && griglia.length && (griglia[0] || []).length < INTESTAZIONI_GIRI.length && !testo((griglia[0] || [])[G['Fino alle']])) {
+    await foglio.copiaCella(TAB_GIRI, 1, G['Fino alle'], 1, G['Fino alle'] + 1).catch(() => {});
+    await foglio.scrivi([{ range: `'${TAB_GIRI}'!${ULTIMA_GIRI}1`, values: [['Fino alle']] }], 'RAW');
+  }
   if (prima) {
     tappa.aggiunta = testo((griglia[prima.riga - 1] || [])[G['Aggiunta il']]) || tappa.aggiunta;
-    await foglio.scrivi([{ range: `'${TAB_GIRI}'!A${prima.riga}:P${prima.riga}`, values: [riga16(tappa)] }], 'RAW');
+    await foglio.scrivi([{ range: `'${TAB_GIRI}'!A${prima.riga}:${ULTIMA_GIRI}${prima.riga}`, values: [rigaGiro(tappa)] }], 'RAW');
   } else {
-    await foglio.accodaRighe(TAB_GIRI, INTESTAZIONI_GIRI, [riga16(tappa)]);
+    await foglio.accodaRighe(TAB_GIRI, INTESTAZIONI_GIRI, [rigaGiro(tappa)]);
   }
   // La tappa vecchia di "Chi ci va" ora è una riga: la colonna si svuota.
   if (id.startsWith('col-') && codice) await togliDaColonna(foglio, codice).catch((err) => console.error('Chi ci va non svuotata:', err));
@@ -687,15 +950,16 @@ export async function togliTappa(foglio, { id }) {
   const { tappe } = await leggiGiri(foglio);
   const t = tappe.find((x) => x.id === k);
   if (!t) return { ok: true, giaTolta: true, annulla: null };
-  await foglio.svuota(`'${TAB_GIRI}'!A${t.riga}:P${t.riga}`);
+  await foglio.svuota(`'${TAB_GIRI}'!A${t.riga}:${ULTIMA_GIRI}${t.riga}`);
   return { ok: true, annulla: { ...t, riga: undefined } };
 }
 
 // Le tappe di un cliente non ancora fatte, fino al giorno della manutenzione
 // fatta compreso: diventano «Fatta». Restituisce gli Id, per l'annulla.
-async function segnaTappeFatte(foglio, codice, serQuando) {
+// `quali`: solo alcune (una riparazione chiude solo le tappe «Guasto»).
+async function segnaTappeFatte(foglio, codice, serQuando, quali = () => true) {
   const { tappe } = await leggiGiri(foglio);
-  const fatte = tappe.filter((t) => t.codice === codice && !t.stato && (serialeDaCella(t.giorno) ?? Infinity) <= serQuando);
+  const fatte = tappe.filter((t) => t.codice === codice && !t.stato && (serialeDaCella(t.giorno) ?? Infinity) <= serQuando && quali(t));
   if (fatte.length) await foglio.scrivi(fatte.map((t) => ({ range: `'${TAB_GIRI}'!O${t.riga}`, values: [['Fatta']] })), 'RAW');
   return fatte.map((t) => t.id);
 }
@@ -760,10 +1024,16 @@ export async function segnaFatta(foglio, { codice, data, frequenza, pagamento },
   let storico = null;
   try {
     const rigaStorico = [testoData(quando), testo(codice).toUpperCase(), nome, testoData(prossima), `App (${chi})`];
-    // Il pagamento nella sua colonna (la sesta, se la scheda nasce adesso).
-    const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.length;
-    while (rigaStorico.length < cP) rigaStorico.push('');
+    // Il pagamento e la scadenza di prima nelle loro colonne (la sesta e la
+    // settima, se la scheda nasce adesso).
+    const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.indexOf('Pagamento') + 1;
+    const cS = (await colonnaStorico(foglio, 'Scadenza prima')) || INTESTAZIONI_STORICO.indexOf('Scadenza prima') + 1;
+    const cL = (await colonnaStorico(foglio, 'Lavoro')) || INTESTAZIONI_STORICO.indexOf('Lavoro') + 1;
+    const serPrima = serialeDaCella(r[col.MANUTENZIONE - 1]);
+    while (rigaStorico.length < Math.max(cP, cS, cL)) rigaStorico.push('');
     rigaStorico[cP - 1] = pag;
+    rigaStorico[cS - 1] = serPrima == null ? '' : testoData(dataDaSeriale(serPrima));
+    rigaStorico[cL - 1] = 'Manutenzione';
     storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO, rigaStorico);
   } catch (err) {
     // Lo storico è un di più: se non si scrive, la manutenzione è segnata lo stesso.
@@ -825,6 +1095,83 @@ export async function rimandaManutenzione(foglio, { codice, mesi, data }) {
     prossima: testoData(nuova),
     annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serNuova, frequenzaScritta: false, storico: null, avvisoPrima },
   };
+}
+
+// ---------------------------------------------------------------------------
+//  Guasto riparato (21 ott 2026)
+// ---------------------------------------------------------------------------
+// Matteo: «se il cliente ha un guasto conta come ho fatto il lavoro? Non è
+// molto chiaro». Prima no: «Risolto» toglieva solo il segno rosso, e
+// «Manutenzione fatta» spostava la prossima manutenzione anche quando non
+// era stata fatta. Ora un guasto riparato SENZA la manutenzione va nello
+// storico con Lavoro "Guasto" (l'app lo chiama «Riparazione»), col giorno e
+// come ha pagato, ma la prossima manutenzione non si tocca: "Prossima
+// manutenzione" e "Scadenza prima" restano vuote, così cancellando una
+// manutenzione questa riga non la tiene ferma. Toglie il segno «Urgente»
+// (non «Sospesa») e chiude solo le sue tappe «Guasto» fino a quel giorno.
+// La stessa richiesta arrivata due volte (stesso cliente, giorno e lavoro)
+// non scrive un'altra riga. Se c'è stata anche la manutenzione, l'app usa
+// segnaFatta, che fa già tutto questo.
+export async function segnaRiparazione(foglio, { codice, data, pagamento }, { chi = 'app' } = {}) {
+  const quando = data ? leggiDataUtente(data) : oggi();
+  if (!quando) throw problema('Data non valida.');
+  const pag = pagamentoDa(pagamento);
+  const serQuando = serialeDa(quando.a, quando.m, quando.g);
+  const serOggi = serialeDa(...Object.values(oggi()));
+  if (serQuando > serOggi) throw problema('La data è nel futuro: scegli oggi o un giorno passato.');
+  if (serQuando < serOggi - 730) throw problema('La data è di più di due anni fa: controlla.');
+
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const riga = trovaCliente(griglia, mappa, codice);
+  const r = griglia[riga - 1] || [];
+  const cod = testo(codice).toUpperCase();
+  const nome = testo(r[mappa.col.NOME - 1]);
+  const giorno = testoData(quando);
+  if ((await leggiStorico(foglio)).some((s) => s.codice === cod && s.data === giorno && s.lavoro === 'Guasto')) {
+    return { ok: true, nome, fatta: giorno, pagamento: pag, annulla: null, giaSegnata: true };
+  }
+
+  // Qui lo storico è l'intervento stesso: se non si scrive, è un errore.
+  const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.indexOf('Pagamento') + 1;
+  const cL = (await colonnaStorico(foglio, 'Lavoro')) || INTESTAZIONI_STORICO.indexOf('Lavoro') + 1;
+  const rigaStorico = [giorno, cod, nome, '', `App (${chi})`];
+  while (rigaStorico.length < Math.max(cP, cL)) rigaStorico.push('');
+  rigaStorico[cP - 1] = pag;
+  rigaStorico[cL - 1] = 'Guasto';
+  const storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO, rigaStorico);
+
+  const avvisoPrima = await togliAvviso(foglio, mappa, riga, r, ['Urgente']);
+  const tappeFatte = await segnaTappeFatte(foglio, cod, serQuando, (t) => normalizza(t.lavoro) === 'guasto')
+    .catch((err) => { console.error('Tappe non segnate:', err); return []; });
+  return { ok: true, nome, fatta: giorno, pagamento: pag, annulla: { codice: cod, data: giorno, storico, avvisoPrima, tappeFatte } };
+}
+
+// «Annulla» della riparazione: la riga dello storico si svuota (solo se è
+// ancora lei), il segno «Urgente» torna (se intanto non ne è stato messo un
+// altro) e le tappe chiuse tornano da fare.
+export async function annullaRiparazione(foglio, { codice, data, storico, avvisoPrima, tappeFatte }) {
+  const cod = testo(codice).toUpperCase();
+  const m = typeof storico === 'string' && storico.match(/^'?Storico-Interventi'?!A(\d+):[A-Z]+\d+$/);
+  if (!m) throw problema('Non riesco ad annullare.', 422);
+  const g = await leggiGrigliaStorico(foglio);
+  const k = colonneStorico(g);
+  const r = (g || [])[+m[1] - 1] || [];
+  if (testo(r[k.codice]).toUpperCase() === cod && testo(r[k.data]) === testo(data) && lavoroStorico(r[k.lavoro]) === 'Guasto') {
+    await foglio.svuota(storico);
+  }
+  if (avvisoPrima && avvisoPrima.avviso === 'Urgente') {
+    try {
+      const { griglia, mappa } = await leggiClienti(foglio);
+      const riga = trovaCliente(griglia, mappa, cod);
+      const ora = mappa.col.AVVISO ? avvisoDa((griglia[riga - 1] || [])[mappa.col.AVVISO - 1]) : '';
+      if (!ora) await scriviAvviso(foglio, mappa, riga, 'Urgente', testo(avvisoPrima.motivo).slice(0, 600));
+    } catch (err) {
+      // Il cliente può essere passato fra i persi: la riparazione è annullata lo stesso.
+      if (!err.perUtente) throw err;
+    }
+  }
+  await rimettiTappe(foglio, (Array.isArray(tappeFatte) ? tappeFatte : []).map(testo).filter((x) => /^[\w-]{6,40}$/.test(x))).catch((err) => console.error('Tappe non rimesse:', err));
+  return { ok: true };
 }
 
 // Sospende la manutenzione o segna il cliente come urgente (guasto), con il
@@ -1525,14 +1872,40 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
 // il numero giusto. Nessuna automazione del foglio legge queste schede.
 export const TAB_MAGAZZINO = 'Magazzino';
 export const TAB_MOVIMENTI = 'Movimenti-Magazzino';
-const INTESTAZIONI_MAGAZZINO = ['Codice', 'Categoria', 'Descrizione', 'Codice fornitore', 'Quantità', 'Scorta minima', 'Costo', 'Note', 'Aggiornato il'];
-const INTESTAZIONI_MOVIMENTI = ['Id', 'Data', 'Articolo', 'Descrizione', 'Quantità', 'Causale', 'Cliente', 'Nome', 'Lavoro', 'Fatto da', 'Note'];
+// Dal 21 ott 2026 (Matteo: «ci vorrà una colonna "in consegna" con le
+// macchine ordinate dal fabbricante e una "da montare" per i clienti che
+// comprano, con un'altra colonna che fa il totale, così da sapere quando fare
+// l'ordine») dopo la Quantità ci sono "In consegna", "Da montare" e "Totale
+// disponibile" = Quantità + In consegna − Da montare (una formula sola,
+// nell'intestazione: l'app non ci scrive). «Da riordinare» si guarda sul
+// totale. Il foglio di prima si aggiorna con aggiornaMagazzino.
+const INTESTAZIONI_MAGAZZINO = ['Codice', 'Categoria', 'Descrizione', 'Codice fornitore', 'Quantità', 'In consegna', 'Da montare', 'Totale disponibile', 'Scorta minima', 'Costo', 'Note', 'Aggiornato il'];
+const INTESTAZIONI_MOVIMENTI = ['Id', 'Data', 'Articolo', 'Descrizione', 'Quantità', 'Causale', 'Cliente', 'Nome', 'Lavoro', 'Fatto da', 'Note', 'Colonna'];
 export const CATEGORIE = ['Filtri e ricambi', 'Impianti', 'Impianti usati', 'Miscelatori e rubinetti', 'Altro'];
+// Il colore di ogni categoria, uguale nel foglio (sfondo di Codice…Codice
+// fornitore) e nell'app (21 ott 2026: «così da sapere subito dove cercare»).
+export const COLORI_CATEGORIE = {
+  'Filtri e ricambi': '#cffafe', Impianti: '#dbeafe', 'Impianti usati': '#ede9fe', 'Miscelatori e rubinetti': '#dcfce7', Altro: '#f1f5f9',
+};
 // Il nome nell'app → l'intestazione della colonna.
-const CAMPI_ARTICOLO = { codice: 'Codice', categoria: 'Categoria', descrizione: 'Descrizione', fornitore: 'Codice fornitore', quantita: 'Quantità', scorta: 'Scorta minima', costo: 'Costo', note: 'Note', aggiornato: 'Aggiornato il' };
-const CAMPI_MOVIMENTO = { id: 'Id', data: 'Data', articolo: 'Articolo', descrizione: 'Descrizione', quantita: 'Quantità', causale: 'Causale', cliente: 'Cliente', nome: 'Nome', lavoro: 'Lavoro', chi: 'Fatto da', note: 'Note' };
-// Cosa chiede il telefono → cosa si scrive nel foglio.
-const CAUSALI = { carico: 'Arrivata merce', lavoro: 'Usato in un lavoro', tolto: 'Tolto', correzione: 'Contati' };
+const CAMPI_ARTICOLO = {
+  codice: 'Codice', categoria: 'Categoria', descrizione: 'Descrizione', fornitore: 'Codice fornitore', quantita: 'Quantità',
+  inConsegna: 'In consegna', daMontare: 'Da montare', scorta: 'Scorta minima', costo: 'Costo', note: 'Note', aggiornato: 'Aggiornato il',
+};
+const CAMPI_MOVIMENTO = { id: 'Id', data: 'Data', articolo: 'Articolo', descrizione: 'Descrizione', quantita: 'Quantità', causale: 'Causale', cliente: 'Cliente', nome: 'Nome', lavoro: 'Lavoro', chi: 'Fatto da', note: 'Note', su: 'Colonna' };
+// I tre numeri di un articolo. Un movimento ne cambia uno: la colonna
+// "Colonna" dei movimenti dice quale (vuota = la Quantità in magazzino).
+const NUMERI = { quantita: 'Quantità', inConsegna: 'In consegna', daMontare: 'Da montare' };
+const suDa = (v) => Object.keys(NUMERI).find((k) => k !== 'quantita' && normalizza(NUMERI[k]) === normalizza(v)) || 'quantita';
+// Cosa chiede il telefono → cosa si scrive nel foglio, e su quale numero.
+const CAUSALI = {
+  carico: 'Arrivata merce', lavoro: 'Usato in un lavoro', tolto: 'Tolto', correzione: 'Contati',
+  ordinato: 'Ordinato al fornitore', venduto: 'Venduto, da montare',
+};
+const SU_DI = { carico: 'quantita', lavoro: 'quantita', tolto: 'quantita', ordinato: 'inConsegna', venduto: 'daMontare' };
+// Scritti dal motore insieme a un altro movimento: la merce arrivata esce da
+// «In consegna», e un articolo venduto usato in un lavoro esce da «Da montare».
+const CAUSALE_MONTATO = 'Montato';
 const CAUSALE_INIZIALE = 'Carico iniziale';
 // Gli Id dei movimenti scritti dal motore («inizio-M001», «nuovo-M087»): il
 // telefono non li usa e non li annulla (un «inizio» li prenderebbe tutti).
@@ -1559,7 +1932,7 @@ const cellaMag = (tab, col, riga) => `'${tab}'!${lettera(col + 1)}${riga}`;
 // magazzino non c'è ancora. `completa`: le righe scritte a mano nel foglio
 // senza codice ricevono il loro M0xx (come farebbe un'automazione).
 async function leggiMagazzino(foglio, { completa = false } = {}) {
-  const intervalli = [`'${TAB_MAGAZZINO}'!A1:L1000`, `'${TAB_MOVIMENTI}'!A1:K6000`];
+  const intervalli = [`'${TAB_MAGAZZINO}'!A1:T1000`, `'${TAB_MOVIMENTI}'!A1:P6000`];
   let griglie;
   try {
     griglie = await foglio.leggiInsieme(intervalli, 'UNFORMATTED_VALUE');
@@ -1581,8 +1954,8 @@ async function leggiMagazzino(foglio, { completa = false } = {}) {
     const v = (k) => (col[k] < 0 ? '' : r[col[k]]);
     const a = {
       riga: i + 1, codice: testo(v('codice')).toUpperCase(), categoria: testo(v('categoria')), descrizione: testo(v('descrizione')).replace(/\s+/g, ' '),
-      fornitore: testo(v('fornitore')), quantita: numeroDa(v('quantita')) ?? 0, scorta: numeroDa(v('scorta')), costo: numeroDa(v('costo')),
-      note: testo(v('note')), aggiornato: dataCella(v('aggiornato')),
+      fornitore: testo(v('fornitore')), quantita: numeroDa(v('quantita')) ?? 0, inConsegna: numeroDa(v('inConsegna')) ?? 0, daMontare: numeroDa(v('daMontare')) ?? 0,
+      scorta: numeroDa(v('scorta')), costo: numeroDa(v('costo')), note: testo(v('note')), aggiornato: dataCella(v('aggiornato')),
     };
     if (a.codice || a.descrizione) articoli.push(a);
   }
@@ -1604,10 +1977,13 @@ async function leggiMagazzino(foglio, { completa = false } = {}) {
     movimenti.push({
       riga: i + 1, id, data: dataCella(v('data')), articolo: testo(v('articolo')).toUpperCase(), descrizione: testo(v('descrizione')),
       quantita: numeroDa(v('quantita')) ?? 0, causale: testo(v('causale')), cliente: testo(v('cliente')).toUpperCase(), nome: testo(v('nome')),
-      lavoro: testo(v('lavoro')), chi: testo(v('chi')).toLowerCase(), note: testo(v('note')),
+      lavoro: testo(v('lavoro')), chi: testo(v('chi')).toLowerCase(), note: testo(v('note')), su: suDa(v('su')),
     });
   }
-  return { col, colMov: cv, articoli, movimenti };
+  // Le colonne «In consegna» e «Da montare» (e «Colonna» nei movimenti) ci
+  // sono? Prima di aggiornaMagazzino no: allora quei numeri non si toccano.
+  const numeri = col.inConsegna >= 0 && col.daMontare >= 0 && cv.su >= 0;
+  return { col, colMov: cv, articoli, movimenti, numeri };
 }
 // Il codice dopo il più alto: M001, M002… (M1000 dopo M999).
 function prossimoArticolo(articoli) {
@@ -1623,6 +1999,8 @@ function magazzinoPerApp(m) {
     articoli: m.articoli.filter((a) => a.codice).map(({ riga, ...a }) => a),
     movimenti: m.movimenti.filter(recente).slice(-3000).map(({ riga, ...x }) => x),
     categorie: CATEGORIE,
+    colori: COLORI_CATEGORIE,
+    numeri: m.numeri,
   };
 }
 
@@ -1632,9 +2010,10 @@ const rigaMovimento = (x) => INTESTAZIONI_MOVIMENTI.map((h) => {
   return v == null ? '' : v;
 });
 // Accoda i movimenti nelle colonne della scheda (che Matteo potrebbe aver
-// spostato): la riga si costruisce sulle intestazioni che ci sono.
+// spostato): la riga si costruisce sulle intestazioni che ci sono. Torna
+// l'intervallo scritto (serve a cambiaMateriali per tornare indietro).
 async function accodaMovimenti(foglio, m, lista) {
-  if (!lista.length) return;
+  if (!lista.length) return null;
   const cv = m.colMov;
   const conIntestazioni = Object.values(cv).some((c) => c >= 0);
   const righe = lista.map((x) => {
@@ -1647,7 +2026,7 @@ async function accodaMovimenti(foglio, m, lista) {
     }
     return r;
   });
-  await foglio.accodaRighe(TAB_MOVIMENTI, INTESTAZIONI_MOVIMENTI, righe);
+  return foglio.accodaRighe(TAB_MOVIMENTI, INTESTAZIONI_MOVIMENTI, righe);
 }
 
 // Aggiunge un articolo nuovo (senza `codice`) o cambia i dati di uno che
@@ -1698,16 +2077,22 @@ export async function salvaArticolo(foglio, dati, { chi = 'app' } = {}) {
 }
 
 // Un movimento del magazzino: merce arrivata (`carico`), usata in un lavoro
-// (`lavoro`, col cliente), tolta per altro (`tolto`: rotta, resa…) o contata
-// (`correzione`: la quantità giusta, non la differenza). `righe` =
-// [{ articolo, quantita }]. Ogni riga diventa un movimento con Id
-// "<id>-<n>". Restituisce le quantità nuove.
+// (`lavoro`, col cliente), tolta per altro (`tolto`: rotta, resa…), contata
+// (`correzione`: il numero giusto, non la differenza; `su` dice quale dei
+// tre numeri), ordinata al fornitore (`ordinato`: In consegna) o venduta a un
+// cliente e da montare (`venduto`: Da montare). `righe` =
+// [{ articolo, quantita }]. Ogni numero cambiato diventa un movimento con Id
+// "<id>-<n>". Due conti si fanno da soli (21 ott 2026): la merce arrivata
+// esce da «In consegna» (fino a quanta ce n'era), e un articolo usato in
+// un'installazione, o un impianto usato in qualsiasi lavoro, esce da «Da
+// montare» (stesso limite). Restituisce i numeri nuovi.
 export async function muoviMagazzino(foglio, dati, { chi = 'app' } = {}) {
   const id = testo(dati.id);
   if (!/^[\w-]{6,40}$/.test(id) || ID_DEL_MOTORE.test(id)) throw problema('Richiesta non valida.');
   const tipo = testo(dati.causale);
   const causale = CAUSALI[tipo];
   if (!causale) throw problema('Richiesta non valida.');
+  const su = tipo === 'correzione' ? (NUMERI[dati.su] ? testo(dati.su) : 'quantita') : SU_DI[tipo];
   const righe = Array.isArray(dati.righe) ? dati.righe : [];
   if (!righe.length || righe.length > 40) throw problema('Scegli almeno un articolo.');
   const quando = dati.data ? leggiDataUtente(dati.data) : oggi();
@@ -1718,47 +2103,75 @@ export async function muoviMagazzino(foglio, dati, { chi = 'app' } = {}) {
 
   const m = await leggiMagazzino(foglio);
   if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
+  if (su !== 'quantita' && !m.numeri) throw problema('Nel foglio il magazzino non ha ancora le colonne «In consegna» e «Da montare». Chiedi a Matteo.', 409);
   // La stessa richiesta arrivata due volte: è già fatta.
   if (m.movimenti.some((x) => x.id.startsWith(`${id}-`))) return { ok: true, giaFatto: true, articoli: [], annulla: { id } };
 
-  const finali = new Map(); // codice → { a, dopo }
+  const finali = new Map(); // "codice|numero" → { a, su, dopo }
+  const ora = (a, s) => (finali.has(`${a.codice}|${s}`) ? finali.get(`${a.codice}|${s}`).dopo : a[s]);
   const movimenti = [];
-  righe.forEach((r, n) => {
+  const base = {
+    data: testoData(quando), cliente: testo(dati.codice).toUpperCase().slice(0, 10), nome: testo(dati.nome).slice(0, 120),
+    lavoro: testo(dati.lavoro).slice(0, 40), chi,
+  };
+  // Cambia un numero e scrive il suo movimento (se è cambiato davvero).
+  const cambia = (a, s, dopo, causaleMov, note) => {
+    const prima = ora(a, s);
+    finali.set(`${a.codice}|${s}`, { a, su: s, dopo: arrotonda(dopo) });
+    const delta = arrotonda(dopo - prima);
+    if (!delta) return; // contati ed erano giusti: niente da scrivere
+    movimenti.push({
+      ...base, id: `${id}-${movimenti.length + 1}`, articolo: a.codice, descrizione: a.descrizione, quantita: delta, causale: causaleMov,
+      note, su: s === 'quantita' ? '' : NUMERI[s],
+    });
+  };
+  const nota = testo(dati.note).replace(/\s+/g, ' ').slice(0, 300);
+  for (const r of righe) {
     const codice = testo(r && r.articolo).toUpperCase();
     const a = m.articoli.find((x) => x.codice === codice);
     if (!a) throw problema('Un articolo non c\'è più nel magazzino. Riapri l\'app e riprova.', 409);
     const q = numeroDa(r.quantita);
     if (q == null || q < 0 || q > 100000 || (tipo !== 'correzione' && q === 0)) throw problema('Controlla le quantità: una non va bene.');
-    const prima = finali.has(codice) ? finali.get(codice).dopo : a.quantita;
-    const dopo = arrotonda(tipo === 'correzione' ? q : tipo === 'carico' ? prima + q : prima - q);
-    finali.set(codice, { a, dopo });
-    const delta = arrotonda(dopo - prima);
-    if (!delta) return; // contati ed erano giusti: niente da scrivere
-    movimenti.push({
-      id: `${id}-${n + 1}`, data: testoData(quando), articolo: codice, descrizione: a.descrizione, quantita: delta, causale,
-      cliente: testo(dati.codice).toUpperCase().slice(0, 10), nome: testo(dati.nome).slice(0, 120), lavoro: testo(dati.lavoro).slice(0, 40),
-      chi, note: testo(dati.note).replace(/\s+/g, ' ').slice(0, 300),
-    });
-  });
-  const articoli = [...finali.values()].map(({ a, dopo }) => ({ codice: a.codice, quantita: dopo }));
+    const prima = ora(a, su);
+    const piu = ['carico', 'ordinato', 'venduto'].includes(tipo);
+    cambia(a, su, tipo === 'correzione' ? q : piu ? prima + q : prima - q, causale, nota);
+    if (!m.numeri) continue;
+    if (tipo === 'carico') {
+      const giu = Math.min(q, Math.max(0, ora(a, 'inConsegna')));
+      if (giu > 0) cambia(a, 'inConsegna', ora(a, 'inConsegna') - giu, causale, 'Era in consegna');
+    }
+    if (tipo === 'lavoro' && (normalizza(dati.lavoro) === 'installazione' || /^impianti/.test(normalizza(a.categoria)))) {
+      const giu = Math.min(q, Math.max(0, ora(a, 'daMontare')));
+      if (giu > 0) cambia(a, 'daMontare', ora(a, 'daMontare') - giu, CAUSALE_MONTATO, 'Era da montare');
+    }
+  }
+  // I numeri nuovi di ogni articolo toccato, per l'app.
+  const perArticolo = new Map();
+  for (const { a, su: s, dopo } of finali.values()) {
+    const x = perArticolo.get(a.codice) || { codice: a.codice, quantita: a.quantita, inConsegna: a.inConsegna, daMontare: a.daMontare };
+    x[s] = dopo;
+    perArticolo.set(a.codice, x);
+  }
+  const articoli = [...perArticolo.values()];
+  const perApp = (x) => ({ ...x, su: suDa(x.su), chi: testo(chi).toLowerCase() });
   if (!movimenti.length) return { ok: true, articoli, movimenti: [], annulla: null };
 
-  const quantita = (lista) => lista.flatMap(({ a, q }) => [
-    { range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[q]] },
+  const celle = (lista) => lista.flatMap(({ a, su: s, v }) => [
+    { range: cellaMag(TAB_MAGAZZINO, m.col[s], a.riga), values: [[v]] },
     ...(m.col.aggiornato >= 0 ? [{ range: cellaMag(TAB_MAGAZZINO, m.col.aggiornato, a.riga), values: [[testoData(oggi())]] }] : []),
   ]);
-  const cambiati = [...finali.values()].filter(({ a, dopo }) => dopo !== a.quantita);
-  await foglio.scrivi(quantita(cambiati.map(({ a, dopo }) => ({ a, q: dopo }))), 'RAW');
+  const cambiati = [...finali.values()].filter(({ a, su: s, dopo }) => dopo !== a[s]);
+  await foglio.scrivi(celle(cambiati.map(({ a, su: s, dopo }) => ({ a, su: s, v: dopo }))), 'RAW');
   try {
     await accodaMovimenti(foglio, m, movimenti);
   } catch (err) {
     // Senza movimenti la stessa richiesta, riprovata, scalerebbe di nuovo:
-    // le quantità tornano com'erano (le date no: non contano).
-    await foglio.scrivi(cambiati.map(({ a }) => ({ range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[a.quantita]] })), 'RAW')
+    // i numeri tornano com'erano (le date no: non contano).
+    await foglio.scrivi(cambiati.map(({ a, su: s }) => ({ range: cellaMag(TAB_MAGAZZINO, m.col[s], a.riga), values: [[a[s]]] })), 'RAW')
       .catch((e) => console.error('Quantità non rimesse:', e));
     throw err;
   }
-  return { ok: true, articoli, movimenti: movimenti.map((x) => ({ ...x, chi: testo(chi).toLowerCase() })), annulla: { id } };
+  return { ok: true, articoli, movimenti: movimenti.map(perApp), annulla: { id } };
 }
 
 // Annulla un movimento (tutte le sue righe): le quantità tornano indietro
@@ -1771,76 +2184,222 @@ export async function annullaMagazzino(foglio, { id }) {
   if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
   const suoi = m.movimenti.filter((x) => x.id.startsWith(`${k}-`));
   if (!suoi.length) return { ok: true, giaAnnullato: true, articoli: [] };
+  // Ogni movimento torna indietro sul suo numero (Quantità, In consegna o Da montare).
   const finali = new Map();
   for (const x of suoi) {
     const a = m.articoli.find((y) => y.codice === x.articolo);
-    if (!a) continue; // articolo tolto dal foglio: il movimento si svuota e basta
-    finali.set(a.codice, { a, dopo: arrotonda((finali.has(a.codice) ? finali.get(a.codice).dopo : a.quantita) - x.quantita) });
+    if (!a || m.col[x.su] < 0) continue; // articolo tolto dal foglio: il movimento si svuota e basta
+    const chiave = `${a.codice}|${x.su}`;
+    finali.set(chiave, { a, su: x.su, dopo: arrotonda((finali.has(chiave) ? finali.get(chiave).dopo : a[x.su]) - x.quantita) });
   }
   const larghezza = Math.max(INTESTAZIONI_MOVIMENTI.length, ...Object.values(m.colMov).map((c) => c + 1));
   await foglio.scrivi([
-    ...[...finali.values()].flatMap(({ a, dopo }) => [
-      { range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[dopo]] },
+    ...[...finali.values()].flatMap(({ a, su: s, dopo }) => [
+      { range: cellaMag(TAB_MAGAZZINO, m.col[s], a.riga), values: [[dopo]] },
       ...(m.col.aggiornato >= 0 ? [{ range: cellaMag(TAB_MAGAZZINO, m.col.aggiornato, a.riga), values: [[testoData(oggi())]] }] : []),
     ]),
     ...suoi.map((x) => ({ range: `'${TAB_MOVIMENTI}'!A${x.riga}:${lettera(larghezza)}${x.riga}`, values: [Array(larghezza).fill('')] })),
   ], 'RAW');
-  return { ok: true, articoli: [...finali.values()].map(({ a, dopo }) => ({ codice: a.codice, quantita: dopo })) };
+  return { ok: true, articoli: [...finali.values()].map(({ a, su: s, dopo }) => ({ codice: a.codice, [s]: dopo })) };
 }
 
-// L'aspetto delle due schede, dato una volta sola quando nascono: testata
-// in grassetto, larghezze, euro, e i colori di chi è da riordinare (sotto
-// la scorta minima: arancio), finito (0: grigio) o sotto zero (da contare:
-// rosso). Le formule dei colori non hanno separatori: valgono in ogni lingua.
-function aspettoMagazzino(id) {
-  const rgb = (h) => ({ red: parseInt(h.slice(1, 3), 16) / 255, green: parseInt(h.slice(3, 5), 16) / 255, blue: parseInt(h.slice(5, 7), 16) / 255 });
+// I materiali di un intervento fatto, segnati o corretti dopo (21 ott 2026,
+// Matteo: «se uno se ne scorda, e per cambiare se uno sbaglia; se uno cambia
+// si deve correggere anche il magazzino, non vorrei che si sommino i pezzi»).
+// `righe` è l'elenco GIUSTO dei materiali usati quel giorno da quel cliente
+// (anche vuoto = nessuno), non quelli da aggiungere: i movimenti «Usato in un
+// lavoro» già segnati per quell'intervento (stesso cliente, stessa data,
+// stesso `lavoro`: Manutenzione, che vale anche senza lavoro, o Guasto per
+// una riparazione) si tolgono e i loro pezzi tornano in
+// magazzino, poi si scrivono quelli nuovi. Così il conto è sempre quello
+// dell'ultima volta. Prima si accodano i movimenti nuovi, poi in una
+// scrittura sola le quantità e lo svuotamento dei vecchi; se quella non
+// riesce, i nuovi si svuotano. Arrivata due volte (stesso `id`) non rifà niente.
+// L'annulla è un altro cambio, con le righe di prima.
+export async function cambiaMateriali(foglio, dati, { chi = 'app' } = {}) {
+  const id = testo(dati.id);
+  if (!/^[\w-]{6,40}$/.test(id) || ID_DEL_MOTORE.test(id)) throw problema('Richiesta non valida.');
+  const cod = testo(dati.codice).toUpperCase();
+  if (!/^C\d+$/.test(cod)) throw problema('Codice cliente non valido.');
+  const quando = leggiDataUtente(dati.data);
+  if (!quando) throw problema('Data non valida.');
+  const serQuando = serialeDa(quando.a, quando.m, quando.g);
+  const serOggi = serialeDa(...Object.values(oggi()));
+  if (serQuando > serOggi + 1 || serQuando < serOggi - 730) throw problema('Controlla la data: è troppo lontana.');
+  const giorno = testoData(quando);
+  const elenco = Array.isArray(dati.righe) ? dati.righe : [];
+  if (elenco.length > 40) throw problema('Troppi articoli insieme.');
+  const lavoro = LAVORI.find((l) => normalizza(l) === normalizza(dati.lavoro)) || 'Manutenzione';
+  const lavoroCombacia = (v) => normalizza(v) === normalizza(lavoro) || (lavoro === 'Manutenzione' && !normalizza(v));
+
+  const m = await leggiMagazzino(foglio);
+  if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
+  if (m.movimenti.some((x) => x.id.startsWith(`${id}-`))) return { ok: true, giaFatto: true, articoli: [], annulla: null };
+
+  // Le quantità che si vogliono, per articolo (lo stesso articolo due volte si somma).
+  const voluti = new Map();
+  for (const r of elenco) {
+    const codice = testo(r && r.articolo).toUpperCase();
+    const q = numeroDa(r && r.quantita);
+    if (q == null || q < 0 || q > 100000) throw problema('Controlla le quantità: una non va bene.');
+    if (!q) continue;
+    if (!m.articoli.some((x) => x.codice === codice)) throw problema('Un articolo non c\'è più nel magazzino. Riapri l\'app e riprova.', 409);
+    voluti.set(codice, arrotonda((voluti.get(codice) || 0) + q));
+  }
+  const vecchi = m.movimenti.filter((x) => x.cliente === cod && x.data === giorno && x.causale === CAUSALI.lavoro
+    && lavoroCombacia(x.lavoro) && !ID_DEL_MOTORE.test(x.id));
+  const prima = new Map(); // quelli segnati finora, per l'annulla
+  for (const x of vecchi) prima.set(x.articolo, arrotonda((prima.get(x.articolo) || 0) - x.quantita));
+
+  // Quantità finali: si rimette quello che c'era e si toglie quello giusto.
+  const finali = new Map();
+  const dopoDi = (a) => (finali.has(a.codice) ? finali.get(a.codice).dopo : a.quantita);
+  for (const x of vecchi) {
+    const a = m.articoli.find((y) => y.codice === x.articolo);
+    if (a) finali.set(a.codice, { a, dopo: arrotonda(dopoDi(a) - x.quantita) });
+  }
+  const nome = testo(dati.nome).slice(0, 120) || (vecchi[0] && vecchi[0].nome) || '';
+  const nuovi = [];
+  let n = 0;
+  for (const [codice, q] of voluti) {
+    const a = m.articoli.find((y) => y.codice === codice);
+    finali.set(codice, { a, dopo: arrotonda(dopoDi(a) - q) });
+    nuovi.push({
+      id: `${id}-${++n}`, data: giorno, articolo: codice, descrizione: a.descrizione, quantita: -q, causale: CAUSALI.lavoro,
+      cliente: cod, nome, lavoro, chi, note: vecchi.length ? 'Corretti dopo' : 'Segnati dopo',
+    });
+  }
+  const cambiati = [...finali.values()].filter(({ a, dopo }) => dopo !== a.quantita);
+  if (!vecchi.length && !nuovi.length) return { ok: true, articoli: [], movimenti: [], annulla: null };
+
+  const accodati = await accodaMovimenti(foglio, m, nuovi);
+  const larghezza = Math.max(INTESTAZIONI_MOVIMENTI.length, ...Object.values(m.colMov).map((c) => c + 1));
+  try {
+    await foglio.scrivi([
+      ...cambiati.flatMap(({ a, dopo }) => [
+        { range: cellaMag(TAB_MAGAZZINO, m.col.quantita, a.riga), values: [[dopo]] },
+        ...(m.col.aggiornato >= 0 ? [{ range: cellaMag(TAB_MAGAZZINO, m.col.aggiornato, a.riga), values: [[testoData(oggi())]] }] : []),
+      ]),
+      ...vecchi.map((x) => ({ range: `'${TAB_MOVIMENTI}'!A${x.riga}:${lettera(larghezza)}${x.riga}`, values: [Array(larghezza).fill('')] })),
+    ], 'RAW');
+  } catch (err) {
+    // I movimenti nuovi senza le quantità farebbero contare due volte: via.
+    if (typeof accodati === 'string' && /^'?Movimenti-Magazzino'?!A\d+:[A-Z]+\d+$/.test(accodati)) {
+      await foglio.svuota(accodati).catch((e) => console.error('Movimenti nuovi non svuotati:', e));
+    }
+    throw err;
+  }
+  return {
+    ok: true,
+    articoli: [...finali.values()].map(({ a, dopo }) => ({ codice: a.codice, quantita: dopo })),
+    movimenti: nuovi.map((x) => ({ ...x, chi: testo(chi).toLowerCase() })),
+    annulla: { codice: cod, data: giorno, nome, lavoro, righe: [...prima].filter(([, q]) => q > 0).map(([articolo, quantita]) => ({ articolo, quantita })) },
+  };
+}
+
+// L'aspetto delle due schede. Le colonne si trovano dall'intestazione (dal
+// 21 ott 2026 ce ne sono tre in più dopo la Quantità). Le formule dei colori
+// non hanno separatori: valgono in ogni lingua.
+// Dove sta ogni colonna (da 0; -1 = non c'è). Le intestazioni fatte di
+// formula ({"Valore";ARRAYFORMULA(…)}) valgono per il loro nome.
+const nomeIntestazione = (v) => (testo(v).match(/^={"([^"]+)"/) || [])[1] || testo(v);
+function posizioniMagazzino(testa) {
+  const nomi = (testa || []).map((v) => normalizza(nomeIntestazione(v)));
+  const p = (h) => nomi.indexOf(normalizza(h));
+  const pos = {
+    codice: p('Codice'), categoria: p('Categoria'), descrizione: p('Descrizione'), fornitore: p('Codice fornitore'), quantita: p('Quantità'),
+    inConsegna: p('In consegna'), daMontare: p('Da montare'), totale: p('Totale disponibile'), scorta: p('Scorta minima'), costo: p('Costo'),
+    note: p('Note'), aggiornato: p('Aggiornato il'), valore: p('Valore'),
+  };
+  pos.ultima = Math.max(...Object.values(pos));
+  // Le scritte riassuntive in testata, dopo la tabella.
+  pos.riassunto = (testa || []).findIndex((v, i) => i > pos.ultima && /^="Valore del magazzino/i.test(testo(v)));
+  pos.riordinare = (testa || []).findIndex((v, i) => i > pos.ultima && /^="Da riordinare/i.test(testo(v)));
+  return pos;
+}
+const L = (i) => lettera(i + 1);
+// Il totale: quelli che ci sono, più quelli in arrivo, meno quelli già venduti.
+const formulaTotale = (pos) => `={"Totale disponibile";ARRAYFORMULA(IF(LEN(${L(pos.codice)}2:${L(pos.codice)});IFERROR(${L(pos.quantita)}2:${L(pos.quantita)}+${L(pos.inConsegna)}2:${L(pos.inConsegna)}-${L(pos.daMontare)}2:${L(pos.daMontare)};"");""))}`;
+// «Da riordinare» si guarda sul totale, se c'è (prima del 21 ott 2026 sulla quantità).
+const suTotale = (pos) => (pos.totale >= 0 ? pos.totale : pos.quantita);
+const formulaRiordinare = (pos) => {
+  const [a, s, t] = [L(pos.codice), L(pos.scorta), L(suTotale(pos))];
+  return `="Da riordinare: "&SUMPRODUCT((${a}2:${a}<>"")*(${s}2:${s}<>"")*(${t}2:${t}<=${s}2:${s}))`;
+};
+// Le visualizzazioni filtro oltre a quelle per categoria: [titolo, colonna, formula].
+function vistePiu(pos) {
+  const a = `$${L(pos.codice)}2<>""`;
+  const v = [
+    ['Da riordinare', suTotale(pos), `=(${a})*($${L(pos.scorta)}2<>"")*($${L(suTotale(pos))}2<=$${L(pos.scorta)}2)`],
+    ['Finiti', pos.quantita, `=(${a})*($${L(pos.quantita)}2<=0)`],
+  ];
+  if (pos.inConsegna >= 0) v.push(['In consegna', pos.inConsegna, `=(${a})*($${L(pos.inConsegna)}2>0)`]);
+  if (pos.daMontare >= 0) v.push(['Da montare', pos.daMontare, `=(${a})*($${L(pos.daMontare)}2>0)`]);
+  return v;
+}
+const rgb = (h) => ({ red: parseInt(h.slice(1, 3), 16) / 255, green: parseInt(h.slice(3, 5), 16) / 255, blue: parseInt(h.slice(5, 7), 16) / 255 });
+// I colori: sui numeri (Quantità…Valore) sotto zero rosso (anche un totale
+// sotto zero: si è venduto più di quel che c'è e arriva, va ordinato
+// subito), da riordinare arancio, finito grigio; e su Codice…Codice
+// fornitore il colore della categoria (21 ott 2026: «evidenziare con colori
+// diversi impianti, miscelatori, filtri così da sapere subito dove cercare»).
+function regoleMagazzino(id, pos) {
+  const zona = (da, a) => [{ sheetId: id, startRowIndex: 1, startColumnIndex: da, endColumnIndex: a }];
+  const regole = [];
+  const regola = (ranges, formula, format) => regole.push({ addConditionalFormatRule: { index: regole.length, rule: { ranges, booleanRule: { condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: formula }] }, format } } } });
+  const a = `$${L(pos.codice)}2<>""`;
+  const q = `$${L(pos.quantita)}2`;
+  const t = `$${L(suTotale(pos))}2`;
+  const numeri = zona(pos.quantita, pos.ultima + 1);
+  regola(numeri, `=(${a})*((${q}<0)+(${t}<0))`, { backgroundColor: rgb('#fde7e5'), textFormat: { foregroundColor: rgb('#b3261e') } });
+  if (pos.scorta >= 0) regola(numeri, `=(${a})*($${L(pos.scorta)}2<>"")*(${t}<=$${L(pos.scorta)}2)`, { backgroundColor: rgb('#fff1d6') });
+  regola(numeri, `=(${a})*(${q}=0)`, { textFormat: { foregroundColor: rgb('#8a97a5') } });
+  if (pos.categoria >= 0) {
+    for (const [c, colore] of Object.entries(COLORI_CATEGORIE)) regola(zona(0, pos.quantita), `=$${L(pos.categoria)}2="${c}"`, { backgroundColor: rgb(colore) });
+  }
+  return regole;
+}
+function aspettoMagazzino(id, pos) {
   const colonne = (da, a) => ({ sheetId: id, startRowIndex: 1, startColumnIndex: da, endColumnIndex: a });
-  const regola = (indice, formula, format) => ({ addConditionalFormatRule: { index: indice, rule: { ranges: [colonne(0, 10)], booleanRule: { condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: formula }] }, format } } } });
   const euro = (c) => ({ repeatCell: { range: colonne(c, c + 1), cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '"€" #,##0.00' } } }, fields: 'userEnteredFormat.numberFormat' } });
-  const larghezze = [70, 160, 440, 150, 90, 110, 90, 220, 110, 100, 30, 300, 180];
+  const larghezze = { codice: 70, categoria: 160, descrizione: 440, fornitore: 150, quantita: 90, inConsegna: 95, daMontare: 95, totale: 130, scorta: 110, costo: 90, note: 220, aggiornato: 110, valore: 100, riassunto: 300, riordinare: 180 };
+  const centro = [pos.quantita, pos.inConsegna, pos.daMontare, pos.totale].filter((c) => c >= 0);
   return [
-    { repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 13 }, cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: rgb('#eaf4fe') } }, fields: 'userEnteredFormat(textFormat,backgroundColor)' } },
-    ...larghezze.map((px, i) => ({ updateDimensionProperties: { range: { sheetId: id, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 }, properties: { pixelSize: px }, fields: 'pixelSize' } })),
-    euro(6), euro(9),
-    { repeatCell: { range: colonne(4, 6), cell: { userEnteredFormat: { horizontalAlignment: 'CENTER', textFormat: { bold: true } } }, fields: 'userEnteredFormat(horizontalAlignment,textFormat)' } },
-    regola(0, '=($A2<>"")*($E2<0)', { backgroundColor: rgb('#fde7e5'), textFormat: { foregroundColor: rgb('#b3261e') } }),
-    regola(1, '=($A2<>"")*($F2<>"")*($E2<=$F2)', { backgroundColor: rgb('#fff1d6') }),
-    regola(2, '=($A2<>"")*($E2=0)', { textFormat: { foregroundColor: rgb('#8a97a5') } }),
+    { repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: Math.max(pos.ultima + 1, pos.riordinare + 1) }, cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: rgb('#eaf4fe') } }, fields: 'userEnteredFormat(textFormat,backgroundColor)' } },
+    ...Object.entries(larghezze).filter(([k]) => pos[k] >= 0).map(([k, px]) => ({ updateDimensionProperties: { range: { sheetId: id, dimension: 'COLUMNS', startIndex: pos[k], endIndex: pos[k] + 1 }, properties: { pixelSize: px }, fields: 'pixelSize' } })),
+    ...[pos.costo, pos.valore].filter((c) => c >= 0).map(euro),
+    ...centro.map((c) => ({ repeatCell: { range: colonne(c, c + 1), cell: { userEnteredFormat: { horizontalAlignment: 'CENTER', textFormat: { bold: true } } }, fields: 'userEnteredFormat(horizontalAlignment,textFormat)' } })),
+    ...regoleMagazzino(id, pos),
   ];
 }
 function aspettoMovimenti(id) {
-  const larghezze = [150, 95, 75, 380, 85, 150, 75, 220, 110, 90, 260];
+  const larghezze = [150, 95, 75, 380, 85, 150, 75, 220, 110, 90, 260, 100];
   return [
-    { repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11 }, cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.918, green: 0.957, blue: 0.996 } } }, fields: 'userEnteredFormat(textFormat,backgroundColor)' } },
+    { repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: larghezze.length }, cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.918, green: 0.957, blue: 0.996 } } }, fields: 'userEnteredFormat(textFormat,backgroundColor)' } },
     ...larghezze.map((px, i) => ({ updateDimensionProperties: { range: { sheetId: id, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 }, properties: { pixelSize: px }, fields: 'pixelSize' } })),
     { repeatCell: { range: { sheetId: id, startRowIndex: 1, startColumnIndex: 4, endColumnIndex: 5 }, cell: { userEnteredFormat: { numberFormat: { type: 'NUMBER', pattern: '+0.##;-0.##;0' }, horizontalAlignment: 'CENTER', textFormat: { bold: true } } }, fields: 'userEnteredFormat(numberFormat,horizontalAlignment,textFormat)' } },
   ];
 }
+const testaMagazzino = async (foglio) => ((await foglio.leggi(`'${TAB_MAGAZZINO}'!A1:T1`, 'FORMULA'))[0] || []);
 
 // Le categorie dal PC (20 ott 2026, Matteo: «se uno usa il foglio dal PC non
 // c'è modo di dividere le categorie?»). La scheda resta una sola (l'app legge
 // e scrive lì), ma si guarda una categoria alla volta:
 // - il riquadro «Filtra per categoria» (filtro dati / slicer) accanto al totale;
 // - una visualizzazione filtro per categoria, più «Da riordinare» e «Finiti»
-//   (Dati → Visualizzazioni filtro: valgono solo per chi le apre);
+//   (e dal 21 ott 2026 «In consegna» e «Da montare») (Dati → Visualizzazioni
+//   filtro: valgono solo per chi le apre);
 // - il menu a tendina nella colonna Categoria, così a mano non si sbaglia a
 //   scriverla (un nome diverso finirebbe in «Altro»).
 // Le righe nascoste dal filtro l'app le legge e le scrive lo stesso. Rifatta
 // una seconda volta non raddoppia niente: salta quello che c'è già.
 const TITOLO_RIQUADRO = 'Filtra per categoria';
-const VISTE_EXTRA = [
-  ['Da riordinare', 4, '=($A2<>"")*($F2<>"")*($E2<=$F2)'],
-  ['Finiti', 4, '=($A2<>"")*($E2<=0)'],
-];
-export async function vistePerCategoria(foglio, _dati, { chi } = {}) {
-  if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
-  const info = await foglio.infoScheda(TAB_MAGAZZINO);
-  if (!info) throw problema('Il magazzino non c\'è ancora nel foglio.', 409);
+function richiesteViste(info, pos) {
   const { sheetId: id, righe, slicers, filterViews } = info;
-  const tabella = { sheetId: id, startRowIndex: 0, endRowIndex: righe, startColumnIndex: 0, endColumnIndex: 10 };
+  const tabella = { sheetId: id, startRowIndex: 0, endRowIndex: righe, startColumnIndex: 0, endColumnIndex: pos.ultima + 1 };
   const richieste = [{
     setDataValidation: {
-      range: { sheetId: id, startRowIndex: 1, endRowIndex: Math.min(righe, 500), startColumnIndex: 1, endColumnIndex: 2 },
+      range: { sheetId: id, startRowIndex: 1, endRowIndex: Math.min(righe, 500), startColumnIndex: pos.categoria, endColumnIndex: pos.categoria + 1 },
       rule: { condition: { type: 'ONE_OF_LIST', values: CATEGORIE.map((c) => ({ userEnteredValue: c })) }, strict: true, showCustomUi: true },
     },
   }];
@@ -1848,32 +2407,91 @@ export async function vistePerCategoria(foglio, _dati, { chi } = {}) {
     richieste.push({
       addSlicer: {
         slicer: {
-          spec: { dataRange: tabella, columnIndex: 1, title: TITOLO_RIQUADRO, applyToPivotTables: false },
-          position: { overlayPosition: { anchorCell: { sheetId: id, rowIndex: 2, columnIndex: 11 }, offsetXPixels: 8, offsetYPixels: 0, widthPixels: 280, heightPixels: 56 } },
+          spec: { dataRange: tabella, columnIndex: pos.categoria, title: TITOLO_RIQUADRO, applyToPivotTables: false },
+          position: { overlayPosition: { anchorCell: { sheetId: id, rowIndex: 2, columnIndex: pos.riassunto >= 0 ? pos.riassunto : pos.ultima + 2 }, offsetXPixels: 8, offsetYPixels: 0, widthPixels: 280, heightPixels: 56 } },
         },
       },
     });
   }
   const viste = [
-    ...CATEGORIE.map((c) => [c, 1, { condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: c }] } }]),
-    ...VISTE_EXTRA.map(([t, col, formula]) => [t, col, { condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: formula }] } }]),
+    ...CATEGORIE.map((c) => [c, pos.categoria, { condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: c }] } }]),
+    ...vistePiu(pos).map(([t, col, formula]) => [t, col, { condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: formula }] } }]),
   ];
   for (const [titolo, col, filterCriteria] of viste) {
     if (filterViews.includes(titolo)) continue;
     richieste.push({ addFilterView: { filter: { title: titolo, range: tabella, filterSpecs: [{ columnIndex: col, filterCriteria }] } } });
   }
-  // Tutto o niente (un batchUpdate solo). Se Google rifiuta, il motivo torna
-  // a chi l'ha chiesto (solo Matteo): serve a correggere la richiesta.
-  await foglio.aspetto(TAB_MAGAZZINO, () => richieste).catch((err) => {
-    throw problema(`Google non l'accetta: ${String(err.testo || err.message).replace(/\s+/g, ' ').slice(0, 400)}`, 502);
-  });
-  return { ok: true, richieste: richieste.length, riquadro: !slicers.includes(TITOLO_RIQUADRO), viste: richieste.filter((r) => r.addFilterView).length };
+  return richieste;
+}
+// Tutto o niente (un batchUpdate solo). Se Google rifiuta, il motivo torna a
+// chi l'ha chiesto (solo Matteo): serve a correggere la richiesta.
+const aspettoOErrore = (foglio, tab, richieste) => foglio.aspetto(tab, () => richieste).catch((err) => {
+  throw problema(`Google non l'accetta: ${String(err.testo || err.message).replace(/\s+/g, ' ').slice(0, 400)}`, 502);
+});
+export async function vistePerCategoria(foglio, _dati, { chi } = {}) {
+  if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
+  const info = await foglio.infoScheda(TAB_MAGAZZINO);
+  if (!info) throw problema('Il magazzino non c\'è ancora nel foglio.', 409);
+  const pos = posizioniMagazzino(await testaMagazzino(foglio));
+  const richieste = richiesteViste(info, pos);
+  await aspettoOErrore(foglio, TAB_MAGAZZINO, richieste);
+  return { ok: true, richieste: richieste.length, riquadro: !info.slicers.includes(TITOLO_RIQUADRO), viste: richieste.filter((r) => r.addFilterView).length };
+}
+
+// Aggiorna il magazzino nato il 20 ott 2026 (solo la chiave di Matteo; si
+// può rifare, salta quello che c'è già): tre colonne nuove subito dopo la
+// Quantità («In consegna», «Da montare», «Totale disponibile»: inserite come
+// colonne, così Google sposta da solo formule, filtri e riquadro), la
+// scritta «Da riordinare» e la visualizzazione filtro sul totale, le
+// visualizzazioni «In consegna» e «Da montare», i colori rifatti (anche
+// quelli delle categorie), e nei movimenti la colonna «Colonna».
+export async function aggiornaMagazzino(foglio, _dati, { chi } = {}) {
+  if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
+  const prima = await foglio.infoScheda(TAB_MAGAZZINO);
+  if (!prima) throw problema('Il magazzino non c\'è ancora nel foglio.', 409);
+  const fatto = [];
+  let pos = posizioniMagazzino(await testaMagazzino(foglio));
+  if (pos.codice < 0 || pos.quantita < 0 || pos.categoria < 0) throw problema('Nel foglio Magazzino non trovo Codice, Categoria o Quantità.', 409);
+  if (pos.inConsegna < 0 && pos.daMontare < 0 && pos.totale < 0) {
+    const q = pos.quantita;
+    await aspettoOErrore(foglio, TAB_MAGAZZINO, [{ insertDimension: { range: { sheetId: prima.sheetId, dimension: 'COLUMNS', startIndex: q + 1, endIndex: q + 4 }, inheritFromBefore: true } }]);
+    await foglio.scrivi([{ range: `'${TAB_MAGAZZINO}'!${L(q + 1)}1:${L(q + 2)}1`, values: [['In consegna', 'Da montare']] }], 'RAW');
+    await foglio.scrivi([{ range: `'${TAB_MAGAZZINO}'!${L(q + 3)}1`, values: [[formulaTotale({ ...pos, inConsegna: q + 1, daMontare: q + 2 })]] }], 'USER_ENTERED');
+    fatto.push('colonne In consegna, Da montare e Totale disponibile');
+    pos = posizioniMagazzino(await testaMagazzino(foglio));
+  } else if (pos.inConsegna < 0 || pos.daMontare < 0 || pos.totale < 0) {
+    throw problema('Le colonne nuove ci sono solo in parte: sistemale a mano prima.', 409);
+  }
+  if (pos.riordinare >= 0) {
+    await foglio.scrivi([{ range: `'${TAB_MAGAZZINO}'!${L(pos.riordinare)}1`, values: [[formulaRiordinare(pos)]] }], 'USER_ENTERED');
+    fatto.push('scritta Da riordinare sul totale');
+  }
+  // Colori e visualizzazioni: le regole vecchie via tutte, poi quelle giuste;
+  // «Da riordinare» si rifà (guardava la quantità), le altre si aggiungono se mancano.
+  const info = await foglio.infoScheda(TAB_MAGAZZINO);
+  const via = [
+    ...Array.from({ length: info.regole || 0 }, () => ({ deleteConditionalFormatRule: { sheetId: info.sheetId, index: 0 } })),
+    ...(info.idViste && info.idViste['Da riordinare'] != null ? [{ deleteFilterView: { filterId: info.idViste['Da riordinare'] } }] : []),
+  ];
+  const restano = { ...info, filterViews: info.filterViews.filter((t) => t !== 'Da riordinare' || !(info.idViste && info.idViste[t] != null)) };
+  const richieste = [...via, ...aspettoMagazzino(info.sheetId, pos), ...richiesteViste(restano, pos)];
+  await aspettoOErrore(foglio, TAB_MAGAZZINO, richieste);
+  fatto.push(`colori e filtri (${richieste.length} richieste)`);
+
+  const testaMov = ((await foglio.leggi(`'${TAB_MOVIMENTI}'!A1:P1`, 'FORMATTED_VALUE'))[0] || []).map(testo);
+  if (testaMov.length && !testaMov.some((v) => normalizza(v) === 'colonna')) {
+    await foglio.scrivi([{ range: `'${TAB_MOVIMENTI}'!${L(testaMov.length)}1`, values: [['Colonna']] }], 'RAW');
+    await foglio.aspetto(TAB_MOVIMENTI, aspettoMovimenti).catch((err) => console.error('Aspetto dei movimenti non dato:', err));
+    fatto.push('colonna Colonna nei movimenti');
+  }
+  return { ok: true, fatto };
 }
 
 // Crea il magazzino nel foglio dagli articoli del vecchio Magazzino.xlsx
 // (una volta sola, solo la chiave di Matteo): codici M001…, quantità, e un
 // movimento «Carico iniziale» per ogni articolo che c'è. Se il magazzino ha
-// già degli articoli si ferma: non riscrive niente.
+// già degli articoli si ferma: non riscrive niente. Nasce già con le colonne
+// del 21 ott 2026.
 export async function importaMagazzino(foglio, { articoli = [] }, { chi } = {}) {
   if (chi !== 'matteo') throw problema('Questa operazione la può fare solo Matteo.', 403);
   if (!Array.isArray(articoli) || !articoli.length || articoli.length > 500) throw problema('Articoli non validi.');
@@ -1886,26 +2504,34 @@ export async function importaMagazzino(foglio, { articoli = [] }, { chi } = {}) 
     const q = numeroDa(x.quantita) ?? 0;
     const costo = numeroDa(x.costo);
     return { codice: `M${String(i + 1).padStart(3, '0')}`, categoria: categoriaDa(x.categoria), descrizione, fornitore: testo(x.fornitore).slice(0, 60),
-      quantita: arrotonda(q), scorta: '', costo: costo == null ? '' : arrotonda(costo), note: testo(x.note).slice(0, 300), aggiornato: giorno };
+      quantita: arrotonda(q), inConsegna: '', daMontare: '', scorta: '', costo: costo == null ? '' : arrotonda(costo), note: testo(x.note).slice(0, 300), aggiornato: giorno };
   });
   await foglio.creaScheda(TAB_MAGAZZINO);
   await foglio.creaScheda(TAB_MOVIMENTI);
-  const valori = (o) => Object.keys(CAMPI_ARTICOLO).map((k) => o[k]);
+  // Ogni valore sotto la sua intestazione (il totale è una formula: lì niente).
+  const chiaveDi = Object.fromEntries(Object.entries(CAMPI_ARTICOLO).map(([k, h]) => [h, k]));
+  const valori = (o) => INTESTAZIONI_MAGAZZINO.map((h) => (chiaveDi[h] ? o[chiaveDi[h]] : ''));
   await foglio.scrivi([
     { range: `'${TAB_MAGAZZINO}'!A1:${lettera(INTESTAZIONI_MAGAZZINO.length)}${righe.length + 1}`, values: [INTESTAZIONI_MAGAZZINO, ...righe.map(valori)] },
     { range: `'${TAB_MOVIMENTI}'!A1:${lettera(INTESTAZIONI_MOVIMENTI.length)}1`, values: [INTESTAZIONI_MOVIMENTI] },
   ], 'RAW');
-  // Il valore di ogni riga e, in testata, il totale e quanti sono da riordinare.
+  // Il totale e il valore di ogni riga e, in testata dopo una colonna vuota,
+  // il valore del magazzino e quanti sono da riordinare.
+  const pos = posizioniMagazzino(INTESTAZIONI_MAGAZZINO);
+  const v = pos.ultima + 1;
+  const [q, c] = [L(pos.quantita), L(pos.costo)];
   await foglio.scrivi([
-    { range: `'${TAB_MAGAZZINO}'!J1`, values: [['={"Valore";ARRAYFORMULA(IF(LEN(A2:A);IFERROR(E2:E*G2:G;0);""))}']] },
-    { range: `'${TAB_MAGAZZINO}'!L1`, values: [['="Valore del magazzino: € "&FIXED(SUM(J2:J);2)']] },
-    { range: `'${TAB_MAGAZZINO}'!M1`, values: [['="Da riordinare: "&SUMPRODUCT((A2:A<>"")*(F2:F<>"")*(E2:E<=F2:F))']] },
+    { range: `'${TAB_MAGAZZINO}'!${L(pos.totale)}1`, values: [[formulaTotale(pos)]] },
+    { range: `'${TAB_MAGAZZINO}'!${L(v)}1`, values: [[`={"Valore";ARRAYFORMULA(IF(LEN(A2:A);IFERROR(${q}2:${q}*${c}2:${c};0);""))}`]] },
+    { range: `'${TAB_MAGAZZINO}'!${L(v + 2)}1`, values: [[`="Valore del magazzino: € "&FIXED(SUM(${L(v)}2:${L(v)});2)`]] },
+    { range: `'${TAB_MAGAZZINO}'!${L(v + 3)}1`, values: [[formulaRiordinare(pos)]] },
   ], 'USER_ENTERED');
   const m = { colMov: Object.fromEntries(Object.keys(CAMPI_MOVIMENTO).map((k, i) => [k, i])) };
   await accodaMovimenti(foglio, m, righe.filter((a) => a.quantita).map((a) => ({
-    id: `inizio-${a.codice}`, data: giorno, articolo: a.codice, descrizione: a.descrizione, quantita: a.quantita, causale: CAUSALE_INIZIALE, chi, note: 'Dal file Magazzino.xlsx',
+    id: `inizio-${a.codice}`, data: giorno, articolo: a.codice, descrizione: a.descrizione, quantita: a.quantita, causale: CAUSALE_INIZIALE, chi, note: 'Dal file Magazzino.xlsx', su: '',
   })));
-  await foglio.aspetto(TAB_MAGAZZINO, aspettoMagazzino).catch((err) => console.error('Aspetto del magazzino non dato:', err));
+  const fatta = posizioniMagazzino(await testaMagazzino(foglio));
+  await foglio.aspetto(TAB_MAGAZZINO, (id) => aspettoMagazzino(id, fatta)).catch((err) => console.error('Aspetto del magazzino non dato:', err));
   await foglio.aspetto(TAB_MOVIMENTI, aspettoMovimenti).catch((err) => console.error('Aspetto dei movimenti non dato:', err));
   return { ok: true, articoli: righe.length, movimenti: righe.filter((a) => a.quantita).length };
 }
@@ -1948,14 +2574,18 @@ export function creaFoglioGoogle(sheetId) {
       const r = await chiama(`/values:batchGet?${q}&valueRenderOption=${render}&dateTimeRenderOption=SERIAL_NUMBER`);
       return (r.valueRanges || []).map((v) => v.values ?? []);
     },
-    // Id, righe, filtri dati (slicer) e visualizzazioni filtro di una scheda (null = non c'è).
+    // Id, righe, filtri dati (slicer), visualizzazioni filtro (titoli e, in
+    // idViste, i loro id) e quante regole di formattazione condizionale ha
+    // una scheda (null = non c'è).
     async infoScheda(tab) {
-      const meta = await chiama(`?fields=${encodeURIComponent('sheets(properties(sheetId,title,gridProperties(rowCount)),slicers(spec(title)),filterViews(title))')}`);
+      const meta = await chiama(`?fields=${encodeURIComponent('sheets(properties(sheetId,title,gridProperties(rowCount)),slicers(spec(title)),filterViews(title,filterViewId),conditionalFormats(ranges(sheetId)))')}`);
       const s = (meta.sheets || []).find((x) => x.properties.title === tab);
       if (!s) return null;
       return {
         sheetId: s.properties.sheetId, righe: s.properties.gridProperties?.rowCount || 1000,
         slicers: (s.slicers || []).map((x) => x.spec?.title || ''), filterViews: (s.filterViews || []).map((x) => x.title || ''),
+        idViste: Object.fromEntries((s.filterViews || []).map((x) => [x.title || '', x.filterViewId])),
+        regole: (s.conditionalFormats || []).length,
       };
     },
     // Formattazione di una scheda: `richieste(sheetId)` dà le richieste di batchUpdate.

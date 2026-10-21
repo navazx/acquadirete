@@ -1,4 +1,4 @@
-// App "Gestione" per il telefono di babbo: manutenzioni, clienti e contatti
+// App "Gestione" per i telefoni di Stefano (babbo), Matteo e della segretaria: manutenzioni, clienti e contatti
 // del Gestionale_Clienti. Tutto passa da /api/gestione
 // (netlify/functions/gestione.mjs), che legge e scrive il foglio.
 //
@@ -94,6 +94,9 @@
     frecciaSx: '<path d="M15 5l-7 7 7 7"/>',
     frecciaDx: '<path d="M9 5l7 7-7 7"/>',
     scatola: '<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/>',
+    ingranaggio: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+    cestino: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+    scudo: '<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -224,6 +227,8 @@
           oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati,
           storico: r.storico || [], io: r.io || '', persone: r.persone || [], tappe: r.tappe || [],
           magazzino: r.magazzino || null,
+          nomi: r.nomi || {}, permessi: r.permessi || {}, titolare: !!r.titolare,
+          accessi: r.accessi || null, elencoPermessi: r.elencoPermessi || null,
         };
         // Le azioni ancora in coda: il foglio non le ha, lo schermo sì.
         for (const v of appenaArrivati) if (Date.now() - v.quando < 120000) APPLICA[v.azione](nuovi, v.dati);
@@ -294,7 +299,7 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri, magazzino: schermoMagazzino };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri, magazzino: schermoMagazzino, impostazioni: schermoImpostazioni };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
@@ -391,26 +396,43 @@
   // ---------------------------------------------------------------------
   //  Giri del giorno, e come hanno pagato (19 ott 2026, richieste di Matteo)
   // ---------------------------------------------------------------------
-  // Due giri condivisi fra i telefoni: quello di chi usa l'app («tu») e
-  // quello dell'altro (i nomi delle chiavi, "babbo" e "matteo"). Il foglio
-  // li tiene nella colonna "Chi ci va" di ogni cliente.
+  // Un giro per ognuno di quelli che vanno dai clienti (dati.persone: i nomi
+  // delle chiavi col permesso «giro», "matteo" e "babbo"; la segretaria no).
+  // Dal 21 ott 2026 l'app li chiama per nome, «Giro di Matteo», «Giro di
+  // Stefano», mai «il tuo» o «babbo» (richiesta di Matteo): i nomi veri
+  // arrivano dal motore (dati.nomi, cambiabili dalle Impostazioni).
   const io = () => (dati && dati.io) || '';
-  const altri = () => ((dati && dati.persone) || []).filter((p) => p !== io());
-  const nomeChi = (k) => (k ? k.charAt(0).toUpperCase() + k.slice(1) : '');
-  const daChi = (k) => (k === io() ? 'da te' : `da ${nomeChi(k)}`);
+  const giranti = () => (dati && dati.persone) || [];
+  const hoGiro = () => giranti().includes(io());
+  // I giri in ordine: prima il mio, se ce l'ho.
+  const ordineGiri = () => (hoGiro() ? [io(), ...giranti().filter((p) => p !== io())] : giranti());
+  const altri = () => ordineGiri().slice(1);
+  // Il giro di riferimento (mappa, tappa nuova): il mio, o il primo.
+  const giroPrincipale = () => ordineGiri()[0] || '';
+  const nomeChi = (k) => (!k ? '' : (dati && dati.nomi && dati.nomi[k]) || k.charAt(0).toUpperCase() + k.slice(1));
+  const daChi = (k) => `da ${nomeChi(k)}`;
+  const giroDiNome = (k) => `Giro di ${nomeChi(k)}`;
+  // «Matteo», «Matteo e Stefano», «Matteo, Stefano e Mario».
+  const elencoNomi = (l) => { const n = l.map(nomeChi); return n.length > 1 ? `${n.slice(0, -1).join(', ')} e ${n[n.length - 1]}` : n.join(''); };
+  const puo = (permesso) => !!(dati && (dati.titolare || (dati.permessi && dati.permessi[permesso])));
 
   // Dopo «Manutenzione fatta» l'app chiede come ha pagato. «Da risentire» =
   // non ha ancora pagato: si ritrova negli Interventi fatti, e quando paga si
-  // cambia da lì. Il primo valore è quello che va nel foglio.
+  // cambia da lì. Il primo valore è quello che va nel foglio. «Gratis in
+  // garanzia» (21 ott 2026, Matteo): fatta senza far pagare, è a posto così.
   const DA_RISENTIRE = 'Da risentire';
+  const GARANZIA = 'Gratis in garanzia';
   const PAGAMENTI = [
     ['Contanti', 'Contanti', 'Contanti'],
     ['POS', 'POS (carta o bancomat)', 'POS'],
     ['Fattura e poi bonifico', 'Fattura, poi bonifico', 'Fattura, poi bonifico'],
+    [GARANZIA, 'Gratis, in garanzia', 'In garanzia'],
     [DA_RISENTIRE, 'Da risentire per il pagamento', 'Da risentire per il pagamento'],
   ];
   const breve = (p) => (PAGAMENTI.find((x) => x[0] === p) || [p, p, p])[2];
+  const icoPagamento = (v) => (v === DA_RISENTIRE ? 'orologio' : v === GARANZIA ? 'scudo' : 'euro');
   const etichettaPagamento = (p) => (p === DA_RISENTIRE ? `<span class="etichetta arancio">${esc(breve(p))}</span>`
+    : p === GARANZIA ? `<span class="etichetta blu">${esc(breve(p))}</span>`
     : p ? `<span class="etichetta verde">${esc(breve(p))}</span>` : '<span class="etichetta grigio">Pagamento non segnato</span>');
   // "19/10/2026" → numero ordinabile.
   const quandoFatto = (s) => { const m = String(s.data).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0; };
@@ -472,8 +494,8 @@
     // Le tappe dei giri: le tue e quelle dell'altro.
     const tappe = (p) => tappeDel(oggiTesto(), p).length;
     const quante = (n) => (n === 0 ? 'nessuna tappa' : n === 1 ? '1 tappa' : `${n} tappe`);
-    const giri = io() ? [`${quante(tappe(io()))} per te`, ...altri().map((p) => `${quante(tappe(p))} per ${nomeChi(p)}`)] : [];
-    const qualcuna = io() && [io(), ...altri()].some((p) => tappe(p));
+    const giri = ordineGiri().map((p) => `${quante(tappe(p))} per ${nomeChi(p)}`);
+    const qualcuna = ordineGiri().some((p) => tappe(p));
     const daRichiamare = dati.lead.filter((l) => statoLead(l) === 'Da richiamare').length;
     const risentire = daRisentire().length;
     const pagare = daPagare().length;
@@ -483,17 +505,17 @@
       <div class="tessere">
         ${urgenti ? `<button class="tessera urgente" data-vai="scadenze" data-vista="urgenti">
           <span class="ico">${icona('allarme')}</span>
-          <span><b>${urgenti === 1 ? '1 cliente urgente' : `${urgenti} clienti urgenti`}</b><small>${urgenti === 1 ? 'Ha' : 'Hanno'} chiamato per un guasto</small></span>
+          <span><b>${urgenti === 1 ? '1 cliente urgente' : `${urgenti} clienti urgenti`}</b><small>Un guasto o tanta fretta</small></span>
         </button>` : ''}
         <button class="tessera" data-vai="scadenze">
           <span class="ico">${icona('attrezzi')}</span>
           <span><b>Manutenzioni da fare</b>
           <small>${scadute ? `<span class="n-rosso">${scadute} scadute</span> · ` : ''}${presto} nei prossimi 2 mesi</small></span>
         </button>
-        ${io() ? `<button class="tessera" data-vai="giri">
+        ${giranti().length ? `<button class="tessera" data-vai="giri">
           <span class="ico">${icona('cartina')}</span>
           <span><b>Giro del giorno</b>
-          <small>${qualcuna ? giri.join(' · ') : `Prepara il tuo giro${altri().length ? ` e quello di ${esc(altri().map(nomeChi).join(', '))}` : ''}`}</small></span>
+          <small>${qualcuna ? giri.join(' · ') : `Prepara ${ordineGiri().length > 1 ? 'i giri' : 'il giro'} di ${esc(elencoNomi(ordineGiri()))}`}</small></span>
         </button>` : ''}
         <button class="tessera" data-vai="lead">
           <span class="ico">${icona('telefono')}</span>
@@ -524,7 +546,8 @@
           <span><b>Aggiungi</b><small>Un cliente nuovo o un contatto</small></span>
         </button>
       </div>
-      <p class="aggiornato">${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button></p>`;
+      <p class="aggiornato">${io() ? `Stai usando l'app come <b>${esc(nomeChi(io()))}</b><br>` : ''}${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button>
+        ${dati.titolare ? `<br><button data-vai="impostazioni">${icona('ingranaggio')} Impostazioni</button>` : ''}</p>`;
     schermo.querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai, vista: b.dataset.vista }); });
     $('aggiungi').onclick = chiediCosaAggiungere;
     $('ricarica').onclick = (e) => conPulsante(e.target, 'Aggiorno…', () => carica().then(() => disegna(history.state)).catch((err) => messaggio(err.message, { errore: true })));
@@ -604,7 +627,7 @@
       $('elenco').innerHTML = lista.length
         ? `<div class="lista">${lista.map((c) => voceCliente(c)).join('')}</div>`
         : vista === 'urgenti'
-          ? `<div class="vuoto">Nessun cliente urgente 👍<br><br>Se un cliente chiama per un guasto: cercalo e nella sua scheda tocca «Ha un guasto».<br><br><button class="btn pieno" id="vai-cerca" style="width:100%">${icona('cerca')} Cerca il cliente</button></div>`
+          ? `<div class="vuoto">Nessun cliente urgente 👍<br><br>Se un cliente ha un guasto o ha fretta: cercalo e nella sua scheda tocca «È urgente».<br><br><button class="btn pieno" id="vai-cerca" style="width:100%">${icona('cerca')} Cerca il cliente</button></div>`
           : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
       if ($('vai-cerca')) $('vai-cerca').onclick = () => vai({ s: 'cerca' });
     } else {
@@ -675,13 +698,17 @@
   // anche province: «Via Italia, Firenze» combacerebbe con la Via Italia di
   // Vinci. Vale se un luogo dell'indirizzo è il paese scritto, o una parte
   // del nome («Montespertoli» per «Montagnaga Montespertoli»), o comincia
-  // come lui («Tavarnelle Val di Pesa» per «Tavarnelle»).
+  // come lui («Tavarnelle Val di Pesa» per «Tavarnelle»), o se è un comune
+  // fuso che lo contiene: «Incisa Valdarno» sta in «Figline e Incisa
+  // Valdarno» (21 ott 2026). Solo per i nomi di due parole o più: «Massa»
+  // non deve combaciare con «Massa e Cozzile».
   const LUOGHI = ['city', 'town', 'village', 'hamlet', 'suburb', 'quarter', 'neighbourhood', 'city_district', 'municipality', 'isolated_dwelling', 'locality'];
   const nelPaese = (paese) => {
     const nomi = [paese, ...paese.split(/\s*[,/]\s*/)].map(normalizza).filter(Boolean);
     return (r) => LUOGHI.some((k) => {
       const v = normalizza(r.address && r.address[k]);
-      return v && nomi.some((n) => ` ${n} `.includes(` ${v} `) || ` ${v} `.startsWith(` ${n} `));
+      return v && nomi.some((n) => ` ${n} `.includes(` ${v} `) || ` ${v} `.startsWith(` ${n} `)
+        || (n.includes(' ') && ` ${v} `.includes(` ${n} `)));
     });
   };
   const SANTE = /^(croce|maria|lucia|caterina|chiara|margherita|reparata|felicita|trinita|elisabetta|anna|agata|marta|cristina|giustina|apollonia|verdiana|brigida|orsola|monica|rosa|teresa|cecilia)$/i;
@@ -755,12 +782,19 @@
       // Una frazione col numero («San Piero in Mercato 218»): il nome da solo.
       const senzaNumero = via.replace(/[\s,]+\d+\s*\S*$/, '');
       if (senzaNumero !== via && senzaNumero.length >= 4) varianti.push(senzaNumero);
+      // Senza «Via»: in centro a Firenze per OpenStreetMap è «Pellicceria»,
+      // non «Via Pellicceria» (21 ott 2026, due clienti in Piazza della Signoria).
+      const senzaTipo = via.replace(/^(Via|Viale)\s+/i, '');
+      const conTipo = varianti.length;
+      if (senzaTipo !== via && senzaTipo.replace(/[\s,]+\d+\s*\S*$/, '').length >= 4) varianti.push(senzaTipo);
       let luogo = null;
-      for (const v of varianti) {
+      for (const [k, v] of varianti.entries()) {
         const lista = await chiediNominatim({ q: v, viewbox, bounded: '1' });
         const r = scegli(lista.filter((x) => (x.civico || x.via) && sullaVia(x) && inProvincia(x) && (nelPaese(paese)(x) || kmFra(centro, x) <= 4)));
         if (r) return { lat: r.lat, lng: r.lng, prec: precisione(r) };
-        luogo = luogo || lista.find((x) => x.luogo && inProvincia(x) && kmFra(centro, x) <= 12);
+        // Senza «Via» vale solo una strada: «Via Paterno 16» a Borgo San
+        // Lorenzo trovava il paesino di Paterno, a 12 km.
+        if (k < conTipo) luogo = luogo || lista.find((x) => x.luogo && inProvincia(x) && kmFra(centro, x) <= 12);
       }
       return luogo ? { lat: luogo.lat, lng: luogo.lng, prec: 'paese' } : null;
     }
@@ -1010,8 +1044,10 @@
   const puntoTappa = (t) => { const l = luogoTappa(t); return l.lat != null ? { lat: l.lat, lng: l.lng } : null; };
   // Le tappe con l'ora vanno in fila per ora; quelle senza si infilano dove
   // allungano meno il giro, da casa a casa; quelle senza posizione in fondo.
+  // Una fascia oraria («dalle 9 alle 11», dal 21 ott 2026) va in fila per
+  // l'ora d'inizio, e a pari inizio prima quella che finisce prima.
   function ordinaTappe(lista, casa = SEDE) {
-    const conOra = lista.filter((t) => t.ora).sort((a, b) => a.ora.localeCompare(b.ora));
+    const conOra = lista.filter((t) => t.ora).sort((a, b) => a.ora.localeCompare(b.ora) || (a.oraFine || '99').localeCompare(b.oraFine || '99'));
     const senza = lista.filter((t) => !t.ora);
     const libere = senza.filter(puntoTappa);
     const inFondo = senza.filter((t) => !puntoTappa(t));
@@ -1021,8 +1057,9 @@
     const punto = (i) => (i < 0 || i >= seq.length ? casa : puntoTappa(seq[i]));
     // Prima le più lontane da casa: si mettono meglio quando il giro è ancora vuoto.
     libere.sort((a, b) => distanza(casa, puntoTappa(b)) - distanza(casa, puntoTappa(a)));
-    // Prima di un appuntamento entro le 10 non c'è tempo per altro: lì non si infila niente.
-    const daQui = conOra[0].ora < '10:00' ? 1 : 0;
+    // Prima di un appuntamento entro le 10 non c'è tempo per altro: lì non si
+    // infila niente. Una fascia che va oltre le 10 («dalle 9 alle 12») lascia spazio.
+    const daQui = (conOra[0].oraFine || conOra[0].ora) < '10:00' ? 1 : 0;
     for (const t of libere) {
       const p = puntoTappa(t);
       let dove = daQui;
@@ -1050,14 +1087,16 @@
     const g = daSeriale(s);
     const giorno = s === o ? 'oggi' : s === o + 1 ? 'domani' : s < o ? `rimasta dal ${due(g.g)}/${due(g.m)}`
       : `${GIORNI[new Date(Date.UTC(g.a, g.m - 1, g.g)).getUTCDay()]} ${due(g.g)}/${due(g.m)}`;
-    return conOra && t.ora ? `${giorno} alle ${t.ora}` : giorno;
+    return conOra && t.ora ? `${giorno} ${t.oraFine ? `dalle ${t.ora} alle ${t.oraFine}` : `alle ${t.ora}`}` : giorno;
   }
+  // «10:00», o la fascia «09:00–11:00».
+  const orarioTappa = (t) => (t.ora && t.oraFine ? `${t.ora}–${t.oraFine}` : t.ora || '');
   const etichettaLavoro = (t) => `<span class="etichetta lavoro-${normalizza(t.lavoro || 'Altro')}">${esc(t.lavoro || 'Altro')}</span>`;
-  // «Nel tuo giro oggi alle 10:00» sulle voci dei clienti.
+  // «Giro di Stefano oggi alle 10:00» sulle voci dei clienti.
   function etichettaGiro(c) {
     const t = tappeDi((x) => x.codice === c.codice)[0];
     if (!t) return '';
-    return `<span class="etichetta${t.chi === io() ? ' chi-mio' : ''}">${t.chi === io() ? 'Nel tuo giro' : `Giro di ${esc(nomeChi(t.chi))}`} ${esc(quandoTappa(t))}</span>`;
+    return `<span class="etichetta${t.chi === io() ? ' chi-mio' : ''}">${esc(giroDiNome(t.chi))} ${esc(quandoTappa(t))}</span>`;
   }
 
   // Salva una tappa (nuova o cambiata) e lo dice, con «Annulla».
@@ -1111,7 +1150,7 @@
     const lista = tappeDel(giorno, p);
     if (!lista.length) return;
     apriFinestra(`
-      <h3>Svuotare ${p === io() ? 'il tuo giro' : `il giro di ${esc(nomeChi(p))}`}?</h3>
+      <h3>Svuotare il giro di ${esc(nomeChi(p))}?</h3>
       <p>Tolgo ${lista.length === 1 ? 'la tappa' : `tutte le ${lista.length} tappe`}. I clienti restano fra le manutenzioni da fare.</p>
       <button class="btn pieno grande" type="button" id="si">Sì, svuota</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
@@ -1174,11 +1213,11 @@
     const questa = ++turnoMappa;
     titolo('Mappa dei giri', true);
     const scelte = new Set(Array.isArray(stato.cat) ? stato.cat : CATEGORIE_DI_BASE);
-    // Le tappe di oggi: il tuo giro (in ordine) e quelle degli altri, ognuna
+    // Le tappe di oggi: il giro principale (il mio, se ce l'ho) e quelle degli altri, ognuna
     // col suo numero. Una tappa si riconosce dal cliente, o dal suo Id se è
     // un contatto o un indirizzo qualsiasi.
     const chiaveTappa = (t) => t.codice || t.id;
-    const giro = giroDi(io());
+    const giro = giroDi(giroPrincipale());
     const numMio = new Map(giro.map((t, i) => [chiaveTappa(t), i + 1]));
     const numSuo = new Map(altri().flatMap((p) => giroDi(p).map((t, i) => [chiaveTappa(t), i + 1])));
     const tutti = dati.clienti.map((c) => ({ c, cat: categoriaMappa(c) })).filter((x) => x.cat);
@@ -1258,12 +1297,12 @@
         return `<p class="giro-altro">Giro di ${esc(nomeChi(p))}: ${n === 1 ? '1 tappa' : `${n} tappe`}${n ? ' (puntini chiari)' : ''} · <button class="link" data-giri>Vedi i giri</button></p>`;
       }).join('');
       $('giro').innerHTML = (tappe.length
-        ? `<div class="giro-testa"><b>Il tuo giro di oggi: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
+        ? `<div class="giro-testa"><b>${esc(giroDiNome(giroPrincipale()))}, oggi: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
             <span><button class="link" id="elenco-giro">${elencoGiroAperto ? 'Chiudi elenco' : 'Elenco'}</button><button class="link" id="svuota-giro">Svuota</button></span></div>
-          ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((t, i) => `<span><b>${i + 1}</b>${t.ora ? `${esc(t.ora)} ` : ''}${esc(nome(t))} <i>${esc(titoloCitta(luogoTappa(t).citta))}</i></span>`).join('')}</p>` : ''}
-          <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il tuo giro in Google Maps</a>`
-        : `<p class="giro-vuoto">Tocca un puntino e poi «Aggiungi al giro». Le tappe senza ora si mettono in ordine da sole, partendo da ${esc(partenzaDi(io()).nome)}.</p>`) + degliAltri;
-      if ($('svuota-giro')) $('svuota-giro').onclick = () => chiediSvuota(io(), oggiTesto());
+          ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((t, i) => `<span><b>${i + 1}</b>${t.ora ? `${esc(orarioTappa(t))} ` : ''}${esc(nome(t))} <i>${esc(titoloCitta(luogoTappa(t).citta))}</i></span>`).join('')}</p>` : ''}
+          <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro di ${esc(nomeChi(giroPrincipale()))} in Google Maps</a>`
+        : giranti().length ? `<p class="giro-vuoto">Tocca un puntino e poi «Aggiungi al giro». Le tappe senza ora si mettono in ordine da sole: il giro di ${esc(nomeChi(giroPrincipale()))} parte da ${esc(partenzaDi(giroPrincipale()).nome)}.</p>` : '') + degliAltri;
+      if ($('svuota-giro')) $('svuota-giro').onclick = () => chiediSvuota(giroPrincipale(), oggiTesto());
       if ($('elenco-giro')) $('elenco-giro').onclick = () => { elencoGiroAperto = !elencoGiroAperto; disegnaGiro(); };
       $('giro').querySelectorAll('[data-giri]').forEach((b) => { b.onclick = () => vai({ s: 'giri' }); });
       dimensiona();
@@ -1276,7 +1315,7 @@
         return `<div class="popup-cliente">
           <b>${esc(t.nome)}</b>
           <span>${esc([t.indirizzo, titoloCitta(t.citta)].filter(Boolean).join(', '))}</span>
-          <span class="riga3">${etichettaLavoro(t)}<span class="etichetta${t.chi === io() ? ' chi-mio' : ''}">${t.chi === io() ? 'Nel tuo giro' : `Giro di ${esc(nomeChi(t.chi))}`} ${esc(quandoTappa(t))}</span></span>
+          <span class="riga3">${etichettaLavoro(t)}<span class="etichetta${t.chi === io() ? ' chi-mio' : ''}">${esc(giroDiNome(t.chi))} ${esc(quandoTappa(t))}</span></span>
           <div class="popup-azioni"><button class="btn pieno" data-giro="modifica">Cambia la tappa</button>
             ${t.contatto ? '<button class="btn" data-azione="contatto">Apri il contatto</button>' : ''}</div>
         </div>`;
@@ -1292,7 +1331,7 @@
         <span class="riga3">${etichetta}${c.prossima ? `<span class="etichetta grigio">${esc(c.prossima)}</span>` : ''}${etichettaGiro(c)}</span>
         ${c.tipo ? `<span class="tipo">${esc(c.tipo)}</span>` : ''}
         ${c.prec === 'paese' ? '<small>Posizione approssimativa: centro del paese. Quando sei lì, «Sono qui» nella scheda la sistema.</small>' : ''}
-        <div class="popup-azioni">${!io() ? '' : suaTappa ? '<button class="btn" data-giro="modifica">Cambia la tappa</button>' : '<button class="btn pieno" data-giro="aggiungi">Aggiungi al giro</button>'}
+        <div class="popup-azioni">${!giranti().length ? '' : suaTappa ? '<button class="btn" data-giro="modifica">Cambia la tappa</button>' : '<button class="btn pieno" data-giro="aggiungi">Aggiungi al giro</button>'}
           <button class="btn" data-azione="scheda">Apri la scheda</button>
         </div>
       </div>`;
@@ -1529,7 +1568,7 @@
       <div class="avviso-cliente ${c.avviso === 'Urgente' ? 'rosso' : 'grigio'}">
         <div><b>${icona(c.avviso === 'Urgente' ? 'allarme' : 'pausa')} ${c.avviso === 'Urgente' ? 'URGENTE' : 'MANUTENZIONE SOSPESA'}</b>
           ${mo.quando ? `<span>dal ${esc(mo.quando)}</span>` : ''}${mo.perche ? `<p>${esc(mo.perche)}</p>` : ''}</div>
-        <button class="btn" type="button" id="togli-avviso">${c.avviso === 'Urgente' ? `${icona('spunta')} Risolto` : 'Riattiva'}</button>
+        <button class="btn" type="button" id="togli-avviso">${c.avviso === 'Urgente' ? `${icona('spunta')} Fatto` : 'Riattiva'}</button>
       </div>`;
     schermo.innerHTML = `
       <div class="testa"><h2>${esc(c.nome)}</h2><p>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p></div>
@@ -1543,19 +1582,19 @@
         <div>Prossima manutenzione<br><span>${esc(c.prossima || 'non segnata')}</span></div>
         <div style="text-align:right">${esc(s.testo)}</div>
       </div>
-      ${io() ? riquadroTappe(tappeDi((t) => t.codice === c.codice)) : ''}
+      ${giranti().length ? riquadroTappe(tappeDi((t) => t.codice === c.codice)) : ''}
       <button class="btn verde grande" id="fatta" style="width:100%">${icona('spunta')} Manutenzione fatta</button>
+      <button class="btn" id="riparazione" style="width:100%;margin-top:10px">${icona('attrezzi')} Riparazione fatta (senza manutenzione)</button>
       ${daFare ? `<button class="btn" id="rimanda" style="width:100%;margin-top:10px">${icona('orologio')} Rimanda la manutenzione</button>` : ''}
-      ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Ha un guasto: è urgente</button>` : ''}
+      ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} È urgente: guasto o fretta</button>` : ''}
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
       ${fatti.length ? `<h3 class="titoletto">Interventi fatti</h3>
       <div class="lista">${fatti.map((x) => voceIntervento(x, false)).join('')}</div>` : ''}
-      ${mag() ? `<h3 class="titoletto">Materiali usati</h3>
-      ${lottiDi(c.codice).length ? `<div class="lista">${lottiDi(c.codice).map(voceLotto).join('')}</div>` : ''}
-      <button class="btn" id="materiali" style="width:100%;margin-top:10px">${icona('scatola')} Segna materiali usati</button>` : ''}
+      ${mag() && lottiDi(c.codice).length ? `<h3 class="titoletto">Materiali usati</h3>
+      <div class="lista">${lottiDi(c.codice).map(voceLotto).join('')}</div>` : ''}
       <h3 class="titoletto">Dati del cliente</h3>
       <dl class="dati">
         ${riga('Impianto', c.tipo)}
@@ -1566,16 +1605,17 @@
         ${riga('Zona del giro', c.zona)}
         ${riga('Codice', c.codice)}
       </dl>
-      <button class="btn leggero" id="perso" style="width:100%;margin-top:14px">Non è più nostro cliente</button>`;
-    $('perso').onclick = () => chiediSposta(c, 'persi');
+      ${puo('togliClienti') ? '<button class="btn leggero" id="perso" style="width:100%;margin-top:14px">Non è più nostro cliente</button>' : ''}`;
+    if ($('perso')) $('perso').onclick = () => chiediSposta(c, 'persi');
     $('fatta').onclick = () => chiediFatta(c);
     if ($('rimanda')) $('rimanda').onclick = () => chiediRimanda(c);
     if ($('urgente')) $('urgente').onclick = () => chiediAvviso(c, 'Urgente');
-    if ($('togli-avviso')) $('togli-avviso').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
+    // «Fatto» di un urgente chiede cosa è stato fatto (21 ott 2026); «Riattiva» no.
+    if ($('togli-avviso')) $('togli-avviso').onclick = (e) => (c.avviso === 'Urgente' ? chiediCosaHaiFatto(c) : conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', '')));
+    if ($('riparazione')) $('riparazione').onclick = () => confermaRiparazione(c);
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
     if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
-    if ($('materiali')) $('materiali').onclick = () => chiediMateriali({ codice: c.codice, nome: c.nome, data: oggi(), dopo: avvisaMovimento });
     collegaTappe({ cliente: c });
     collegaInterventi();
     collegaLotti();
@@ -1714,20 +1754,23 @@
   const leadIn = (d, x) => d.lead.find((l) => l.data === x.data && l.nome === x.nome) || d.lead.find((l) => String(l.riga) === String(x.riga));
   const conProssima = (c, g) => { c.prossima = testoData(g); c.prossimaSeriale = serialeDa(g.a, g.m, g.g); };
   // Fatta la manutenzione, le tappe del cliente fino a quel giorno sono fatte (come fa il motore).
-  const chiudiTappe = (d, codice, g) => {
+  // `quali`: solo alcune (una riparazione chiude solo le tappe «Guasto»).
+  const chiudiTappe = (d, codice, g, quali = () => true) => {
     const fattaS = serialeDa(g.a, g.m, g.g);
     (d.tappe || []).forEach((t) => {
-      if (t.codice !== codice || t.stato) return;
+      if (t.codice !== codice || t.stato || !quali(t)) return;
       const s = t.giorno ? serialeGiorno(t.giorno) : serialeOggi();
       if (s != null && s <= fattaS) t.stato = 'Fatta';
     });
   };
   // L'intervento appena segnato, nello storico del telefono (una volta sola).
-  const nelloStorico = (d, x, c) => {
+  // Lavoro "Guasto" = una riparazione: senza la prossima manutenzione.
+  const nelloStorico = (d, x, c, prima = '') => {
     const data = testoData(daIso(x.data));
+    const lavoro = x.lavoro === 'Guasto' ? 'Guasto' : '';
     d.storico = d.storico || [];
-    if (d.storico.some((s) => s.codice === x.codice && s.data === data)) return;
-    d.storico.push({ riga: null, data, codice: x.codice, nome: c.nome, prossima: c.prossima, chi: d.io || '', pagamento: x.pagamento || '' });
+    if (d.storico.some((s) => s.codice === x.codice && s.data === data && (s.lavoro || '') === lavoro)) return;
+    d.storico.push({ riga: null, data, codice: x.codice, nome: c.nome, prossima: lavoro ? '' : c.prossima, chi: d.io || '', pagamento: x.pagamento || '', prima, lavoro });
   };
   // Come cambiano i dati per ogni azione, finché il foglio non risponde.
   const APPLICA = {
@@ -1736,13 +1779,28 @@
       const mesi = parseInt(c && (c.frequenza || x.frequenza), 10);
       const g = daIso(x.data);
       if (!c || !(mesi > 0) || !g) return;
+      const prima = c.prossima || '';
       conProssima(c, piuMesi(g, mesi));
       if (!c.frequenza) c.frequenza = mesi;
       c.avviso = '';
       c.motivo = '';
       c.chiVa = '';
-      nelloStorico(d, x, c);
+      nelloStorico(d, x, c, prima);
       chiudiTappe(d, x.codice, g);
+    },
+    // Come segnaRiparazione: la prossima manutenzione resta, «Urgente» no.
+    riparazione(d, x) {
+      const c = clienteIn(d, x.codice);
+      const g = daIso(x.data);
+      if (!c || !g) return;
+      if (c.avviso === 'Urgente') { c.avviso = ''; c.motivo = ''; }
+      nelloStorico(d, { ...x, lavoro: 'Guasto' }, c);
+      chiudiTappe(d, x.codice, g, (t) => t.lavoro === 'Guasto');
+    },
+    annullaRiparazione(d, x) {
+      d.storico = (d.storico || []).filter((s) => !(s.codice === x.codice && s.data === x.data && s.lavoro === 'Guasto'));
+      const c = clienteIn(d, x.codice);
+      if (c && !c.avviso && x.avvisoPrima && x.avvisoPrima.avviso === 'Urgente') { c.avviso = 'Urgente'; c.motivo = x.avvisoPrima.motivo || ''; }
     },
     tappa(d, x) {
       d.tappe = d.tappe || [];
@@ -1759,28 +1817,67 @@
       if (String(x.id).startsWith('col-')) { const c = clienteIn(d, x.codice); if (c) c.chiVa = ''; }
     },
     pagamento(d, x) {
-      const s = (d.storico || []).find((v) => v.codice === x.codice && v.data === x.data);
+      const s = (d.storico || []).find((v) => v.codice === x.codice && v.data === x.data && (x.lavoro == null || (v.lavoro || '') === x.lavoro));
       if (s) s.pagamento = x.pagamento || '';
     },
     // Come muoviMagazzino nel motore: stessi Id dei movimenti, così non si
     // conta due volte una voce già arrivata e riletta dal foglio.
+    // Dal 21 ott 2026 un movimento cambia uno dei tre numeri (`su`), e la
+    // merce arrivata esce da «in consegna», un impianto (o qualsiasi cosa in
+    // un'installazione) usato esce da «da montare»: come nel motore.
     magazzino(d, x) {
       const m = d.magazzino;
       if (!m) return;
       m.movimenti = m.movimenti || [];
       if (m.movimenti.some((v) => String(v.id).startsWith(`${x.id}-`))) return;
-      (x.righe || []).forEach((r, n) => {
+      const SU = { carico: 'quantita', lavoro: 'quantita', tolto: 'quantita', ordinato: 'inConsegna', venduto: 'daMontare' };
+      const su = x.causale === 'correzione' ? (['inConsegna', 'daMontare'].includes(x.su) ? x.su : 'quantita') : SU[x.causale];
+      if (!su) return;
+      let n = 0;
+      const base = { data: testoData(daIso(x.data) || oggi()), cliente: x.codice || '', nome: x.nome || '', lavoro: x.lavoro || '', chi: d.io || '' };
+      const cambia = (a, s, dopo, causale, note) => {
+        const prima = a[s] || 0;
+        a[s] = arrotonda(dopo);
+        const delta = arrotonda(a[s] - prima);
+        if (delta) m.movimenti.push({ ...base, id: `${x.id}-${++n}`, articolo: a.codice, descrizione: a.descrizione, quantita: delta, causale, note, su: s });
+      };
+      (x.righe || []).forEach((r) => {
         const a = m.articoli.find((y) => y.codice === r.articolo);
         if (!a) return;
         const q = Number(r.quantita) || 0;
-        const prima = a.quantita;
-        a.quantita = arrotonda(x.causale === 'correzione' ? q : x.causale === 'carico' ? prima + q : prima - q);
-        const delta = arrotonda(a.quantita - prima);
-        if (!delta) return;
-        m.movimenti.push({
-          id: `${x.id}-${n + 1}`, data: testoData(daIso(x.data) || oggi()), articolo: a.codice, descrizione: a.descrizione, quantita: delta,
-          causale: CAUSALI_MAG[x.causale], cliente: x.codice || '', nome: x.nome || '', lavoro: x.lavoro || '', chi: d.io || '', note: x.note || '',
-        });
+        const prima = a[su] || 0;
+        const piu = ['carico', 'ordinato', 'venduto'].includes(x.causale);
+        cambia(a, su, x.causale === 'correzione' ? q : piu ? prima + q : prima - q, CAUSALI_MAG[x.causale], x.note || '');
+        if (!m.numeri) return;
+        if (x.causale === 'carico') {
+          const giu = Math.min(q, Math.max(0, a.inConsegna || 0));
+          if (giu > 0) cambia(a, 'inConsegna', (a.inConsegna || 0) - giu, CAUSALI_MAG.carico, 'Era in consegna');
+        }
+        if (x.causale === 'lavoro' && (normalizza(x.lavoro) === 'installazione' || /^impianti/.test(normalizza(a.categoria)))) {
+          const giu = Math.min(q, Math.max(0, a.daMontare || 0));
+          if (giu > 0) cambia(a, 'daMontare', (a.daMontare || 0) - giu, CAUSALE_MONTATO, 'Era da montare');
+        }
+      });
+    },
+    // Come cambiaMateriali nel motore: i pezzi segnati prima per
+    // quell'intervento tornano, quelli giusti si tolgono.
+    materiali(d, x) {
+      const m = d.magazzino;
+      if (!m) return;
+      m.movimenti = m.movimenti || [];
+      if (m.movimenti.some((v) => String(v.id).startsWith(`${x.id}-`))) return;
+      const giorno = daIso(x.data) ? testoData(daIso(x.data)) : String(x.data);
+      const vecchi = m.movimenti.filter((v) => v.cliente === x.codice && v.data === giorno && v.causale === CAUSALI_MAG.lavoro && stessoLavoro(v.lavoro, x.lavoro));
+      vecchi.forEach((v) => { const a = m.articoli.find((y) => y.codice === v.articolo); if (a) a.quantita = arrotonda(a.quantita - v.quantita); });
+      m.movimenti = m.movimenti.filter((v) => !vecchi.includes(v));
+      const voluti = new Map();
+      (x.righe || []).forEach((r) => { const q = Number(r.quantita) || 0; if (q > 0) voluti.set(r.articolo, arrotonda((voluti.get(r.articolo) || 0) + q)); });
+      let n = 0;
+      voluti.forEach((q, k) => {
+        const a = m.articoli.find((y) => y.codice === k);
+        if (!a) return;
+        a.quantita = arrotonda(a.quantita - q);
+        m.movimenti.push({ id: `${x.id}-${++n}`, data: giorno, articolo: k, descrizione: a.descrizione, quantita: -q, causale: CAUSALI_MAG.lavoro, cliente: x.codice, nome: x.nome || '', lavoro: x.lavoro || 'Manutenzione', chi: d.io || '', note: '' });
       });
     },
     annullaMagazzino(d, x) {
@@ -1789,7 +1886,8 @@
       const suo = (v) => String(v.id).startsWith(`${x.id}-`);
       (m.movimenti || []).filter(suo).forEach((v) => {
         const a = m.articoli.find((y) => y.codice === v.articolo);
-        if (a) a.quantita = arrotonda(a.quantita - v.quantita);
+        const s = ['inConsegna', 'daMontare'].includes(v.su) ? v.su : 'quantita';
+        if (a) a[s] = arrotonda((a[s] || 0) - v.quantita);
       });
       m.movimenti = (m.movimenti || []).filter((v) => !suo(v));
     },
@@ -2039,12 +2137,12 @@
   function chiediAvviso(c, avviso) {
     const urgente = avviso === 'Urgente';
     apriFinestra(`
-      <h3>${urgente ? 'Ha un guasto?' : 'Sospendere la manutenzione?'}</h3>
+      <h3>${urgente ? 'È urgente?' : 'Sospendere la manutenzione?'}</h3>
       <p><strong>${esc(c.nome)}</strong><br>${urgente
-        ? 'Lo metto fra gli <strong>urgenti</strong>, in cima alla schermata iniziale, finché non tocchi «Risolto».'
+        ? 'Lo metto fra gli <strong>urgenti</strong>, in cima alla schermata iniziale, finché non tocchi «Fatto».'
         : 'Non comparirà più fra le scadute: lo trovi nella pagina <strong>Sospese</strong> finché non tocchi «Riattiva».'}</p>
-      <label class="campo"><span>${urgente ? 'Cosa è successo?' : 'Perché?'} <em>(facoltativo)</em></span>
-        <textarea id="motivo" placeholder="${urgente ? 'Es. perde acqua sotto il lavello' : 'Es. ha venduto casa, richiama lui'}"></textarea></label>
+      <label class="campo"><span>${urgente ? 'Cosa c\'è da fare?' : 'Perché?'} <em>(facoltativo)</em></span>
+        <textarea id="motivo" placeholder="${urgente ? 'Es. perde acqua sotto il lavello, oppure: manutenzione entro venerdì' : 'Es. ha venduto casa, richiama lui'}"></textarea></label>
       <button class="btn ${urgente ? 'btn-rosso-pieno' : 'pieno'} grande" type="button" id="si">${icona(urgente ? 'allarme' : 'pausa')} ${urgente ? 'Sì, è urgente' : 'Sì, sospendi'}</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     $('no').onclick = chiudiFinestra;
@@ -2057,7 +2155,7 @@
     try {
       const prima = c.avviso;
       const testo = avviso === 'Urgente' ? 'Segnato urgente' : avviso === 'Sospesa' ? 'Manutenzione sospesa'
-        : prima === 'Urgente' ? 'Risolto ✓' : 'Riattivata ✓';
+        : prima === 'Urgente' ? 'Non più urgente ✓' : 'Riattivata ✓';
       // Il motivo parte già col giorno: se arriva dopo (senza campo) resta quello giusto.
       const m = String(motivo || '').replace(/\s+/g, ' ').trim();
       const motivoDatato = avviso ? [testoData(oggi()), m].filter(Boolean).join(' — ') : '';
@@ -2165,7 +2263,7 @@
           <input type="date" id="giorno" max="${isoDa(o)}" value="${isoDa(o)}"></label>
       </div>
       <p class="domanda">Come ha pagato?</p>
-      ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(v === DA_RISENTIRE ? 'orologio' : 'euro')} ${esc(t)}</button>`).join('')}
+      ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(icoPagamento(v))} ${esc(t)}</button>`).join('')}
       <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     let giorno = null;
@@ -2236,6 +2334,103 @@
     });
   }
 
+  // ---------------------------------------------------------------------
+  //  Urgenti e guasti: cosa è stato fatto (21 ott 2026)
+  // ---------------------------------------------------------------------
+  // Matteo: «se il cliente ha un guasto conta come ho fatto il lavoro? Non è
+  // molto chiaro», e «le cose urgenti possono essere anche semplici
+  // manutenzioni di gente che ha fretta». Prima «Risolto» toglieva solo il
+  // segno rosso e un guasto riparato non restava da nessuna parte. Ora il
+  // «Fatto» di un urgente e il «Fatto» di una tappa Guasto chiedono cosa è
+  // stato fatto: la manutenzione («Manutenzione fatta», la prossima si
+  // sposta), solo una riparazione (negli Interventi fatti col pagamento e i
+  // materiali, la prossima manutenzione resta: segnaRiparazione nel motore)
+  // o niente (si toglie solo il segno, o si chiude solo la tappa).
+  function chiediCosaHaiFatto(c, { tappa = null } = {}) {
+    const mo = leggiMotivo(c);
+    const mesi = c.frequenza ? `${c.frequenza} mesi` : 'sei o dodici mesi';
+    apriFinestra(`
+      <h3>Cosa hai fatto?</h3>
+      <p><strong>${esc(c.nome)}</strong>${c.avviso === 'Urgente' && mo.perche ? `<br>${esc(mo.perche)}` : ''}</p>
+      <button class="btn verde scelta-lavoro" type="button" id="fatta-manutenzione">${icona('spunta')}<span>La manutenzione<small>Anche se c'era un guasto. La prossima si sposta di ${esc(mesi)}.</small></span></button>
+      <button class="btn pieno scelta-lavoro" type="button" id="fatta-riparazione">${icona('attrezzi')}<span>Solo una riparazione<small>La prossima manutenzione resta ${c.prossima ? `il ${esc(c.prossima)}` : 'com\'è'}.</small></span></button>
+      ${tappa ? `<button class="btn scelta-lavoro" type="button" id="fatta-niente"><span>Niente: chiudi solo la tappa</span></button>`
+        : `<button class="btn scelta-lavoro" type="button" id="fatta-niente"><span>Niente: togli solo «urgente»<small>Per esempio si è risolto al telefono.</small></span></button>`}
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('fatta-manutenzione').onclick = () => chiediFatta(c);
+    $('fatta-riparazione').onclick = () => confermaRiparazione(c);
+    $('fatta-niente').onclick = (e) => {
+      if (tappa) { chiudiFinestra(); segnaTappaFatta(tappa, { soloTappa: true }); return; }
+      conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
+    };
+    $('no').onclick = chiudiFinestra;
+  }
+
+  // Un guasto riparato senza la manutenzione: come ha pagato (la risposta
+  // è anche il «sì»), poi i materiali, come per «Manutenzione fatta».
+  function confermaRiparazione(c) {
+    const o = oggi();
+    const f = apriFinestra(`
+      <h3>Riparazione fatta oggi?</h3>
+      <p><strong>${esc(c.nome)}</strong><br>Va negli interventi fatti. La prossima manutenzione resta ${c.prossima ? `il <strong>${esc(c.prossima)}</strong>` : 'com\'è'}.</p>
+      <div id="altro-giorno" hidden>
+        <label class="campo"><span>Che giorno l'hai fatta?</span>
+          <input type="date" id="giorno" max="${isoDa(o)}" value="${isoDa(o)}"></label>
+      </div>
+      <p class="domanda">Come ha pagato?</p>
+      ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(icoPagamento(v))} ${esc(t)}</button>`).join('')}
+      <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    let giorno = null;
+    const aggiornaGiorno = () => {
+      const g = daIso($('giorno').value);
+      if (!g) return;
+      giorno = g;
+      f.querySelector('h3').textContent = `Riparazione fatta il ${dataLunga(g)}?`;
+    };
+    $('altro').onclick = () => { $('altro-giorno').hidden = false; $('altro').hidden = true; $('giorno').focus(); aggiornaGiorno(); };
+    $('giorno').onchange = aggiornaGiorno;
+    $('no').onclick = chiudiFinestra;
+    const salva = (btn, pagamento) => conPulsante(btn, 'Salvo…', async () => {
+      try {
+        const fotoCliente = fotografia(c);
+        const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
+        const fotoStorico = (dati.storico || []).slice();
+        const ripristina = () => { fotoCliente(); dati.tappe = fotoTappe; dati.storico = fotoStorico; };
+        const fattaIl = giorno || oggi();
+        const d = { codice: c.codice, data: isoDa(fattaIl), pagamento };
+        const { r, voce } = await manda('riparazione', d, `Riparazione fatta il ${testoData(fattaIl)}: ${c.nome}`);
+        chiudiFinestra();
+        if (r && !r.giaSegnata) { APPLICA.riparazione(dati, d); salvaDati(); }
+        disegna(history.state);
+        const puoiAnnullare = voce || (r && r.annulla);
+        const annullaRiparazione = voce ? () => annullaInCoda(voce, ripristina)
+          : () => manda('annullaRiparazione', r.annulla, `Annulla la riparazione: ${c.nome}`)
+            .then(({ r: r2, voce: v2 }) => {
+              ripristina();
+              salvaDati();
+              disegna(history.state);
+              messaggio('Annullato.' + (v2 ? fuoriLinea(v2) : ''));
+              if (r2) aggiornaInSottofondo();
+            })
+            .catch((err) => messaggio(err.message, { errore: true, durata: 8000 }));
+        const avvisa = (mov) => {
+          disegna(history.state);
+          messaggio(`Riparazione segnata ✓ ${breve(pagamento)}` + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+            durata: 15000,
+            azione: puoiAnnullare || mov ? { testo: 'Annulla', fai: async () => { if (mov) await annullaMovimento(mov, { zitto: puoiAnnullare }); if (puoiAnnullare) annullaRiparazione(); } } : null,
+          });
+        };
+        if (r) aggiornaInSottofondo();
+        if (mag()) chiediMateriali({ codice: c.codice, nome: c.nome, lavoro: 'Guasto', data: fattaIl, dopo: avvisa });
+        else avvisa(null);
+      } catch (err) {
+        messaggio(err.message, { errore: true, durata: 8000 });
+      }
+    });
+    f.querySelectorAll('[data-pag]').forEach((b) => { b.onclick = (e) => salva(e.currentTarget, b.dataset.pag); });
+  }
+
   // Annulla di «fatta» o «rimanda» già arrivate al foglio. Senza campo va
   // in coda anche lui, e lo schermo torna subito com'era.
   async function annulla(datiAnnulla, c, ripristina) {
@@ -2277,14 +2472,17 @@
     const fatteSenzaTappa = interventi().filter((x) => x.data === giorno && !fatte.some((t) => t.codice === x.codice));
     const sezione = (p) => {
       const tappe = giroDi(p, giorno);
-      const mio = p === io();
+      const mio = p === giroPrincipale();
       return `
-        <div class="testa-giro"><h2 class="gruppo">${mio ? 'Il tuo giro' : `Giro di ${esc(nomeChi(p))}`} (${tappe.length})</h2>
+        <div class="testa-giro"><h2 class="gruppo">${esc(giroDiNome(p))} (${tappe.length})</h2>
           ${tappe.length ? `<button class="link" type="button" data-svuota="${esc(p)}">Svuota</button>` : ''}</div>
         ${tappe.length ? `<div class="lista">${tappe.map((t, i) => voceTappa(t, i, p)).join('')}</div>
-          <a class="btn${mio ? ' pieno' : ''} apri-giro" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} ${mio ? 'Apri il tuo giro in Google Maps' : `Apri il giro di ${esc(nomeChi(p))} in Google Maps`}</a>`
-        : `<div class="vuoto">${mio ? 'Nessuna tappa nel tuo giro.' : `Nessuna tappa nel giro di ${esc(nomeChi(p))}.`}</div>`}`;
+          <a class="btn${mio ? ' pieno' : ''} apri-giro" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro di ${esc(nomeChi(p))} in Google Maps</a>`
+        : `<div class="vuoto">Nessuna tappa nel giro di ${esc(nomeChi(p))}.</div>`}`;
     };
+    // I giri di chi ha il giro, più quello di chi l'ha perso ma ha ancora
+    // tappe quel giorno (se no sparirebbero).
+    const sezioni = [...ordineGiri(), ...new Set(tappeDel(giorno).map((t) => t.chi).filter((p) => p && !giranti().includes(p)))];
     schermo.innerHTML = `
       <div class="giorni">
         <button class="btn" type="button" data-giorno="${ser - 1}" aria-label="Il giorno prima">${icona('frecciaSx')}</button>
@@ -2296,8 +2494,8 @@
         <label>Vai al giorno <input type="date" id="vai-giorno" value="${isoDa(g)}"></label>
       </div>
       <button class="btn pieno" id="nuova-tappa" type="button" style="width:100%;margin:12px 0 4px">${icona('piu')} Aggiungi una tappa</button>
-      <p class="spiega">Le tappe con l'ora vanno in fila per ora; le altre si infilano dove allungano meno il giro, mai prima di un appuntamento entro le 10 (${[io(), ...altri()].map((p) => `${p === io() ? 'il tuo' : `quello di ${esc(nomeChi(p))}`} parte da ${esc(partenzaDi(p).nome)}`).join(', ')}).</p>
-      ${[io(), ...altri()].map(sezione).join('')}
+      <p class="spiega">Le tappe con l'ora vanno in fila per ora; le altre si infilano dove allungano meno il giro, mai prima di un appuntamento entro le 10 (${ordineGiri().map((p) => `quello di ${esc(nomeChi(p))} parte da ${esc(partenzaDi(p).nome)}`).join(', ')}).</p>
+      ${sezioni.map(sezione).join('')}
       ${fatte.length || fatteSenzaTappa.length ? `<h2 class="gruppo">Fatte ${ser === o ? 'oggi' : 'quel giorno'} (${fatte.length + fatteSenzaTappa.length})</h2>
         <div class="lista">${fatte.map(voceFatta).join('')}${fatteSenzaTappa.map((x) => voceIntervento(x)).join('')}</div>` : ''}`;
     const vaiAl = (s) => { history.replaceState({ s: 'giri', giorno: testoGiorno(s) }, '', location.pathname + location.hash); disegna(history.state); };
@@ -2310,14 +2508,15 @@
   }
 
   // Una tappa: tocchi il nome e apri la scheda; sotto, «Fatto», passarla
-  // all'altro (o prenderla tu) e cambiarla (giorno, ora, lavoro, togli).
+  // all'altro («A Stefano», «A Matteo») e cambiarla (giorno, ora, lavoro, togli).
   function voceTappa(t, i, p) {
     const l = luogoTappa(t);
     const c = l.cliente;
     const s = c ? scadenza(c) : null;
     const posto = [l.indirizzo, titoloCitta(l.citta)].filter(Boolean).join(', ');
-    const mio = p === io();
-    const altro = altri()[0];
+    const mio = p === giroPrincipale();
+    // A chi si può passare: il mio giro prima, poi gli altri (di solito uno solo).
+    const verso = ordineGiri().filter((q) => q !== p).slice(0, 2);
     const rimasta = (serialeGiorno(giornoDi(t)) ?? 0) < serialeOggi();
     const etichette = [
       etichettaLavoro(t),
@@ -2329,15 +2528,14 @@
     ].join('');
     return `<div class="tappa">
       <button class="voce" type="button" data-tappa-apri="${esc(t.id)}">
-        <b><span class="numero${mio ? '' : ' suo'}">${i + 1}</span>${t.ora ? `<span class="ora">${esc(t.ora)}</span>` : ''}${esc(l.nome)}</b>
+        <b><span class="numero${mio ? '' : ' suo'}">${i + 1}</span>${t.ora ? `<span class="ora">${esc(orarioTappa(t))}</span>` : ''}${esc(l.nome)}</b>
         <span class="riga2">${esc(posto || '—')}${c && c.tipo ? ' · ' + esc(c.tipo) : ''}</span>
         <span class="riga3">${etichette}</span>
         ${t.note ? `<span class="riga2 nota-tappa">${esc(t.note)}</span>` : ''}
       </button>
-      <div class="tappa-azioni${altro || !mio ? '' : ' senza-passa'}">
+      <div class="tappa-azioni${verso.length === 1 ? '' : verso.length ? ' piu-passa' : ' senza-passa'}">
         <button class="btn" type="button" data-tappa-fatta="${esc(t.id)}">${icona('spunta')} Fatto</button>
-        ${mio && altro ? `<button class="btn" type="button" data-tappa-passa="${esc(t.id)}" data-a="${esc(altro)}">${icona('frecciaGiu')} A ${esc(nomeChi(altro))}</button>` : ''}
-        ${!mio ? `<button class="btn" type="button" data-tappa-passa="${esc(t.id)}" data-a="${esc(io())}">${icona('frecciaSu')} Lo prendo io</button>` : ''}
+        ${verso.map((q) => `<button class="btn" type="button" data-tappa-passa="${esc(t.id)}" data-a="${esc(q)}">${icona(q === io() ? 'frecciaSu' : 'frecciaGiu')} A ${esc(nomeChi(q))}</button>`).join('')}
         <button class="btn" type="button" data-tappa-cambia="${esc(t.id)}" aria-label="Cambia la tappa">${icona('matita')}</button>
       </div>
     </div>`;
@@ -2355,7 +2553,7 @@
   function riquadroTappe(lista) {
     return `<div class="tappe-scheda">
       ${lista.map((t) => `<div class="tappa-riga">
-        <span>${icona('cartina')} ${t.chi === io() ? 'Nel tuo giro' : `Nel giro di ${esc(nomeChi(t.chi))}`} ${esc(quandoTappa(t))} · ${esc(t.lavoro || 'Altro')}</span>
+        <span>${icona('cartina')} Nel giro di ${esc(nomeChi(t.chi))} ${esc(quandoTappa(t))} · ${esc(t.lavoro || 'Altro')}</span>
         <button class="link" type="button" data-tappa-cambia="${esc(t.id)}">Cambia</button>
       </div>`).join('')}
       <button class="btn" type="button" id="al-giro" style="width:100%">${icona('cartina')} ${lista.length ? 'Aggiungi un\'altra tappa' : 'Aggiungi al giro'}</button>
@@ -2377,15 +2575,17 @@
   // Più di 10 tappe in un giorno Google Maps non le apre.
   function troppe(chi, giorno, id) {
     if (tappeDel(giorno, chi).filter((t) => t.id !== id).length < MAX_TAPPE) return false;
-    messaggio(`${chi === io() ? 'Il tuo giro' : `Il giro di ${nomeChi(chi)}`} di quel giorno ha già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
+    messaggio(`Il giro di ${nomeChi(chi)} di quel giorno ha già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
     return true;
   }
 
   // «Fatto»: una manutenzione passa dalla solita domanda (data, pagamento),
   // che chiude anche la tappa; gli altri lavori si segnano fatti e basta.
-  function segnaTappaFatta(t) {
+  function segnaTappaFatta(t, { soloTappa = false } = {}) {
     const c = t.codice && clienteIn(dati, t.codice);
-    if (c && t.lavoro === 'Manutenzione' && !c.perso) { chiediFatta(c); return; }
+    if (!soloTappa && c && t.lavoro === 'Manutenzione' && !c.perso) { chiediFatta(c); return; }
+    // Un guasto: manutenzione, riparazione o niente (21 ott 2026).
+    if (!soloTappa && c && t.lavoro === 'Guasto' && !c.perso) { chiediCosaHaiFatto(c, { tappa: t }); return; }
     salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`, {
       materiali: { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
     });
@@ -2402,7 +2602,7 @@
         const t = trova(b.dataset.tappaPassa);
         const a = b.dataset.a;
         if (!t || troppe(a, giornoDi(t), t.id)) return;
-        await salvaLaTappa({ ...t, giorno: giornoDi(t), chi: a }, a === io() ? `Nel tuo giro: ${luogoTappa(t).nome}` : `Passata a ${nomeChi(a)}: ${luogoTappa(t).nome}`);
+        await salvaLaTappa({ ...t, giorno: giornoDi(t), chi: a }, `Passata a ${nomeChi(a)}: ${luogoTappa(t).nome}`);
       });
     });
     if ($('al-giro')) $('al-giro').onclick = () => chiediTappa(perAggiungere);
@@ -2450,17 +2650,17 @@
     let lavoro = t0 ? (t0.lavoro || 'Altro')
       : c ? (c.avviso === 'Urgente' ? 'Guasto' : s.giorni != null && s.giorni <= 60 ? 'Manutenzione' : 'Altro')
         : l ? 'Sopralluogo' : 'Altro';
-    let chi = t0 ? t0.chi : io();
+    let chi = t0 && giranti().includes(t0.chi) ? t0.chi : giroPrincipale();
     const o = serialeOggi();
     let ser = Math.max(serialeGiorno(t0 ? giornoDi(t0) : giorno || oggiTesto()) ?? o, o);
     const cittaLead = l ? ((String(l.note || '').match(/Città:\s*([^—]+)/) || [])[1] || '').trim() : '';
     const v = (x) => esc(x || '');
-    const persone = [io(), ...altri()];
+    const persone = ordineGiri();
     apriFinestra(`
       <h3>${t0 ? 'Cambia la tappa' : 'Aggiungi al giro'}</h3>
       ${c ? `<p><strong>${esc(c.nome)}</strong><br>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p>` : ''}
       ${persone.length > 1 ? `<p class="domanda">Nel giro di</p>
-        <div class="scelta scelta-chi" id="t-chi">${persone.map((p) => `<button type="button" data-v="${esc(p)}" aria-pressed="${chi === p}">${p === io() ? 'Il mio' : `Di ${esc(nomeChi(p))}`}</button>`).join('')}</div>` : ''}
+        <div class="scelta scelta-chi" id="t-chi">${persone.map((p) => `<button type="button" data-v="${esc(p)}" aria-pressed="${chi === p}">${esc(nomeChi(p))}</button>`).join('')}</div>` : ''}
       <p class="domanda">Che lavoro</p>
       <div class="pillole pillole-lavoro" id="t-lavoro">${LAVORI.map((x) => `<button type="button" class="pillola" data-v="${x}" aria-pressed="${lavoro === x}">${x}</button>`).join('')}</div>
       <p class="domanda">Quando</p>
@@ -2470,8 +2670,12 @@
         <button type="button" data-v="altro" aria-pressed="${ser > o + 1}">Altro giorno</button>
       </div>
       <input class="campo-data" type="date" id="t-data" min="${isoDa(daSeriale(o))}" value="${isoDa(daSeriale(ser))}" ${ser > o + 1 ? '' : 'hidden'}>
-      <label class="campo"><span>Ora <em>(facoltativa: con l'ora la tappa va in fila per ora)</em></span>
-        <input type="time" id="t-ora" value="${v(t0 && t0.ora)}"></label>
+      <p class="domanda">Orario <em>(facoltativo)</em></p>
+      <div class="orari">
+        <label class="campo"><span>Alle, o dalle</span><input type="time" id="t-ora" value="${v(t0 && t0.ora)}"></label>
+        <label class="campo"><span>Fino alle</span><input type="time" id="t-ora-fine" value="${v(t0 && t0.oraFine)}"></label>
+      </div>
+      <p class="spiega">Con l'ora la tappa va in fila per ora. Se il cliente dà una fascia («fra le 9 e le 11»), scrivi anche fino a che ora; se no lascia vuoto «Fino alle».</p>
       ${libero ? `
         <label class="campo"><span>Nome</span><input id="t-nome" autocapitalize="words" value="${v((t0 && t0.nome) || (l && l.nome))}"></label>
         <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
@@ -2497,7 +2701,7 @@
     if ($('t-togli')) $('t-togli').onclick = (e) => conPulsante(e.currentTarget, 'Tolgo…', async () => { chiudiFinestra(); await togliLaTappa(t0); });
     $('t-salva').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
       const nuovo = {
-        id: t0 ? t0.id : nuovoId(), giorno: testoGiorno(ser), ora: $('t-ora').value, chi, lavoro,
+        id: t0 ? t0.id : nuovoId(), giorno: testoGiorno(ser), ora: $('t-ora').value, oraFine: $('t-ora-fine').value, chi, lavoro,
         codice: c ? c.codice : '', contatto: l ? chiaveLead(l) : (t0 && t0.contatto) || '',
         nome: c ? c.nome : $('t-nome').value.replace(/\s+/g, ' ').trim(),
         indirizzo: c ? c.indirizzo : $('t-indirizzo').value.trim(), citta: c ? c.citta : $('t-citta').value.trim(),
@@ -2505,6 +2709,9 @@
         lat: t0 && !c ? t0.lat : null, lng: t0 && !c ? t0.lng : null, stato: '',
       };
       if (!nuovo.nome) { messaggio('Scrivi il nome.', { errore: true }); return; }
+      if (nuovo.oraFine && !nuovo.ora) { messaggio('Scrivi anche da che ora: la fascia comincia da lì.', { errore: true }); return; }
+      if (nuovo.oraFine && nuovo.oraFine <= nuovo.ora) { messaggio('«Fino alle» deve venire dopo l\'ora d\'inizio.', { errore: true }); return; }
+      if (nuovo.oraFine === nuovo.ora) nuovo.oraFine = '';
       if (libero && !nuovo.indirizzo && !nuovo.citta) { messaggio('Scrivi almeno la città: se no non so dove andare.', { errore: true }); return; }
       if (troppe(chi, nuovo.giorno, nuovo.id)) return;
       // Contatto o indirizzo qualsiasi: dove sta lo cerca il telefono (al
@@ -2518,7 +2725,7 @@
         if (p && p.lat != null) { nuovo.lat = p.lat; nuovo.lng = p.lng; } else if (cambiato) { nuovo.lat = null; nuovo.lng = null; }
       }
       chiudiFinestra();
-      await salvaLaTappa(nuovo, `${chi === io() ? 'Nel tuo giro' : `Nel giro di ${nomeChi(chi)}`} ${quandoTappa(nuovo)}: ${nuovo.nome}`);
+      await salvaLaTappa(nuovo, `Nel giro di ${nomeChi(chi)} ${quandoTappa(nuovo)}: ${nuovo.nome}`);
     });
   }
 
@@ -2531,11 +2738,13 @@
   // per vedere lo storico degli interventi fatti, e come hanno pagato»).
   const interventi = () => (dati.storico || []).slice()
     .sort((a, b) => quandoFatto(b) - quandoFatto(a) || (b.riga || Infinity) - (a.riga || Infinity));
-  const idIntervento = (x) => `${x.codice}|${x.data}`;
+  const idIntervento = (x) => `${x.codice}|${x.data}|${x.lavoro || ''}`;
+  // Lavoro "Guasto" nello storico = una riparazione senza manutenzione (21 ott 2026).
+  const tipoIntervento = (x) => (x.lavoro === 'Guasto' ? 'Riparazione' : 'Manutenzione');
   // conNome: nella pagina degli interventi; senza, nella scheda del cliente.
   function voceIntervento(x, conNome = true) {
-    const riga2 = conNome ? [`Fatta il ${x.data}`, x.chi && daChi(x.chi)] : [x.chi && `Fatta ${daChi(x.chi)}`];
-    const usati = materialiDi(x.codice, x.data);
+    const riga2 = conNome ? [`${tipoIntervento(x)} del ${x.data}`, x.chi && daChi(x.chi)] : [tipoIntervento(x), x.chi && `fatta ${daChi(x.chi)}`];
+    const usati = materialiDi(x.codice, x.data, x.lavoro);
     return `<button class="voce" data-intervento="${esc(idIntervento(x))}">
       <b>${esc(conNome ? x.nome || x.codice : x.data)}</b>
       ${riga2.filter(Boolean).length ? `<span class="riga2">${esc(riga2.filter(Boolean).join(' · '))}</span>` : ''}
@@ -2572,9 +2781,9 @@
         <button class="pillola" data-filtro="tutti" aria-pressed="${filtro === 'tutti'}">Tutti (${tutti.length})</button>
         <button class="pillola${pagare.length ? ' pillola-rossa' : ''}" data-filtro="pagare" aria-pressed="${filtro === 'pagare'}">Da risentire (${pagare.length})</button>
       </div>
-      ${filtro === 'pagare' && pagare.length ? '<p class="spiega">Da risentire per il pagamento: hanno avuto la manutenzione ma non hanno ancora pagato. Quando pagano, tocca il nome e scegli come.</p>' : ''}
+      ${filtro === 'pagare' && pagare.length ? '<p class="spiega">Da risentire per il pagamento: hanno avuto un intervento ma non hanno ancora pagato. Quando pagano, tocca il nome e scegli come.</p>' : ''}
       ${gruppi.map((g) => `<h2 class="gruppo">${esc(g.nome)} (${g.voci.length})</h2><div class="lista">${g.voci.map((x) => voceIntervento(x)).join('')}</div>`).join('')
-        || `<div class="vuoto">${filtro === 'pagare' ? 'Nessuno da risentire per il pagamento 👍' : 'Ancora nessun intervento segnato.<br><br>Ogni volta che tocchi «Manutenzione fatta» nella scheda di un cliente, compare qui con come ha pagato.'}</div>`}`;
+        || `<div class="vuoto">${filtro === 'pagare' ? 'Nessuno da risentire per il pagamento 👍' : 'Ancora nessun intervento segnato.<br><br>Ogni volta che tocchi «Manutenzione fatta» o «Riparazione fatta» nella scheda di un cliente, compare qui con come ha pagato.'}</div>`}`;
     schermo.querySelectorAll('[data-filtro]').forEach((b) => {
       b.onclick = () => { history.replaceState({ s: 'storico', filtro: b.dataset.filtro }, '', location.pathname + location.hash); disegna(history.state); };
     });
@@ -2588,22 +2797,95 @@
     const tel = c && x.pagamento === DA_RISENTIRE ? telefoni(c.contatto)[0] : null;
     const f = apriFinestra(`
       <h3>${esc(x.nome || x.codice)}</h3>
-      <p>Manutenzione del <strong>${esc(x.data)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}.<br>Pagamento: <strong>${esc(x.pagamento ? breve(x.pagamento) : 'non segnato')}</strong></p>
+      <p>${tipoIntervento(x)} del <strong>${esc(x.data)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}.<br>Pagamento: <strong>${esc(x.pagamento ? breve(x.pagamento) : 'non segnato')}</strong></p>
       ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
       <p class="domanda">Come ha pagato?</p>
       ${PAGAMENTI.map(([v, t]) => `<button class="btn${v === x.pagamento ? ' scelto' : ''}" type="button" data-pag="${esc(v)}">${v === x.pagamento ? `${icona('spunta')} ` : ''}${esc(t)}</button>`).join('')}
+      ${mag() ? `<p class="domanda">Materiali usati</p>
+        <p>${esc(materialiDi(x.codice, x.data, x.lavoro) || 'Nessuno segnato.')}</p>
+        <button class="btn" type="button" id="materiali-intervento">${icona('scatola')} ${materialiDi(x.codice, x.data, x.lavoro) ? 'Cambia i materiali' : 'Segna materiali usati'}</button>` : ''}
       ${c && !(history.state && history.state.s === 'cliente' && history.state.codice === x.codice) ? '<button class="btn" type="button" id="apri-scheda">Apri la scheda del cliente</button>' : ''}
+      ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-intervento">${icona('cestino')} Cancella questo intervento</button>` : ''}
       <button class="btn leggero" type="button" id="no">Chiudi</button>`);
     f.querySelectorAll('[data-pag]').forEach((b) => {
       b.onclick = (e) => (b.dataset.pag === x.pagamento ? chiudiFinestra() : conPulsante(e.currentTarget, 'Salvo…', () => salvaPagamento(x, b.dataset.pag)));
     });
     if ($('apri-scheda')) $('apri-scheda').onclick = () => vai({ s: 'cliente', codice: x.codice });
+    if ($('cancella-intervento')) $('cancella-intervento').onclick = () => chiediCancellaIntervento(x);
+    if ($('materiali-intervento')) $('materiali-intervento').onclick = () => chiediMaterialiIntervento(x);
     $('no').onclick = chiudiFinestra;
+  }
+
+  // Cancellare un intervento (21 ott 2026, Matteo: lui, babbo e la
+  // segretaria sì, un dipendente no: il permesso «cancellaInterventi» degli
+  // Accessi, che il motore ricontrolla). Nel foglio resta una copia, nella
+  // scheda «Interventi-Cancellati». Se è stato lui a spostare la prossima
+  // manutenzione, si può rimetterla dov'era prima (come fa il motore: la
+  // «Scadenza prima» scritta dal 21 ott 2026, se no la scadenza
+  // dell'intervento prima, se no il giorno dell'intervento).
+  // Serve il campo: non va in coda, perché è una cosa che non si fa di fretta.
+  function scadenzaSeCancello(x) {
+    const c = clienteIn(dati, x.codice);
+    const sua = serialeGiorno(x.prossima);
+    if (!c || c.perso || sua == null || c.prossimaSeriale !== sua) return null;
+    const altre = (dati.storico || []).filter((s) => s !== x && s.codice === x.codice).map((s) => serialeGiorno(s.prossima)).filter((n) => n != null);
+    if (altre.some((n) => n >= sua)) return null;
+    if (serialeGiorno(x.prima) != null) return serialeGiorno(x.prima);
+    return altre.length ? Math.max(...altre) : serialeGiorno(x.data);
+  }
+  function chiediCancellaIntervento(x) {
+    const torna = scadenzaSeCancello(x);
+    const usati = materialiDi(x.codice, x.data, x.lavoro);
+    apriFinestra(`
+      <h3>Cancellare questo intervento?</h3>
+      <p>${tipoIntervento(x)} del <strong>${esc(x.data)}</strong> a <strong>${esc(x.nome || x.codice)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}. Sparisce dagli interventi fatti; nel foglio ne resta una copia.</p>
+      ${torna != null ? `<p>Questo intervento aveva spostato la prossima manutenzione al <strong>${esc(x.prossima)}</strong>. Se non è stato fatto davvero, rimettila al <strong>${esc(testoGiorno(torna))}</strong>.</p>` : ''}
+      ${usati ? `<p>I materiali segnati (${esc(usati)}) restano: si tolgono dalla scheda del cliente.</p>` : ''}
+      ${torna != null ? `<button class="btn btn-rosso-pieno" type="button" data-cancella="si">${icona('cestino')} Cancella e rimetti al ${esc(testoGiorno(torna))}</button>
+        <button class="btn btn-rosso" type="button" data-cancella="no">Cancella e lascia il ${esc(x.prossima)}</button>`
+        : `<button class="btn btn-rosso-pieno" type="button" data-cancella="no">${icona('cestino')} Sì, cancella</button>`}
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('finestra').querySelectorAll('[data-cancella]').forEach((b) => {
+      b.onclick = (e) => conPulsante(e.currentTarget, 'Cancello…', () => cancellaLIntervento(x, b.dataset.cancella === 'si'));
+    });
+  }
+  async function cancellaLIntervento(x, rimetti) {
+    let r;
+    try {
+      r = await api('cancellaIntervento', { riga: x.riga, codice: x.codice, data: x.data, rimetti });
+    } catch (err) {
+      messaggio(err.linea ? 'Per cancellare serve il campo. Riprova quando c\'è linea.' : err.message, { errore: true, durata: 8000 });
+      return;
+    }
+    const c = clienteIn(dati, x.codice);
+    const fotoC = c ? fotografia(c) : null;
+    dati.storico = (dati.storico || []).filter((s) => s !== x);
+    if (c && r.prossima) { const g = String(r.prossima).split('/'); conProssima(c, { g: +g[0], m: +g[1], a: +g[2] }); }
+    salvaDati();
+    chiudiFinestra();
+    disegna(history.state);
+    messaggio(`Cancellato: ${x.nome || x.codice} del ${x.data}${r.prossima ? `. Prossima manutenzione al ${r.prossima}` : ''}`, {
+      durata: 12000,
+      azione: {
+        testo: 'Annulla',
+        fai: () => api('annullaCancellazione', r.annulla)
+          .then(() => {
+            dati.storico = [...(dati.storico || []), x];
+            if (fotoC) fotoC();
+            salvaDati();
+            disegna(history.state);
+            messaggio('Annullato: l\'intervento è tornato.');
+          })
+          .catch((err) => messaggio(err.linea ? 'Senza campo non si annulla: riprova fra poco.' : err.message, { errore: true, durata: 8000 })),
+      },
+    });
   }
 
   async function salvaPagamento(x, pagamento) {
     const prima = x.pagamento || '';
-    const quale = { codice: x.codice, data: x.data };
+    // Col lavoro: una manutenzione e una riparazione lo stesso giorno sono due.
+    const quale = { codice: x.codice, data: x.data, lavoro: x.lavoro || '' };
     const metti = (p) => { APPLICA.pagamento(dati, { ...quale, pagamento: p }); salvaDati(); };
     try {
       const { r, voce } = await manda('pagamento', { riga: x.riga, ...quale, pagamento }, `Pagamento (${breve(pagamento)}): ${x.nome || x.codice}`);
@@ -2627,6 +2909,70 @@
   }
 
   // ---------------------------------------------------------------------
+  //  Impostazioni: chi usa l'app e cosa può fare (21 ott 2026)
+  // ---------------------------------------------------------------------
+  // Solo per Matteo (il motore manda gli accessi solo a lui, e solo lui li
+  // può cambiare). Una persona per ogni chiave dell'app: il nome con cui
+  // l'app la chiama e i permessi, scritti nella scheda «Accessi» del foglio.
+  // Una persona nuova (un dipendente) arriva con una chiave nuova, e qui
+  // compare da sola con i permessi di base: il giro sì, cancellare no.
+  function schermoImpostazioni() {
+    titolo('Impostazioni', true);
+    if (!dati.titolare || !dati.accessi) {
+      schermo.innerHTML = '<div class="vuoto">Le impostazioni le vede solo Matteo.</div>';
+      return;
+    }
+    const elenco = dati.elencoPermessi || [];
+    schermo.innerHTML = `
+      <p class="spiega">Le vedi solo tu. Per ognuno scegli come lo chiama l'app e cosa può fare. Vale subito; sugli altri telefoni si vede alla prossima apertura dell'app.</p>
+      ${dati.accessi.map((a) => `
+        <form class="riquadro-accesso" data-persona="${esc(a.persona)}">
+          <h2 class="gruppo">${esc(a.nome)}${a.persona === io() ? ' (tu)' : ''}</h2>
+          <label class="campo"><span>Nome nell'app</span>
+            <input name="nome" value="${esc(a.nome)}" autocapitalize="words" maxlength="30" required></label>
+          ${a.titolare ? '<p class="spiega">Sei il titolare: puoi fare tutto e solo tu vedi le impostazioni.</p>'
+            : elenco.map((p) => `<div class="permesso">
+              <span><b>${esc(p.nome)}</b><small>${esc(p.spiega)}</small></span>
+              <div class="scelta scelta-si-no" data-permesso="${esc(p.id)}">
+                <button type="button" data-v="si" aria-pressed="${!!a[p.id]}">Sì</button>
+                <button type="button" data-v="no" aria-pressed="${!a[p.id]}">No</button>
+              </div>
+            </div>`).join('')}
+          <button class="btn pieno" type="submit">${icona('spunta')} Salva ${esc(a.nome)}</button>
+        </form>`).join('')}
+      <p class="spiega">Per dare l'app a una persona nuova serve un codice di attivazione nuovo: si prepara dal PC. Appena c'è, la persona compare qui.</p>`;
+    schermo.querySelectorAll('.riquadro-accesso').forEach((f) => {
+      f.querySelectorAll('[data-permesso]').forEach((g) => {
+        g.querySelectorAll('[data-v]').forEach((b) => {
+          b.onclick = () => g.querySelectorAll('[data-v]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        });
+      });
+      f.onsubmit = (e) => {
+        e.preventDefault();
+        const permessi = {};
+        f.querySelectorAll('[data-permesso]').forEach((g) => { permessi[g.dataset.permesso] = g.querySelector('[data-v="si"]').getAttribute('aria-pressed') === 'true'; });
+        conPulsante(f.querySelector('[type=submit]'), 'Salvo…', () => salvaAccesso({ persona: f.dataset.persona, nome: f.nome.value.trim(), permessi }));
+      };
+    });
+  }
+  async function salvaAccesso(scelta, testo) {
+    let r;
+    try {
+      r = await api('accessi', scelta);
+    } catch (err) {
+      messaggio(err.linea ? 'Per cambiare le impostazioni serve il campo.' : err.message, { errore: true, durata: 8000 });
+      return;
+    }
+    const a = r.accesso;
+    dati.accessi = dati.accessi.map((x) => (x.persona === a.persona ? a : x));
+    dati.nomi = { ...(dati.nomi || {}), [a.persona]: a.nome };
+    dati.persone = dati.accessi.filter((x) => x.giro).map((x) => x.persona);
+    salvaDati();
+    disegna(history.state);
+    messaggio(testo || `Salvato: ${a.nome}`, testo ? {} : { durata: 10000, azione: { testo: 'Annulla', fai: () => salvaAccesso(r.annulla, 'Rimesso com\'era.') } });
+  }
+
+  // ---------------------------------------------------------------------
   //  Magazzino (20 ott 2026)
   // ---------------------------------------------------------------------
   // Matteo: «questo è il file del magazzino, creane uno migliore nel
@@ -2641,24 +2987,75 @@
   const mag = () => (dati && dati.magazzino) || null;
   const articoliMag = () => (mag() ? mag().articoli : []);
   const articoloDa = (k) => articoliMag().find((a) => a.codice === k);
-  const CAUSALI_MAG = { carico: 'Arrivata merce', lavoro: 'Usato in un lavoro', tolto: 'Tolto', correzione: 'Contati' };
+  const CAUSALI_MAG = { carico: 'Arrivata merce', lavoro: 'Usato in un lavoro', tolto: 'Tolto', correzione: 'Contati', ordinato: 'Ordinato al fornitore', venduto: 'Venduto, da montare' };
+  const CAUSALE_MONTATO = 'Montato';
   const arrotonda = (n) => Math.round(n * 100) / 100;
   const numeroIt = (n) => String(arrotonda(n)).replace('.', ',');
-  const daRiordinare = (a) => a.scorta != null && a.quantita <= a.scorta;
+  // «In consegna» (ordinati al fabbricante) e «Da montare» (venduti a un
+  // cliente), dal 21 ott 2026: il totale disponibile è quelli che ci sono,
+  // più quelli in arrivo, meno quelli già venduti, e «da riordinare» si guarda
+  // lì (Matteo: «così da sapere quando fare l'ordine»). `numeri` = il foglio
+  // ha già quelle colonne (dopo aggiornaMagazzino).
+  const numeriMag = () => !!(mag() && mag().numeri);
+  const disponibile = (a) => arrotonda((a.quantita || 0) + (a.inConsegna || 0) - (a.daMontare || 0));
+  const daRiordinare = (a) => a.scorta != null && disponibile(a) <= a.scorta;
   const categorieMag = () => (mag() && mag().categorie) || ['Filtri e ricambi', 'Impianti', 'Impianti usati', 'Miscelatori e rubinetti', 'Altro'];
   const categoriaDi = (a) => (categorieMag().includes(a.categoria) ? a.categoria : 'Altro');
-  const coloreQuantita = (a) => (a.quantita < 0 ? 'rosso' : a.quantita === 0 ? 'grigio' : daRiordinare(a) ? 'arancio' : '');
+  // Il colore della categoria (lo stesso del foglio): una classe «cat-impianti»…
+  const classeCategoria = (cat) => `cat-${normalizza(cat).replace(/ /g, '-')}`;
+  const coloreQuantita = (a) => (a.quantita < 0 || disponibile(a) < 0 ? 'rosso' : a.quantita === 0 ? 'grigio' : daRiordinare(a) ? 'arancio' : '');
+  const NOMI_NUMERI = { inConsegna: 'in consegna', daMontare: 'da montare' };
   // I movimenti salvati insieme hanno lo stesso Id col numero in fondo: «t…-1», «t…-2».
   const lotto = (x) => String(x.id).replace(/-\d+$/, '');
   // Un numero scritto da babbo: «28,50», «€ 28.50», «3 » → "28.50", "28.50", "3"; vuoto → ''.
   const numeroScritto = (v) => String(v == null ? '' : v).replace(/[\s€]/g, '').replace(',', '.');
   const pezziTesto = (n) => `${numeroIt(n)} ${n === 1 ? 'pezzo' : 'pezzi'}`;
 
-  // I materiali usati per un cliente quel giorno: «1 × Filtro …, 2 × …».
-  function materialiDi(codice, data) {
-    if (!mag() || !codice) return '';
-    return (mag().movimenti || []).filter((x) => x.cliente === codice && x.data === data && x.causale === CAUSALI_MAG.lavoro)
-      .map((x) => `${numeroIt(-x.quantita)} × ${x.descrizione}`).join(', ');
+  // I materiali di un intervento: quelli «Usato in un lavoro» per quel
+  // cliente quel giorno, con quel lavoro (Manutenzione vale anche senza
+  // lavoro), come lavoroCombacia in cambiaMateriali nel motore: un guasto
+  // lo stesso giorno non si mescola con la manutenzione.
+  const stessoLavoro = (v, lavoro) => {
+    const l = normalizza(lavoro || 'Manutenzione');
+    return normalizza(v) === l || (l === 'manutenzione' && !normalizza(v));
+  };
+  function usatiIntervento(codice, data, lavoro) {
+    return (mag() ? mag().movimenti || [] : [])
+      .filter((x) => codice && x.cliente === codice && x.data === data && x.causale === CAUSALI_MAG.lavoro && stessoLavoro(x.lavoro, lavoro));
+  }
+  // «1 × Filtro …, 2 × …».
+  function materialiDi(codice, data, lavoro) {
+    return usatiIntervento(codice, data, lavoro).map((x) => `${numeroIt(-x.quantita)} × ${x.descrizione}`).join(', ');
+  }
+
+  // Segnare o correggere dopo i materiali di un intervento fatto (21 ott
+  // 2026, Matteo: «se uno se ne scorda, e per cambiare se uno sbaglia; se uno
+  // cambia si deve correggere anche il magazzino, non vorrei che si sommino
+  // i pezzi»). Dalla finestra dell'intervento in «Interventi fatti». La
+  // finestra parte coi pezzi già segnati e si salva l'elenco GIUSTO: il
+  // motore (cambiaMateriali) rimette in magazzino quelli di prima e toglie
+  // quelli nuovi, così i pezzi non si sommano mai.
+  function chiediMaterialiIntervento(x) {
+    const scelti = new Map();
+    usatiIntervento(x.codice, x.data, x.lavoro).forEach((m) => scelti.set(m.articolo, arrotonda((scelti.get(m.articolo) || 0) - m.quantita)));
+    const g = String(x.data).split('/');
+    chiediMateriali({ codice: x.codice, nome: x.nome || x.codice, lavoro: x.lavoro || 'Manutenzione', data: { g: +g[0], m: +g[1], a: +g[2] }, scelti, cambia: true, dopo: () => disegna(history.state) });
+  }
+  async function salvaMaterialiIntervento(d, testo) {
+    const foto = JSON.parse(JSON.stringify(dati.magazzino));
+    try {
+      const { r, voce } = await manda('materiali', d, testo);
+      if (r) {
+        APPLICA.materiali(dati, d);
+        appenaArrivati.push({ azione: 'materiali', dati: d, quando: Date.now() });
+        salvaDati();
+        aggiornaInSottofondo();
+      }
+      return { r, voce, foto };
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+      return null;
+    }
   }
   // I materiali usati per un cliente, a gruppi (uno per volta che sono stati segnati), dal più recente.
   function lottiDi(codice) {
@@ -2699,7 +3096,7 @@
   }
   // Una riga dell'elenco dei movimenti: «−1 Usato in un lavoro — Rossi», sotto data e chi.
   const rigaMovimento = (x) => `<li><span class="q ${x.quantita > 0 ? 'piu' : 'meno'}">${x.quantita > 0 ? '+' : '−'}${numeroIt(Math.abs(x.quantita))}</span>
-    <span>${esc(x.causale === CAUSALI_MAG.lavoro ? x.descrizione : x.causale)}${x.causale === CAUSALI_MAG.lavoro && x.nome ? '' : x.nome ? ` — ${esc(x.nome)}` : ''}${x.note ? ` (${esc(x.note)})` : ''}
+    <span>${esc(x.causale === CAUSALI_MAG.lavoro ? x.descrizione : x.causale)}${NOMI_NUMERI[x.su] ? ` <em>(${NOMI_NUMERI[x.su]})</em>` : ''}${x.causale === CAUSALI_MAG.lavoro && x.nome ? '' : x.nome ? ` — ${esc(x.nome)}` : ''}${x.note ? ` (${esc(x.note)})` : ''}
     <small>${esc(x.data)}${x.causale === CAUSALI_MAG.lavoro && x.nome ? ` · per ${esc(x.nome)}` : ''}${x.chi ? ` · ${esc(nomeChi(x.chi))}` : ''}</small></span></li>`;
 
   // Manda un movimento; torna quel che serve per annullarlo (o null se il foglio l'ha rifiutato).
@@ -2761,8 +3158,12 @@
   // arrivata): si tocca + sugli articoli e si salva tutto insieme. `dopo(mov)`
   // riceve il movimento salvato, o null se non si è usato niente, comunque
   // si chiuda la finestra. Le righe non si spostano mentre si tocca.
-  function chiediMateriali({ codice = '', nome = '', lavoro = '', data = null, carico = false, scelti = new Map(), dopo = () => {} }) {
+  // `cambia`: i materiali di un intervento già fatto (chiediMaterialiIntervento):
+  // `scelti` arriva coi pezzi già segnati e si salva l'elenco giusto.
+  function chiediMateriali({ codice = '', nome = '', lavoro = '', data = null, carico = false, scelti = new Map(), cambia = false, partenza = null, dopo = () => {} }) {
     if (!mag()) { dopo(null); return; }
+    const iniziali = partenza || new Map(scelti);
+    const giaSegnati = cambia ? [...iniziali.keys()].map(articoloDa).filter(Boolean) : [];
     let finito = false;
     const fine = (mov) => { if (!finito) { finito = true; dopo(mov); } };
     // In cima i più usati nei lavori (per lo stesso lavoro contano doppio).
@@ -2772,26 +3173,38 @@
         if (x.causale === CAUSALI_MAG.lavoro) punti.set(x.articolo, (punti.get(x.articolo) || 0) + (lavoro && x.lavoro === lavoro ? 2 : 1));
       }
     }
-    const soliti = [...punti].sort((a, b) => b[1] - a[1]).map(([k]) => articoloDa(k)).filter(Boolean).slice(0, 8);
+    const soliti = [...punti].sort((a, b) => b[1] - a[1]).map(([k]) => articoloDa(k)).filter((a) => a && !giaSegnati.includes(a)).slice(0, 8);
+    const inCima = [...giaSegnati, ...soliti];
+    // In cima anche quelli che si aspettano (21 ott 2026): con la merce
+    // arrivata quelli «in consegna», in un lavoro quelli venduti «da montare».
+    const attesi = cambia ? [] : articoliMag().filter((a) => !inCima.includes(a) && (carico ? (a.inConsegna || 0) > 0 : (a.daMontare || 0) > 0));
+    inCima.push(...attesi);
     // Poi le categorie che servono a quel lavoro.
     const primi = carico ? [] : lavoro === 'Installazione' ? ['Impianti', 'Miscelatori e rubinetti'] : ['Filtri e ricambi'];
     const ordine = [...primi, ...categorieMag().filter((x) => !primi.includes(x))];
     // Le altre restano chiuse in un tasto (sono tante: 80 fra impianti e miscelatori).
     const aperte = new Set(carico ? ['Filtri e ricambi'] : primi);
     apriFinestra(`
-      <h3>${carico ? 'Cos\'è arrivato?' : 'Che materiali hai usato?'}</h3>
+      <h3>${carico ? 'Cos\'è arrivato?' : cambia ? 'Materiali usati' : 'Che materiali hai usato?'}</h3>
       <p>${carico ? 'Tocca + sugli articoli arrivati: si aggiungono al magazzino.'
+        : cambia ? `<strong>${esc(nome)}</strong> · ${esc(String(lavoro || 'Manutenzione').toLowerCase())} del ${esc(testoData(data))}<br>Metti i numeri giusti con − e +: il magazzino si corregge da solo, i pezzi non si sommano.`
         : `${nome ? `<strong>${esc(nome)}</strong>${lavoro ? ` · ${esc(lavoro)}` : ''}<br>` : ''}Tocca + su quello che hai usato: si toglie dal magazzino.`}</p>
       <input class="cerca-finestra" id="cerca-mat" type="search" autocomplete="off" placeholder="Cerca un articolo">
       <div id="lista-mat"></div>
       <button class="link" type="button" id="mat-nuovo">Non c'è? Aggiungi un articolo</button>
       <div class="piede-finestra">
         <button class="btn pieno grande" type="button" id="mat-salva"></button>
-        <button class="btn leggero" type="button" id="mat-niente">${carico ? 'Lascia stare' : 'Niente dal magazzino'}</button>
+        <button class="btn leggero" type="button" id="mat-niente">${carico ? 'Lascia stare' : cambia ? 'Lascia com\'era' : 'Niente dal magazzino'}</button>
       </div>`);
     const aggiornaSalva = () => {
       const n = [...scelti.values()].filter((x) => x > 0);
       const pezzi = n.reduce((s, x) => s + x, 0);
+      if (cambia) {
+        const uguale = [...new Set([...scelti.keys(), ...iniziali.keys()])].every((k) => (scelti.get(k) || 0) === (iniziali.get(k) || 0));
+        $('mat-salva').disabled = uguale;
+        $('mat-salva').textContent = uguale ? (iniziali.size ? 'Cambia i numeri con − e +' : 'Tocca + su quello che hai usato') : n.length ? `Salva: ${pezziTesto(pezzi)}${n.length > 1 ? ` (${n.length} articoli)` : ''}` : 'Nessun materiale: rimettili in magazzino';
+        return;
+      }
       $('mat-salva').disabled = !n.length;
       $('mat-salva').textContent = !n.length ? (carico ? 'Tocca + sugli articoli arrivati' : 'Tocca + su quello che hai usato')
         : `${carico ? 'Aggiungi' : 'Togli'} ${pezziTesto(pezzi)}${n.length > 1 ? ` (${n.length} articoli)` : ''}`;
@@ -2799,11 +3212,11 @@
     const rigaMateriale = (a) => {
       const n = scelti.get(a.codice) || 0;
       return `<div class="materiale${n ? ' scelto' : ''}" data-mat="${esc(a.codice)}">
-        <div class="mat-testo"><b>${esc(a.descrizione)}</b><small>${a.fornitore ? `${esc(a.fornitore)} · ` : ''}${a.quantita < 0 ? 'sotto zero: da ricontare' : `ne hai ${numeroIt(a.quantita)}`}</small></div>
+        <div class="mat-testo"><b>${esc(a.descrizione)}</b><small>${a.fornitore ? `${esc(a.fornitore)} · ` : ''}${a.quantita < 0 ? 'sotto zero: da ricontare' : `ne hai ${numeroIt(a.quantita)}`}${a.inConsegna > 0 ? ` · ${numeroIt(a.inConsegna)} in consegna` : ''}${a.daMontare > 0 ? ` · ${numeroIt(a.daMontare)} da montare` : ''}</small></div>
         <div class="contatore"><button type="button" data-d="-1" aria-label="Uno in meno">−</button><output>${numeroIt(n)}</output><button type="button" data-d="1" aria-label="Uno in più">+</button></div>
       </div>`;
     };
-    const gruppo = (t, lista) => (lista.length ? `<h4 class="gruppo">${esc(t)}</h4><div class="lista-materiali">${lista.map(rigaMateriale).join('')}</div>` : '');
+    const gruppo = (t, lista, cls = '') => (lista.length ? `<h4 class="gruppo ${cls}">${esc(t)}</h4><div class="lista-materiali">${lista.map(rigaMateriale).join('')}</div>` : '');
     const disegnaLista = () => {
       const q = normalizza($('cerca-mat').value);
       const tutti = articoliMag();
@@ -2812,13 +3225,13 @@
         const trovati = tutti.filter((a) => normalizza([a.descrizione, a.fornitore, a.codice, a.categoria].join(' ')).includes(q)).slice(0, 40);
         html = trovati.length ? gruppo(`Trovati (${trovati.length})`, trovati) : '<div class="vuoto">Nessun articolo con questo nome.</div>';
       } else {
-        html = gruppo('Usati di solito', soliti) + ordine.map((cat) => {
+        html = gruppo('Segnati per questo intervento', giaSegnati) + gruppo(carico ? 'In consegna: quelli che aspetti' : 'Venduti, da montare', attesi) + gruppo('Usati di solito', soliti) + ordine.map((cat) => {
           // In un lavoro prima quelli che ci sono (si usa quello che si ha), poi i finiti.
-          const lista = tutti.filter((a) => categoriaDi(a) === cat && !soliti.includes(a));
+          const lista = tutti.filter((a) => categoriaDi(a) === cat && !inCima.includes(a));
           if (!carico) lista.sort((a, b) => (b.quantita > 0) - (a.quantita > 0));
-          if (!lista.length || aperte.has(cat)) return gruppo(cat, lista);
+          if (!lista.length || aperte.has(cat)) return gruppo(cat, lista, classeCategoria(cat));
           const presi = lista.filter((a) => scelti.get(a.codice)).length;
-          return `<button class="mostra-altri" type="button" data-apri="${esc(cat)}">${esc(cat)} (${lista.length})${presi ? ` · ${presi} ${presi === 1 ? 'scelto' : 'scelti'}` : ''}</button>`;
+          return `<button class="mostra-altri ${classeCategoria(cat)}" type="button" data-apri="${esc(cat)}">${esc(cat)} (${lista.length})${presi ? ` · ${presi} ${presi === 1 ? 'scelto' : 'scelti'}` : ''}</button>`;
         }).join('');
         if (!carico && !tutti.some((a) => categoriaDi(a) === 'Filtri e ricambi')) {
           html = '<p class="spiega">Filtri e ricambi non sono ancora nel magazzino: aggiungili con «Non c\'è? Aggiungi un articolo», in fondo.</p>' + html;
@@ -2849,11 +3262,31 @@
       perLavoro: !carico,
       poi: (nuovo) => {
         if (nuovo && !carico) scelti.set(nuovo.codice, (scelti.get(nuovo.codice) || 0) + 1);
-        chiediMateriali({ codice, nome, lavoro, data, carico, scelti, dopo });
+        chiediMateriali({ codice, nome, lavoro, data, carico, scelti, cambia, partenza: iniziali, dopo });
       },
     });
     $('mat-salva').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
       const righe = [...scelti].filter(([, n]) => n > 0).map(([articolo, quantita]) => ({ articolo, quantita }));
+      if (cambia) {
+        const pezzi = righe.reduce((s, r) => s + r.quantita, 0);
+        const d = { id: nuovoId(), codice, nome, lavoro: lavoro || 'Manutenzione', data: isoDa(data), righe };
+        const esito = await salvaMaterialiIntervento(d, `Materiali corretti (${pezziTesto(pezzi)}): ${nome}`);
+        if (!esito) return;
+        alChiudere = null;
+        chiudiFinestra();
+        fine(null);
+        const { r, voce, foto } = esito;
+        const indietro = async () => {
+          const x = await salvaMaterialiIntervento({ ...r.annulla, id: nuovoId(), lavoro: lavoro || 'Manutenzione', data: isoDa(data) }, `Materiali rimessi com'erano: ${nome}`);
+          if (x) { disegna(history.state); messaggio('Annullato: i materiali sono com\'erano.'); }
+        };
+        messaggio((righe.length ? `Materiali salvati: ${pezziTesto(pezzi)}` : 'Materiali tolti: sono tornati in magazzino') + (voce ? fuoriLinea(voce) : ''), {
+          durata: 10000,
+          azione: voce ? { testo: 'Annulla', fai: () => annullaInCoda(voce, () => { dati.magazzino = foto; }) }
+            : r && r.annulla ? { testo: 'Annulla', fai: indietro } : null,
+        });
+        return;
+      }
       if (!righe.length) return;
       const pezzi = righe.reduce((s, r) => s + r.quantita, 0);
       const datiMov = { id: nuovoId(), causale: carico ? 'carico' : 'lavoro', data: isoDa(data || oggi()), codice, nome, lavoro, righe };
@@ -2889,24 +3322,39 @@
     };
   }
 
-  // Un articolo toccato: quanti ce ne sono, e cosa si può fare.
+  // Un articolo toccato: quanti ce ne sono, e cosa si può fare. Dal 21 ott
+  // 2026 anche quanti ne sono in consegna e da montare, e il totale: toccando
+  // uno di quei due numeri lo si corregge.
   function chiediArticolo(a) {
     const movimenti = (mag().movimenti || []).filter((x) => x.articolo === a.codice).slice(-8).reverse();
+    const numeri = numeriMag();
+    const tot = disponibile(a);
     apriFinestra(`
       <h3>${esc(a.descrizione)}</h3>
-      <p>${esc([a.fornitore, categoriaDi(a)].filter(Boolean).join(' · '))}</p>
+      <p><span class="pallino ${classeCategoria(categoriaDi(a))}"></span>${esc([a.fornitore, categoriaDi(a)].filter(Boolean).join(' · '))}</p>
       <div class="quanti-grande ${coloreQuantita(a)}"><b>${numeroIt(a.quantita)}</b>
-        <span>in magazzino${a.quantita < 0 ? ': sotto zero, ricontali' : daRiordinare(a) ? ' · da riordinare' : ''}</span></div>
+        <span>in magazzino${a.quantita < 0 ? ': sotto zero, ricontali' : !numeri && daRiordinare(a) ? ' · da riordinare' : ''}</span></div>
+      ${numeri ? `<div class="tre-numeri">
+        <button type="button" id="a-n-consegna"><b>${numeroIt(a.inConsegna || 0)}</b><small>in consegna</small></button>
+        <button type="button" id="a-n-montare"><b>${numeroIt(a.daMontare || 0)}</b><small>da montare</small></button>
+        <div class="totale ${tot < 0 ? 'rosso' : daRiordinare(a) ? 'arancio' : ''}"><b>${numeroIt(tot)}</b><small>${tot < 0 ? 'da ordinare!' : daRiordinare(a) ? 'da riordinare' : 'totale'}</small></div>
+      </div>
+      <p class="spiega">Totale = in magazzino + in consegna − da montare. Tocca «in consegna» o «da montare» per correggerli.</p>` : ''}
       <p class="spiega">${esc([a.scorta != null ? `Scorta minima: ${numeroIt(a.scorta)}` : 'Scorta minima non segnata', a.costo != null ? `costo € ${numeroIt(a.costo)}` : '', a.note].filter(Boolean).join(' · '))}</p>
       <button class="btn pieno" type="button" id="a-arrivati">${icona('frecciaGiu')} Ne sono arrivati</button>
+      ${numeri ? `<div class="azioni-magazzino">
+        <button class="btn" type="button" id="a-ordinati">${icona('orologio')} Ordinati</button>
+        <button class="btn" type="button" id="a-venduti">${icona('euro')} Venduti, da montare</button>
+      </div>` : ''}
       <button class="btn" type="button" id="a-tolti">Ne ho tolti (rotti, resi…)</button>
       <button class="btn" type="button" id="a-contati">${icona('spunta')} Ho contato: correggi il numero</button>
       <button class="btn" type="button" id="a-modifica">${icona('matita')} Modifica i dati</button>
       ${movimenti.length ? `<p class="domanda">Ultimi movimenti</p><ul class="movimenti">${movimenti.map(rigaMovimento).join('')}</ul>` : ''}
       <button class="btn leggero" type="button" id="no">Chiudi</button>`);
     // Un movimento di un articolo solo, poi il messaggio con «Annulla».
-    const salvaUno = async (causale, quantita, note, testo, fatto) => {
-      const mov = await mandaMovimento({ id: nuovoId(), causale, data: isoDa(oggi()), righe: [{ articolo: a.codice, quantita }], note }, testo);
+    // `altro`: `su` (quale numero si corregge) o `nome` (per chi è venduto).
+    const salvaUno = async (causale, quantita, note, testo, fatto, altro = {}) => {
+      const mov = await mandaMovimento({ id: nuovoId(), causale, data: isoDa(oggi()), righe: [{ articolo: a.codice, quantita }], note, ...altro }, testo);
       if (!mov) return;
       mov.testo = fatto;
       chiudiFinestra();
@@ -2914,9 +3362,33 @@
     };
     $('no').onclick = chiudiFinestra;
     $('a-arrivati').onclick = () => chiediNumero({
-      titolo: 'Quanti ne sono arrivati?', testo: esc(a.descrizione), positivo: true, pulsante: `${icona('frecciaGiu')} Aggiungi al magazzino`,
-      fai: (n) => salvaUno('carico', n, '', `Arrivati ${numeroIt(n)}: ${a.descrizione}`, `aggiunti al magazzino ${pezziTesto(n)}`),
+      titolo: 'Quanti ne sono arrivati?',
+      testo: `${esc(a.descrizione)}${a.inConsegna > 0 ? `<br>Ne aspettavi <strong>${numeroIt(a.inConsegna)}</strong>: escono da «in consegna».` : ''}`,
+      valore: a.inConsegna > 0 ? a.inConsegna : 1, positivo: true, pulsante: `${icona('frecciaGiu')} Aggiungi al magazzino`,
+      fai: (n) => salvaUno('carico', n, '', `Arrivati ${numeroIt(n)}: ${a.descrizione}`, `aggiunti al magazzino ${pezziTesto(n)}${a.inConsegna > 0 ? ', usciti da «in consegna»' : ''}`),
     });
+    if (numeri) {
+      $('a-ordinati').onclick = () => chiediNumero({
+        titolo: 'Quanti ne hai ordinati?', testo: `${esc(a.descrizione)}<br>Restano «in consegna» finché non arrivano: allora tocca «Ne sono arrivati».`,
+        positivo: true, nota: 'Note (quando arrivano, a chi…)', pulsante: `${icona('orologio')} Segna in consegna`,
+        fai: (n, nota) => salvaUno('ordinato', n, nota, `Ordinati ${numeroIt(n)}: ${a.descrizione}`, `in consegna ${pezziTesto(n)} in più`),
+      });
+      $('a-venduti').onclick = () => chiediNumero({
+        titolo: 'Quanti ne hai venduti da montare?', testo: `${esc(a.descrizione)}<br>Restano «da montare» finché non li monti: quando segni i materiali dell'installazione escono da soli.`,
+        positivo: true, nota: 'Per chi', pulsante: `${icona('euro')} Segna da montare`,
+        fai: (n, nota) => salvaUno('venduto', n, '', `Venduti ${numeroIt(n)}: ${a.descrizione}`, `da montare ${pezziTesto(n)} in più`, { nome: nota }),
+      });
+      const correggi = (su, nome) => chiediNumero({
+        titolo: `Quanti ne sono ${nome}?`, testo: `${esc(a.descrizione)}<br>Per l'app sono <strong>${numeroIt(a[su] || 0)}</strong>.`, valore: Math.max(0, a[su] || 0),
+        pulsante: `${icona('spunta')} Sono questi`,
+        fai: (n) => {
+          if (n === (a[su] || 0)) { chiudiFinestra(); messaggio('Il numero era già giusto ✓'); return null; }
+          return salvaUno('correzione', n, '', `Corretti ${nome} (${numeroIt(n)}): ${a.descrizione}`, `corretto: ${nome} ora sono ${numeroIt(n)}`, { su });
+        },
+      });
+      $('a-n-consegna').onclick = () => correggi('inConsegna', 'in consegna');
+      $('a-n-montare').onclick = () => correggi('daMontare', 'da montare');
+    }
     $('a-tolti').onclick = () => chiediNumero({
       titolo: 'Quanti ne hai tolti?', testo: `${esc(a.descrizione)}<br>Se li hai usati per un cliente, segnali dalla sua scheda.`, positivo: true, nota: 'Perché',
       pulsante: 'Togli dal magazzino', fai: (n, nota) => salvaUno('tolto', n, nota, `Tolti ${numeroIt(n)}: ${a.descrizione}`, `tolti dal magazzino ${pezziTesto(n)}`),
@@ -3007,56 +3479,82 @@
     };
   }
 
+  // Un articolo nell'elenco: il bordo col colore della categoria, e sotto
+  // quanti ne sono in consegna e da montare, col totale (21 ott 2026).
   function voceArticolo(a) {
+    const tot = disponibile(a);
     const etichetta = a.quantita < 0 ? '<span class="etichetta rosso">Sotto zero: ricontali</span>'
-      : daRiordinare(a) ? '<span class="etichetta arancio">Da riordinare</span>' : '';
-    return `<button class="voce articolo" type="button" data-articolo="${esc(a.codice)}">
+      : tot < 0 ? '<span class="etichetta rosso">Da ordinare: venduti più di quelli che hai</span>'
+        : daRiordinare(a) ? '<span class="etichetta arancio">Da riordinare</span>' : '';
+    const attesa = [a.inConsegna > 0 && `${numeroIt(a.inConsegna)} in consegna`, a.daMontare > 0 && `${numeroIt(a.daMontare)} da montare`].filter(Boolean);
+    return `<button class="voce articolo ${classeCategoria(categoriaDi(a))}" type="button" data-articolo="${esc(a.codice)}">
       <span class="articolo-testo"><b>${esc(a.descrizione)}</b>
         ${a.fornitore || a.note ? `<span class="riga2">${esc([a.fornitore, a.note].filter(Boolean).join(' · '))}</span>` : ''}
+        ${attesa.length ? `<span class="riga2 attesa">${esc(attesa.join(' · '))} · totale ${numeroIt(tot)}</span>` : ''}
         ${etichetta ? `<span class="riga3">${etichetta}</span>` : ''}</span>
       <span class="pezzi ${coloreQuantita(a)}"><b>${numeroIt(a.quantita)}</b><small>${a.quantita === 1 ? 'pezzo' : 'pezzi'}</small></span>
     </button>`;
   }
 
+  // La pagina del magazzino. Dal 21 ott 2026 (Matteo: «nell'app metti anche
+  // per filtrare impianti, filtri, miscelatori») una fila di categorie, coi
+  // colori del foglio, sopra l'elenco; e i filtri «In consegna» e «Da montare».
+  const FILTRI_MAG = ['riordinare', 'finiti', 'consegna', 'montare'];
   function schermoMagazzino(stato) {
     titolo('Magazzino', true);
     if (!mag()) { schermo.innerHTML = '<div class="vuoto">Il magazzino non è ancora nel foglio. Chiedi a Matteo.</div>'; return; }
     const tutti = articoliMag();
-    const filtro = ['riordinare', 'finiti'].includes(stato.filtro) ? stato.filtro : 'tutti';
-    const finiti = tutti.filter((a) => a.quantita <= 0);
-    const riordinare = tutti.filter(daRiordinare);
+    const numeri = numeriMag();
+    const filtro = FILTRI_MAG.includes(stato.filtro) ? stato.filtro : 'tutti';
+    const cat = categorieMag().includes(stato.cat) ? stato.cat : '';
+    const gruppi = {
+      tutti, riordinare: tutti.filter(daRiordinare), finiti: tutti.filter((a) => a.quantita <= 0),
+      consegna: tutti.filter((a) => a.inConsegna > 0), montare: tutti.filter((a) => a.daMontare > 0),
+    };
+    const base = gruppi[filtro];
     const pezzi = tutti.reduce((s, a) => s + Math.max(0, a.quantita), 0);
     const valore = tutti.reduce((s, a) => s + Math.max(0, a.quantita) * (a.costo || 0), 0);
+    const pillola = (k, t, rossa = false) => `<button class="pillola${rossa && gruppi[k].length ? ' pillola-rossa' : ''}" data-filtro="${k}" aria-pressed="${filtro === k}">${t} (${gruppi[k].length})</button>`;
     schermo.innerHTML = `
       <div class="cerca"><input id="cerca-mag" type="search" autocomplete="off" placeholder="Cerca un articolo" value="${esc(stato.q || '')}"></div>
       <div class="pillole">
-        <button class="pillola" data-filtro="tutti" aria-pressed="${filtro === 'tutti'}">Tutti (${tutti.length})</button>
-        <button class="pillola${riordinare.length ? ' pillola-rossa' : ''}" data-filtro="riordinare" aria-pressed="${filtro === 'riordinare'}">Da riordinare (${riordinare.length})</button>
-        <button class="pillola" data-filtro="finiti" aria-pressed="${filtro === 'finiti'}">Finiti (${finiti.length})</button>
+        ${pillola('tutti', 'Tutti')}${pillola('riordinare', 'Da riordinare', true)}${pillola('finiti', 'Finiti')}
+        ${numeri ? pillola('consegna', 'In consegna') + pillola('montare', 'Da montare') : ''}
+      </div>
+      <div class="pillole pillole-categorie">
+        <button class="pillola" data-cat="" aria-pressed="${!cat}">Tutte le categorie</button>
+        ${categorieMag().map((c) => `<button class="pillola ${classeCategoria(c)}" data-cat="${esc(c)}" aria-pressed="${cat === c}">${esc(c)} (${base.filter((a) => categoriaDi(a) === c).length})</button>`).join('')}
       </div>
       <div class="azioni-magazzino">
         <button class="btn pieno" type="button" id="arrivata">${icona('frecciaGiu')} È arrivata merce</button>
         <button class="btn" type="button" id="nuovo-articolo">${icona('piu')} Nuovo articolo</button>
       </div>
-      <p class="spiega">${pezziTesto(pezzi)} in magazzino${valore ? `, per € ${Math.round(valore).toLocaleString('it-IT')} al prezzo d'acquisto` : ''}. Tocca un articolo per segnare quelli arrivati, correggere il numero o cambiarne i dati.</p>
+      <p class="spiega">${pezziTesto(pezzi)} in magazzino${valore ? `, per € ${Math.round(valore).toLocaleString('it-IT')} al prezzo d'acquisto` : ''}.${numeri ? ' Il totale di un articolo è in magazzino + in consegna − da montare: «da riordinare» si guarda lì.' : ''} Tocca un articolo per segnare quelli arrivati, ordinati o venduti, correggere i numeri o cambiarne i dati.</p>
       <div id="lista-mag"></div>`;
     const disegnaLista = () => {
       const q = normalizza($('cerca-mag').value);
-      let lista = filtro === 'riordinare' ? riordinare : filtro === 'finiti' ? finiti : tutti;
+      let lista = base;
       if (q) lista = lista.filter((a) => normalizza([a.descrizione, a.fornitore, a.codice, a.categoria, a.note].join(' ')).includes(q));
-      const html = categorieMag().map((cat) => {
-        const l = lista.filter((a) => categoriaDi(a) === cat);
-        return l.length ? `<h2 class="gruppo">${esc(cat)} (${l.length})</h2><div class="lista">${l.map(voceArticolo).join('')}</div>` : '';
+      const html = categorieMag().filter((c) => !cat || c === cat).map((c) => {
+        const l = lista.filter((a) => categoriaDi(a) === c);
+        return l.length ? `<h2 class="gruppo ${classeCategoria(c)}">${esc(c)} (${l.length})</h2><div class="lista">${l.map(voceArticolo).join('')}</div>` : '';
       }).join('');
-      $('lista-mag').innerHTML = html || `<div class="vuoto">${q ? 'Nessun articolo con questo nome.'
-        : filtro === 'riordinare' ? 'Niente da riordinare.<br><br>Un articolo è «da riordinare» quando ne restano quanti dice la sua scorta minima: la scegli toccandolo, in «Modifica i dati».'
-          : filtro === 'finiti' ? 'Nessun articolo finito.' : 'Il magazzino è vuoto.'}</div>`;
+      const vuoti = {
+        riordinare: 'Niente da riordinare.<br><br>Un articolo è «da riordinare» quando il suo totale arriva alla scorta minima: la scegli toccandolo, in «Modifica i dati».',
+        finiti: 'Nessun articolo finito.',
+        consegna: 'Niente in consegna.<br><br>Quando ordini al fornitore, tocca l\'articolo e «Ordinati».',
+        montare: 'Niente da montare.<br><br>Quando un cliente compra, tocca l\'articolo e «Venduti, da montare».',
+      };
+      $('lista-mag').innerHTML = html || `<div class="vuoto">${q ? 'Nessun articolo con questo nome.' : cat ? `Nessun articolo fra ${esc(cat)}.` : vuoti[filtro] || 'Il magazzino è vuoto.'}</div>`;
       $('lista-mag').querySelectorAll('[data-articolo]').forEach((b) => { b.onclick = () => { const a = articoloDa(b.dataset.articolo); if (a) chiediArticolo(a); }; });
     };
+    const ricorda = (cambi) => {
+      history.replaceState({ s: 'magazzino', filtro, cat, q: $('cerca-mag').value, ...cambi }, '', location.pathname + location.hash);
+      disegna(history.state);
+    };
     $('cerca-mag').oninput = () => { history.replaceState({ ...history.state, q: $('cerca-mag').value }, '', location.pathname + location.hash); disegnaLista(); };
-    schermo.querySelectorAll('[data-filtro]').forEach((b) => {
-      b.onclick = () => { history.replaceState({ s: 'magazzino', filtro: b.dataset.filtro, q: $('cerca-mag').value }, '', location.pathname + location.hash); disegna(history.state); };
-    });
+    schermo.querySelectorAll('[data-filtro]').forEach((b) => { b.onclick = () => ricorda({ filtro: b.dataset.filtro }); });
+    schermo.querySelectorAll('[data-cat]').forEach((b) => { b.onclick = () => ricorda({ cat: b.dataset.cat }); });
     $('arrivata').onclick = () => chiediMateriali({ carico: true, dopo: avvisaMovimento });
     $('nuovo-articolo').onclick = () => chiediDatiArticolo(null);
     disegnaLista();
@@ -3224,7 +3722,7 @@
     schermo.innerHTML = `
       <div class="testa"><h2>${esc(l.nome || 'Senza nome')}</h2><p>Arrivato il ${esc(String(l.data).split(',')[0])}${l.provenienza ? ' da ' + esc(l.provenienza) : ''}</p></div>
       <div class="azioni">${pulsantiContatto(l.contatto, '')}</div>
-      ${io() ? riquadroTappe(tappeDi((t) => t.contatto === chiaveLead(l))) : ''}
+      ${giranti().length ? riquadroTappe(tappeDi((t) => t.contatto === chiaveLead(l))) : ''}
       <h3 class="titoletto">Com'è andata?</h3>
       <div class="stati">${(dati.stati || Object.keys(ETICHETTE_STATO)).map((s) => `
         <button class="stato" data-stato="${esc(s)}" aria-pressed="${attuale === s}">
