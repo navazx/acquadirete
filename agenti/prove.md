@@ -61,3 +61,10 @@ il repository è pubblico.
 - Come si misura: in Search Console dal 17 novembre, per le due ricerche: quali pagine compaiono, con posizione e clic dell'articolo sul bonus. I numeri sono piccoli (62 volte in un mese), quindi conta quale pagina compare, non le percentuali.
 - Si controlla dal: 2026-11-17
 - Esito: da vedere
+
+## 2026-10-21 · ADS · modifiche a Google Ads approvate su Telegram
+- Cosa è cambiato: la proposta per Google Ads del 21/10: applicate 14 modifiche (14 ricerche escluse). Budget e offerte non toccati. La revisione del mese prossimo dice se hanno funzionato.
+- Cosa ci si aspetta: meno clic che non portano contatti, senza perdere contatti veri
+- Come si misura: clic, spesa e contatti "arrivato da un annuncio Google" nel Gestionale, quattro settimane prima e dopo
+- Si controlla dal: 2026-11-18
+- Esito: da vedere
