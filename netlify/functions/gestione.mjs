@@ -21,7 +21,7 @@ import {
   nuovoCliente, modificaCliente,
   nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
   salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, vistePerCategoria, creaFoglioGoogle,
-  cancellaIntervento, annullaCancellazione, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
+  cancellaIntervento, annullaCancellazione, cancellaLavoro, annullaCancellaLavoro, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
 } from './_shared/gestionale.mjs';
 
@@ -98,6 +98,8 @@ const AZIONI = {
   aggiornaMagazzino, // In consegna, Da montare, Totale e colori delle categorie (21 ott 2026, solo Matteo)
   cancellaIntervento,
   annullaCancellazione,
+  cancellaLavoro, // un lavoro fatto, dal Giro del giorno
+  annullaCancellaLavoro,
   accessi: salvaAccessi, // le impostazioni (solo Matteo)
 };
 
@@ -106,6 +108,8 @@ const AZIONI = {
 const PERMESSO_PER = {
   cancellaIntervento: () => 'cancellaInterventi',
   annullaCancellazione: () => 'cancellaInterventi',
+  cancellaLavoro: () => 'cancellaInterventi',
+  annullaCancellaLavoro: () => 'cancellaInterventi',
   sposta: (d) => (d.verso === 'persi' ? 'togliClienti' : null),
 };
 // Quelle per cui servono gli Accessi: i permessi, e chi ha un giro (le tappe).

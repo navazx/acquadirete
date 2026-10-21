@@ -2505,6 +2505,104 @@
     schermo.querySelectorAll('[data-svuota]').forEach((b) => { b.onclick = () => chiediSvuota(b.dataset.svuota, giorno); });
     collegaTappe({});
     collegaInterventi();
+    schermo.querySelectorAll('[data-lavoro-fatto]').forEach((b) => {
+      b.onclick = () => { const t = (dati.tappe || []).find((x) => x.id === b.dataset.lavoroFatto); if (t) chiediLavoroFatto(t); };
+    });
+  }
+
+  // Un lavoro fatto, toccato nel Giro del giorno (21 ott 2026, Matteo: «il
+  // lavoro che non riesco a cancellare lo vedo in giro del giorno»): cos'era,
+  // i materiali, la scheda e «Cancella questo lavoro» (stesso permesso degli
+  // interventi). Il motore (cancellaLavoro) cancella anche l'intervento che
+  // quel «Fatto» aveva scritto, se c'è: il primo dello stesso cliente e tipo
+  // dal giorno della tappa in poi (come interventoDellaTappa qui).
+  function interventoDellaTappa(t) {
+    if (!t.codice || !['Manutenzione', 'Guasto'].includes(t.lavoro)) return null;
+    const dal = serialeGiorno(giornoDi(t));
+    return (dati.storico || [])
+      .filter((x) => x.codice === t.codice && (x.lavoro === 'Guasto' ? 'Guasto' : 'Manutenzione') === t.lavoro
+        && serialeGiorno(x.data) != null && (dal == null || serialeGiorno(x.data) >= dal))
+      .sort((a, b) => serialeGiorno(a.data) - serialeGiorno(b.data))[0] || null;
+  }
+  // I materiali di una tappa senza intervento: del primo giorno con dei materiali dal giorno della tappa.
+  function materialiTappa(t) {
+    const dal = serialeGiorno(giornoDi(t));
+    const suoi = (mag() ? mag().movimenti || [] : []).filter((m) => m.causale === CAUSALI_MAG.lavoro && stessoLavoro(m.lavoro, t.lavoro || 'Altro')
+      && (t.codice ? m.cliente === t.codice : !m.cliente && normalizza(m.nome) === normalizza(t.nome))
+      && serialeGiorno(m.data) != null && (dal == null || serialeGiorno(m.data) >= dal));
+    if (!suoi.length) return '';
+    const primo = Math.min(...suoi.map((m) => serialeGiorno(m.data)));
+    return suoi.filter((m) => serialeGiorno(m.data) === primo).map((m) => `${numeroIt(-m.quantita)} × ${m.descrizione}`).join(', ');
+  }
+  // «Installazione fatta», «Sopralluogo fatto».
+  const fattoA = (lavoro) => (['Manutenzione', 'Installazione'].includes(lavoro) ? 'fatta' : 'fatto');
+  function chiediLavoroFatto(t) {
+    const l = luogoTappa(t);
+    const x = interventoDellaTappa(t);
+    const usati = x ? materialiDi(x.codice, x.data, x.lavoro) : materialiTappa(t);
+    const apri = (t.codice && clienteIn(dati, t.codice)) || (t.contatto && leadDaChiave(t.contatto));
+    apriFinestra(`
+      <h3>${esc(l.nome)}</h3>
+      <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? breve(x.pagamento) : 'pagamento non segnato')}.` : ''}</p>
+      ${usati ? `<p>Materiali: ${esc(usati)}</p>` : ''}
+      ${apri ? '<button class="btn" type="button" id="apri-lavoro">Apri la scheda</button>' : ''}
+      ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-lavoro">${icona('cestino')} Cancella questo lavoro</button>` : ''}
+      <button class="btn leggero" type="button" id="no">Chiudi</button>`);
+    $('no').onclick = chiudiFinestra;
+    if ($('apri-lavoro')) $('apri-lavoro').onclick = () => apriTappa(t);
+    if ($('cancella-lavoro')) $('cancella-lavoro').onclick = () => chiediCancellaLavoro(t, x, usati);
+  }
+  function chiediCancellaLavoro(t, x, usati) {
+    const torna = x ? scadenzaSeCancello(x) : null;
+    apriFinestra(`
+      <h3>Cancellare questo lavoro?</h3>
+      <p><strong>${esc(luogoTappa(t).nome)}</strong> · ${esc(t.lavoro || 'Altro')}${t.chi ? `, ${fattoA(t.lavoro)} ${esc(daChi(t.chi))}` : ''}. Sparisce dai lavori fatti del giro${x ? ' e dagli interventi fatti (nel foglio ne resta una copia)' : ''}.</p>
+      ${torna != null ? `<p>Quella manutenzione aveva spostato la prossima al <strong>${esc(x.prossima)}</strong>. Se non è stata fatta davvero, rimettila al <strong>${esc(testoGiorno(torna))}</strong>.</p>` : ''}
+      ${usati ? `<p>I materiali segnati (${esc(usati)}) tornano in magazzino.</p>` : ''}
+      ${bottoniCancella(x, torna)}
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('finestra').querySelectorAll('[data-cancella]').forEach((b) => {
+      b.onclick = (e) => conPulsante(e.currentTarget, 'Cancello…', () => cancellaIlLavoro(t, x, b.dataset.cancella === 'si'));
+    });
+  }
+  async function cancellaIlLavoro(t, x, rimetti) {
+    let r;
+    try {
+      r = await api('cancellaLavoro', { id: t.id, rimetti });
+    } catch (err) {
+      messaggio(err.linea ? 'Per cancellare serve il campo. Riprova quando c\'è linea.' : err.message, { errore: true, durata: 8000 });
+      return;
+    }
+    const c = t.codice && clienteIn(dati, t.codice);
+    const fotoC = c ? fotografia(c) : null;
+    const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
+    const fotoStorico = (dati.storico || []).slice();
+    const via = new Set([t.id, ...(r.tappe || [])]);
+    dati.tappe = (dati.tappe || []).filter((y) => !via.has(y.id));
+    if (r.intervento && x) dati.storico = (dati.storico || []).filter((s) => s !== x);
+    if (c && r.prossima) { const g = String(r.prossima).split('/'); conProssima(c, { g: +g[0], m: +g[1], a: +g[2] }); }
+    salvaDati();
+    chiudiFinestra();
+    disegna(history.state);
+    aggiornaInSottofondo(); // il magazzino coi pezzi tornati
+    messaggio(dopoCancellato(luogoTappa(t).nome, r), {
+      durata: 12000,
+      azione: {
+        testo: 'Annulla',
+        fai: () => api('annullaCancellaLavoro', r.annulla)
+          .then(() => {
+            dati.tappe = fotoTappe;
+            dati.storico = fotoStorico;
+            if (fotoC) fotoC();
+            salvaDati();
+            disegna(history.state);
+            aggiornaInSottofondo();
+            messaggio('Annullato: il lavoro è tornato.');
+          })
+          .catch((err) => messaggio(err.linea ? 'Senza campo non si annulla: riprova fra poco.' : err.message, { errore: true, durata: 8000 })),
+      },
+    });
   }
 
   // Una tappa: tocchi il nome e apri la scheda; sotto, «Fatto», passarla
@@ -2542,7 +2640,7 @@
   }
   function voceFatta(t) {
     const l = luogoTappa(t);
-    return `<button class="voce" type="button" data-tappa-apri="${esc(t.id)}">
+    return `<button class="voce" type="button" data-lavoro-fatto="${esc(t.id)}">
       <b>${esc(l.nome)}</b>
       <span class="riga2">${esc(t.lavoro || 'Altro')} · fatta ${esc(daChi(t.chi))}</span>
       <span class="riga3"><span class="etichetta verde">Fatto ✓</span></span>
@@ -2840,16 +2938,24 @@
       <h3>Cancellare questo intervento?</h3>
       <p>${tipoIntervento(x)} del <strong>${esc(x.data)}</strong> a <strong>${esc(x.nome || x.codice)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}. Sparisce dagli interventi fatti; nel foglio ne resta una copia.</p>
       ${torna != null ? `<p>Questo intervento aveva spostato la prossima manutenzione al <strong>${esc(x.prossima)}</strong>. Se non è stato fatto davvero, rimettila al <strong>${esc(testoGiorno(torna))}</strong>.</p>` : ''}
-      ${usati ? `<p>I materiali segnati (${esc(usati)}) restano: si tolgono dalla scheda del cliente.</p>` : ''}
-      ${torna != null ? `<button class="btn btn-rosso-pieno" type="button" data-cancella="si">${icona('cestino')} Cancella e rimetti al ${esc(testoGiorno(torna))}</button>
-        <button class="btn btn-rosso" type="button" data-cancella="no">Cancella e lascia il ${esc(x.prossima)}</button>`
-        : `<button class="btn btn-rosso-pieno" type="button" data-cancella="no">${icona('cestino')} Sì, cancella</button>`}
+      ${usati ? `<p>I materiali segnati (${esc(usati)}) tornano in magazzino.</p>` : ''}
+      ${bottoniCancella(x, torna)}
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     $('no').onclick = chiudiFinestra;
     $('finestra').querySelectorAll('[data-cancella]').forEach((b) => {
       b.onclick = (e) => conPulsante(e.currentTarget, 'Cancello…', () => cancellaLIntervento(x, b.dataset.cancella === 'si'));
     });
   }
+  // «Cancella e rimetti al …» / «Cancella e lascia il …», o solo «Sì, cancella».
+  const bottoniCancella = (x, torna) => (torna != null
+    ? `<button class="btn btn-rosso-pieno" type="button" data-cancella="si">${icona('cestino')} Cancella e rimetti al ${esc(testoGiorno(torna))}</button>
+        <button class="btn btn-rosso" type="button" data-cancella="no">Cancella e lascia il ${esc(x.prossima)}</button>`
+    : `<button class="btn btn-rosso-pieno" type="button" data-cancella="no">${icona('cestino')} Sì, cancella</button>`);
+  // Il messaggio dopo una cancellazione: i pezzi tornati e la scadenza.
+  const dopoCancellato = (nome, r) => `Cancellato: ${nome}`
+    + (r.materiali ? ` · ${pezziTesto(r.materiali)} ${r.materiali === 1 ? 'tornato' : 'tornati'} in magazzino` : '')
+    + (r.materialiNo ? ' · i materiali no: rimettili dalla scheda del cliente' : '')
+    + (r.prossima ? `. Prossima manutenzione al ${r.prossima}` : '');
   async function cancellaLIntervento(x, rimetti) {
     let r;
     try {
@@ -2860,21 +2966,26 @@
     }
     const c = clienteIn(dati, x.codice);
     const fotoC = c ? fotografia(c) : null;
+    const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
     dati.storico = (dati.storico || []).filter((s) => s !== x);
+    dati.tappe = (dati.tappe || []).filter((t) => !(r.tappe || []).includes(t.id));
     if (c && r.prossima) { const g = String(r.prossima).split('/'); conProssima(c, { g: +g[0], m: +g[1], a: +g[2] }); }
     salvaDati();
     chiudiFinestra();
     disegna(history.state);
-    messaggio(`Cancellato: ${x.nome || x.codice} del ${x.data}${r.prossima ? `. Prossima manutenzione al ${r.prossima}` : ''}`, {
+    aggiornaInSottofondo(); // il magazzino coi pezzi tornati
+    messaggio(`${dopoCancellato(x.nome || x.codice, r)}`, {
       durata: 12000,
       azione: {
         testo: 'Annulla',
         fai: () => api('annullaCancellazione', r.annulla)
           .then(() => {
             dati.storico = [...(dati.storico || []), x];
+            dati.tappe = fotoTappe;
             if (fotoC) fotoC();
             salvaDati();
             disegna(history.state);
+            aggiornaInSottofondo();
             messaggio('Annullato: l\'intervento è tornato.');
           })
           .catch((err) => messaggio(err.linea ? 'Senza campo non si annulla: riprova fra poco.' : err.message, { errore: true, durata: 8000 })),

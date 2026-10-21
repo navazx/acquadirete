@@ -572,8 +572,89 @@ export async function cambiaPagamento(foglio, { riga, codice, data, pagamento })
 // riga (dal 21 ott 2026), se no alla scadenza dell'intervento prima, se no
 // al giorno dell'intervento (la manutenzione torna da fare). Non la tocca se nel frattempo è cambiata, o se un altro intervento
 // dello stesso cliente la tiene lì (un doppione segnato due volte).
-// I materiali usati restano: si tolgono dalla scheda del cliente.
+// Dal 21 ott 2026 sera (Matteo: «metti che i materiali tornano in magazzino
+// se cancello»; «il lavoro che non riesco a cancellare lo vedo in giro del
+// giorno») i materiali di quell'intervento tornano in magazzino
+// (materialiIndietro) e le tappe «Fatta» che aveva chiuso spariscono dal
+// giro (tappeDellIntervento). L'annulla rimette tutto.
 export const TAB_CANCELLATI = 'Interventi-Cancellati';
+// Il lavoro di una riga dello storico, come lo chiamano tappe e materiali.
+const lavoroDellaRiga = (k, r) => (lavoroStorico((r || [])[k.lavoro]) === 'Guasto' ? 'Guasto' : 'Manutenzione');
+// Lo stesso lavoro: Manutenzione vale anche per un lavoro vuoto (le righe di prima).
+const stessoLavoro = (v, lavoro) => normalizza(v) === normalizza(lavoro) || (normalizza(lavoro) === 'manutenzione' && !normalizza(v));
+
+// I materiali «Usato in un lavoro» di un lavoro fatto tornano in magazzino.
+// Si annullano i movimenti interi (annullaMagazzino), così torna giusto anche
+// il «Da montare» che un impianto montato aveva fatto scendere. Il lavoro si
+// riconosce da cliente (o, per un contatto o un indirizzo, dal nome), lavoro e
+// data: `data` esatta, oppure `dal` = il primo giorno con dei materiali da
+// lì in poi (una tappa rimasta dai giorni prima e fatta dopo). Torna quello
+// che serve per rimetterli (materialiDiNuovo), o null se non c'era niente.
+async function materialiIndietro(foglio, { codice = '', nome = '', data = '', dal = '', lavoro = 'Manutenzione' }) {
+  const m = await leggiMagazzino(foglio);
+  if (!m) return null;
+  const cod = testo(codice).toUpperCase();
+  const suo = (x) => x.causale === CAUSALI.lavoro && stessoLavoro(x.lavoro, lavoro) && !ID_DEL_MOTORE.test(x.id)
+    && (cod ? x.cliente === cod : !x.cliente && normalizza(x.nome) === normalizza(nome));
+  let giorno = '';
+  if (data) {
+    const d = leggiDataUtente(data);
+    if (!d) return null;
+    giorno = testoData(d);
+  } else {
+    const da = serialeDaCella(testo(dal));
+    const giorni = m.movimenti.filter(suo).map((x) => serialeDaCella(x.data)).filter((s) => s != null && (da == null || s >= da));
+    if (!giorni.length) return null;
+    giorno = testoData(dataDaSeriale(Math.min(...giorni)));
+  }
+  const usati = m.movimenti.filter((x) => suo(x) && x.data === giorno);
+  if (!usati.length) return null;
+  for (const l of new Set(usati.map((x) => x.id.replace(/-\d+$/, '')))) await annullaMagazzino(foglio, { id: l });
+  const righe = new Map();
+  for (const x of usati) righe.set(x.articolo, arrotonda((righe.get(x.articolo) || 0) - x.quantita));
+  return {
+    codice: cod, nome: testo(nome).slice(0, 120) || usati[0].nome, lavoro, data: giorno,
+    righe: [...righe].filter(([, q]) => q > 0).map(([articolo, quantita]) => ({ articolo, quantita })),
+  };
+}
+// L'annulla: gli stessi materiali, segnati di nuovo come usati in quel lavoro.
+async function materialiDiNuovo(foglio, mat, ctx) {
+  if (!mat || !Array.isArray(mat.righe) || !mat.righe.length) return;
+  const cod = testo(mat.codice).toUpperCase();
+  if (cod && !/^C\d+$/.test(cod)) throw problema('Non riesco ad annullare.', 422);
+  await muoviMagazzino(foglio, {
+    id: `rimessi${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, causale: 'lavoro', data: mat.data,
+    codice: cod, nome: mat.nome, lavoro: LAVORI.find((l) => normalizza(l) === normalizza(mat.lavoro)) || 'Manutenzione', righe: mat.righe.slice(0, 40),
+  }, ctx);
+}
+
+// Le tappe «Fatta» chiuse da un intervento: dello stesso cliente e lavoro,
+// del giorno dell'intervento o prima, ma dopo l'intervento precedente dello
+// stesso tipo (quelle le aveva chiuse lui). Si tolgono dal giro; torna
+// quello che serve per rimetterle (salvaTappa).
+async function togliTappeDellIntervento(foglio, g, k, n, cod, lavoro) {
+  const serData = serialeDaCella(testo((g[n - 1] || [])[k.data]));
+  if (serData == null) return [];
+  let prima = null;
+  for (let i = 2; i <= g.length; i++) {
+    const r = g[i - 1] || [];
+    if (i === n || testo(r[k.codice]).toUpperCase() !== cod || lavoroDellaRiga(k, r) !== lavoro) continue;
+    const s = serialeDaCella(testo(r[k.data]));
+    if (s != null && s < serData && (prima == null || s > prima)) prima = s;
+  }
+  const { tappe } = await leggiGiri(foglio);
+  const sue = tappe.filter((t) => {
+    if (t.stato !== 'Fatta' || t.codice !== cod || !stessoLavoro(t.lavoro, lavoro)) return false;
+    const s = serialeDaCella(t.giorno);
+    return s != null && s <= serData && (prima == null || s > prima);
+  });
+  const tolte = [];
+  for (const t of sue) {
+    const r = await togliTappa(foglio, { id: t.id });
+    if (r.annulla) tolte.push(r.annulla);
+  }
+  return tolte;
+}
 const scadenzaDopoCancellazione = (g, k, n, cod) => {
   const r = g[n - 1] || [];
   const sua = serialeDaCella(testo(r[k.prossima]));
@@ -601,11 +682,30 @@ export async function cancellaIntervento(foglio, { riga, codice, data, rimetti =
   const valori = Array.from({ length: k.larghezza }, (_, i) => testo((g[n - 1] || [])[i]));
   const testa = (g[0] || []).slice(0, k.larghezza).map(testo);
 
+  const lavoro = lavoroDellaRiga(k, g[n - 1]);
+
   // Prima la copia (se qualcosa va storto qui, l'intervento è ancora al suo posto).
   const cancellato = await foglio.accoda(TAB_CANCELLATI, [...testa, 'Cancellato il', 'Cancellato da'],
     [...valori, testoData(oggi()), `App (${chi})`]);
   const larghezza = `'${TAB_STORICO}'!A${n}:${lettera(k.larghezza)}${n}`;
   await foglio.svuota(larghezza);
+
+  // I materiali tornano in magazzino e le tappe chiuse da lui spariscono dal
+  // giro. Se uno dei due non riesce, l'intervento è cancellato lo stesso: lo si dice.
+  let materiali = null;
+  let materialiNo = false;
+  try {
+    materiali = await materialiIndietro(foglio, { codice: cod, nome: valori[k.nome], data, lavoro });
+  } catch (err) {
+    console.error('Materiali non tornati:', err);
+    materialiNo = true;
+  }
+  let tappe = [];
+  try {
+    tappe = await togliTappeDellIntervento(foglio, g, k, n, cod, lavoro);
+  } catch (err) {
+    console.error('Tappe non tolte:', err);
+  }
 
   let scadenza = null;
   if (rimetti) {
@@ -627,13 +727,16 @@ export async function cancellaIntervento(foglio, { riga, codice, data, rimetti =
   }
   return {
     ok: true, nome: valori[k.nome] || cod, prossima: scadenza ? scadenza.prossima : '',
-    annulla: { riga: n, codice: cod, data: testo(data), valori, cancellato, scadenza },
+    materiali: materiali ? materiali.righe.reduce((s, r) => s + r.quantita, 0) : 0, materialiNo,
+    tappe: tappe.map((t) => t.id),
+    annulla: { riga: n, codice: cod, data: testo(data), valori, cancellato, scadenza, materiali, tappe },
   };
 }
 
 // «Annulla» della cancellazione: la riga torna nello storico (al suo posto,
-// se è ancora vuoto), sparisce dai cancellati e la scadenza torna com'era.
-export async function annullaCancellazione(foglio, { riga, codice, valori, cancellato, scadenza }) {
+// se è ancora vuoto), sparisce dai cancellati, la scadenza torna com'era, i
+// materiali si risegnano e le tappe tornano nel giro.
+export async function annullaCancellazione(foglio, { riga, codice, valori, cancellato, scadenza, materiali = null, tappe = [] }, ctx = {}) {
   const cod = testo(codice).toUpperCase();
   if (!Array.isArray(valori) || !valori.length || valori.length > 12) throw problema('Non riesco ad annullare.', 422);
   const righe = valori.map((v) => testo(v).slice(0, 300));
@@ -655,6 +758,68 @@ export async function annullaCancellazione(foglio, { riga, codice, valori, cance
     await annullaFatta(foglio, { codice: cod, prima: scadenza.prima, scritto: scadenza.scritto })
       .catch((err) => { if (!err.perUtente) throw err; });
   }
+  if (materiali && testo(materiali.codice).toUpperCase() === cod) await materialiDiNuovo(foglio, materiali, ctx);
+  for (const t of (Array.isArray(tappe) ? tappe : []).slice(0, 10)) {
+    await salvaTappa(foglio, { ...t, stato: 'Fatta' }, ctx).catch((err) => console.error('Tappa non rimessa:', err));
+  }
+  return { ok: true };
+}
+
+// Cancellare un lavoro fatto dal Giro del giorno (21 ott 2026): una tappa
+// segnata «Fatta». Se è una manutenzione o una riparazione di un cliente
+// finita negli Interventi fatti, si cancella quell'intervento (il primo dello
+// stesso tipo dal giorno della tappa in poi), con tutto quello che fa
+// cancellaIntervento. Se no (sopralluogo, installazione, contatto, indirizzo,
+// guasto chiuso senza intervento) tornano in magazzino i suoi materiali e la
+// tappa si toglie. Si annulla con annullaCancellaLavoro.
+export async function cancellaLavoro(foglio, { id, rimetti = false }, ctx = {}) {
+  const k = testo(id);
+  const { tappe } = await leggiGiri(foglio);
+  const t = tappe.find((x) => x.id === k);
+  if (!t) throw problema('Non trovo più questo lavoro nel giro. Riapri l\'app e riprova.', 409);
+  if (t.stato !== 'Fatta') throw problema('Questo lavoro non è segnato come fatto.', 409);
+  if (t.codice && ['Manutenzione', 'Guasto'].includes(t.lavoro)) {
+    const g = await leggiGrigliaStorico(foglio);
+    const ks = g && g.length ? colonneStorico(g) : null;
+    let trovato = null;
+    if (ks && ks.codice >= 0 && ks.data >= 0) {
+      const dal = serialeDaCella(t.giorno);
+      for (let i = 2; i <= g.length; i++) {
+        const r = g[i - 1] || [];
+        if (testo(r[ks.codice]).toUpperCase() !== t.codice || lavoroDellaRiga(ks, r) !== t.lavoro) continue;
+        const s = serialeDaCella(testo(r[ks.data]));
+        if (s == null || (dal != null && s < dal)) continue;
+        if (!trovato || s < trovato.s) trovato = { riga: i, s, data: testo(r[ks.data]) };
+      }
+    }
+    if (trovato) {
+      const r = await cancellaIntervento(foglio, { riga: trovato.riga, codice: t.codice, data: trovato.data, rimetti }, ctx);
+      if (!r.tappe.includes(t.id)) {
+        const tt = await togliTappa(foglio, { id: t.id });
+        if (tt.annulla) r.annulla.tappe.push(tt.annulla);
+      }
+      return { ...r, intervento: true, annulla: { intervento: r.annulla } };
+    }
+  }
+  let materiali = null;
+  let materialiNo = false;
+  try {
+    materiali = await materialiIndietro(foglio, { codice: t.codice, nome: t.nome, dal: t.giorno, lavoro: t.lavoro || 'Altro' });
+  } catch (err) {
+    console.error('Materiali non tornati:', err);
+    materialiNo = true;
+  }
+  const tt = await togliTappa(foglio, { id: t.id });
+  return {
+    ok: true, nome: t.nome, prossima: '', intervento: false, materialiNo,
+    materiali: materiali ? materiali.righe.reduce((s, r) => s + r.quantita, 0) : 0,
+    annulla: { tappa: tt.annulla, materiali },
+  };
+}
+export async function annullaCancellaLavoro(foglio, { intervento = null, tappa = null, materiali = null }, ctx = {}) {
+  if (intervento) return annullaCancellazione(foglio, intervento, ctx);
+  if (materiali) await materialiDiNuovo(foglio, materiali, ctx);
+  if (tappa && tappa.id) await salvaTappa(foglio, { ...tappa, stato: 'Fatta' }, ctx);
   return { ok: true };
 }
 
