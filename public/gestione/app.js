@@ -3128,7 +3128,7 @@
   // Contatto nuovo scritto a mano: chi telefona o scrive senza passare dal
   // modulo del sito. Il motore lo scrive in Lead-Contatti come quelli del
   // sito (nuovoLead in gestionale.mjs), poi si apre la sua scheda.
-  const PROVENIENZE = [['Passaparola', 'Passaparola'], ['Meta / Facebook', 'Facebook'], ['Sito web', 'Sito web'], ['Altro', 'Altro']];
+  const PROVENIENZE = [['Passaparola', 'Passaparola'], ['Meta / Facebook', 'Facebook'], ['Sito web', 'Sito web'], ['Annuncio Google (WhatsApp/telefono)', 'Annuncio Google']];
   function schermoNuovoLead() {
     titolo('Nuovo contatto', true);
     const piuUsati = (valori, n) => {

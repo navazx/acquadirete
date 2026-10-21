@@ -165,14 +165,17 @@ async function main() {
 
   const clienti = lead.filter((l) => l.stato === 'Cliente');
   const daMeta = (l) => l.provenienza.startsWith('Meta') || l.provenienza === 'Instagram' || l.provenienza === 'Facebook';
+  // Chi chiama o scrive su WhatsApp dopo un annuncio è passato dal sito: conta
+  // con "Sito web" (Provenienza "Annuncio Google (WhatsApp/telefono)", dal 21 ott 2026).
+  const dalSito = (l) => l.provenienza === 'Sito web' || l.provenienza.startsWith('Annuncio Google');
 
   const riga = [
     settimanaIso(lunedi),
     it(lunedi),
     it(domenica),
-    conta((l) => l.provenienza === 'Sito web'),
-    conta((l) => l.provenienza.startsWith('Meta') || l.provenienza === 'Instagram' || l.provenienza === 'Facebook'),
-    conta((l) => !['Sito web', 'Instagram', 'Facebook'].includes(l.provenienza) && !l.provenienza.startsWith('Meta')),
+    conta(dalSito),
+    conta(daMeta),
+    conta((l) => !dalSito(l) && !daMeta(l)),
     lead.length,
     lead.filter((l) => l.stato === 'Cliente').length,
     gsc.clic,
@@ -184,7 +187,7 @@ async function main() {
     meta,
     clienti.filter(daMeta).length,
     // chi non ha data sul foglio si conta: e' successo una volta (Vannucci), ed era un cliente vero
-    clienti.filter((l) => l.provenienza === 'Sito web' && (!l.data || l.data >= INIZIO_GOOGLE_ADS)).length,
+    clienti.filter((l) => dalSito(l) && (!l.data || l.data >= INIZIO_GOOGLE_ADS)).length,
     '',
   ];
 

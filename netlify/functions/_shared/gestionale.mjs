@@ -1316,7 +1316,11 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
 // nome "NOME COGNOME" in maiuscolo, zona nelle note come "Zona: Z4" così il
 // passaggio a cliente la ritrova, e lo stesso anti-doppioni del sito (stesso
 // telefono o email negli ultimi 30 giorni = si completa la riga che c'è).
-const PROVENIENZE = ['Meta / Facebook', 'Sito web', 'Passaparola', 'Altro'];
+// Gli stessi valori del menu a tendina della colonna Provenienza del foglio.
+// "Altro" non esiste più dal 21 ott 2026: al suo posto "Annuncio Google
+// (WhatsApp/telefono)", chi chiama o scrive su WhatsApp dopo un annuncio (il
+// modulo del sito lo sa da solo, le chiamate no: lo dice chi risponde).
+const PROVENIENZE = ['Meta / Facebook', 'Sito web', 'Annuncio Google (WhatsApp/telefono)', 'Passaparola'];
 export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
   const nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200);
   const telefono = testo(dati.telefono).slice(0, 50);
@@ -1370,7 +1374,9 @@ export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
     adesso,
     nome,
     [telefono, email].filter(Boolean).join(' · '),
-    PROVENIENZE.includes(dati.provenienza) ? dati.provenienza : 'Altro',
+    // Un telefono con l'app vecchia può ancora mandare "Altro": resta vuoto,
+    // da scegliere poi nel foglio, invece di finire su una voce sbagliata.
+    PROVENIENZE.includes(dati.provenienza) ? dati.provenienza : '',
     testo(dati.interesse).slice(0, 100),
     'Da richiamare',
     note,

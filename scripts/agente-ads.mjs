@@ -142,7 +142,8 @@ async function leggiFoglio(p) {
   // Mese per mese, da dove arrivano i contatti e quanti sono diventati clienti: il
   // cliente firma settimane dopo il contatto, quindi il mese in corso sembra
   // sempre peggio di com'e'. Serve all'analisi per non giudicare troppo presto.
-  const fonte = (l) => (/meta|facebook|instagram/i.test(l.provenienza) ? 'meta' : /sito/i.test(l.provenienza) ? 'sito' : 'altro');
+  // "annuncio" = chi chiama o scrive su WhatsApp dopo un annuncio (dal 21 ott 2026)
+  const fonte = (l) => (/meta|facebook|instagram/i.test(l.provenienza) ? 'meta' : /annuncio google/i.test(l.provenienza) ? 'annuncio' : /sito/i.test(l.provenienza) ? 'sito' : 'altro');
   const storico = {};
   for (const l of tutti) {
     const mese = giorno(l.data).slice(0, 7);

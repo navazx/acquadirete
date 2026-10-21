@@ -8,11 +8,13 @@
 //
 //  I canali:
 //    googleAds    contatti dal modulo del sito arrivati da un annuncio (lo sa il
-//                 modulo dal 27 set 2026: prima finivano in "sito")
+//                 modulo dal 27 set 2026: prima finivano in "sito"), e dal 21 ott
+//                 2026 chi chiama o scrive su WhatsApp dall'annuncio (Provenienza
+//                 "Annuncio Google (WhatsApp/telefono)", la sceglie chi risponde)
 //    sito         gli altri contatti "Sito web": Google senza annuncio, IA, altri
 //                 siti, chi scrive l'indirizzo. Gratis.
 //    meta         i moduli di Facebook e Instagram
-//    altro        passaparola, telefono, scritti a mano
+//    altro        passaparola (e il vecchio "Altro", tolto dal menu il 21 ott 2026)
 //
 //  Dentro ci sono cifre in euro: il risultato va solo nei file in /tmp del
 //  Direttore, mai nel repo, nei commit o sulla bacheca (il repo è pubblico).
@@ -27,6 +29,7 @@ const tondo = (n) => (n == null || !Number.isFinite(n) ? null : Math.round(n));
 
 export function canale(l) {
   if (/meta|facebook|instagram/i.test(l.provenienza)) return 'meta';
+  if (/annuncio google/i.test(l.provenienza)) return 'googleAds';
   if (/sito/i.test(l.provenienza)) return /annuncio google/i.test(l.note) ? 'googleAds' : 'sito';
   return 'altro';
 }
@@ -92,7 +95,7 @@ export function imbuto({ lead, settimane, visite, da, a, tetto = null }) {
 
   return {
     periodo: { da: da.toISOString().slice(0, 10), a: a.toISOString().slice(0, 10) },
-    come_si_legge: 'Per ogni canale: visite al sito da lì (contatore dal 16 ott 2026; null se non si sa) → contatti → sentiti (stato diverso da "Da richiamare") → preventivi ("Preventivo inviato" o "Cliente") → clienti. Lo stato è quello di oggi: i contatti recenti possono ancora diventare clienti. googleAds conta solo i moduli con "arrivato da un annuncio Google" (dal 27 set 2026): chi chiama o scrive su WhatsApp dall\'annuncio finisce in "sito" o "altro", quindi i clienti di Google Ads sono un minimo; e prima del 27 set 2026 i contatti da annuncio sono finiti tutti in "sito". La spesa è delle settimane del Cruscotto che cominciano nel periodo. RISERVATO: niente cifre in euro nel repo.',
+    come_si_legge: 'Per ogni canale: visite al sito da lì (contatore dal 16 ott 2026; null se non si sa) → contatti → sentiti (stato diverso da "Da richiamare") → preventivi ("Preventivo inviato" o "Cliente") → clienti. Lo stato è quello di oggi: i contatti recenti possono ancora diventare clienti. googleAds conta solo i moduli con "arrivato da un annuncio Google" (dal 27 set 2026): chi chiama o scrive su WhatsApp dall\'annuncio conta in googleAds solo dal 21 ott 2026 (Provenienza "Annuncio Google (WhatsApp/telefono)", scelta da chi risponde; prima finiva in "sito" o "altro"), quindi i clienti di Google Ads sono un minimo; e prima del 27 set 2026 i contatti da annuncio sono finiti tutti in "sito". La spesa è delle settimane del Cruscotto che cominciano nel periodo. RISERVATO: niente cifre in euro nel repo.',
     canali,
   };
 }
