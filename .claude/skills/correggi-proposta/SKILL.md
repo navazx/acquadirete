@@ -74,8 +74,12 @@ Un commit sul ramo. **La prima riga deve essere la stessa del primo commit della
 proposta** (`git log --reverse --format=%s origin/main..HEAD | head -1` ti dice
 qual è, per esempio `Articolo: <titolo>` o `SEO: 3 correzioni`; se hai cambiato
 il titolo dell'articolo, metti `Articolo: <titolo nuovo>`): diventa il titolo del
-messaggio che arriva a Matteo. Nel corpo, una riga per correzione fatta, e cosa non hai fatto e
-perché. Nel corpo **non scrivere mai le sigle fra parentesi quadre per saltare il
+messaggio che arriva a Matteo. Il corpo si apre con la riga `Cosa ho fatto:` e
+sotto, in prima persona e nel concreto, **tutto quello che la proposta cambia sul
+sito com'è adesso** (non solo la correzione di oggi): è l'elenco che Matteo rilegge
+nella conferma dopo APPROVA. Parti dal blocco "Cosa ho fatto:" dei commit
+precedenti del ramo (`git log --format=%B origin/main..HEAD`) e aggiornalo. Poi una
+riga vuota, una riga per correzione fatta, e cosa non hai fatto e perché. Nel corpo **non scrivere mai le sigle fra parentesi quadre per saltare il
 deploy o i controlli**: anche solo citate fermano il workflow.
 
 Poi `git push origin HEAD`. Se il push fallisce, **non provare altre strade**:

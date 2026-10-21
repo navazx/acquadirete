@@ -124,8 +124,13 @@ telefono: italiano semplice, niente codice, niente nomi di file.
 
 Committa sul ramo. **La prima riga del messaggio deve essere
 `Recensioni: <titolo corto>`**, per esempio `Recensioni: sul sito "140+" al posto
-di "130+"`: diventa il titolo del messaggio che arriva a Matteo. Sotto, due o tre
-righe per lui. Poi:
+di "130+"`: diventa il titolo del messaggio che arriva a Matteo. Il corpo si apre
+con la riga `Cosa ho fatto:` e sotto una riga per ogni scritta cambiata, in prima
+persona e nel concreto: dove si legge e le parole esatte ("- Nel piè di pagina ho
+cambiato «oltre 130 recensioni» in «oltre 140 recensioni»"; se sono tante uguali,
+una riga che le conta: "- Ho cambiato «130+» in «140+» in 18 punti: testata, piè di
+pagina, home e titoli delle pagine servizio"). Tornano da sole nella conferma dopo
+APPROVA. Poi una riga vuota e due o tre righe per lui. Poi:
 
 ```bash
 git push origin proposta/recensioni-<AAAA-MM-GG>

@@ -111,7 +111,11 @@ regola, una funzione di Netlify). Riparalo come proposta:
    cambio** · **Cosa non cambia** · **Come vedrai che funziona** · **Di cosa non
    sono sicuro**.
 6. Committa. **La prima riga deve essere `Riparazione: <titolo corto>`** (diventa
-   il titolo del messaggio). Sotto, due o tre righe per Matteo. Poi
+   il titolo del messaggio). Il corpo si apre con la riga `Cosa ho fatto:` e sotto
+   una riga per ogni cosa cambiata, in prima persona, nel concreto e senza nomi di
+   file ("- Ho fatto usare all'agente Ads la versione nuova del collegamento con
+   Google Ads, la 26 al posto della 22"). Torna da sola nella conferma dopo
+   APPROVA. Poi una riga vuota e due o tre righe per Matteo. Poi
    `git push origin proposta/riparazione-<AAAA-MM-GG>`: il workflow *Proposta -
    presentala a Matteo* prova a costruire il sito e gliela manda con APPROVA /
    CORREGGI / RIFIUTA RIPARAZIONE. Se il push fallisce, non provare altre strade:

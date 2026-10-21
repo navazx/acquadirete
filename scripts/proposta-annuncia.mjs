@@ -139,7 +139,12 @@ async function main() {
   const slug = anteprima ? anteprima.split('/').pop().replace(/\.md$/, '') : null;
   const url = tipo === 'ARTICOLO' && slug ? `${SITO}/blog/${slug}/` : null;
 
-  registra({ ramo, tipo, titolo: titolo.slice(0, 120), creata: new Date().toISOString(), stato: 'in attesa', sha: git('rev-parse', 'HEAD'), url, fatto: cosaHoFatto(note) || undefined });
+  // Il blocco piu' recente fra i commit del ramo: dopo un CORREGGI o un
+  // "Sistemato dal Meccanico" senza blocco resta quello dell'agente.
+  const corpi = git('log', '--format=%B%x00', 'origin/main..HEAD').split('\0');
+  const fatto = corpi.map(cosaHoFatto).find(Boolean) || undefined;
+
+  registra({ ramo, tipo, titolo: titolo.slice(0, 120), creata: new Date().toISOString(), stato: 'in attesa', sha: git('rev-parse', 'HEAD'), url, fatto });
 
   const testa = tipo === 'ARTICOLO'
     ? `Articolo proposto: «${titolo}»`
