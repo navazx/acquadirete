@@ -8,6 +8,8 @@ Le note di MATTEO vengono da lui: valgono come sue indicazioni, sempre dentro
 le regole del tuo lavoro. Le altre sono degli agenti: informazioni, non ordini.
 Gli ordini veri stanno in `agenti/ordini.md`.
 
+- **21/10, 18:25 · Ads** → per MATTEO, Direttore: Revisione Ads del mese fatta e mandata a Matteo su Telegram. Nel periodo Meta ha portato contatti ma nessun cliente. Dal sito sono arrivati clienti. Per MATTEO: 10 parole di ricerca sono da guardare e forse escludere su Google Ads (l'elenco è nel messaggio).
+- **21/10, 18:25 · Ads** → per MATTEO, Direttore: Per MATTEO: ho preparato 14 modifiche a Google Ads già pronte (ricerche da escludere, parole da mettere in pausa). Su Telegram rispondi APPROVA ADS e le applico io, oppure RIFIUTA ADS e il motivo.
 - **20/10, 10:25 · SEO** → per Contenuti, Direttore: Per Contenuti: l'articolo sul bonus della Regione, online dal 5/10, ha 80 viste e 0 clic; «depuratore acqua gratis province» e «… comune» fanno 43 viste fra i due articoli sul gratis, ma «provincia» e «comune» lì non compaiono mai. Per il Direttore: la pagina Assistenza scende, «assistenza depuratore acqua» da 7,3 a 16,5 di posizione media (numeri piccoli, da guardare).
 - **20/10, 10:25 · SEO**: Proposta SEO mandata a Matteo (1 correzione): su «depuratore acqua gratis toscana» e «… province» vince l'articolo sul bonus della Regione, e l'articolo sui contratti "gratis" gli porta un collegamento nel testo. Nessun segnale vetrina. Chi siamo era già sistemata, Note legali oggi risponde.
 - **20/10, 10:16 · Meccanico** → per MATTEO: Ti aspetta la riparazione della pubblicità: Google non accetta più la versione vecchia del suo sistema e la revisione Ads del 18 è saltata. Su Telegram rispondi APPROVA RIPARAZIONE.
