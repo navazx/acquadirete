@@ -111,9 +111,13 @@ const PERMESSO_PER = {
   cancellaLavoro: () => 'cancellaInterventi',
   annullaCancellaLavoro: () => 'cancellaInterventi',
   sposta: (d) => (d.verso === 'persi' ? 'togliClienti' : null),
+  // I materiali usati in un lavoro no: quelli li segna chiunque (22 ott 2026).
+  magazzino: (d) => (d.causale === 'lavoro' ? null : 'modificaMagazzino'),
+  articolo: () => 'modificaMagazzino',
 };
-// Quelle per cui servono gli Accessi: i permessi, e chi ha un giro (le tappe).
-const CON_ACCESSI = new Set([...Object.keys(PERMESSO_PER), 'tappa', 'assegna', 'accessi']);
+// Quelle per cui servono gli Accessi: i permessi, chi ha un giro (le tappe),
+// e l'annulla di un movimento (lo decide annullaMagazzino: dipende da cos'era).
+const CON_ACCESSI = new Set([...Object.keys(PERMESSO_PER), 'tappa', 'assegna', 'accessi', 'annullaMagazzino']);
 
 // creaFoglio è un parametro solo per il server di prova in locale
 // (scripts/gestione-locale.mjs), che scrive su una copia in memoria.
@@ -169,7 +173,7 @@ export const creaGestore = (creaFoglio) => async (req) => {
       const serve = PERMESSO_PER[body.azione] && PERMESSO_PER[body.azione](dati);
       const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
       if (serve && !mio[serve]) return risposta({ ok: false, errore: 'Non hai il permesso per farlo. Chiedi a Matteo.' }, 403);
-      ctx = { ...ctx, persone: giranti(acc) };
+      ctx = { ...ctx, persone: giranti(acc), permessi: Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]])) };
     }
     return risposta(await azione(foglio, dati, ctx));
   } catch (err) {

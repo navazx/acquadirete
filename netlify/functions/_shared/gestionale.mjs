@@ -843,14 +843,18 @@ export const PERMESSI = [
   { id: 'giro', colonna: 'Ha un giro', nome: 'Ha un suo giro del giorno', spiega: 'Va dai clienti: gli si possono dare delle tappe.' },
   { id: 'cancellaInterventi', colonna: 'Cancella interventi', nome: 'Cancella gli interventi fatti', spiega: 'Dalla pagina «Interventi fatti».' },
   { id: 'togliClienti', colonna: 'Toglie clienti', nome: 'Toglie i clienti (fra i persi)', spiega: '«Non è più nostro cliente», nella scheda del cliente.' },
+  // 22 ott 2026, Matteo: «la possibilità di modificare il magazzino senza aver
+  // fatto nessun intervento». Senza, il magazzino si guarda e basta: i
+  // materiali usati in un lavoro (e la loro correzione) li segna chiunque.
+  { id: 'modificaMagazzino', colonna: 'Modifica magazzino', nome: 'Modifica il magazzino', spiega: 'Merce arrivata, ordinata o venduta, pezzi tolti, conteggi e articoli, anche senza un lavoro. I materiali usati in un lavoro li segna chiunque.' },
 ];
 const COLONNE_ACCESSI = ['Persona', 'Nome', ...PERMESSI.map((p) => p.colonna), 'Cambiato il'];
 const ACCESSI_DI_BASE = {
-  matteo: { nome: 'Matteo', giro: true, cancellaInterventi: true, togliClienti: true },
-  babbo: { nome: 'Stefano', giro: true, cancellaInterventi: true, togliClienti: true },
-  segretaria: { nome: 'Segretaria', giro: false, cancellaInterventi: true, togliClienti: true },
+  matteo: { nome: 'Matteo', giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true },
+  babbo: { nome: 'Stefano', giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true },
+  segretaria: { nome: 'Segretaria', giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true },
 };
-const ACCESSI_NUOVO = { giro: true, cancellaInterventi: false, togliClienti: false };
+const ACCESSI_NUOVO = { giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false };
 const accessoDiBase = (p) => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), ...ACCESSI_NUOVO, ...ACCESSI_DI_BASE[p] });
 const siNo = (v) => {
   const n = normalizza(v);
@@ -2342,13 +2346,19 @@ export async function muoviMagazzino(foglio, dati, { chi = 'app' } = {}) {
 // Annulla un movimento (tutte le sue righe): le quantità tornano indietro
 // della stessa differenza, anche se intanto sono cambiate per altro, e le
 // righe dei movimenti si svuotano. Arrivato due volte, la seconda non fa niente.
-export async function annullaMagazzino(foglio, { id }) {
+// `permessi` (dal telefono, via gestione.mjs): un movimento che non è di un
+// lavoro (merce arrivata, tolti, contati…) si annulla solo con «Modifica il
+// magazzino» (22 ott 2026); i materiali di un lavoro li toglie chiunque.
+export async function annullaMagazzino(foglio, { id }, { permessi = null } = {}) {
   const k = testo(id);
   if (!/^[\w-]{6,40}$/.test(k) || ID_DEL_MOTORE.test(k)) throw problema('Questo movimento non si annulla dall\'app.');
   const m = await leggiMagazzino(foglio);
   if (!m) throw problema('Il magazzino non c\'è ancora nel foglio. Chiedi a Matteo.', 409);
   const suoi = m.movimenti.filter((x) => x.id.startsWith(`${k}-`));
   if (!suoi.length) return { ok: true, giaAnnullato: true, articoli: [] };
+  if (permessi && !permessi.modificaMagazzino && suoi.some((x) => ![CAUSALI.lavoro, CAUSALE_MONTATO].includes(x.causale))) {
+    throw problema('Per cambiare il magazzino serve il permesso. Chiedi a Matteo.', 403);
+  }
   // Ogni movimento torna indietro sul suo numero (Quantità, In consegna o Da montare).
   const finali = new Map();
   for (const x of suoi) {

@@ -436,6 +436,8 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .tre-numeri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 4px; }
 .tre-numeri > * { display: grid; place-items: center; gap: 2px; padding: 10px 6px; border: 0; border-radius: 14px; background: #f1f4f7; color: var(--testo); font: inherit; }
 .tre-numeri button { box-shadow: inset 0 0 0 2px var(--linea); }
+/* Senza «Modifica il magazzino» (22 ott 2026) i due numeri si leggono e basta. */
+.tre-numeri button[disabled] { box-shadow: none; color: inherit; opacity: 1; }
 .tre-numeri b { font-size: 24px; line-height: 1; }
 .tre-numeri small { font-size: 14px; color: var(--grigio); font-weight: 600; }
 .tre-numeri .totale { background: var(--blu-chiaro); color: var(--blu-scuro); }

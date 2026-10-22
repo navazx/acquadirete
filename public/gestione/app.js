@@ -3302,7 +3302,7 @@
         : `${nome ? `<strong>${esc(nome)}</strong>${lavoro ? ` · ${esc(lavoro)}` : ''}<br>` : ''}Tocca + su quello che hai usato: si toglie dal magazzino.`}</p>
       <input class="cerca-finestra" id="cerca-mat" type="search" autocomplete="off" placeholder="Cerca un articolo">
       <div id="lista-mat"></div>
-      <button class="link" type="button" id="mat-nuovo">Non c'è? Aggiungi un articolo</button>
+      ${puo('modificaMagazzino') ? '<button class="link" type="button" id="mat-nuovo">Non c\'è? Aggiungi un articolo</button>' : ''}
       <div class="piede-finestra">
         <button class="btn pieno grande" type="button" id="mat-salva"></button>
         <button class="btn leggero" type="button" id="mat-niente">${carico ? 'Lascia stare' : cambia ? 'Lascia com\'era' : 'Niente dal magazzino'}</button>
@@ -3369,7 +3369,7 @@
     alChiudere = () => fine(null);
     $('mat-niente').onclick = chiudiFinestra;
     // L'articolo nuovo, se è per un lavoro, è già scelto (uno).
-    $('mat-nuovo').onclick = () => chiediDatiArticolo(null, {
+    if ($('mat-nuovo')) $('mat-nuovo').onclick = () => chiediDatiArticolo(null, {
       perLavoro: !carico,
       poi: (nuovo) => {
         if (nuovo && !carico) scelti.set(nuovo.codice, (scelti.get(nuovo.codice) || 0) + 1);
@@ -3439,6 +3439,7 @@
   function chiediArticolo(a) {
     const movimenti = (mag().movimenti || []).filter((x) => x.articolo === a.codice).slice(-8).reverse();
     const numeri = numeriMag();
+    const cambia = puo('modificaMagazzino'); // senza, la finestra mostra e basta
     const tot = disponibile(a);
     apriFinestra(`
       <h3>${esc(a.descrizione)}</h3>
@@ -3446,20 +3447,21 @@
       <div class="quanti-grande ${coloreQuantita(a)}"><b>${numeroIt(a.quantita)}</b>
         <span>in magazzino${a.quantita < 0 ? ': sotto zero, ricontali' : !numeri && daRiordinare(a) ? ' · da riordinare' : ''}</span></div>
       ${numeri ? `<div class="tre-numeri">
-        <button type="button" id="a-n-consegna"><b>${numeroIt(a.inConsegna || 0)}</b><small>in consegna</small></button>
-        <button type="button" id="a-n-montare"><b>${numeroIt(a.daMontare || 0)}</b><small>da montare</small></button>
+        <button type="button" id="a-n-consegna"${cambia ? '' : ' disabled'}><b>${numeroIt(a.inConsegna || 0)}</b><small>in consegna</small></button>
+        <button type="button" id="a-n-montare"${cambia ? '' : ' disabled'}><b>${numeroIt(a.daMontare || 0)}</b><small>da montare</small></button>
         <div class="totale ${tot < 0 ? 'rosso' : daRiordinare(a) ? 'arancio' : ''}"><b>${numeroIt(tot)}</b><small>${tot < 0 ? 'da ordinare!' : daRiordinare(a) ? 'da riordinare' : 'totale'}</small></div>
       </div>
-      <p class="spiega">Totale = in magazzino + in consegna − da montare. Tocca «in consegna» o «da montare» per correggerli.</p>` : ''}
+      <p class="spiega">Totale = in magazzino + in consegna − da montare.${cambia ? ' Tocca «in consegna» o «da montare» per correggerli.' : ''}</p>` : ''}
       <p class="spiega">${esc([a.scorta != null ? `Scorta minima: ${numeroIt(a.scorta)}` : 'Scorta minima non segnata', a.costo != null ? `costo € ${numeroIt(a.costo)}` : '', a.note].filter(Boolean).join(' · '))}</p>
-      <button class="btn pieno" type="button" id="a-arrivati">${icona('frecciaGiu')} Ne sono arrivati</button>
+      ${cambia ? `<button class="btn pieno" type="button" id="a-arrivati">${icona('frecciaGiu')} Ne sono arrivati</button>
       ${numeri ? `<div class="azioni-magazzino">
         <button class="btn" type="button" id="a-ordinati">${icona('orologio')} Ordinati</button>
         <button class="btn" type="button" id="a-venduti">${icona('euro')} Venduti, da montare</button>
       </div>` : ''}
       <button class="btn" type="button" id="a-tolti">Ne ho tolti (rotti, resi…)</button>
       <button class="btn" type="button" id="a-contati">${icona('spunta')} Ho contato: correggi il numero</button>
-      <button class="btn" type="button" id="a-modifica">${icona('matita')} Modifica i dati</button>
+      <button class="btn" type="button" id="a-modifica">${icona('matita')} Modifica i dati</button>`
+        : '<p class="spiega">Per cambiare il magazzino serve il permesso, che dà Matteo.</p>'}
       ${movimenti.length ? `<p class="domanda">Ultimi movimenti</p><ul class="movimenti">${movimenti.map(rigaMovimento).join('')}</ul>` : ''}
       <button class="btn leggero" type="button" id="no">Chiudi</button>`);
     // Un movimento di un articolo solo, poi il messaggio con «Annulla».
@@ -3472,6 +3474,7 @@
       avvisaMovimento(mov);
     };
     $('no').onclick = chiudiFinestra;
+    if (!cambia) return;
     $('a-arrivati').onclick = () => chiediNumero({
       titolo: 'Quanti ne sono arrivati?',
       testo: `${esc(a.descrizione)}${a.inConsegna > 0 ? `<br>Ne aspettavi <strong>${numeroIt(a.inConsegna)}</strong>: escono da «in consegna».` : ''}`,
@@ -3636,11 +3639,11 @@
         <button class="pillola" data-cat="" aria-pressed="${!cat}">Tutte le categorie</button>
         ${categorieMag().map((c) => `<button class="pillola ${classeCategoria(c)}" data-cat="${esc(c)}" aria-pressed="${cat === c}">${esc(c)} (${base.filter((a) => categoriaDi(a) === c).length})</button>`).join('')}
       </div>
-      <div class="azioni-magazzino">
+      ${puo('modificaMagazzino') ? `<div class="azioni-magazzino">
         <button class="btn pieno" type="button" id="arrivata">${icona('frecciaGiu')} È arrivata merce</button>
         <button class="btn" type="button" id="nuovo-articolo">${icona('piu')} Nuovo articolo</button>
-      </div>
-      <p class="spiega">${pezziTesto(pezzi)} in magazzino${valore ? `, per € ${Math.round(valore).toLocaleString('it-IT')} al prezzo d'acquisto` : ''}.${numeri ? ' Il totale di un articolo è in magazzino + in consegna − da montare: «da riordinare» si guarda lì.' : ''} Tocca un articolo per segnare quelli arrivati, ordinati o venduti, correggere i numeri o cambiarne i dati.</p>
+      </div>` : ''}
+      <p class="spiega">${pezziTesto(pezzi)} in magazzino${valore ? `, per € ${Math.round(valore).toLocaleString('it-IT')} al prezzo d'acquisto` : ''}.${numeri ? ' Il totale di un articolo è in magazzino + in consegna − da montare: «da riordinare» si guarda lì.' : ''} ${puo('modificaMagazzino') ? 'Tocca un articolo per segnare quelli arrivati, ordinati o venduti, correggere i numeri o cambiarne i dati.' : 'Puoi guardarlo; per cambiarlo serve il permesso, che dà Matteo. I materiali usati in un lavoro li segni lo stesso, dopo il lavoro o dalla finestra dell\'intervento.'}</p>
       <div id="lista-mag"></div>`;
     const disegnaLista = () => {
       const q = normalizza($('cerca-mag').value);
@@ -3666,8 +3669,8 @@
     $('cerca-mag').oninput = () => { history.replaceState({ ...history.state, q: $('cerca-mag').value }, '', location.pathname + location.hash); disegnaLista(); };
     schermo.querySelectorAll('[data-filtro]').forEach((b) => { b.onclick = () => ricorda({ filtro: b.dataset.filtro }); });
     schermo.querySelectorAll('[data-cat]').forEach((b) => { b.onclick = () => ricorda({ cat: b.dataset.cat }); });
-    $('arrivata').onclick = () => chiediMateriali({ carico: true, dopo: avvisaMovimento });
-    $('nuovo-articolo').onclick = () => chiediDatiArticolo(null);
+    if ($('arrivata')) $('arrivata').onclick = () => chiediMateriali({ carico: true, dopo: avvisaMovimento });
+    if ($('nuovo-articolo')) $('nuovo-articolo').onclick = () => chiediDatiArticolo(null);
     disegnaLista();
   }
 
