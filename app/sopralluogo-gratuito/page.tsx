@@ -104,7 +104,7 @@ export default function SopralluogoGratuitoPage() {
       <style>{'#site-header,#site-footer{display:none!important}'}</style>
 
       <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Il logo come nella testata del sito, ma senza link: da qui non si va altrove. */}
           <span className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -119,33 +119,43 @@ export default function SopralluogoGratuitoPage() {
         </div>
       </header>
 
-      {/* In alto: la risposta a chi ha cercato il prezzo, e il modulo. */}
-      <section className="bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 px-4 sm:px-6 pt-8 pb-10 md:pt-14 md:pb-16">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-[1.1fr_0.9fr] gap-8 md:gap-12 items-start">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-blue-700">Firenze · Prato · Pistoia</p>
-            <h1 className="mt-2 text-3xl md:text-5xl font-bold text-blue-950 tracking-tight leading-tight text-balance">
+      {/* In alto: la risposta a chi ha cercato il prezzo, e il modulo.
+          Il 95% arriva dal telefono (Matteo, 22 ott 2026): lì l'ordine è titolo,
+          stelle, modulo, e solo dopo i punti; il modulo deve vedersi senza
+          scorrere. Sul computer le due colonne restano: a sinistra titolo e
+          punti, a destra il modulo per tutta l'altezza. */}
+      <section className="bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 px-4 sm:px-6 pt-4 pb-10 md:pt-14 md:pb-16">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-[1.1fr_0.9fr] gap-x-12 gap-y-4 md:gap-y-0 items-start">
+          <div className="md:col-start-1 md:row-start-1">
+            <p className="text-xs md:text-sm font-bold uppercase tracking-widest text-blue-700">Firenze · Prato · Pistoia</p>
+            <h1 className="mt-1.5 md:mt-2 text-[1.75rem] md:text-5xl font-bold text-blue-950 tracking-tight leading-tight text-balance">
               Il depuratore d&apos;acqua installato a casa tua, da 400 €
             </h1>
-            <p className="mt-4 text-lg text-slate-700 leading-relaxed">
-              Veniamo noi a provare l&apos;acqua del tuo rubinetto e ti diciamo quale impianto ti serve e quanto costa. Il sopralluogo è gratuito e non ti impegna a niente.
+            {/* Sul telefono la frase corta: quella lunga spingeva il modulo sotto il banner dei cookie. */}
+            <p className="mt-2 md:mt-4 text-base md:text-lg text-slate-700 leading-snug md:leading-relaxed">
+              <span className="md:hidden">Veniamo a provare l&apos;acqua e ti diciamo cosa ti serve e quanto costa.</span>
+              <span className="hidden md:inline">Veniamo noi a provare l&apos;acqua del tuo rubinetto e ti diciamo quale impianto ti serve e quanto costa. Il sopralluogo è gratuito e non ti impegna a niente.</span>
             </p>
-            <ul className="mt-5 space-y-2">
+            <p className="mt-2 md:mt-5 flex flex-wrap items-center gap-x-2 text-sm md:text-base text-slate-700">
+              <Stelle /> <strong className="text-slate-900">{REVIEW_RATING_TESTO} su Google</strong> · {REVIEW_TOTAL} recensioni<span className="hidden sm:inline"> · dal 2005</span>
+            </p>
+          </div>
+          <div className="md:col-start-2 md:row-start-1 md:row-span-2" id="zona-modulo">
+            <ModuloSopralluogo />
+          </div>
+          <div className="md:col-start-1 md:row-start-2">
+            <ul className="md:mt-5 space-y-2">
               {PUNTI.map((p) => (
                 <li key={p} className="flex items-center gap-2.5 text-slate-800 font-medium">
-                  <span className="bg-emerald-500 text-white rounded-full p-0.5"><Check size={14} strokeWidth={3} /></span>
+                  <span className="bg-emerald-500 text-white rounded-full p-0.5 shrink-0"><Check size={14} strokeWidth={3} /></span>
                   {p}
                 </li>
               ))}
             </ul>
-            <p className="mt-5 flex flex-wrap items-center gap-x-2 text-slate-700">
-              <Stelle /> <strong className="text-slate-900">{REVIEW_RATING_TESTO} su Google</strong> · {REVIEW_TOTAL} recensioni · dal 2005
-            </p>
             <div className="mt-6 hidden md:block">
               <PulsantiContatto />
             </div>
           </div>
-          <ModuloSopralluogo />
         </div>
       </section>
 

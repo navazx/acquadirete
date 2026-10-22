@@ -24,14 +24,60 @@ export const MESSAGGIO_WHATSAPP = "Buongiorno, vorrei un sopralluogo gratuito pe
 // cookie finché quello è aperto. Va montata dentro <body> con un portale: la
 // pagina sta nel div animato di app/template.tsx, e dentro un elemento animato
 // con transform un "fixed" scorre con la pagina invece di stare fermo.
+//
+// La barra si toglie di mezzo in due casi (22 ott 2026): quando il modulo è
+// sullo schermo, perché lì la cosa da fare è già davanti e la barra ne copriva
+// il pulsante; e mentre si scrive, perché su Android con la tastiera aperta la
+// barra finiva proprio sopra la casella.
 export function BarraContatti() {
   const [pronta, setPronta] = useState(false);
+  const [moduloInVista, setModuloInVista] = useState(false);
+  const [scrive, setScrive] = useState(false);
   useEffect(() => setPronta(true), []);
+
+  // "In vista" = almeno 150 px del modulo sullo schermo. Si ricalcola a ogni
+  // scorrimento invece di usare IntersectionObserver, che a pagina in secondo
+  // piano non risponde e lasciava la barra sopra il modulo.
+  useEffect(() => {
+    const zona = document.getElementById('zona-modulo');
+    if (!zona) return;
+    // Il conto è leggero, e React non ridisegna se il valore non cambia.
+    const controlla = () => {
+      const r = zona.getBoundingClientRect();
+      const visibile = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+      setModuloInVista(visibile > 150);
+    };
+    controlla();
+    window.addEventListener('scroll', controlla, { passive: true });
+    window.addEventListener('resize', controlla);
+    return () => {
+      window.removeEventListener('scroll', controlla);
+      window.removeEventListener('resize', controlla);
+    };
+  }, []);
+
+  useEffect(() => {
+    const eCampo = (t: EventTarget | null) =>
+      t instanceof HTMLElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(t.tagName);
+    const entra = (e: FocusEvent) => { if (eCampo(e.target)) setScrive(true); };
+    // Passando da una casella all'altra c'è un attimo senza fuoco: si aspetta
+    // un momento prima di rimettere la barra, così non lampeggia.
+    const esce = () => setTimeout(() => setScrive(eCampo(document.activeElement)), 150);
+    document.addEventListener('focusin', entra);
+    document.addEventListener('focusout', esce);
+    return () => {
+      document.removeEventListener('focusin', entra);
+      document.removeEventListener('focusout', esce);
+    };
+  }, []);
+
   if (!pronta) return null;
+  const nascosta = moduloInVista || scrive;
   return createPortal(
     <div
-      className="md:hidden fixed inset-x-0 z-40 grid grid-cols-2 gap-2 bg-white/95 backdrop-blur border-t border-slate-200 p-2"
+      className={`md:hidden fixed inset-x-0 z-40 grid grid-cols-2 gap-2 bg-white/95 backdrop-blur border-t border-slate-200 p-2 transition-transform duration-200 ${nascosta ? 'translate-y-[150%] pointer-events-none' : ''}`}
       style={{ bottom: 'var(--cookie-banner-h, 0px)' }}
+      aria-hidden={nascosta}
     >
       <a href={telHref()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-900 text-white font-bold py-3">
         <Phone size={18} /> Chiama
@@ -63,6 +109,12 @@ export default function ModuloSopralluogo() {
   };
 
   const zonaScelta = ZONE.find((z) => z.code === zona);
+
+  // Sul telefono, chiusa la tastiera, la pagina può restare più in basso del
+  // riquadro "Fatto": lo si riporta in vista, così si vede che è arrivata.
+  useEffect(() => {
+    if (fatto) document.getElementById('modulo-fatto')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [fatto]);
 
   const invia = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,18 +190,18 @@ export default function ModuloSopralluogo() {
     'block w-full pl-10 pr-3 py-3.5 border border-slate-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 md:p-7 shadow-xl" id="modulo">
+    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 md:p-7 shadow-xl" id="modulo">
       <h2 className="text-xl md:text-2xl font-bold text-blue-950 tracking-tight">Richiedi il sopralluogo gratuito</h2>
       <p className="text-sm text-slate-600 mt-1">
-        Lasciaci il numero: ti richiamano Stefano o Matteo, non un call center.
+        Ti richiamano Stefano o Matteo, non un call center.
       </p>
 
-      <form onSubmit={invia} onFocus={alPrimoCampo} className="mt-5 space-y-3.5">
+      <form onSubmit={invia} onFocus={alPrimoCampo} className="mt-4 md:mt-5 space-y-3 md:space-y-3.5">
         <label className="block">
           <span className="sr-only">Nome e cognome</span>
           <span className="relative block">
             <User size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input type="text" required autoComplete="name" placeholder="Nome e cognome" className={campo} value={nome} onChange={(e) => setNome(e.target.value)} />
+            <input type="text" required autoComplete="name" autoCapitalize="words" enterKeyHint="next" placeholder="Nome e cognome" className={campo} value={nome} onChange={(e) => setNome(e.target.value)} />
           </span>
         </label>
 
@@ -157,7 +209,7 @@ export default function ModuloSopralluogo() {
           <span className="sr-only">Telefono</span>
           <span className="relative block">
             <Phone size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input type="tel" required autoComplete="tel" inputMode="tel" placeholder="Telefono" className={campo} value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+            <input type="tel" required autoComplete="tel" inputMode="tel" enterKeyHint="next" placeholder="Telefono" className={campo} value={telefono} onChange={(e) => setTelefono(e.target.value)} />
           </span>
         </label>
 
@@ -177,9 +229,9 @@ export default function ModuloSopralluogo() {
           {zonaScelta?.comuni && <span className="block text-xs text-slate-500 mt-1.5">Comprende: {zonaScelta.comuni}</span>}
         </label>
 
-        <label className="flex items-start gap-2.5 pt-1 cursor-pointer select-none">
-          <input type="checkbox" required aria-label="Acconsento al trattamento dei dati per essere ricontattato" className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300" checked={privacy} onChange={(e) => setPrivacy(e.target.checked)} />
-          <span className="text-xs text-slate-500 leading-snug">
+        <label className="flex items-start gap-3 py-1 cursor-pointer select-none">
+          <input type="checkbox" required aria-label="Acconsento al trattamento dei dati per essere ricontattato" className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300" checked={privacy} onChange={(e) => setPrivacy(e.target.checked)} />
+          <span className="text-[13px] text-slate-500 leading-snug">
             Acconsento al trattamento dei dati per essere ricontattato, secondo la{' '}
             <a href="/privacy-policy" target="_blank" className="underline">privacy policy</a>.
           </span>
