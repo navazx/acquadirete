@@ -20,7 +20,8 @@
 //
 //  Cosa fa quando trova un guasto (dal 13 ott 2026: prima scriveva a Matteo
 //  "chiedi a Claude dal PC di guardarci", cioe' gli rimandava il lavoro):
-//   - un agente che non e' partito lo fa partire lui, subito;
+//   - un agente che non e' partito lo fa partire lui, subito, e chiede al
+//     Meccanico perche' non era partito da solo (dal 22 ott 2026);
 //   - tutto il resto lo passa al Meccanico (lib/meccanico.mjs, meccanico.yml), che
 //     legge i log, trova la causa e la sistema o porta la riparazione da approvare;
 //   - un agente partito tardi ma che ha finito il lavoro non e' "non ha
@@ -76,6 +77,17 @@ async function github(percorso) {
 const iso = (d) => d.toISOString().replace(/\.\d+Z$/, 'Z');
 const giri = (workflow, dal) =>
   github(`/actions/workflows/${workflow}/runs?per_page=20&created=${encodeURIComponent(`>=${iso(dal)}`)}`);
+
+// La ricerca per data di GitHub ogni tanto risponde vuota anche se i giri ci sono
+// (il 22 ott 2026 alle 19: Recensioni e Sentinella erano partite in orario, e il
+// controllo le ha date per non partite e rilanciate). Prima di dire "non è
+// partito" si ricontrolla con l'elenco semplice degli ultimi giri, senza filtro.
+async function giriDal(workflow, dal) {
+  const { workflow_runs: filtrati = [] } = await giri(workflow, dal);
+  if (filtrati.length) return filtrati;
+  const { workflow_runs: ultimi = [] } = await github(`/actions/workflows/${workflow}/runs?per_page=30`);
+  return ultimi.filter((g) => new Date(g.created_at) >= dal);
+}
 
 // --- La bacheca -------------------------------------------------------------
 
@@ -133,7 +145,7 @@ export async function controlla(adesso = new Date()) {
     const recente = eta <= DA_DIRE;
     const dove = recente ? problemi : vecchi;
 
-    const { workflow_runs: elenco = [] } = await giri(a.workflow, quando);
+    const elenco = await giriDal(a.workflow, quando);
     if (!elenco.length) {
       dove.push({ ...chi, tipo: 'non-partito', inputs: a.inputs, testo: `${a.nome}: NON È PARTITO. Doveva partire ${quandoIt(quando)}.` });
       continue;
@@ -240,7 +252,9 @@ const daQuanto = (a) => (a.giorni === null ? '' : a.giorni === 0 ? ' (da oggi)' 
 
 /**
  * Quello che il Direttore fa da solo, prima di scrivere a Matteo.
- *   - chi non e' partito lo fa partire (e' un clic, non serve capire niente);
+ *   - chi non e' partito lo fa partire, e chiede lo stesso al Meccanico PERCHE'
+ *     non era partito da solo (dal 22 ott 2026, osservazione di Matteo: prima lo
+ *     rilanciava e basta, e il giorno dopo la causa era ancora li');
  *   - tutto il resto lo passa al Meccanico, in una chiamata sola. Le routine su
  *     claude.ai da qui non si possono far ripartire: il Meccanico guarda le
  *     tracce e dice cosa manca.
@@ -253,14 +267,19 @@ export async function rimedia(problemi, { fai = true } = {}) {
     if (p.tipo === 'non-partito') {
       const errore = fai ? await avvia(p.workflow, p.inputs) : null;
       if (errore) { p.passato = true; p.gia_fatto = `Il Direttore ha provato a farlo partire e non ci è riuscito: ${errore}.`; }
-      else p.fatto = fai ? "l'ho fatto partire io adesso" : '(prova) lo farei partire io adesso';
+      else {
+        p.fatto = fai ? "l'ho fatto partire io adesso" : '(prova) lo farei partire io adesso';
+        // Il lavoro adesso parte; resta da capire perche' la sveglia non l'aveva fatto partire.
+        p.perche = true;
+        p.gia_fatto = "Il Direttore l'ha fatto partire a mano adesso: NON rilanciarlo. Trova perché non era partito da solo (la sveglia su Netlify, il token di GitHub, l'orario in orari.mjs, GitHub) e se ricapiterà.";
+      }
     } else {
       p.passato = true;
     }
   }
-  const daPassare = problemi.filter((p) => p.passato);
+  const daPassare = problemi.filter((p) => p.passato || p.perche);
   if (!daPassare.length || !fai) return { meccanico: null };
-  const errore = await chiamaMeccanico('Direttore (controllo del mattino)', daPassare.map(({ passato, fatto, inputs, ...resto }) => resto));
+  const errore = await chiamaMeccanico('Direttore (controllo del mattino)', daPassare.map(({ passato, fatto, perche, inputs, ...resto }) => resto));
   return { meccanico: errore };
 }
 
@@ -277,10 +296,12 @@ export function componi({ problemi, attese, meccanico = null }, adesso, soloProm
   if (fatti.length) blocchi.push(`SISTEMATO DA ME (${fatti.length})\n${elenco(fatti.map((p) => `${p.testo}\n  → ${p.fatto}.`))}`);
   if (ritardi.length) blocchi.push(`IN RITARDO, MA IL LAVORO È FATTO (${ritardi.length})\n${elenco(ritardi.map((p) => p.testo))}`);
   if (passati.length) blocchi.push(`NON HA FUNZIONATO (${passati.length})\n${elenco(passati.map((p) => p.testo))}`);
-  if (ritardi.length + passati.length) {
+  const rilanciati = fatti.filter((p) => p.perche);
+  if (ritardi.length + passati.length + rilanciati.length) {
+    const cosa = passati.length ? 'cosa si è rotto' : rilanciati.length ? 'perché non erano partiti da soli' : 'perché sono partiti tardi';
     blocchi.push(meccanico
       ? `→ Volevo passarlo al Meccanico ma non sono riuscito a chiamarlo (${meccanico}). Ci riprovo al controllo di domani mattina.`
-      : `→ L'ho passato al Meccanico: sta guardando ${passati.length ? 'cosa si è rotto' : 'perché sono partiti tardi'} e ti scrive lui fra poco, con la causa e cosa ha fatto. Tu per ora non devi fare niente.`);
+      : `→ L'ho passato al Meccanico: sta guardando ${cosa} e ti scrive lui fra poco, con la causa e cosa ha fatto. Tu per ora non devi fare niente.`);
   }
 
   const lista = soloPromemoria ? attese.filter(daRicordare) : attese;
@@ -319,7 +340,7 @@ async function main() {
   const lunedi = adesso.getUTCDay() === 1;
   if (problemi.length || lunedi) {
     const testo = problemi.length
-      ? `Controllo degli agenti: ${problemi.length === 1 ? 'una cosa non è andata liscia' : `${problemi.length} cose non sono andate lisce`}. ${problemi.map((p) => (p.fatto ? `${p.testo} Sistemato: ${p.fatto}.` : p.testo)).join(' ')}${problemi.some((p) => p.passato) ? (esito.meccanico ? ' Non sono riuscito a chiamare il Meccanico.' : ' Passato al Meccanico.') : ''}`
+      ? `Controllo degli agenti: ${problemi.length === 1 ? 'una cosa non è andata liscia' : `${problemi.length} cose non sono andate lisce`}. ${problemi.map((p) => (p.fatto ? `${p.testo} Sistemato: ${p.fatto}.` : p.testo)).join(' ')}${problemi.some((p) => p.passato || p.perche) ? (esito.meccanico ? ' Non sono riuscito a chiamare il Meccanico.' : ' Passato al Meccanico, anche per capire perché chi non era partito non è partito da solo.') : ''}`
       : `Controllo degli agenti, riepilogo della settimana: tutti hanno girato regolari.${attese.length ? ` Aspettano Matteo: ${attese.map((a) => a.testo).join(' ')}` : ' Niente in attesa di Matteo.'}`;
     try { lasciaNota('direttore', testo, problemi.length ? ['meccanico', 'matteo'] : ['matteo']); } catch (e) { console.log(`Nota per la bacheca non lasciata: ${e.message}`); }
   }

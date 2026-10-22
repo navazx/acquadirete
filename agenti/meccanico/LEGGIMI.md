@@ -104,3 +104,14 @@ revisione Ads, con appuntamento il 18 alle 07:00 UTC, era già oltre: non è sta
 ripassata, anche se il messaggio di riserva del Meccanico lo promette. A ogni giro
 guarda anche i giri falliti in `giri-recenti.json` e le tue note «mi sono fermato
 prima di finire» sulla bacheca: lì stanno i guasti rimasti senza risposta.
+
+**Il falso «non è partito»** — 22 ott 2026, controllo delle 19. Recensioni e
+Sentinella erano partite in orario (giri delle 09:00 e delle 16:30), ma la ricerca
+dei giri per data di GitHub (`created>=…`) ha risposto vuota e il controllo le ha
+date per non partite e rilanciate. Rilanciarle non ha fatto danni. Rimedio: prima
+di dire «non è partito» il controllo ricontrolla con l'elenco semplice degli ultimi
+giri (`giriDal` in `direttore-controllo.mjs`). Dallo stesso giorno, quando un agente
+non è partito davvero, il Direttore lo rilancia **e** ti chiama per trovare perché
+la sveglia non l'aveva fatto partire (`gia_fatto` lo dice: non rilanciarlo di nuovo).
+Se nei giri recenti c'è un `workflow_dispatch` poco dopo l'appuntamento, l'agente
+era partito: il guasto è del controllo, non della sveglia.
