@@ -7,6 +7,12 @@
        Motore: netlify/functions/gestione.mjs. -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
+  <!-- Content-Security-Policy (22 ott 2026, controllo di sicurezza): si esegue
+       solo app.js e Leaflet da cdnjs; cartine e ricerca indirizzi solo da
+       OpenStreetMap. Se un testo scritto da qualcuno riuscisse a entrare nella
+       pagina come codice, il telefono non lo eseguirebbe. Gli style="" dei
+       modelli vogliono 'unsafe-inline' sugli stili (non sugli script). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://cdnjs.cloudflare.com; connect-src 'self' https://nominatim.openstreetmap.org https://tile.openstreetmap.org; font-src 'self' data:; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
   <meta name="theme-color" content="#0f6cbd">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -17,7 +23,7 @@
   <link rel="manifest" href="/gestione/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="icon" href="/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/gestione/app.css?v=40">
+  <link rel="stylesheet" href="/gestione/app.css?v=41">
 </head>
 <body>
   <header class="barra">
@@ -35,6 +41,6 @@
   <div class="velo" id="velo" hidden></div>
   <section class="finestra" id="finestra" role="dialog" aria-modal="true" hidden></section>
 
-  <script src="/gestione/app.js?v=40"></script>
+  <script src="/gestione/app.js?v=41"></script>
 </body>
 </html>

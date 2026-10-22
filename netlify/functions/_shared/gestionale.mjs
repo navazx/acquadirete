@@ -840,6 +840,10 @@ export async function annullaCancellaLavoro(foglio, { intervento = null, tappa =
 export const TAB_ACCESSI = 'Accessi';
 export const TITOLARE = 'matteo';
 export const PERMESSI = [
+  // 22 ott 2026 (controllo di sicurezza in vista di un dipendente): un tocco e
+  // il codice di quella persona smette di funzionare, senza passare da
+  // Netlify (dipendente andato via, telefono perso). Il titolare è sempre attivo.
+  { id: 'attivo', colonna: 'Attivo', nome: 'Può usare l\'app', spiega: 'Su «No» il suo codice smette subito di funzionare, e il telefono cancella i dati che aveva (dipendente andato via, telefono perso).' },
   { id: 'giro', colonna: 'Ha un giro', nome: 'Ha un suo giro del giorno', spiega: 'Va dai clienti: gli si possono dare delle tappe.' },
   { id: 'cancellaInterventi', colonna: 'Cancella interventi', nome: 'Cancella gli interventi fatti', spiega: 'Dalla pagina «Interventi fatti».' },
   { id: 'togliClienti', colonna: 'Toglie clienti', nome: 'Toglie i clienti (fra i persi)', spiega: '«Non è più nostro cliente», nella scheda del cliente.' },
@@ -847,14 +851,23 @@ export const PERMESSI = [
   // fatto nessun intervento». Senza, il magazzino si guarda e basta: i
   // materiali usati in un lavoro (e la loro correzione) li segna chiunque.
   { id: 'modificaMagazzino', colonna: 'Modifica magazzino', nome: 'Modifica il magazzino', spiega: 'Merce arrivata, ordinata o venduta, pezzi tolti, conteggi e articoli, anche senza un lavoro. I materiali usati in un lavoro li segna chiunque.' },
+  // 22 ott 2026, Matteo: la lista clienti un dipendente non se la deve poter
+  // portare via; i prezzi ai clienti sì (servono per farsi pagare), i costi
+  // del magazzino no. Il filtro lo fa il motore (perPersona), non il telefono.
+  { id: 'tuttiClienti', colonna: 'Vede tutti i clienti', nome: 'Vede tutti i clienti', spiega: 'Su «No» vede solo i clienti e i contatti delle sue tappe (dell\'ultimo mese e future), e lavora solo su quelli. I prezzi ai clienti li vede sempre.' },
+  { id: 'costi', colonna: 'Vede i costi', nome: 'Vede i costi del magazzino', spiega: 'I prezzi d\'acquisto degli articoli e il valore del magazzino.' },
 ];
 const COLONNE_ACCESSI = ['Persona', 'Nome', ...PERMESSI.map((p) => p.colonna), 'Cambiato il'];
 const ACCESSI_DI_BASE = {
-  matteo: { nome: 'Matteo', giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true },
-  babbo: { nome: 'Stefano', giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true },
-  segretaria: { nome: 'Segretaria', giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true },
+  matteo: { nome: 'Matteo', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true },
+  babbo: { nome: 'Stefano', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true },
+  segretaria: { nome: 'Segretaria', attivo: true, giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true },
 };
-const ACCESSI_NUOVO = { giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false };
+// Una persona nuova (un dipendente): il suo giro sì, il resto no.
+const ACCESSI_NUOVO = { attivo: true, giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false, tuttiClienti: false, costi: false };
+// Le persone che hanno i loro accessi di base anche se la scheda Accessi non
+// si legge (chi controlla un dipendente non tira a indovinare: lui no).
+export const conAccessiDiBase = (p) => Object.prototype.hasOwnProperty.call(ACCESSI_DI_BASE, p);
 const accessoDiBase = (p) => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), ...ACCESSI_NUOVO, ...ACCESSI_DI_BASE[p] });
 const siNo = (v) => {
   const n = normalizza(v);
@@ -863,7 +876,8 @@ const siNo = (v) => {
 
 async function leggiGrigliaAccessi(foglio) {
   try {
-    return await foglio.leggi(`'${TAB_ACCESSI}'!A1:J100`, 'FORMATTED_VALUE');
+    // Fino a T: i permessi aggiunti dopo finiscono in fondo, dopo "Cambiato il".
+    return await foglio.leggi(`'${TAB_ACCESSI}'!A1:T100`, 'FORMATTED_VALUE');
   } catch (err) {
     if (err.status === 400) return null; // scheda non ancora creata
     throw err;
@@ -954,6 +968,129 @@ export async function salvaAccessi(foglio, { persona, nome, permessi = {} }, { c
     ok: true, accesso: dopo,
     annulla: { persona: p, nome: prima.nome, permessi: Object.fromEntries(PERMESSI.map((pe) => [pe.id, prima[pe.id]])) },
   };
+}
+
+// ---------------------------------------------------------------------------
+//  Cosa vede chi non vede tutti i clienti (22 ott 2026)
+// ---------------------------------------------------------------------------
+// Matteo, dopo il controllo di sicurezza: un dipendente non deve potersi
+// portare via la lista dei clienti, né i costi del magazzino; i prezzi ai
+// clienti sì (le note: servono per farsi pagare). Chi non ha «Vede tutti i
+// clienti» riceve solo i clienti e i contatti delle SUE tappe (fatte o da
+// fare, da GIORNI_VISIBILI giorni fa in poi), il loro storico e i loro
+// materiali, le sue tappe e basta; niente clienti persi. E le azioni le può
+// fare solo su quei clienti (riferimentiFuori): con un codice inventato
+// («C123») non tocca né legge nessun altro. Chi non ha «Vede i costi» riceve
+// gli articoli del magazzino senza costo.
+const GIORNI_VISIBILI = 30;
+const chiaveContatto = (l) => `${l.data}|${l.nome}`;
+const serialeTappa = (g, serOggi) => (/^\d+$/.test(testo(g)) ? +testo(g) : serialeDaCella(g) ?? serOggi);
+function visibiliDa(tappe, persona, serOggi) {
+  const codici = new Set();
+  const contatti = new Set();
+  const nomi = new Set();
+  for (const t of tappe) {
+    if (t.chi !== persona || serialeTappa(t.giorno, serOggi) < serOggi - GIORNI_VISIBILI) continue;
+    if (t.codice) codici.add(t.codice);
+    if (t.contatto) contatti.add(t.contatto);
+    if (t.nome) nomi.add(normalizza(t.nome));
+  }
+  return { codici, contatti, nomi };
+}
+export function perPersona(tutto, accesso) {
+  let t = tutto;
+  if (!accesso.costi && t.magazzino) {
+    t = { ...t, magazzino: { ...t.magazzino, articoli: t.magazzino.articoli.map(({ costo, ...a }) => a) } };
+  }
+  if (accesso.tuttiClienti) return t;
+  const p = accesso.persona;
+  const v = visibiliDa(t.tappe, p, t.oggi);
+  const suoMovimento = (m) => (m.cliente ? v.codici.has(m.cliente) : !m.nome || v.nomi.has(normalizza(m.nome)));
+  return {
+    ...t,
+    clienti: t.clienti.filter((c) => v.codici.has(c.codice)),
+    lead: t.lead.filter((l) => v.contatti.has(chiaveContatto(l))),
+    persi: [],
+    storico: t.storico.filter((s) => v.codici.has(s.codice)),
+    tappe: t.tappe.filter((x) => x.chi === p),
+    magazzino: t.magazzino && { ...t.magazzino, movimenti: (t.magazzino.movimenti || []).filter(suoMovimento) },
+    soloSuoi: true,
+  };
+}
+// I clienti e i contatti nominati in una richiesta (codice, codici, posizioni,
+// la tappa, il contatto di stato/nota), a qualunque profondità.
+function riferimenti(azione, dati) {
+  const codici = new Set();
+  const contatti = new Set();
+  const visita = (x, prof) => {
+    if (!x || typeof x !== 'object' || prof > 4) return;
+    if (Array.isArray(x)) { x.slice(0, 200).forEach((y) => visita(y, prof + 1)); return; }
+    for (const [k, val] of Object.entries(x)) {
+      if ((k === 'codice' || k === 'cliente') && /^C\d+$/i.test(testo(val))) codici.add(testo(val).toUpperCase());
+      else if (k === 'codici' && Array.isArray(val)) val.forEach((c) => { if (/^C\d+$/i.test(testo(c))) codici.add(testo(c).toUpperCase()); });
+      else if (k === 'contatto' && testo(val) && azione === 'tappa') contatti.add(testo(val));
+      else if (typeof val === 'object') visita(val, prof + 1);
+    }
+  };
+  visita(dati, 0);
+  if ((azione === 'stato' || azione === 'nota') && dati) contatti.add(chiaveContatto({ data: testo(dati.data), nome: testo(dati.nome) }));
+  return { codici, contatti };
+}
+// I riferimenti che questa persona non può toccare (vuoto = va bene). Legge
+// le tappe e la colonna «Chi ci va» dal foglio, non quello che dice il telefono.
+export async function riferimentiFuori(foglio, azione, dati, persona) {
+  const rif = riferimenti(azione, dati);
+  if (!rif.codici.size && !rif.contatti.size) return [];
+  const serOggi = serialeDa(...Object.values(oggi()));
+  const [{ tappe }, { griglia, mappa }] = await Promise.all([leggiGiri(foglio), leggiClienti(foglio)]);
+  const v = visibiliDa(tappe, persona, serOggi);
+  // Le tappe di oggi ancora nella colonna «Chi ci va» (del 19 ott).
+  if (mappa.col.CHI) {
+    for (let i = mappa.riga; i < griglia.length; i++) {
+      const r = griglia[i] || [];
+      if (testo(r[mappa.col.CHI - 1]).toLowerCase() === persona) v.codici.add(testo(r[mappa.col.CODICE - 1]).toUpperCase());
+    }
+  }
+  return [...[...rif.codici].filter((c) => !v.codici.has(c)), ...[...rif.contatti].filter((c) => !v.contatti.has(c))];
+}
+
+// ---------------------------------------------------------------------------
+//  Registro delle modifiche (22 ott 2026)
+// ---------------------------------------------------------------------------
+// Ogni azione andata a buon fine dall'app (tranne le posizioni sulla mappa,
+// che i telefoni salvano da soli) diventa una riga della scheda "Registro":
+// quando, chi, cosa, su quale cliente, e per le modifiche il prima → dopo.
+// Così si sa chi ha cambiato un telefono o un indirizzo. Si accoda e basta;
+// se non si scrive, l'azione resta fatta. Nessuna automazione la legge.
+export const TAB_REGISTRO = 'Registro';
+const INTESTAZIONI_REGISTRO = ['Quando', 'Chi', 'Azione', 'Cliente', 'Cosa'];
+const NOMI_AZIONI = {
+  fatta: 'Manutenzione fatta', annulla: 'Annullata data', riparazione: 'Riparazione', annullaRiparazione: 'Annullata riparazione', rimanda: 'Rimandata',
+  avviso: 'Urgente / sospesa', sposta: 'Spostato (persi)', nuovo: 'Cliente nuovo', modifica: 'Dati cambiati', nuovoLead: 'Contatto nuovo', stato: 'Stato contatto',
+  nota: 'Nota contatto', pagamento: 'Pagamento', assegna: 'Giro', tappa: 'Tappa', togliTappa: 'Tappa tolta', articolo: 'Articolo magazzino',
+  magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
+  annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
+};
+const breveValore = (v) => testo(typeof v === 'object' ? JSON.stringify(v) : v).replace(/\s+/g, ' ').slice(0, 80);
+function cosaRegistro(azione, dati, r) {
+  if (azione === 'modifica' && r && Array.isArray(r.cambi)) {
+    return r.cambi.map((x) => `${x.campo}: «${breveValore(x.prima)}» → «${breveValore(x.dopo)}»`).join('; ');
+  }
+  if (azione === 'accessi') return `${testo(dati.persona)}: ${Object.entries(dati.permessi || {}).map(([k, val]) => `${k} ${val ? 'sì' : 'no'}`).join(', ')}`;
+  const parti = [];
+  for (const [k, val] of Object.entries(dati || {})) {
+    if (['codice', 'riga', 'annulla', 'id'].includes(k) || val === '' || val == null) continue;
+    if (Array.isArray(val)) parti.push(`${k}: ${val.length}`);
+    else if (typeof val === 'object') continue;
+    else parti.push(`${k}: ${breveValore(val)}`);
+  }
+  return parti.join(', ');
+}
+export async function registra(foglio, { chi, nome = '', azione, dati, r }) {
+  const quando = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+  const codici = [...riferimenti(azione, dati).codici];
+  const riga = [quando, nome || nomePersona(chi), NOMI_AZIONI[azione] || azione, codici.slice(0, 5).join(' '), cosaRegistro(azione, dati, r).slice(0, 500)];
+  await foglio.accoda(TAB_REGISTRO, INTESTAZIONI_REGISTRO, riga);
 }
 
 // ---------------------------------------------------------------------------
@@ -1671,9 +1808,13 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
   const testi = [];
   const numeri = [];
   const scritti = {};
+  // Per il Registro (22 ott 2026): cosa c'era e cosa c'è adesso.
+  const cambi = [];
+  const comeTesto = (x) => (typeof x === 'number' ? testoData(dataDaSeriale(x)) : testo(x));
 
   for (const [nome, campo] of Object.entries(CAMPI_MODIFICABILI)) {
     if (!(nome in campi)) continue;
+    const prima = r[col[campo] - 1];
     let v = testo(campi[nome]);
     if (nome === 'installazione') {
       if (v) {
@@ -1682,17 +1823,20 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
         v = serialeDa(d.a, d.m, d.g);
       }
       numeri.push({ range: cella(col[campo]), values: [[v]] });
+      cambi.push({ campo: nome, prima: comeTesto(prima), dopo: comeTesto(v) });
       continue;
     }
     if (nome === 'frequenza') {
       const n = parseInt(v, 10);
       if (v && !(n > 0 && n <= 36)) throw problema('La frequenza va da 1 a 36 mesi.');
       numeri.push({ range: cella(col[campo]), values: [[v ? n : '']] });
+      cambi.push({ campo: nome, prima: comeTesto(prima), dopo: v ? n : '' });
       continue;
     }
     if (nome === 'citta' && v) v = cittaComeNelFoglio(dati, col, v);
     testi.push({ range: cella(col[campo]), values: [[v.slice(0, 300)]] });
     scritti[nome] = v.slice(0, 300);
+    cambi.push({ campo: nome, prima: comeTesto(prima), dopo: v.slice(0, 300) });
   }
 
   if ('citta' in campi && testo(campi.citta)) {
@@ -1727,7 +1871,7 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
       { indirizzo: scritti.indirizzo ?? r[col.INDIRIZZO - 1], citta: scritti.citta ?? r[col.CITTA - 1] },
     ).catch((err) => console.error('Posizione sul posto non aggiornata:', err));
   }
-  return { ok: true, codice: testo(codice).toUpperCase() };
+  return { ok: true, codice: testo(codice).toUpperCase(), cambi: cambi.filter((x) => testo(x.prima) !== testo(x.dopo)) };
 }
 
 // Una posizione segnata sul posto («Sono qui») è più giusta di qualunque
@@ -2217,6 +2361,9 @@ export async function salvaArticolo(foglio, dati, { chi = 'app' } = {}) {
     scorta: numero(dati.scorta, 10000), costo: numero(dati.costo, 100000), note: testo(dati.note).replace(/\s+/g, ' ').slice(0, 300),
     aggiornato: testoData(oggi()),
   };
+  // Senza il costo nella richiesta (chi non vede i costi, 22 ott 2026) quello
+  // che c'è resta com'è: prima si cancellava.
+  if (dati.costo === undefined) delete campi.costo;
   const daApp = (a) => ({ ...a, riga: undefined, scorta: a.scorta === '' ? null : a.scorta, costo: a.costo === '' ? null : a.costo });
   const scrivi = (riga, valori) => foglio.scrivi(Object.entries(valori).filter(([k]) => m.col[k] >= 0)
     .map(([k, v]) => ({ range: cellaMag(TAB_MAGAZZINO, m.col[k], riga), values: [[v]] })), 'RAW');

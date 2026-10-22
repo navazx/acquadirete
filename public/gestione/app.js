@@ -33,6 +33,8 @@
   }
   let chiave = chiaveDaIndirizzo() || memoria.leggi(K_CHIAVE);
   if (chiave) memoria.scrivi(K_CHIAVE, chiave);
+  // Perché il codice non vale più (accesso spento da Matteo), da mostrare all'ingresso.
+  let motivoSospeso = '';
 
   let dati = null;          // { oggi, clienti, lead, stati }
   let aggiornatoAlle = null;
@@ -198,6 +200,19 @@
         chiave = null;
         throw Object.assign(new Error('Codice di attivazione non valido.'), { chiave: true });
       }
+      // Accesso spento da Matteo (22 ott 2026): il telefono non tiene più
+      // niente, né i clienti né le cose da mandare né il codice.
+      if (res.status === 403 && corpo.sospeso) {
+        try { Object.keys(localStorage).filter((k) => k.startsWith('gestione-')).forEach((k) => localStorage.removeItem(k)); } catch { /* memoria non disponibile */ }
+        chiave = null;
+        dati = null;
+        motivoSospeso = corpo.errore || 'Il tuo accesso all\'app è stato sospeso.';
+        // Via il codice anche dall'indirizzo, e subito la schermata d'ingresso.
+        try { history.replaceState({ s: 'attiva' }, '', location.pathname); } catch { /* niente */ }
+        chiudiFinestra();
+        schermoAttiva(motivoSospeso);
+        throw Object.assign(new Error(motivoSospeso), { chiave: true, sospeso: true });
+      }
       if (!res.ok || !corpo.ok) throw Object.assign(new Error(corpo.errore || 'Qualcosa non ha funzionato. Riprova tra poco.'), { stato: res.status });
       return corpo;
     } finally {
@@ -229,6 +244,8 @@
           magazzino: r.magazzino || null,
           nomi: r.nomi || {}, permessi: r.permessi || {}, titolare: !!r.titolare,
           accessi: r.accessi || null, elencoPermessi: r.elencoPermessi || null,
+          // Vede solo i clienti dei suoi giri (22 ott 2026): lo dice il motore.
+          soloSuoi: !!r.soloSuoi,
         };
         // Le azioni ancora in coda: il foglio non le ha, lo schermo sì.
         for (const v of appenaArrivati) if (Date.now() - v.quando < 120000) APPLICA[v.azione](nuovi, v.dati);
@@ -355,6 +372,7 @@
   //  Attivazione (una volta sola, la fa Matteo)
   // ---------------------------------------------------------------------
   function schermoAttiva(errore) {
+    errore = errore || motivoSospeso;
     titolo('Acquadirete', false);
     schermo.innerHTML = `
       <p class="saluto">Benvenuto</p>
@@ -369,6 +387,7 @@
       e.preventDefault();
       chiave = e.target.codice.value.trim().toLowerCase();
       if (!chiave) return;
+      motivoSospeso = '';
       memoria.scrivi(K_CHIAVE, chiave);
       history.replaceState({ s: 'home' }, '', location.pathname + '#chiave=' + chiave);
       dati = null;
@@ -546,6 +565,7 @@
           <span><b>Aggiungi</b><small>Un cliente nuovo o un contatto</small></span>
         </button>
       </div>
+      ${dati.soloSuoi ? '<p class="spiega">Vedi i clienti e i contatti dei tuoi giri (dell\'ultimo mese e futuri). Per gli altri chiedi a Matteo.</p>' : ''}
       <p class="aggiornato">${io() ? `Stai usando l'app come <b>${esc(nomeChi(io()))}</b><br>` : ''}${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button>
         ${dati.titolare ? `<br><button data-vai="impostazioni">${icona('ingranaggio')} Impostazioni</button>` : ''}</p>`;
     schermo.querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai, vista: b.dataset.vista }); });
@@ -3108,6 +3128,8 @@
   // lì (Matteo: «così da sapere quando fare l'ordine»). `numeri` = il foglio
   // ha già quelle colonne (dopo aggiornaMagazzino).
   const numeriMag = () => !!(mag() && mag().numeri);
+  // I costi d'acquisto: solo a chi ha il permesso (22 ott 2026; il motore agli altri non li manda).
+  const vedeCosti = () => !(dati && dati.permessi && dati.permessi.costi === false);
   const disponibile = (a) => arrotonda((a.quantita || 0) + (a.inConsegna || 0) - (a.daMontare || 0));
   const daRiordinare = (a) => a.scorta != null && disponibile(a) <= a.scorta;
   const categorieMag = () => (mag() && mag().categorie) || ['Filtri e ricambi', 'Impianti', 'Impianti usati', 'Miscelatori e rubinetti', 'Altro'];
@@ -3533,8 +3555,8 @@
         <input id="ar-q" type="text" inputmode="decimal" autocomplete="off" value="0"></label>`}
       <label class="campo"><span>Scorta minima <em>(facoltativa: quando ne restano così pochi è «da riordinare»)</em></span>
         <input id="ar-scorta" type="text" inputmode="decimal" autocomplete="off" value="${a && a.scorta != null ? numeroIt(a.scorta) : ''}"></label>
-      <label class="campo"><span>Costo d'acquisto in euro <em>(facoltativo)</em></span>
-        <input id="ar-costo" type="text" inputmode="decimal" autocomplete="off" value="${a && a.costo != null ? numeroIt(a.costo) : ''}"></label>
+      ${vedeCosti() ? `<label class="campo"><span>Costo d'acquisto in euro <em>(facoltativo)</em></span>
+        <input id="ar-costo" type="text" inputmode="decimal" autocomplete="off" value="${a && a.costo != null ? numeroIt(a.costo) : ''}"></label>` : ''}
       <label class="campo"><span>Note <em>(facoltative)</em></span><input id="ar-note" value="${v(a && a.note)}"></label>
       <button class="btn pieno grande" type="button" id="ar-salva">${icona('spunta')} ${a ? 'Salva' : 'Aggiungi al magazzino'}</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
@@ -3547,10 +3569,12 @@
     $('ar-salva').onclick = (e) => {
       const campi = {
         codice: a ? a.codice : '', categoria, descrizione: $('ar-desc').value.replace(/\s+/g, ' ').trim(), fornitore: $('ar-forn').value.trim(),
-        scorta: numeroScritto($('ar-scorta').value), costo: numeroScritto($('ar-costo').value), note: $('ar-note').value.replace(/\s+/g, ' ').trim(),
+        scorta: numeroScritto($('ar-scorta').value), note: $('ar-note').value.replace(/\s+/g, ' ').trim(),
       };
       if (!a) campi.quantita = numeroScritto($('ar-q').value) || '0';
       if (!campi.descrizione) { messaggio('Scrivi cos\'è l\'articolo.', { errore: true }); return; }
+      // Senza il permesso dei costi il campo non c'è e il costo non si manda: resta quello che c'è.
+      if (vedeCosti()) campi.costo = numeroScritto($('ar-costo').value);
       if ([campi.scorta, campi.costo, campi.quantita].some((x) => x && !(Number(x) >= 0))) {
         messaggio('Controlla i numeri: solo cifre, per esempio 28,50.', { errore: true });
         return;

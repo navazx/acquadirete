@@ -23,6 +23,7 @@ import {
   salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, vistePerCategoria, creaFoglioGoogle,
   cancellaIntervento, annullaCancellazione, cancellaLavoro, annullaCancellaLavoro, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
+  perPersona, riferimentiFuori, registra, conAccessiDiBase,
 } from './_shared/gestionale.mjs';
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
@@ -138,23 +139,41 @@ export const creaGestore = (creaFoglio) => async (req) => {
   const foglio = creaFoglio(sheetId);
 
   const tutti = persone();
-  const giranti = (acc) => acc.filter((a) => a.giro).map((a) => a.persona);
+  // Chi ha un giro e non è stato spento.
+  const giranti = (acc) => acc.filter((a) => a.giro && a.attivo).map((a) => a.persona);
+  // La lettura completa parte subito (in parallelo agli Accessi), ma conta
+  // solo se gli Accessi dicono che si può.
+  const tuttoP = req.method === 'GET' ? leggiTutto(foglio) : null;
+  if (tuttoP) tuttoP.catch(() => {});
   try {
+    // Gli Accessi a ogni richiesta (22 ott 2026): chi Matteo ha spento non
+    // entra più, neanche a leggere. Se la scheda non si legge, le persone di
+    // base (Matteo, Stefano, la segretaria) hanno i loro accessi di base; un
+    // dipendente no: per lui non si tira a indovinare.
+    let acc;
+    try {
+      acc = await leggiAccessi(foglio, tutti);
+    } catch (err) {
+      console.error('Accessi non letti:', err);
+      if (!conAccessiDiBase(chi)) return risposta({ ok: false, errore: 'Non riesco a controllare il tuo accesso. Riprova tra poco.' }, 503);
+      acc = accessiDiBase(tutti);
+    }
+    const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
+    if (!mio.attivo) return risposta({ ok: false, sospeso: true, errore: 'Il tuo accesso all\'app è stato sospeso. Chiedi a Matteo.' }, 403);
+    const permessi = Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]]));
+
     // io: chi sta usando l'app; persone: chi ha un giro (fra chi si dividono
     // le manutenzioni); nomi: come si chiama ognuno («babbo» → «Stefano»);
     // permessi: cosa può fare io. Il titolare riceve anche tutti gli accessi,
-    // per le impostazioni.
+    // per le impostazioni. Chi non vede tutti i clienti o i costi riceve solo
+    // la sua parte (perPersona).
     if (req.method === 'GET') {
-      const [tutto, acc] = await Promise.all([
-        leggiTutto(foglio),
-        leggiAccessi(foglio, tutti).catch((err) => { console.error('Accessi non letti:', err); return accessiDiBase(tutti); }),
-      ]);
-      const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
+      const tutto = await tuttoP;
       const titolare = chi === TITOLARE;
       return risposta({
-        ok: true, ...tutto, io: chi, persone: giranti(acc),
+        ok: true, ...perPersona(tutto, mio), io: chi, persone: giranti(acc),
         nomi: Object.fromEntries(acc.map((a) => [a.persona, a.nome])),
-        permessi: Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]])),
+        permessi,
         titolare,
         ...(titolare ? { accessi: acc, elencoPermessi: PERMESSI } : {}),
       });
@@ -166,16 +185,26 @@ export const creaGestore = (creaFoglio) => async (req) => {
     const azione = AZIONI[body?.azione];
     if (!azione) return risposta({ ok: false, errore: 'Azione sconosciuta' }, 400);
     const dati = body.dati ?? {};
-    let ctx = { chi, persone: tutti, tutti };
-    if (CON_ACCESSI.has(body.azione)) {
-      // Qui gli Accessi si devono leggere: se il foglio non risponde, niente.
-      const acc = await leggiAccessi(foglio, tutti);
-      const serve = PERMESSO_PER[body.azione] && PERMESSO_PER[body.azione](dati);
-      const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
-      if (serve && !mio[serve]) return risposta({ ok: false, errore: 'Non hai il permesso per farlo. Chiedi a Matteo.' }, 403);
-      ctx = { ...ctx, persone: giranti(acc), permessi: Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]])) };
+    const serve = PERMESSO_PER[body.azione] && PERMESSO_PER[body.azione](dati);
+    if (serve && !mio[serve]) return risposta({ ok: false, errore: 'Non hai il permesso per farlo. Chiedi a Matteo.' }, 403);
+    // Chi vede solo i suoi clienti lavora solo su quelli (anche con un codice inventato).
+    if (!mio.tuttiClienti && (await riferimentiFuori(foglio, body.azione, dati, chi)).length) {
+      return risposta({ ok: false, errore: 'Questo cliente non è fra i tuoi. Chiedi a Matteo.' }, 403);
     }
-    return risposta(await azione(foglio, dati, ctx));
+    // Chi non vede i costi non li manda e non li riceve.
+    const senzaCosti = !mio.costi && body.azione === 'articolo';
+    if (senzaCosti) delete dati.costo;
+    const ctx = { chi, tutti, permessi, persone: CON_ACCESSI.has(body.azione) ? giranti(acc) : tutti };
+    const r = await azione(foglio, dati, ctx);
+    if (senzaCosti && r) {
+      if (r.articolo) delete r.articolo.costo;
+      if (r.annulla) delete r.annulla.costo;
+    }
+    // Il Registro: chi ha fatto cosa (non le posizioni, che salvano i telefoni da soli).
+    if (r && r.ok !== false && body.azione !== 'posizioni') {
+      await registra(foglio, { chi, nome: mio.nome, azione: body.azione, dati, r }).catch((err) => console.error('Registro non scritto:', err));
+    }
+    return risposta(r);
   } catch (err) {
     if (err.perUtente) return risposta({ ok: false, errore: err.message }, err.status || 400);
     console.error('Gestione:', err);
