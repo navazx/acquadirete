@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Phone, User, MapPin, ChevronDown, CheckCircle2, Send } from 'lucide-react';
+import { Phone, User, MapPin, ChevronDown, CheckCircle2, Send, X } from 'lucide-react';
 import { CONTACT, telHref, whatsappHref } from '../lib/siteConfig';
 import { setGoogleAdsUserData, trackGoogleAdsConversion } from '../lib/googleAds';
 import { vieneDaAnnuncioGoogle, codiceClicGoogle } from '../lib/provenienza';
@@ -24,60 +24,14 @@ export const MESSAGGIO_WHATSAPP = "Buongiorno, vorrei un sopralluogo gratuito pe
 // cookie finché quello è aperto. Va montata dentro <body> con un portale: la
 // pagina sta nel div animato di app/template.tsx, e dentro un elemento animato
 // con transform un "fixed" scorre con la pagina invece di stare fermo.
-//
-// La barra si toglie di mezzo in due casi (22 ott 2026): quando il modulo è
-// sullo schermo, perché lì la cosa da fare è già davanti e la barra ne copriva
-// il pulsante; e mentre si scrive, perché su Android con la tastiera aperta la
-// barra finiva proprio sopra la casella.
 export function BarraContatti() {
   const [pronta, setPronta] = useState(false);
-  const [moduloInVista, setModuloInVista] = useState(false);
-  const [scrive, setScrive] = useState(false);
   useEffect(() => setPronta(true), []);
-
-  // "In vista" = almeno 150 px del modulo sullo schermo. Si ricalcola a ogni
-  // scorrimento invece di usare IntersectionObserver, che a pagina in secondo
-  // piano non risponde e lasciava la barra sopra il modulo.
-  useEffect(() => {
-    const zona = document.getElementById('zona-modulo');
-    if (!zona) return;
-    // Il conto è leggero, e React non ridisegna se il valore non cambia.
-    const controlla = () => {
-      const r = zona.getBoundingClientRect();
-      const visibile = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
-      setModuloInVista(visibile > 150);
-    };
-    controlla();
-    window.addEventListener('scroll', controlla, { passive: true });
-    window.addEventListener('resize', controlla);
-    return () => {
-      window.removeEventListener('scroll', controlla);
-      window.removeEventListener('resize', controlla);
-    };
-  }, []);
-
-  useEffect(() => {
-    const eCampo = (t: EventTarget | null) =>
-      t instanceof HTMLElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(t.tagName);
-    const entra = (e: FocusEvent) => { if (eCampo(e.target)) setScrive(true); };
-    // Passando da una casella all'altra c'è un attimo senza fuoco: si aspetta
-    // un momento prima di rimettere la barra, così non lampeggia.
-    const esce = () => setTimeout(() => setScrive(eCampo(document.activeElement)), 150);
-    document.addEventListener('focusin', entra);
-    document.addEventListener('focusout', esce);
-    return () => {
-      document.removeEventListener('focusin', entra);
-      document.removeEventListener('focusout', esce);
-    };
-  }, []);
-
   if (!pronta) return null;
-  const nascosta = moduloInVista || scrive;
   return createPortal(
     <div
-      className={`md:hidden fixed inset-x-0 z-40 grid grid-cols-2 gap-2 bg-white/95 backdrop-blur border-t border-slate-200 p-2 transition-transform duration-200 ${nascosta ? 'translate-y-[150%] pointer-events-none' : ''}`}
+      className="md:hidden fixed inset-x-0 z-40 grid grid-cols-2 gap-2 bg-white/95 backdrop-blur border-t border-slate-200 p-2"
       style={{ bottom: 'var(--cookie-banner-h, 0px)' }}
-      aria-hidden={nascosta}
     >
       <a href={telHref()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-900 text-white font-bold py-3">
         <Phone size={18} /> Chiama
@@ -90,7 +44,91 @@ export function BarraContatti() {
   );
 }
 
-export default function ModuloSopralluogo() {
+// Dal 22 ott 2026 il modulo non sta più aperto nella pagina: c'è un pulsante
+// che lo apre in una finestra (a tutto schermo sul telefono). Matteo: il
+// modulo in pagina spingeva tutto in basso, il pulsante si vede subito.
+// I pulsanti sono più d'uno (in alto e in fondo) e la finestra una sola: si
+// parlano con un evento della pagina.
+const APRI = 'apri-modulo-sopralluogo';
+
+export function PulsanteModulo({ className = '', children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={() => window.dispatchEvent(new Event(APRI))} className={`cursor-pointer ${className}`}>
+      {children}
+    </button>
+  );
+}
+
+// La finestra resta montata anche da chiusa, così dopo l'invio riaprendola si
+// rivede "Fatto" e non un modulo vuoto da rimandare. Col tasto indietro del
+// telefono si chiude la finestra, non si esce dalla pagina: per questo
+// all'apertura si aggiunge un passo alla cronologia.
+export function FinestraModulo() {
+  const [pronta, setPronta] = useState(false);
+  const [aperta, setAperta] = useState(false);
+  useEffect(() => setPronta(true), []);
+
+  useEffect(() => {
+    const apri = () => {
+      setAperta(true);
+      if (!history.state?.moduloAperto) history.pushState({ ...history.state, moduloAperto: true }, '');
+    };
+    const indietro = () => setAperta(false);
+    window.addEventListener(APRI, apri);
+    window.addEventListener('popstate', indietro);
+    return () => {
+      window.removeEventListener(APRI, apri);
+      window.removeEventListener('popstate', indietro);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!aperta) return;
+    const prima = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const tasto = (e: KeyboardEvent) => { if (e.key === 'Escape') chiudi(); };
+    window.addEventListener('keydown', tasto);
+    return () => {
+      document.body.style.overflow = prima;
+      window.removeEventListener('keydown', tasto);
+    };
+  }, [aperta]);
+
+  const chiudi = () => {
+    if (history.state?.moduloAperto) history.back();
+    else setAperta(false);
+  };
+
+  if (!pronta) return null;
+  return createPortal(
+    <div
+      className={`fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-slate-950/60 md:p-6 ${aperta ? '' : 'hidden'}`}
+      onClick={(e) => { if (e.target === e.currentTarget) chiudi(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Richiedi il sopralluogo gratuito"
+    >
+      <div className="w-full md:max-w-md max-h-[100dvh] overflow-y-auto overscroll-contain">
+        <ModuloSopralluogo chiudi={chiudi} />
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// Nella finestra, sul telefono il riquadro poggia sul fondo dello schermo:
+// angoli tondi solo sopra, e spazio per la barra di sistema dell'iPhone.
+const SHEET = 'rounded-t-2xl md:rounded-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]';
+
+function BottoneChiudi({ chiudi }: { chiudi: () => void }) {
+  return (
+    <button type="button" onClick={chiudi} aria-label="Chiudi" className="absolute top-2.5 right-2.5 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 cursor-pointer">
+      <X size={22} />
+    </button>
+  );
+}
+
+export default function ModuloSopralluogo({ chiudi }: { chiudi?: () => void }) {
   const [nome, setNome] = useState('');
   const [telefono, setTelefono] = useState('');
   const [zona, setZona] = useState('');
@@ -167,7 +205,8 @@ export default function ModuloSopralluogo() {
 
   if (fatto) {
     return (
-      <div className="bg-white rounded-2xl border border-emerald-200 p-6 md:p-8 shadow-xl text-center" id="modulo-fatto">
+      <div className={`relative bg-white border border-emerald-200 p-6 md:p-8 shadow-xl text-center ${chiudi ? SHEET : 'rounded-2xl'}`} id="modulo-fatto">
+        {chiudi && <BottoneChiudi chiudi={chiudi} />}
         <CheckCircle2 size={44} className="mx-auto text-emerald-500" />
         <h2 className="text-2xl font-bold text-blue-950 mt-3">Fatto, {nome}!</h2>
         <p className="text-slate-600 mt-2">
@@ -190,8 +229,9 @@ export default function ModuloSopralluogo() {
     'block w-full pl-10 pr-3 py-3.5 border border-slate-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 md:p-7 shadow-xl" id="modulo">
-      <h2 className="text-xl md:text-2xl font-bold text-blue-950 tracking-tight">Richiedi il sopralluogo gratuito</h2>
+    <div className={`relative bg-white border border-slate-200 p-4 sm:p-5 md:p-7 shadow-xl ${chiudi ? SHEET : 'rounded-2xl'}`} id="modulo">
+      {chiudi && <BottoneChiudi chiudi={chiudi} />}
+      <h2 className="text-xl md:text-2xl font-bold text-blue-950 tracking-tight pr-10">Richiedi il sopralluogo gratuito</h2>
       <p className="text-sm text-slate-600 mt-1">
         Ti richiamano Stefano o Matteo, non un call center.
       </p>

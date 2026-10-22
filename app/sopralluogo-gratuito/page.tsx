@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Phone, Check, Star, ChevronDown } from 'lucide-react';
-import ModuloSopralluogo, { BarraContatti, MESSAGGIO_WHATSAPP } from '../../components/ModuloSopralluogo';
+import { BarraContatti, FinestraModulo, PulsanteModulo, MESSAGGIO_WHATSAPP } from '../../components/ModuloSopralluogo';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { CONTACT, OG_DEFAULTS, telHref, whatsappHref } from '../../lib/siteConfig';
 import { REVIEW_RATING_TESTO, REVIEW_TOTAL } from '../../lib/reviews';
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 const PUNTI = [
-  'Sopralluogo gratuito e senza impegno',
+  'Sopralluogo gratuito in 10 minuti',
   'Installazione compresa, fatta da noi',
   '10 anni di garanzia (esclusi i consumabili)',
   'Anche a rate a tasso zero',
@@ -40,7 +40,7 @@ const PREZZI = [
 
 const PASSI = [
   { titolo: 'Ci lasci il numero', testo: 'Ti richiamiamo noi e fissiamo un giorno che va bene a te.' },
-  { titolo: "Veniamo a provare l'acqua", testo: 'Guardiamo la tua acqua e lo spazio in cucina, e ti diciamo cosa ti serve davvero. Anche quando basta il più semplice.' },
+  { titolo: "Veniamo a provare l'acqua", testo: 'In una decina di minuti guardiamo la tua acqua e lo spazio in cucina, e ti diciamo cosa ti serve davvero. Anche quando basta il più semplice.' },
   { titolo: 'Ti lasciamo il preventivo', testo: 'Con le voci principali scritte, valido 3 mesi. Decidi con calma.' },
 ];
 
@@ -81,7 +81,7 @@ function PulsantiContatto({ chiaro = false }: { chiaro?: boolean }) {
     <div className="flex flex-col sm:flex-row gap-3">
       <a
         href={telHref()}
-        className={`inline-flex items-center justify-center gap-2 rounded-xl font-bold px-5 py-3.5 border ${chiaro ? 'bg-white text-blue-900 border-white' : 'bg-blue-900 text-white border-blue-900'}`}
+        className={`whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-xl font-bold px-5 py-3.5 border ${chiaro ? 'bg-white text-blue-900 border-white' : 'bg-blue-900 text-white border-blue-900'}`}
       >
         <Phone size={18} /> Chiama {CONTACT.phoneDisplay}
       </a>
@@ -89,7 +89,7 @@ function PulsantiContatto({ chiaro = false }: { chiaro?: boolean }) {
         href={whatsappHref(MESSAGGIO_WHATSAPP)}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center justify-center gap-2 rounded-xl font-bold px-5 py-3.5 bg-[#25D366] text-white"
+        className="whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-xl font-bold px-5 py-3.5 bg-[#25D366] text-white"
       >
         <WhatsAppIcon size={18} /> Scrivici su WhatsApp
       </a>
@@ -119,43 +119,39 @@ export default function SopralluogoGratuitoPage() {
         </div>
       </header>
 
-      {/* In alto: la risposta a chi ha cercato il prezzo, e il modulo.
-          Il 95% arriva dal telefono (Matteo, 22 ott 2026): lì l'ordine è titolo,
-          stelle, modulo, e solo dopo i punti; il modulo deve vedersi senza
-          scorrere. Sul computer le due colonne restano: a sinistra titolo e
-          punti, a destra il modulo per tutta l'altezza. */}
-      <section className="bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 px-4 sm:px-6 pt-4 pb-10 md:pt-14 md:pb-16">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-[1.1fr_0.9fr] gap-x-12 gap-y-4 md:gap-y-0 items-start">
-          <div className="md:col-start-1 md:row-start-1">
-            <p className="text-xs md:text-sm font-bold uppercase tracking-widest text-blue-700">Firenze · Prato · Pistoia</p>
-            <h1 className="mt-1.5 md:mt-2 text-[1.75rem] md:text-5xl font-bold text-blue-950 tracking-tight leading-tight text-balance">
-              Il depuratore d&apos;acqua installato a casa tua, da 400 €
-            </h1>
-            {/* Sul telefono la frase corta: quella lunga spingeva il modulo sotto il banner dei cookie. */}
-            <p className="mt-2 md:mt-4 text-base md:text-lg text-slate-700 leading-snug md:leading-relaxed">
-              <span className="md:hidden">Veniamo a provare l&apos;acqua e ti diciamo cosa ti serve e quanto costa.</span>
-              <span className="hidden md:inline">Veniamo noi a provare l&apos;acqua del tuo rubinetto e ti diciamo quale impianto ti serve e quanto costa. Il sopralluogo è gratuito e non ti impegna a niente.</span>
-            </p>
-            <p className="mt-2 md:mt-5 flex flex-wrap items-center gap-x-2 text-sm md:text-base text-slate-700">
-              <Stelle /> <strong className="text-slate-900">{REVIEW_RATING_TESTO} su Google</strong> · {REVIEW_TOTAL} recensioni<span className="hidden sm:inline"> · dal 2005</span>
-            </p>
-          </div>
-          <div className="md:col-start-2 md:row-start-1 md:row-span-2" id="zona-modulo">
-            <ModuloSopralluogo />
-          </div>
-          <div className="md:col-start-1 md:row-start-2">
-            <ul className="md:mt-5 space-y-2">
-              {PUNTI.map((p) => (
-                <li key={p} className="flex items-center gap-2.5 text-slate-800 font-medium">
-                  <span className="bg-emerald-500 text-white rounded-full p-0.5 shrink-0"><Check size={14} strokeWidth={3} /></span>
-                  {p}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 hidden md:block">
+      {/* In alto: la risposta a chi ha cercato il prezzo e il pulsante.
+          Il 95% arriva dal telefono (Matteo, 22 ott 2026): titolo, i quattro
+          punti, le stelle e subito il pulsante che apre il modulo, tutto senza
+          scorrere. Il modulo aperto nella pagina spingeva giù tutto il resto. */}
+      <section className="bg-gradient-to-br from-blue-200 via-blue-100 to-slate-50 px-4 sm:px-6 pt-5 pb-8 md:pt-14 md:pb-16">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs md:text-sm font-bold uppercase tracking-widest text-blue-700">Firenze · Prato · Pistoia</p>
+          <h1 className="mt-1.5 md:mt-2 text-[1.75rem] md:text-5xl font-bold text-blue-950 tracking-tight leading-tight text-balance">
+            Il depuratore d&apos;acqua installato a casa tua, da 400 €
+          </h1>
+          <p className="hidden md:block mt-4 text-lg text-slate-700 leading-relaxed">
+            Veniamo noi a provare l&apos;acqua del tuo rubinetto e ti diciamo quale impianto ti serve e quanto costa.
+          </p>
+          <ul className="mt-4 md:mt-5 space-y-2">
+            {PUNTI.map((p) => (
+              <li key={p} className="flex items-center gap-2.5 text-slate-800 font-medium">
+                <span className="bg-emerald-500 text-white rounded-full p-0.5 shrink-0"><Check size={14} strokeWidth={3} /></span>
+                {p}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 md:mt-5 flex flex-wrap items-center gap-x-2 text-sm md:text-base text-slate-700">
+            <Stelle /> <strong className="text-slate-900">{REVIEW_RATING_TESTO} su Google</strong> · {REVIEW_TOTAL} recensioni<span className="hidden sm:inline"> · dal 2005</span>
+          </p>
+          <div className="mt-5 md:mt-7 flex flex-col md:flex-row md:flex-wrap gap-3">
+            <PulsanteModulo className="w-full md:w-auto whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-xl bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold text-lg px-6 py-4 shadow-md">
+              Richiedi il sopralluogo gratuito
+            </PulsanteModulo>
+            <div className="hidden md:block">
               <PulsantiContatto />
             </div>
           </div>
+          <p className="mt-2.5 text-sm text-slate-600 text-center md:text-left">Lasci il numero, ti richiamiamo noi. Nessun impegno.</p>
         </div>
       </section>
 
@@ -174,7 +170,7 @@ export default function SopralluogoGratuitoPage() {
             ))}
           </div>
           <p className="mt-5 text-slate-700">
-            <strong>Niente contratti «gratis» da dieci anni</strong>: l&apos;impianto lo compri, anche a rate a tasso zero, e resta tuo.
+            <strong>Niente contratti «gratis»</strong>: l&apos;impianto lo compri, anche a rate a tasso zero, e resta tuo.
           </p>
         </div>
       </section>
@@ -203,7 +199,7 @@ export default function SopralluogoGratuitoPage() {
             <figcaption className="mt-3 text-slate-700">Lo installiamo noi, <strong>sotto il lavello o sotto lo zoccolo</strong> della cucina.</figcaption>
           </figure>
           <figure>
-            <img src="/assets/hero-assistenza-team.webp" alt="Stefano e Matteo di Acquadirete" width={900} height={900} loading="lazy" className="w-full h-auto rounded-2xl md:max-h-[400px] md:object-cover" />
+            <img src="/assets/hero-assistenza-team.webp" alt="Stefano e Matteo di Acquadirete" width={900} height={900} loading="lazy" className="w-full aspect-[5/3] rounded-2xl object-cover object-[50%_8%]" />
             <figcaption className="mt-3 text-slate-700"><strong>Stefano e Matteo.</strong> Siamo noi che rispondiamo al telefono, veniamo a casa tua e installiamo. Dal 2005, niente agenti e niente call center.</figcaption>
           </figure>
         </div>
@@ -249,9 +245,9 @@ export default function SopralluogoGratuitoPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Il prezzo esatto per casa tua</h2>
           <p className="mt-3 text-blue-100">Veniamo noi, proviamo l&apos;acqua del tuo rubinetto e ti lasciamo un preventivo valido 3 mesi. Gratis e senza impegno.</p>
-          <a href="#modulo" className="mt-6 inline-flex items-center justify-center rounded-xl bg-mint-400 text-slate-900 font-bold px-6 py-4">
+          <PulsanteModulo className="mt-6 inline-flex items-center justify-center rounded-xl bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold px-6 py-4">
             Richiedi il sopralluogo gratuito
-          </a>
+          </PulsanteModulo>
           <div className="mt-4 flex justify-center">
             <PulsantiContatto chiaro />
           </div>
@@ -265,6 +261,7 @@ export default function SopralluogoGratuitoPage() {
       </footer>
 
       <BarraContatti />
+      <FinestraModulo />
     </div>
   );
 }
