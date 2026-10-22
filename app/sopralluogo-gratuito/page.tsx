@@ -248,7 +248,8 @@ export default function SopralluogoGratuitoPage() {
           <PulsanteModulo className="mt-6 inline-flex items-center justify-center rounded-xl bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold px-6 py-4">
             Richiedi il sopralluogo gratuito
           </PulsanteModulo>
-          <div className="mt-4 flex justify-center">
+          {/* Sul telefono Chiama e WhatsApp sono già nella barra fissa in basso. */}
+          <div className="mt-4 hidden md:flex justify-center">
             <PulsantiContatto chiaro />
           </div>
         </div>
