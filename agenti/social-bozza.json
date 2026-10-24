@@ -1,74 +1,18 @@
 {
-  "tema": "curiosità sull'acqua",
-  "foto": "assets/social/curiosita-2026-10-17.jpg",
-  "grafica": {
-    "titolo": "Lo sapevi che l'acqua è controllata *fino al contatore*?",
-    "punti": [
-      {
-        "icona": "scudo",
-        "titolo": "Fino al contatore",
-        "testo": "Il gestore dell'acquedotto controlla l'acqua e ne risponde fino al contatore."
-      },
-      {
-        "icona": "casa",
-        "titolo": "Dopo, è casa tua",
-        "testo": "Colonna del condominio e tubi di casa sono privati. Per questo due case nella stessa via possono avere acqua diversa."
-      },
-      {
-        "icona": "rubinetto",
-        "titolo": "Dopo una lunga sosta",
-        "testo": "Lasciala scorrere qualche minuto prima di berla, e usala per le piante. Lo consiglia l'Istituto Superiore di Sanità."
-      }
-    ]
-  },
+  "tema": "installazione",
+  "foto": "assets/social/tg-2026-09-29-206.jpg",
   "varianti": [
     {
-      "testo": "L'acquedotto controlla l'acqua e ne risponde fino al contatore. Da lì in poi ci sono la colonna del condominio e i tubi di casa, ed è per questo che due appartamenti nella stessa via possono avere un'acqua diversa. L'acqua che conta è quella che esce dal tuo rubinetto: durante il sopralluogo gratuito la analizziamo lì, davanti a te.",
-      "hashtag": [
-        "#acquadelrubinetto",
-        "#firenze",
-        "#prato",
-        "#pistoia"
-      ]
+      "testo": "Quanto spazio prende un depuratore sotto il lavello? Questo, a ultrafiltrazione, l'abbiamo montato in piedi, accostato al fianco del mobile, con i tubi che corrono in alto lungo la parete di fondo: accanto c'è ancora posto. Ti chiedi se nel tuo ci sta? Veniamo a vederlo noi, il sopralluogo è gratuito.",
+      "hashtag": ["#depuratoreacqua", "#ultrafiltrazione", "#firenze", "#prato"]
     },
     {
-      "testo": "Un consiglio che non costa niente: quando un rubinetto è rimasto fermo tutta la notte, o per le ferie, lascia scorrere l'acqua per qualche minuto prima di berla o di cucinarci. Quella non la buttare: va bene per le piante o per lavare. Lo consiglia l'Istituto Superiore di Sanità, nella pagina «Cosa fare in casa» del suo sito.",
-      "hashtag": [
-        "#acquadelrubinetto",
-        "#firenze",
-        "#consiglidicasa",
-        "#acquabuona"
-      ]
+      "testo": "Vedi il riquadro azzurro sul fianco dell'impianto? È un contatore digitale: tiene il conto dell'acqua che ci passa, così il cambio dei filtri non si fa a occhio. E il cambio lo facciamo noi: ai nostri clienti diciamo quando è il momento e veniamo a casa. Lo facciamo dal 2005, fra Firenze, Prato e Pistoia.",
+      "hashtag": ["#assistenzadepuratori", "#depuratoreacqua", "#firenze", "#pistoia"]
     },
     {
-      "testo": "Dal contatore in poi l'impianto è di casa tua, e il depuratore ne fa parte. Nella pagina «Cosa fare in casa» del suo sito, l'Istituto Superiore di Sanità consiglia a chi ha un apparecchio per l'acqua di curarne con scrupolo la manutenzione. Per i nostri clienti ci pensiamo noi, dal 2005, fra Firenze, Prato e Pistoia: ti avvisiamo quando è il momento del cambio filtri.",
-      "hashtag": [
-        "#assistenzadepuratori",
-        "#depuratoreacqua",
-        "#firenze",
-        "#prato"
-      ]
+      "testo": "Non tutti i depuratori sono a osmosi inversa. Questo è a ultrafiltrazione, un sistema diverso: in certe case è la scelta giusta, in altre no. Dipende dall'acqua che esce dal tuo rubinetto e da cosa ti serve. Per capirlo veniamo da te col sopralluogo gratuito: bastano una decina di minuti.",
+      "hashtag": ["#depuratoreacqua", "#ultrafiltrazione", "#prato", "#pistoia"]
     }
-  ],
-  "correzioni": [
-    {
-      "quando": "2026-10-19T16:19:33.481Z",
-      "note": "1 va bene ma cambia la frase “un’acqua che sa diversa”, i post 2 e 3 è vero che sono cose consigliate dall’Istituto Superiore di Sanità?",
-      "fatto": "Post 1: \"un’acqua che sa diversa\" diventa \"un’acqua diversa\", come nella grafica. Post 2 e 3: verificato, entrambi i consigli sono nella pagina «Cosa fare in casa» dell’ISS (iss.it/acqua-cosa-fare-in-casa); nel testo ora c’è scritto da dove vengono. Grafica invariata: il consiglio che riporta è vero."
-    }
-  ],
-  "inviato": "2026-10-19T16:20:02.164Z",
-  "pubblicato": "2026-10-19T16:46:01.891Z",
-  "variantePubblicata": 1,
-  "esiti": {
-    "facebook": {
-      "id": "1164447766749757_122124177837366858",
-      "url": "https://www.facebook.com/1164447766749757_122124177837366858"
-    },
-    "instagram": {
-      "id": "18016049438959517",
-      "url": "https://www.instagram.com/p/18016049438959517/"
-    }
-  },
-  "graficaTolta": true
+  ]
 }
