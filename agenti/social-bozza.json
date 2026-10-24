@@ -4,15 +4,31 @@
   "varianti": [
     {
       "testo": "Quanto spazio prende un depuratore sotto il lavello? Questo, a ultrafiltrazione, l'abbiamo montato in piedi, accostato al fianco del mobile, con i tubi che corrono in alto lungo la parete di fondo: accanto c'è ancora posto. Ti chiedi se nel tuo ci sta? Veniamo a vederlo noi, il sopralluogo è gratuito.",
-      "hashtag": ["#depuratoreacqua", "#ultrafiltrazione", "#firenze", "#prato"]
+      "hashtag": [
+        "#depuratoreacqua",
+        "#ultrafiltrazione",
+        "#firenze",
+        "#prato"
+      ]
     },
     {
       "testo": "Vedi il riquadro azzurro sul fianco dell'impianto? È un contatore digitale: tiene il conto dell'acqua che ci passa, così il cambio dei filtri non si fa a occhio. E il cambio lo facciamo noi: ai nostri clienti diciamo quando è il momento e veniamo a casa. Lo facciamo dal 2005, fra Firenze, Prato e Pistoia.",
-      "hashtag": ["#assistenzadepuratori", "#depuratoreacqua", "#firenze", "#pistoia"]
+      "hashtag": [
+        "#assistenzadepuratori",
+        "#depuratoreacqua",
+        "#firenze",
+        "#pistoia"
+      ]
     },
     {
       "testo": "Non tutti i depuratori sono a osmosi inversa. Questo è a ultrafiltrazione, un sistema diverso: in certe case è la scelta giusta, in altre no. Dipende dall'acqua che esce dal tuo rubinetto e da cosa ti serve. Per capirlo veniamo da te col sopralluogo gratuito: bastano una decina di minuti.",
-      "hashtag": ["#depuratoreacqua", "#ultrafiltrazione", "#prato", "#pistoia"]
+      "hashtag": [
+        "#depuratoreacqua",
+        "#ultrafiltrazione",
+        "#prato",
+        "#pistoia"
+      ]
     }
-  ]
+  ],
+  "inviato": "2026-10-24T07:05:01.855Z"
 }
