@@ -3131,7 +3131,8 @@
   // I costi d'acquisto: solo a chi ha il permesso (22 ott 2026; il motore agli altri non li manda).
   const vedeCosti = () => !(dati && dati.permessi && dati.permessi.costi === false);
   const disponibile = (a) => arrotonda((a.quantita || 0) + (a.inConsegna || 0) - (a.daMontare || 0));
-  const daRiordinare = (a) => a.scorta != null && disponibile(a) <= a.scorta;
+  // Sotto la scorta minima, non alla pari (24 ott 2026, Matteo): come nel foglio.
+  const daRiordinare = (a) => a.scorta != null && disponibile(a) < a.scorta;
   const categorieMag = () => (mag() && mag().categorie) || ['Filtri e ricambi', 'Impianti', 'Impianti usati', 'Miscelatori e rubinetti', 'Altro'];
   const categoriaDi = (a) => (categorieMag().includes(a.categoria) ? a.categoria : 'Altro');
   // Il colore della categoria (lo stesso del foglio): una classe «cat-impianti»…
@@ -3553,7 +3554,7 @@
       <label class="campo"><span>Codice del fornitore <em>(facoltativo)</em></span><input id="ar-forn" value="${v(a && a.fornitore)}" autocomplete="off"></label>
       ${a ? '' : `<label class="campo"><span>Quanti ne hai in magazzino${perLavoro ? ' <em>(contando anche quelli appena usati)</em>' : ''}</span>
         <input id="ar-q" type="text" inputmode="decimal" autocomplete="off" value="0"></label>`}
-      <label class="campo"><span>Scorta minima <em>(facoltativa: quando ne restano così pochi è «da riordinare»)</em></span>
+      <label class="campo"><span>Scorta minima <em>(facoltativa: quando ne restano meno di così è «da riordinare»)</em></span>
         <input id="ar-scorta" type="text" inputmode="decimal" autocomplete="off" value="${a && a.scorta != null ? numeroIt(a.scorta) : ''}"></label>
       ${vedeCosti() ? `<label class="campo"><span>Costo d'acquisto in euro <em>(facoltativo)</em></span>
         <input id="ar-costo" type="text" inputmode="decimal" autocomplete="off" value="${a && a.costo != null ? numeroIt(a.costo) : ''}"></label>` : ''}
@@ -3678,7 +3679,7 @@
         return l.length ? `<h2 class="gruppo ${classeCategoria(c)}">${esc(c)} (${l.length})</h2><div class="lista">${l.map(voceArticolo).join('')}</div>` : '';
       }).join('');
       const vuoti = {
-        riordinare: 'Niente da riordinare.<br><br>Un articolo è «da riordinare» quando il suo totale arriva alla scorta minima: la scegli toccandolo, in «Modifica i dati».',
+        riordinare: 'Niente da riordinare.<br><br>Un articolo è «da riordinare» quando il suo totale scende sotto la scorta minima: la scegli toccandolo, in «Modifica i dati».',
         finiti: 'Nessun articolo finito.',
         consegna: 'Niente in consegna.<br><br>Quando ordini al fornitore, tocca l\'articolo e «Ordinati».',
         montare: 'Niente da montare.<br><br>Quando un cliente compra, tocca l\'articolo e «Venduti, da montare».',

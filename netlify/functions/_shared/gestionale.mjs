@@ -2642,17 +2642,19 @@ function posizioniMagazzino(testa) {
 const L = (i) => lettera(i + 1);
 // Il totale: quelli che ci sono, più quelli in arrivo, meno quelli già venduti.
 const formulaTotale = (pos) => `={"Totale disponibile";ARRAYFORMULA(IF(LEN(${L(pos.codice)}2:${L(pos.codice)});IFERROR(${L(pos.quantita)}2:${L(pos.quantita)}+${L(pos.inConsegna)}2:${L(pos.inConsegna)}-${L(pos.daMontare)}2:${L(pos.daMontare)};"");""))}`;
-// «Da riordinare» si guarda sul totale, se c'è (prima del 21 ott 2026 sulla quantità).
+// «Da riordinare» si guarda sul totale, se c'è (prima del 21 ott 2026 sulla
+// quantità), ed è SOTTO la scorta minima, non alla pari (24 ott 2026, Matteo:
+// «devono essere sotto il numero minimo inserito»). Uguale nell'app (daRiordinare).
 const suTotale = (pos) => (pos.totale >= 0 ? pos.totale : pos.quantita);
 const formulaRiordinare = (pos) => {
   const [a, s, t] = [L(pos.codice), L(pos.scorta), L(suTotale(pos))];
-  return `="Da riordinare: "&SUMPRODUCT((${a}2:${a}<>"")*(${s}2:${s}<>"")*(${t}2:${t}<=${s}2:${s}))`;
+  return `="Da riordinare: "&SUMPRODUCT((${a}2:${a}<>"")*(${s}2:${s}<>"")*(${t}2:${t}<${s}2:${s}))`;
 };
 // Le visualizzazioni filtro oltre a quelle per categoria: [titolo, colonna, formula].
 function vistePiu(pos) {
   const a = `$${L(pos.codice)}2<>""`;
   const v = [
-    ['Da riordinare', suTotale(pos), `=(${a})*($${L(pos.scorta)}2<>"")*($${L(suTotale(pos))}2<=$${L(pos.scorta)}2)`],
+    ['Da riordinare', suTotale(pos), `=(${a})*($${L(pos.scorta)}2<>"")*($${L(suTotale(pos))}2<$${L(pos.scorta)}2)`],
     ['Finiti', pos.quantita, `=(${a})*($${L(pos.quantita)}2<=0)`],
   ];
   if (pos.inConsegna >= 0) v.push(['In consegna', pos.inConsegna, `=(${a})*($${L(pos.inConsegna)}2>0)`]);
@@ -2674,7 +2676,7 @@ function regoleMagazzino(id, pos) {
   const t = `$${L(suTotale(pos))}2`;
   const numeri = zona(pos.quantita, pos.ultima + 1);
   regola(numeri, `=(${a})*((${q}<0)+(${t}<0))`, { backgroundColor: rgb('#fde7e5'), textFormat: { foregroundColor: rgb('#b3261e') } });
-  if (pos.scorta >= 0) regola(numeri, `=(${a})*($${L(pos.scorta)}2<>"")*(${t}<=$${L(pos.scorta)}2)`, { backgroundColor: rgb('#fff1d6') });
+  if (pos.scorta >= 0) regola(numeri, `=(${a})*($${L(pos.scorta)}2<>"")*(${t}<$${L(pos.scorta)}2)`, { backgroundColor: rgb('#fff1d6') });
   regola(numeri, `=(${a})*(${q}=0)`, { textFormat: { foregroundColor: rgb('#8a97a5') } });
   if (pos.categoria >= 0) {
     for (const [c, colore] of Object.entries(COLORI_CATEGORIE)) regola(zona(0, pos.quantita), `=$${L(pos.categoria)}2="${c}"`, { backgroundColor: rgb(colore) });
