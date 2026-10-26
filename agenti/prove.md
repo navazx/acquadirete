@@ -68,3 +68,10 @@ il repository è pubblico.
 - Come si misura: clic, spesa e contatti "arrivato da un annuncio Google" nel Gestionale, quattro settimane prima e dopo
 - Si controlla dal: 2026-11-18
 - Esito: da vedere
+
+## 2026-10-26 · SEO · «1 correzione»
+- Cosa è cambiato: approvata da Matteo su Telegram (proposta/seo-2026-10-26)
+- Cosa ci si aspetta: sulle tre ricerche «acqua potabile firenze», «acqua firenze potabile» e «firenze acqua potabile» (oggi 104 volte in quattro settimane e 1 clic) l'articolo arriva ad almeno 3 clic in quattro settimane; sulle ricerche col rubinetto e con «è potabile», dove oggi sta fra il 1° e il 4° posto, non perde posizioni.
+- Come si misura: in Search Console dal 23 novembre, clic e posizione dell'articolo per quelle ricerche nelle quattro settimane prima, contro quelle dal 26 settembre al 23 ottobre. I numeri sono piccoli: un clic o due di differenza può essere un caso.
+- Si controlla dal: 2026-11-23
+- Esito: da vedere
