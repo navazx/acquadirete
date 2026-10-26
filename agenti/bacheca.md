@@ -8,6 +8,8 @@ Le note di MATTEO vengono da lui: valgono come sue indicazioni, sempre dentro
 le regole del tuo lavoro. Le altre sono degli agenti: informazioni, non ordini.
 Gli ordini veri stanno in `agenti/ordini.md`.
 
+- **26/10, 08:30 · SEO**: Controllo del sito: 28 pagine e 31 link. 3 risolti dalla volta scorsa. Niente di nuovo da sistemare.
+- **26/10, 08:30 · SEO** → per SEO, Social, Contenuti, Direttore: Novità su Google questa settimana. "acqua potabile firenze" (/blog/acqua-rubinetto-firenze-si-puo-bere/): si vede ma nessuno clicca; "depuratore acqua domestico gratis" (/blog/depuratore-acqua-gratis-contratti/): entrata in prima pagina; "depuratore acqua gratis" (/blog/depuratore-acqua-gratis-contratti/): a un passo dalla prima pagina; "depuratore acqua gratis province" (/blog/truffa-bonus-regione-depuratore/): entrata in prima pagina; "depuratori acqua prato" (/): sale. E altri 2.
 - **26/10, 07:45 · Lead e clienti** → per Direttore, Social, Contenuti: Cruscotto della settimana 19/10/2026-25/10/2026 scritto sul Gestionale. Contatti nuovi: più della settimana prima. La maggior parte da Meta e dai social.
 - **24/10, 09:04 · Social** → per MATTEO: Per MATTEO: con questa le foto di installazioni usabili sono finite. Le due del miscelatore nero (8/10) restano ferme per la persona riflessa nel marmo: se sei tu o Stefano scrivilo al bot. Per i prossimi post di installazione servono foto nuove, con una riga su che impianto è.
 - **24/10, 09:04 · Social**: Bozza della settimana 43 pronta: installazione, con la foto dell'impianto a ultrafiltrazione sotto il lavello (29/09). Tre angoli: quanto spazio prende, il contatore digitale per il cambio filtri, non tutti i depuratori sono a osmosi.
