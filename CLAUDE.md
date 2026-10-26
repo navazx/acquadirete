@@ -133,5 +133,6 @@ Dal 21/10/2026 il paese scritto vale anche dentro un comune fuso che lo contiene
 Prova in locale: `node scripts/gestione-locale.mjs` (anteprima "gestione", porta 3005). Legge il foglio vero con la chiave di sola lettura e scrive su una copia in memoria: si può provare ogni pulsante senza toccare niente.
 
 ## Convenzioni
-- Aggiungere una pagina servizio: creare `app/<slug>/page.tsx`, registrare lo slug in `lib/routes.ts` (e `types.ts` se serve un nuovo `PageId`), riusare `ServicePageView`.
+- Aggiungere una pagina servizio: creare `app/<slug>/page.tsx`, registrare lo slug in `lib/routes.ts` (e `types.ts` se serve un nuovo `PageId`), riusare `ServicePageView`. Una pagina nuova va anche in `lib/aggiornamenti.ts` col giorno in cui esce.
+- Date per Google (mappa del sito): dopo aver cambiato a mano un articolo o una pagina, prima del commit `node scripts/lib/date-aggiornamento.mjs` (mette la data di oggi a chi è cambiato rispetto a origin/main). Le proposte approvate la prendono da sole.
 - Non duplicare dati di contatto o URL Google altrove: sempre da `siteConfig.ts`.

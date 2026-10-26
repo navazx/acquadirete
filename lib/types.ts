@@ -81,6 +81,9 @@ export interface BlogPost {
   excerpt: string;
   /** Data ISO, es. '2026-06-21'. */
   publishedAt: string;
+  /** Ultima modifica vera del testo, data ISO: va nella mappa del sito per Google.
+   *  La mette scripts/lib/date-aggiornamento.mjs, non si scrive a mano. */
+  updatedAt?: string;
   readingMinutes: number;
   sections: BlogSection[];
   faqs?: ServiceFaq[];

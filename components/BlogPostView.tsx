@@ -40,7 +40,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
     headline: post.title,
     description: post.metaDescription,
     datePublished: post.publishedAt,
-    dateModified: post.publishedAt,
+    dateModified: post.updatedAt ?? post.publishedAt,
     author: { '@type': 'Organization', name: 'Acquadirete' },
     publisher: {
       '@type': 'Organization',

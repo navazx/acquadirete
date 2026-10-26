@@ -215,6 +215,9 @@ Le ha tolte la revisione dei testi del 14 ott 2026; non vanno rimesse.
   `heading` e `paragraphs`. Niente elenchi puntati: la pagina mostra solo paragrafi.
 - `faqs`: 2 o 3.
 - `publishedAt`: la data di oggi, `AAAA-MM-GG`.
+- `updatedAt` non lo scrivi, né nell'articolo nuovo né in quello rinforzato: lo
+  mette da solo `scripts/lib/date-aggiornamento.mjs` quando Matteo approva, e
+  dice a Google (nella mappa del sito) che l'articolo vecchio è cambiato.
 - `readingMinutes`: numero di parole diviso 200, arrotondato.
 
 ## I collegamenti: la parte che si dimentica sempre

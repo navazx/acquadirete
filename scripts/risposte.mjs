@@ -50,6 +50,7 @@ import { chiamaMeccanico } from './lib/meccanico.mjs';
 import { leggi as proposteAds, inAttesa, applica as applicaAds, rifiuta as rifiutaAds, annulla as annullaAds } from './lib/ads-proposte.mjs';
 import { lasciaNota } from './lib/bacheca.mjs';
 import { segnaProva, attesaDa } from './lib/prove.mjs';
+import { segnaDate, DATE } from './lib/date-aggiornamento.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
 const STATO = 'agenti/telegram-stato.json';
@@ -326,6 +327,20 @@ async function approva(p) {
       `Resta in attesa. ${await alMeccanico({ tipo: 'proposta-non-si-unisce', ramo: p.ramo, workflow: 'risposte.yml', testo: `Matteo ha approvato «${p.titolo}» (ramo ${p.ramo}) ma il ramo non si unisce a main: i due sono cambiati negli stessi punti. Va riallineato a main sul suo stesso ramo, così torna a Matteo da approvare.` })}`,
     );
     return;
+  }
+
+  // Gli articoli e le pagine che cambiano prendono la data di oggi nella mappa
+  // del sito: cosi' Google sa da dove ripassare, senza "Richiedi indicizzazione"
+  // a mano (lib/date-aggiornamento.mjs). Se non riesce, la proposta va online lo stesso.
+  try {
+    const { articoli, pagine } = segnaDate('HEAD^1');
+    if (articoli.length + pagine.length) {
+      git('add', 'lib/blogPosts.ts', DATE);
+      git('commit', '--amend', '--no-edit');
+    }
+  } catch (e) {
+    console.log(`Date di aggiornamento non segnate: ${e.message}`);
+    try { git('checkout', '--', 'lib/blogPosts.ts', DATE); } catch { /* niente da rimettere */ }
   }
 
   // Prima si pubblica, poi si dice che e' pubblicato.

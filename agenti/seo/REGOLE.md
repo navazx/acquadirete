@@ -226,6 +226,10 @@ Gli altri tipi di segnale (prima pagina, sale, scende, fuori) sono solo notizie.
 - Le pagine che non rispondono 200, le immagini pesanti, le pagine orfane: servono
   decisioni che non sono tue. Restano segnalate.
 - Le diciture "130+" / "oltre 130" recensioni: vedi `CLAUDE.md`.
+- Le date di aggiornamento: `updatedAt` negli articoli e `lib/aggiornamenti.ts`.
+  Le mette da solo `scripts/lib/date-aggiornamento.mjs` quando Matteo approva,
+  col giorno in cui la correzione va online: è così che Google sa da quale pagina
+  ripassare (nella mappa del sito), senza "Richiedi indicizzazione" a mano.
 
 ## Titoli e description
 

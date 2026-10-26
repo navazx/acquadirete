@@ -13,6 +13,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Carboni attivi o osmosi inversa? Le differenze reali, spiegate senza tecnicismi, per capire quale soluzione serve davvero alla tua acqua.',
     publishedAt: '2026-06-21',
+    updatedAt: '2026-07-28',
     readingMinutes: 6,
     relatedServices: ['carboni', 'osmosi', 'depuratore'],
     relatedPosts: ['acqua-rubinetto-firenze-si-puo-bere', 'quanto-costa-depuratore-osmosi-inversa'],
@@ -92,6 +93,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Telefonate e venditori porta a porta promettono un depuratore "gratis". Ecco come funzionano davvero questi contratti e cosa guardare prima di firmare.',
     publishedAt: '2026-06-22',
+    updatedAt: '2026-10-20',
     readingMinutes: 5,
     relatedServices: ['depuratore', 'assistenza'],
     relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'installatore-depuratore-scomparso-cosa-fare', 'domande-prima-contratto-depuratore', 'truffa-bonus-regione-depuratore'],
@@ -155,6 +157,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Quanto costa davvero un depuratore a osmosi inversa? Le fasce di prezzo indicative, cosa le fa variare e quanto si spende di manutenzione.',
     publishedAt: '2026-06-23',
+    updatedAt: '2026-10-17',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'depuratore', 'assistenza'],
     relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'depuratore-casa-in-affitto'],
@@ -217,6 +220,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Il tuo installatore del depuratore non risponde più o ha chiuso? Ecco cosa fare passo per passo, senza dover buttare via l\'impianto.',
     publishedAt: '2026-06-24',
+    updatedAt: '2026-10-17',
     readingMinutes: 5,
     relatedServices: ['assistenza', 'depuratore'],
     relatedPosts: ['depuratore-acqua-gratis-contratti', 'domande-prima-contratto-depuratore'],
@@ -287,6 +291,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Tanti proponiamo solo il noleggio. Noi no: ecco perché preferiamo vendere il depuratore, e cosa cambia davvero per te tra le due strade.',
     publishedAt: '2026-06-25',
+    updatedAt: '2026-10-17',
     readingMinutes: 5,
     relatedServices: ['depuratore', 'osmosi', 'assistenza'],
     relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'depuratore-acqua-gratis-contratti', 'depuratore-casa-in-affitto', 'erogatore-frizzante-ufficio-costi'],
@@ -356,6 +361,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'osmosi inversa fa male? Rispondiamo onestamente al dubbio più diffuso su quest\'acqua, andando oltre la sola domanda sui minerali.',
     publishedAt: '2026-06-25',
+    updatedAt: '2026-10-14',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'carboni', 'depuratore'],
     relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'osmosi-inversa-neonati'],
@@ -427,6 +433,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'acqua a osmosi inversa va bene per il latte del neonato? Rispondiamo con onestà, separando i fatti generali dalle valutazioni che spettano al pediatra.',
     publishedAt: '2026-06-26',
+    updatedAt: '2026-07-08',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'carboni', 'depuratore'],
     relatedPosts: ['osmosi-inversa-fa-male', 'carboni-attivi-vs-osmosi-inversa'],
@@ -488,6 +495,7 @@ export const BLOG_POSTS: BlogPost[] = [
     "metaDescription": "Quando cambiare i filtri del tuo depuratore? Indicazioni generali, i segnali da non ignorare e come funziona una manutenzione fatta bene. Guida onesta.",
     "excerpt": "Filtri a carboni, membrane osmotiche e prefiltri: ti spieghiamo ogni quanto vanno cambiati, i segnali da non sottovalutare e cosa comprende una manutenzione seria.",
     "publishedAt": "2026-07-06",
+    "updatedAt": "2026-07-15",
     "readingMinutes": 5,
     "relatedServices": [
       "depuratore",
@@ -563,6 +571,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'acqua di Firenze è potabile, ma tra cloro e calcare in tanti la comprano in bottiglia. Ti spieghiamo com\'è davvero e quando un depuratore ha senso.',
     publishedAt: '2026-07-15',
+    updatedAt: '2026-10-26',
     readingMinutes: 7,
     relatedServices: ['depuratore', 'carboni', 'osmosi'],
     relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'quanto-costa-depuratore-osmosi-inversa'],
@@ -655,6 +664,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Servire acqua microfiltrata al tavolo invece delle bottiglie: cosa cambia davvero in sala, in magazzino e nei conti di un locale.',
     publishedAt: '2026-07-28',
+    updatedAt: '2026-10-14',
     readingMinutes: 5,
     relatedServices: ['frizzante', 'business', 'assistenza'],
     relatedPosts: ['acqua-rubinetto-firenze-si-puo-bere', 'noleggio-vs-acquisto-depuratore', 'erogatore-frizzante-ufficio-costi'],
@@ -725,6 +735,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Vivi in affitto e hai messo da parte l\'idea del depuratore pensando sia impossibile? Quasi sempre si installa, e quando cambi casa lo porti con te.',
     publishedAt: '2026-08-05',
+    updatedAt: '2026-10-17',
     readingMinutes: 5,
     // 'prato' aggiunto il 12/10/2026: l'articolo nomina Firenze e Prato, e la pagina
     // di Prato deve vincere la ricerca "depuratore acqua prato".
@@ -808,6 +819,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Un erogatore d\'acqua frizzante in ufficio quanto costa? Ti spieghiamo cosa fa davvero variare il prezzo, senza numeri buttati lì a caso.',
     publishedAt: '2026-09-11',
+    updatedAt: '2026-10-17',
     readingMinutes: 3,
     relatedServices: ['business', 'frizzante', 'assistenza'],
     relatedPosts: ['acqua-frizzante-bar-ristoranti', 'noleggio-vs-acquisto-depuratore'],
@@ -882,6 +894,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Grande marchio, venditore passato a casa o ditta della zona: prima di firmare per un depuratore ci sono alcune domande da fare. E un modo semplice per confrontare due preventivi.',
     publishedAt: '2026-09-18',
+    updatedAt: '2026-10-05',
     readingMinutes: 4,
     relatedServices: ['depuratore', 'assistenza', 'osmosi'],
     relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'truffa-bonus-regione-depuratore'],
@@ -959,6 +972,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Una telefonata o una pubblicità su Facebook ti dice che hai diritto a un depuratore gratis grazie al bonus della Regione. Quel bonus non esiste: ecco com\'è fatta la proposta e cosa fare se capita anche a te.',
     publishedAt: '2026-10-05',
+    updatedAt: '2026-10-17',
     readingMinutes: 4,
     relatedServices: ['depuratore', 'assistenza'],
     relatedPosts: ['depuratore-acqua-gratis-contratti', 'domande-prima-contratto-depuratore'],
