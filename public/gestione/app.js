@@ -1180,19 +1180,38 @@
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     $('no').onclick = chiudiFinestra;
     $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+      const tolte = [];
       try {
         for (const t of lista) {
           const { r } = await manda('togliTappa', { id: t.id, codice: t.codice }, `Tolta dal giro: ${luogoTappa(t).nome}`);
           if (r) APPLICA.togliTappa(dati, { id: t.id, codice: t.codice });
+          tolte.push(t);
         }
         salvaDati();
         chiudiFinestra();
         disegna(history.state);
-        messaggio('Giro svuotato.');
+        messaggio('Giro svuotato.', { azione: { testo: 'Annulla', fai: () => rimettiTappe(tolte, giorno) }, durata: 12000 });
       } catch (err) {
         messaggio(err.message, { errore: true, durata: 8000 });
       }
     });
+  }
+  // L'annulla di «Svuota» (26 ott 2026: Matteo l'aveva toccato per sbaglio e
+  // il giro è stato rimesso a mano): le tappe tornano uguali, con lo stesso Id.
+  async function rimettiTappe(tolte, giorno) {
+    try {
+      for (const t of tolte) {
+        const { vecchia, ...x } = t;
+        const tappa = { ...x, giorno: t.giorno || giorno };
+        const { r } = await manda('tappa', tappa, `Rimessa nel giro: ${luogoTappa(t).nome}`);
+        if (r) APPLICA.tappa(dati, tappa);
+      }
+      salvaDati();
+      disegna(history.state);
+      messaggio('Giro rimesso com\'era.');
+    } catch (err) {
+      messaggio(err.message, { errore: true, durata: 8000 });
+    }
   }
 
   // Il link che apre Google Maps col percorso: si parte da dove si è, l'ultima
