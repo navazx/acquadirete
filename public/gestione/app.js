@@ -527,17 +527,16 @@
     const risentire = daRisentire().length;
     const pagare = daPagare().length;
     const alle = aggiornatoAlle ? new Date(aggiornatoAlle).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
+    // Ordine delle tessere (26 ott 2026, Matteo): gli urgenti dentro
+    // «Manutenzioni da fare» (prima avevano una tessera rossa loro, in cima),
+    // «Aggiungi» subito sotto «Cerca», «Interventi fatti» in fondo.
     schermo.innerHTML = `
       ${riquadroCoda()}
       <div class="tessere">
-        ${urgenti ? `<button class="tessera urgente" data-vai="scadenze" data-vista="urgenti">
-          <span class="ico">${icona('allarme')}</span>
-          <span><b>${urgenti === 1 ? '1 cliente urgente' : `${urgenti} clienti urgenti`}</b><small>Un guasto o tanta fretta</small></span>
-        </button>` : ''}
         <button class="tessera" data-vai="scadenze">
           <span class="ico">${icona('attrezzi')}</span>
           <span><b>Manutenzioni da fare</b>
-          <small>${scadute ? `<span class="n-rosso">${scadute} scadute</span> · ` : ''}${presto} nei prossimi 2 mesi</small></span>
+          <small>${urgenti ? `<span class="n-rosso">${urgenti === 1 ? '1 urgente' : `${urgenti} urgenti`}</span> · ` : ''}${scadute ? `<span class="n-rosso">${scadute} scadute</span> · ` : ''}${presto} nei prossimi 2 mesi</small></span>
         </button>
         ${giranti().length ? `<button class="tessera" data-vai="giri">
           <span class="ico">${icona('cartina')}</span>
@@ -553,10 +552,9 @@
           <span class="ico">${icona('cerca')}</span>
           <span><b>Cerca clienti e contatti</b><small>Per nome, città o telefono</small></span>
         </button>
-        <button class="tessera" data-vai="storico">
-          <span class="ico">${icona('registro')}</span>
-          <span><b>Interventi fatti</b>
-          <small>${pagare ? `<span class="n-rosso">${pagare} da risentire per il pagamento</span>` : 'Storico e pagamenti'}</small></span>
+        <button class="tessera" id="aggiungi">
+          <span class="ico">${icona('piu')}</span>
+          <span><b>Aggiungi</b><small>Un cliente nuovo o un contatto</small></span>
         </button>
         ${mag() ? `<button class="tessera" data-vai="magazzino">
           <span class="ico">${icona('scatola')}</span>
@@ -568,9 +566,10 @@
               .filter(Boolean).join(' · ') || `${articoliMag().length} articoli`;
           })()}</small></span>
         </button>` : ''}
-        <button class="tessera" id="aggiungi">
-          <span class="ico">${icona('piu')}</span>
-          <span><b>Aggiungi</b><small>Un cliente nuovo o un contatto</small></span>
+        <button class="tessera" data-vai="storico">
+          <span class="ico">${icona('registro')}</span>
+          <span><b>Interventi fatti</b>
+          <small>${pagare ? `<span class="n-rosso">${pagare} da risentire per il pagamento</span>` : 'Storico e pagamenti'}</small></span>
         </button>
       </div>
       ${dati.soloSuoi ? '<p class="spiega">Vedi i clienti e i contatti dei tuoi giri (dell\'ultimo mese e futuri). Per gli altri chiedi a Matteo.</p>' : ''}
@@ -629,36 +628,36 @@
     schermo.querySelectorAll('[data-codice]').forEach((b) => { b.onclick = () => vai({ s: 'cliente', codice: b.dataset.codice }); });
   }
 
-  // Tre pagine: "Da fare" (scadute e in scadenza), "Urgenti" (hanno chiamato
-  // per un guasto) e "Sospese" (senza data, finché non si riattivano). Per
+  // Due pagine: "Da fare" (urgenti, scadute e in scadenza) e "Sospese"
+  // (senza data, finché non si riattivano). Per
   // scegliere dove andare c'è la mappa: i tasti delle città sono stati tolti
   // il 5 ott 2026, quando è arrivata (richiesta di Matteo).
-  const VISTE = [['fare', 'Da fare'], ['urgenti', 'Urgenti'], ['sospese', 'Sospese']];
+  // Dal 26 ott 2026 (Matteo: «unifica le urgenze in manutenzioni da fare»)
+  // gli urgenti non hanno più una pagina loro: stanno in cima a «Da fare»,
+  // dal più vecchio (chi aspetta da più tempo per primo), solo se ce ne sono.
+  const VISTE = [['fare', 'Da fare'], ['sospese', 'Sospese']];
   function schermoScadenze(stato) {
     titolo('Manutenzioni', true);
     const vista = VISTE.some(([v]) => v === stato.vista) ? stato.vista : 'fare';
-    const { urgenti, sospese } = contaScadenze();
-    const conta = { fare: null, urgenti, sospese };
+    const { sospese } = contaScadenze();
+    const conta = { fare: null, sospese };
     const inPagina = vista === 'fare'
       ? dati.clienti.filter((c) => { if (c.avviso) return false; const s = scadenza(c); return s.giorni != null && s.giorni <= 60; })
-      : dati.clienti.filter((c) => c.avviso === (vista === 'urgenti' ? 'Urgente' : 'Sospesa'));
+      : dati.clienti.filter((c) => c.avviso === 'Sospesa');
 
     schermo.innerHTML = `
-      <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola${v === 'urgenti' && urgenti ? ' pillola-rossa' : ''}" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
+      <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
       <button class="btn vai-mappa" id="vai-mappa" type="button">${icona('mappa')} Vedi sulla mappa</button>
       <div id="elenco"></div>`;
 
     if (vista !== 'fare') {
-      // Gli urgenti dal più vecchio (chi aspetta da più tempo in cima), le sospese per nome.
-      const lista = inPagina.slice()
-        .sort(vista === 'urgenti' ? (a, b) => leggiMotivo(a).t - leggiMotivo(b).t : (a, b) => a.nome.localeCompare(b.nome, 'it'));
+      // Le sospese per nome.
+      const lista = inPagina.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
       $('elenco').innerHTML = lista.length
         ? `<div class="lista">${lista.map((c) => voceCliente(c)).join('')}</div>`
-        : vista === 'urgenti'
-          ? `<div class="vuoto">Nessun cliente urgente 👍<br><br>Se un cliente ha un guasto o ha fretta: cercalo e nella sua scheda tocca «È urgente».<br><br><button class="btn pieno" id="vai-cerca" style="width:100%">${icona('cerca')} Cerca il cliente</button></div>`
-          : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
-      if ($('vai-cerca')) $('vai-cerca').onclick = () => vai({ s: 'cerca' });
+        : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
     } else {
+      const urgenti = dati.clienti.filter((c) => c.avviso === 'Urgente').sort((a, b) => leggiMotivo(a).t - leggiMotivo(b).t);
       const conGiorni = inPagina.map((c) => ({ c, s: scadenza(c) }));
       const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
       // Tutte le scadute insieme, dalla più vecchia: anche quelle di anni fa,
@@ -666,6 +665,8 @@
       const scadute = conGiorni.filter((x) => x.s.giorni < 0).sort(perData);
       const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
       $('elenco').innerHTML = `
+        ${urgenti.length ? `<h2 class="gruppo gruppo-rosso">${icona('allarme')} Urgenti (${urgenti.length})</h2>
+        <div class="lista">${urgenti.map((c) => voceCliente(c)).join('')}</div>` : ''}
         <h2 class="gruppo">Scadute (${scadute.length})</h2>
         <div class="lista">${scadute.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}</div>
         <h2 class="gruppo">Nei prossimi 2 mesi (${presto.length})</h2>
