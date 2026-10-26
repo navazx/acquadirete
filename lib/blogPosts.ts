@@ -557,9 +557,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'acqua-rubinetto-firenze-si-puo-bere',
     title: 'Si può bere l\'acqua del rubinetto a Firenze? Facciamo chiarezza',
-    metaTitle: 'Acqua del Rubinetto a Firenze: si può Bere? | Acquadirete',
+    metaTitle: 'Acqua Potabile a Firenze: si può Bere dal Rubinetto?',
     metaDescription:
-      'L\'acqua del rubinetto a Firenze è potabile e controllata. Allora perché sa di cloro e lascia calcare? Cosa sapere davvero e quando ha senso un depuratore.',
+      'Sì, l\'acqua del rubinetto a Firenze è potabile: l\'acquedotto la controlla fino al contatore, poi ci sono i tubi di casa. Perché sa di cloro e lascia calcare?',
     excerpt:
       'L\'acqua di Firenze è potabile, ma tra cloro e calcare in tanti la comprano in bottiglia. Ti spieghiamo com\'è davvero e quando un depuratore ha senso.',
     publishedAt: '2026-07-15',
