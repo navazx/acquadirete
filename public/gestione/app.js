@@ -1571,6 +1571,16 @@
   // 2026 «Portami lì» usava sempre l'indirizzo, e dopo un «Sono qui» portava
   // ancora nel posto sbagliato.
   const sulPosto = (c) => (c && c.prec === 'gps' && c.lat != null ? `${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}` : '');
+  // Su Android «Portami lì» apre Maps con geo: (26 ott 2026, Matteo: durante
+  // il giro Maps si apriva «senza il punto», solo la mappa). Il link web di
+  // Google Maps, con Maps già aperto, può riportare l'app in primo piano
+  // senza fare la ricerca; geo: è il modo di Android per dire «apri questo
+  // posto», e Maps lo esegue sempre (indirizzo o coordinate). Su iPhone geo:
+  // non esiste: resta il link web, in una scheda nuova.
+  const ANDROID = /Android/i.test(navigator.userAgent);
+  const linkPortami = (dove) => (ANDROID
+    ? `href="geo:0,0?q=${encodeURIComponent(dove)}"`
+    : `href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dove)}" target="_blank" rel="noopener"`);
   function pulsantiContatto(testo, indirizzo, cliente = null) {
     const nums = telefoni(testo);
     const mail = email(testo);
@@ -1578,7 +1588,7 @@
     const cell = nums.find((n) => n.cellulare);
     if (cell) html += `<a class="btn" href="https://wa.me/${esc(cell.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp</a>`;
     const dove = sulPosto(cliente) || indirizzo;
-    if (dove) html += `<a class="btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dove)}" target="_blank" rel="noopener">${icona('mappa')} Portami lì</a>`;
+    if (dove) html += `<a class="btn" ${linkPortami(dove)}>${icona('mappa')} Portami lì</a>`;
     // La mappa dell'app, centrata su di lui (17 ott 2026): per vedere chi gli
     // sta vicino e metterlo nel giro. Solo se ha una posizione.
     if (cliente && cliente.lat != null) html += `<button class="btn" type="button" id="sulla-mappa">${icona('cartina')} Sulla mappa</button>`;
