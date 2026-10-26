@@ -78,6 +78,8 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 /* ---- Filtri a pillola ---- */
 .pillole { display: flex; gap: 8px; overflow-x: auto; padding: 2px 16px 12px; margin: 0 -16px; scrollbar-width: none; }
 .pillole::-webkit-scrollbar { display: none; }
+/* Pochi filtri che devono vedersi tutti (le Manutenzioni): vanno a capo invece di scorrere. */
+.pillole.a-capo { flex-wrap: wrap; overflow-x: visible; }
 .pillola {
   flex: none; min-height: 44px; padding: 0 16px;
   background: var(--carta); border: 2px solid var(--linea); border-radius: 999px; font-weight: 600; font-size: 17px;

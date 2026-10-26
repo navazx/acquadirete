@@ -628,57 +628,52 @@
     schermo.querySelectorAll('[data-codice]').forEach((b) => { b.onclick = () => vai({ s: 'cliente', codice: b.dataset.codice }); });
   }
 
-  // Due pagine: "Da fare" (urgenti, scadute e in scadenza) e "Sospese"
-  // (senza data, finché non si riattivano). Per
-  // scegliere dove andare c'è la mappa: i tasti delle città sono stati tolti
-  // il 5 ott 2026, quando è arrivata (richiesta di Matteo).
-  // Dal 26 ott 2026 (Matteo: «unifica le urgenze in manutenzioni da fare»)
-  // gli urgenti non hanno più una pagina loro: stanno in cima a «Da fare»,
-  // dal più vecchio (chi aspetta da più tempo per primo), solo se ce ne sono.
-  const VISTE = [['fare', 'Da fare'], ['sospese', 'Sospese']];
+  // Tre filtri (26 ott 2026, Matteo: «le manutenzioni "nei prossimi due mesi"
+  // perché non le posso selezionare con il filtro, e "da fare" rinominale
+  // "scadute"»): "Scadute", "Prossimi 2 mesi" e "Sospese" (senza data,
+  // finché non si riattivano). Prima scadute e prossime stavano insieme in
+  // "Da fare". Gli urgenti (dal 26 ott non hanno più una pagina loro) stanno
+  // in cima alle Scadute, dal più vecchio. Per scegliere dove andare c'è la
+  // mappa: i tasti delle città sono stati tolti il 5 ott 2026.
+  const VISTE = [['scadute', 'Scadute'], ['presto', 'Prossimi 2 mesi'], ['sospese', 'Sospese']];
   function schermoScadenze(stato) {
     titolo('Manutenzioni', true);
-    const vista = VISTE.some(([v]) => v === stato.vista) ? stato.vista : 'fare';
-    const { sospese } = contaScadenze();
-    const conta = { fare: null, sospese };
-    const inPagina = vista === 'fare'
-      ? dati.clienti.filter((c) => { if (c.avviso) return false; const s = scadenza(c); return s.giorni != null && s.giorni <= 60; })
-      : dati.clienti.filter((c) => c.avviso === 'Sospesa');
+    const vista = VISTE.some(([v]) => v === stato.vista) ? stato.vista : 'scadute';
+    const conGiorni = dati.clienti.filter((c) => !c.avviso).map((c) => ({ c, s: scadenza(c) })).filter((x) => x.s.giorni != null);
+    const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
+    // Tutte le scadute insieme, dalla più vecchia: anche quelle di anni fa,
+    // che babbo sposta fra le sospese o fra i persi (scelta di Matteo, 1 ott).
+    const scadute = conGiorni.filter((x) => x.s.giorni < 0).sort(perData).map((x) => x.c);
+    const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData).map((x) => x.c);
+    const sospese = dati.clienti.filter((c) => c.avviso === 'Sospesa').sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+    const urgenti = dati.clienti.filter((c) => c.avviso === 'Urgente').sort((a, b) => leggiMotivo(a).t - leggiMotivo(b).t);
+    const conta = { scadute: scadute.length, presto: presto.length, sospese: sospese.length };
 
     schermo.innerHTML = `
-      <div class="pillole">${VISTE.map(([v, t]) => `<button class="pillola" data-vista="${v}" aria-pressed="${vista === v}">${t}${conta[v] != null ? ` (${conta[v]})` : ''}</button>`).join('')}</div>
+      <div class="pillole a-capo">${VISTE.map(([v, t]) => `<button class="pillola" data-vista="${v}" aria-pressed="${vista === v}">${t} (${conta[v]})</button>`).join('')}</div>
       <button class="btn vai-mappa" id="vai-mappa" type="button">${icona('mappa')} Vedi sulla mappa</button>
       <div id="elenco"></div>`;
 
-    if (vista !== 'fare') {
-      // Le sospese per nome.
-      const lista = inPagina.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
-      $('elenco').innerHTML = lista.length
-        ? `<div class="lista">${lista.map((c) => voceCliente(c)).join('')}</div>`
+    const lista = (l) => `<div class="lista">${l.map((c) => voceCliente(c)).join('')}</div>`;
+    if (vista === 'sospese') {
+      $('elenco').innerHTML = sospese.length ? lista(sospese)
         : '<div class="vuoto">Nessuna manutenzione sospesa.<br><br>Per sospenderne una: nella scheda del cliente tocca «Rimanda la manutenzione» e poi «Sospendi, senza data».</div>';
+    } else if (vista === 'presto') {
+      $('elenco').innerHTML = presto.length ? lista(presto) : '<div class="vuoto">Niente in scadenza nei prossimi 2 mesi.</div>';
     } else {
-      const urgenti = dati.clienti.filter((c) => c.avviso === 'Urgente').sort((a, b) => leggiMotivo(a).t - leggiMotivo(b).t);
-      const conGiorni = inPagina.map((c) => ({ c, s: scadenza(c) }));
-      const perData = (x, y) => x.c.prossimaSeriale - y.c.prossimaSeriale;
-      // Tutte le scadute insieme, dalla più vecchia: anche quelle di anni fa,
-      // che babbo sposta fra le sospese o fra i persi (scelta di Matteo, 1 ott).
-      const scadute = conGiorni.filter((x) => x.s.giorni < 0).sort(perData);
-      const presto = conGiorni.filter((x) => x.s.giorni >= 0 && x.s.giorni <= 60).sort(perData);
       $('elenco').innerHTML = `
-        ${urgenti.length ? `<h2 class="gruppo gruppo-rosso">${icona('allarme')} Urgenti (${urgenti.length})</h2>
-        <div class="lista">${urgenti.map((c) => voceCliente(c)).join('')}</div>` : ''}
-        <h2 class="gruppo">Scadute (${scadute.length})</h2>
-        <div class="lista">${scadute.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}</div>
-        <h2 class="gruppo">Nei prossimi 2 mesi (${presto.length})</h2>
-        <div class="lista">${presto.map((x) => voceCliente(x.c)).join('') || '<div class="vuoto">Niente in scadenza</div>'}</div>`;
+        ${urgenti.length ? `<h2 class="gruppo gruppo-rosso">${icona('allarme')} Urgenti (${urgenti.length})</h2>${lista(urgenti)}
+        <h2 class="gruppo">Scadute (${scadute.length})</h2>` : ''}
+        ${scadute.length ? lista(scadute) : '<div class="vuoto">Nessuna manutenzione scaduta 👍</div>'}`;
     }
     collegaVoci();
 
     schermo.querySelectorAll('[data-vista]').forEach((b) => {
       b.onclick = () => { history.replaceState({ s: 'scadenze', vista: b.dataset.vista }, '', location.pathname + location.hash); disegna(history.state); };
     });
-    // Dalle sospese, la mappa si apre con anche le sospese accese.
-    $('vai-mappa').onclick = () => vai({ s: 'mappa', cat: vista === 'sospese' ? [...CATEGORIE_DI_BASE, 'sospese'] : CATEGORIE_DI_BASE });
+    // Dalle sospese la mappa si apre con anche le sospese accese, dalle
+    // prossime anche quelle fra 30 e 60 giorni.
+    $('vai-mappa').onclick = () => vai({ s: 'mappa', cat: vista === 'sospese' ? [...CATEGORIE_DI_BASE, 'sospese'] : vista === 'presto' ? [...CATEGORIE_DI_BASE, 'due'] : CATEGORIE_DI_BASE });
   }
 
   // ---------------------------------------------------------------------
