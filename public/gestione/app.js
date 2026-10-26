@@ -99,6 +99,7 @@
     ingranaggio: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
     cestino: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
     scudo: '<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+    fotocamera: '<path d="M3.5 8.5h3.5l2-3h6l2 3h3.5v11h-17z"/><circle cx="12" cy="13.5" r="3.5"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -181,9 +182,10 @@
   // rifiuto del foglio (4xx: non si riprova) da un guasto (5xx: si riprova).
   // forse: la richiesta potrebbe essere arrivata lo stesso (20 s senza risposta).
   const nientelinea = (forse = false) => Object.assign(new Error('Niente linea. Riprova quando c\'è campo.'), { linea: true, forse });
-  async function api(azione, datiAzione) {
+  // `attesa`: una foto, col campo debole, può metterci più di 20 secondi.
+  async function api(azione, datiAzione, attesa = 20000) {
     const ferma = new AbortController();
-    const timer = setTimeout(() => ferma.abort(), 20000);
+    const timer = setTimeout(() => ferma.abort(), attesa);
     try {
       let res;
       try {
@@ -204,6 +206,10 @@
       // niente, né i clienti né le cose da mandare né il codice.
       if (res.status === 403 && corpo.sospeso) {
         try { Object.keys(localStorage).filter((k) => k.startsWith('gestione-')).forEach((k) => localStorage.removeItem(k)); } catch { /* memoria non disponibile */ }
+        // Anche le foto: quelle da mandare e quelle già viste (26 ott 2026).
+        fotoInAttesa = [];
+        try { indexedDB.deleteDatabase(DB_FOTO); } catch { /* niente memoria grande */ }
+        try { caches.delete(CASSETTO_FOTO).catch(() => {}); } catch { /* niente Cache */ }
         chiave = null;
         dati = null;
         motivoSospeso = corpo.errore || 'Il tuo accesso all\'app è stato sospeso.';
@@ -241,7 +247,7 @@
         const nuovi = {
           oggi: r.oggi, clienti: r.clienti, lead: r.lead, persi: r.persi || [], stati: r.stati,
           storico: r.storico || [], io: r.io || '', persone: r.persone || [], tappe: r.tappe || [],
-          magazzino: r.magazzino || null,
+          magazzino: r.magazzino || null, foto: r.foto || [],
           nomi: r.nomi || {}, permessi: r.permessi || {}, titolare: !!r.titolare,
           accessi: r.accessi || null, elencoPermessi: r.elencoPermessi || null,
           // Vede solo i clienti dei suoi giri (22 ott 2026): lo dice il motore.
@@ -250,12 +256,14 @@
         // Le azioni ancora in coda: il foglio non le ha, lo schermo sì.
         for (const v of appenaArrivati) if (Date.now() - v.quando < 120000) APPLICA[v.azione](nuovi, v.dati);
         for (const v of leggiLista(K_CODA)) if (APPLICA[v.azione]) APPLICA[v.azione](nuovi, v.dati);
+        // Le foto appena arrivate, che una rilettura partita prima non ha ancora.
+        for (const v of fotoAppenaArrivate) if (Date.now() - v.quando < 120000 && !nuovi.foto.some((f) => f.id === v.foto.id)) nuovi.foto.push(v.foto);
         dati = nuovi;
         aggiornatoAlle = Date.now();
         salvaDati();
         $('avviso').hidden = true;
         mandaPosizioniInAttesa();
-        mandaCoda();
+        mandaTutto();
         return dati;
       }).finally(() => { caricando = null; });
     }
@@ -1611,6 +1619,7 @@
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
+      ${riquadroFoto(c)}
       ${fatti.length ? `<h3 class="titoletto">Interventi fatti</h3>
       <div class="lista">${fatti.map((x) => voceIntervento(x, false)).join('')}</div>` : ''}
       ${mag() && lottiDi(c.codice).length ? `<h3 class="titoletto">Materiali usati</h3>
@@ -1639,6 +1648,7 @@
     collegaTappe({ cliente: c });
     collegaInterventi();
     collegaLotti();
+    collegaFoto(c);
   }
 
   // «Sono qui»: dal cliente, il punto dove sta il telefono diventa la sua
@@ -1743,7 +1753,7 @@
   // carica() rilegge il foglio, toglie l'avviso e fa partire le code.
   function riprovaLinea() {
     if (!chiave || !dati || document.visibilityState !== 'visible') return;
-    const daMandare = leggiLista(K_CODA).length || posizioniInAttesa().length;
+    const daMandare = leggiLista(K_CODA).length || posizioniInAttesa().length || fotoInAttesa.length;
     if (!daMandare && $('avviso').hidden) return;
     carica().then(() => { if ($('finestra').hidden && !staiScrivendo()) disegna(history.state); }).catch(() => {});
   }
@@ -1968,6 +1978,19 @@
       const l = leadIn(d, x);
       if (l) l.note = [l.note, `${x.giorno}: ${x.nota}`].filter(Boolean).join(' — ');
     },
+    // Le foto (26 ott 2026): la descrizione cambiata, tolta, rimessa. Quelle
+    // nuove non passano da qui: aspettano nella memoria grande (mandaFoto).
+    foto(d, x) {
+      const f = (d.foto || []).find((y) => y.id === x.id);
+      if (f && x.grande == null) f.descrizione = x.descrizione || '';
+    },
+    togliFoto(d, x) {
+      d.foto = (d.foto || []).filter((y) => y.id !== x.id);
+    },
+    rimettiFoto(d, x) {
+      d.foto = d.foto || [];
+      if (x.foto && !d.foto.some((y) => y.id === x.id)) d.foto.push(x.foto);
+    },
     // nuovo, nuovoLead e annulla non cambiano lo schermo: il cliente o il
     // contatto nuovo compare quando arriva al foglio.
   };
@@ -1983,9 +2006,11 @@
   // altro, la nuova va in fondo e parte dopo, perché l'ordine conta.
   const inVoloOra = new Set(); // voci che manda() sta mandando adesso: mandaCoda non le tocca
   const segnaForse = (id, forse) => scriviLista(K_CODA, leggiLista(K_CODA).map((v) => (v.id === id ? { ...v, forse } : v)));
-  async function manda(azione, datiAzione, testo) {
+  // `id`: scelto prima da chi chiama (le foto di un cliente nuovo aspettano quella voce).
+  const nuovoIdVoce = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  async function manda(azione, datiAzione, testo, { id = nuovoIdVoce() } = {}) {
     const prima = leggiLista(K_CODA);
-    const voce = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, azione, dati: datiAzione, testo, quando: Date.now(), forse: !prima.length, dietro: prima.length > 0 };
+    const voce = { id, azione, dati: datiAzione, testo, quando: Date.now(), forse: !prima.length, dietro: prima.length > 0 };
     scriviLista(K_CODA, [...prima, voce]);
     const applica = () => { if (dati && APPLICA[azione]) { APPLICA[azione](dati, datiAzione); salvaDati(); } };
     if (prima.length) {
@@ -2042,6 +2067,9 @@
         segnaForse(voce.id, true);
         try {
           const r = await api(voce.azione, voce.dati);
+          // Il codice del cliente nuovo, per le sue foto che lo aspettano
+          // (prima di togliere la voce: chi manda le foto guarda lì).
+          if (voce.azione === 'nuovo' && r.codice) segnaCodiceNuovo(voce.id, r.codice);
           // Il cliente nuovo c'era già (stesso nome): il foglio non l'ha
           // aggiunto. Se però era «forse arrivato», quello che c'è è lui.
           if (voce.azione === 'nuovo' && r.giaPresente && !voce.forse) {
@@ -2070,7 +2098,11 @@
   function riquadroCoda() {
     const coda = leggiLista(K_CODA).map((v) => v.testo);
     const posizioni = posizioniInAttesa().map((p) => { const c = dati && clienteIn(dati, p.codice); return `Posizione di ${c ? c.nome : p.codice}`; });
-    const tutte = [...coda, ...posizioni];
+    // Le foto, una riga per cliente.
+    const perCliente = new Map();
+    fotoInAttesa.forEach((f) => perCliente.set(f.nome, (perCliente.get(f.nome) || 0) + 1));
+    const foto = [...perCliente].map(([nome, n]) => (n === 1 ? `Foto di ${nome}` : `${n} foto di ${nome}`));
+    const tutte = [...coda, ...posizioni, ...foto];
     const rifiutate = leggiLista(K_NON_ARRIVATE);
     return (tutte.length ? `
       <div class="riquadro-coda">
@@ -2089,12 +2121,396 @@
   function collegaRiquadroCoda() {
     if ($('manda-coda')) {
       $('manda-coda').onclick = (e) => conPulsante(e.currentTarget, 'Provo…', async () => {
-        await Promise.all([mandaCoda(), mandaPosizioniInAttesa()]);
+        await Promise.all([mandaTutto(), mandaPosizioniInAttesa()]);
         disegna(history.state);
-        if (leggiLista(K_CODA).length || posizioniInAttesa().length) messaggio('Ancora niente linea: riprovo da solo appena torna.', { errore: true });
+        if (leggiLista(K_CODA).length || posizioniInAttesa().length || fotoInAttesa.length) messaggio('Ancora niente linea: riprovo da solo appena torna.', { errore: true });
       });
     }
     if ($('visto-rifiutate')) $('visto-rifiutate').onclick = () => { scriviLista(K_NON_ARRIVATE, []); disegna(history.state); };
+  }
+
+  // ---------------------------------------------------------------------
+  //  Foto dei clienti
+  // ---------------------------------------------------------------------
+  // Dal 26 ott 2026 (Matteo: «quando babbo fa un sopralluogo può aggiungere
+  // un nuovo cliente con le foto del lavello ecc., così quando vado io a
+  // montare so cosa mi serve»). Il telefono riduce ogni foto (lato lungo
+  // 1600 px, più una miniatura da 400) e la tiene nella sua memoria grande
+  // (IndexedDB) finché non è arrivata: nella scheda si vede subito, e parte
+  // da sola, una alla volta, appena c'è campo. Quelle di un cliente nuovo
+  // segnato senza campo aspettano il suo codice (C0xx), che arriva con lui.
+  // Le foto del foglio si scaricano quando servono e restano nel telefono
+  // (Cache), così si rivedono anche senza campo. Il motore le tiene
+  // nell'archivio di Netlify (vedi salvaFoto in gestionale.mjs).
+  const DB_FOTO = 'gestione-foto';
+  const CASSETTO_FOTO = 'gestione-foto';
+  const MAX_FOTO_SALVATE = 400; // immagini tenute nel telefono (miniature comprese)
+  const K_CODICI_NUOVI = 'gestione-codici-nuovi'; // voce «nuovo» → codice dato dal foglio
+  // { id, codice, nuovo (id della voce del cliente nuovo), nome, descrizione, grande, piccola, quando, chi, url }
+  let fotoInAttesa = [];
+  const fotoAppenaArrivate = []; // { quando, foto }: per una rilettura partita prima
+
+  let dbFoto = null;
+  function apriDbFoto() {
+    if (!dbFoto) {
+      dbFoto = new Promise((ok, ko) => {
+        const r = indexedDB.open(DB_FOTO, 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('attesa', { keyPath: 'id' });
+        r.onsuccess = () => ok(r.result);
+        r.onerror = () => ko(r.error);
+      });
+      dbFoto.catch(() => { dbFoto = null; });
+    }
+    return dbFoto;
+  }
+  async function nelDbFoto(modo, fai) {
+    const db = await apriDbFoto();
+    return new Promise((ok, ko) => {
+      const t = db.transaction('attesa', modo);
+      const r = fai(t.objectStore('attesa'));
+      t.oncomplete = () => ok(r.result);
+      t.onerror = () => ko(t.error);
+      t.onabort = () => ko(t.error);
+    });
+  }
+  // All'apertura: quelle rimaste da mandare. Senza memoria grande (navigazione
+  // privata su qualche telefono) restano solo quelle di questa apertura.
+  async function caricaFotoInAttesa() {
+    try {
+      const tutte = await nelDbFoto('readonly', (s) => s.getAll());
+      fotoInAttesa = (tutte || []).sort((a, b) => a.quando - b.quando).map((f) => ({ ...f, url: URL.createObjectURL(f.piccola) }));
+    } catch { /* pazienza */ }
+  }
+  async function mettiFotoInAttesa(lista) {
+    for (const f of lista) {
+      const { url, ...daTenere } = f;
+      try { await nelDbFoto('readwrite', (s) => s.put(daTenere)); } catch { /* resta solo in memoria */ }
+      fotoInAttesa = fotoInAttesa.filter((x) => x.id !== f.id).concat({ ...f, url: url || URL.createObjectURL(f.piccola) });
+    }
+  }
+  async function togliFotoInAttesa(id) {
+    fotoInAttesa = fotoInAttesa.filter((x) => x.id !== id);
+    try { await nelDbFoto('readwrite', (s) => s.delete(id)); } catch { /* era solo in memoria */ }
+  }
+  const codiciNuovi = () => { try { return JSON.parse(memoria.leggi(K_CODICI_NUOVI) || '{}') || {}; } catch { return {}; } };
+  function segnaCodiceNuovo(idVoce, codice) {
+    memoria.scrivi(K_CODICI_NUOVI, JSON.stringify({ ...codiciNuovi(), [idVoce]: codice }));
+  }
+  const codiceFoto = (f) => f.codice || codiciNuovi()[f.nuovo] || '';
+
+  // Le immagini già viste stanno nel telefono sotto un indirizzo finto (non
+  // si chiede mai alla rete: il service worker non c'entra).
+  const indirizzoFoto = (id, mini) => `/gestione/foto/${encodeURIComponent(id)}${mini ? '-mini' : ''}.jpg`;
+  const urlFoto = new Map(); // indirizzo → immagine pronta da mostrare
+  const comeJpeg = (b) => new Response(b, { headers: { 'Content-Type': 'image/jpeg' } });
+  async function tieniFoto(id, mini, blob) {
+    try {
+      const cassetto = await caches.open(CASSETTO_FOTO);
+      await cassetto.put(indirizzoFoto(id, mini), comeJpeg(blob));
+      const chiavi = await cassetto.keys();
+      for (const k of chiavi.slice(0, Math.max(0, chiavi.length - MAX_FOTO_SALVATE))) await cassetto.delete(k);
+    } catch { /* niente Cache: si riscarica */ }
+  }
+  // L'immagine di una foto del foglio: dal telefono se c'è, se no dal foglio.
+  async function immagineFoto(id, mini) {
+    const k = indirizzoFoto(id, mini);
+    if (urlFoto.has(k)) return urlFoto.get(k);
+    let blob = null;
+    try { const r = await (await caches.open(CASSETTO_FOTO)).match(k); if (r) blob = await r.blob(); } catch { /* niente Cache */ }
+    if (!blob) {
+      const ferma = new AbortController();
+      const timer = setTimeout(() => ferma.abort(), 30000);
+      let res;
+      try {
+        res = await fetch(`${API}?foto=${encodeURIComponent(id)}${mini ? '&mini=1' : ''}`, { headers: { 'X-Chiave': chiave || '' }, cache: 'no-store', signal: ferma.signal });
+        if (!res.ok) throw new Error(res.status === 404 ? 'Foto non trovata.' : 'La foto non si apre. Riprova tra poco.');
+        blob = await res.blob();
+      } catch (err) {
+        throw err.name === 'AbortError' || err instanceof TypeError ? nientelinea() : err;
+      } finally { clearTimeout(timer); }
+      tieniFoto(id, mini, blob);
+    }
+    const u = URL.createObjectURL(blob);
+    urlFoto.set(k, u);
+    return u;
+  }
+
+  // Una foto scelta dal telefono, ridotta: il lato lungo a 1600 px (si legge
+  // ancora la scritta su una cartuccia) e una miniatura da 400. JPEG anche
+  // se era HEIC o PNG; il telefono la gira già per il verso giusto.
+  async function riduciFoto(file) {
+    const indirizzo = URL.createObjectURL(file);
+    try {
+      // onload e non decode(): decode() può restare appeso finché la pagina non si ridisegna.
+      const img = new Image();
+      await new Promise((ok, ko) => { img.onload = ok; img.onerror = () => ko(new Error('foto')); img.src = indirizzo; });
+      const fai = (lato, qualita) => new Promise((ok, ko) => {
+        const k = Math.min(1, lato / Math.max(img.naturalWidth, img.naturalHeight));
+        const tela = document.createElement('canvas');
+        tela.width = Math.max(1, Math.round(img.naturalWidth * k));
+        tela.height = Math.max(1, Math.round(img.naturalHeight * k));
+        const g = tela.getContext('2d');
+        g.fillStyle = '#fff';
+        g.fillRect(0, 0, tela.width, tela.height);
+        g.drawImage(img, 0, 0, tela.width, tela.height);
+        tela.toBlob((b) => (b ? ok(b) : ko(new Error('foto'))), 'image/jpeg', qualita);
+      });
+      return { grande: await fai(1600, 0.8), piccola: await fai(400, 0.7) };
+    } finally {
+      URL.revokeObjectURL(indirizzo);
+    }
+  }
+  const nuovoIdFoto = () => `f${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const base64 = (blob) => new Promise((ok, ko) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).split(',')[1] || '');
+    r.onerror = () => ko(r.error);
+    r.readAsDataURL(blob);
+  });
+
+  // Manda le foto in attesa, una alla volta. Si ferma alla prima senza linea.
+  // Una rifiutata dal foglio (cliente non più nel foglio) finisce fra le
+  // «non arrivate»; un guasto del motore si riprova per tre giorni.
+  let mandandoFoto = null;
+  function mandaFoto() {
+    if (mandandoFoto) return mandandoFoto;
+    mandandoFoto = (async () => {
+      let arrivate = 0;
+      for (const f of [...fotoInAttesa]) {
+        if (!chiave) break;
+        const codice = codiceFoto(f);
+        if (!codice) {
+          // Il cliente nuovo è ancora in coda (o sta per avere il codice,
+          // appena salvato col campo): la foto aspetta lui.
+          if (leggiLista(K_CODA).some((v) => v.id === f.nuovo) || Date.now() - (f.quando || 0) < 60000) continue;
+          scriviLista(K_NON_ARRIVATE, [...leggiLista(K_NON_ARRIVATE), { testo: `Foto di ${f.nome}`, errore: 'il cliente nuovo non è arrivato al foglio', quando: Date.now() }]);
+          await togliFotoInAttesa(f.id);
+          continue;
+        }
+        try {
+          const r = await api('foto', { id: f.id, codice, descrizione: f.descrizione || '', grande: await base64(f.grande), piccola: await base64(f.piccola) }, 90000);
+          // Tolta dal telefono mentre partiva: si toglie anche dal foglio.
+          const ora = fotoInAttesa.find((x) => x.id === f.id);
+          if (!ora) {
+            manda('togliFoto', { id: f.id, codice }, `Foto tolta: ${f.nome}`).catch(() => {});
+            continue;
+          }
+          // E la descrizione cambiata intanto.
+          if ((ora.descrizione || '') !== (f.descrizione || '')) {
+            r.foto.descrizione = ora.descrizione || '';
+            manda('foto', { id: f.id, codice, descrizione: r.foto.descrizione }, `Descrizione di una foto: ${f.nome}`).catch(() => {});
+          }
+          // Già nel telefono: non si riscarica per vederla.
+          urlFoto.set(indirizzoFoto(f.id, true), f.url);
+          await tieniFoto(f.id, true, f.piccola);
+          await tieniFoto(f.id, false, f.grande);
+          fotoAppenaArrivate.push({ quando: Date.now(), foto: r.foto });
+          if (dati) { dati.foto = (dati.foto || []).filter((x) => x.id !== f.id).concat(r.foto); salvaDati(); }
+          await togliFotoInAttesa(f.id);
+          arrivate++;
+        } catch (err) {
+          if (err.linea || err.chiave) break;
+          if (err.stato >= 500 && Date.now() - (f.quando || 0) < 3 * 24 * 3600 * 1000) break;
+          scriviLista(K_NON_ARRIVATE, [...leggiLista(K_NON_ARRIVATE), { testo: `Foto di ${f.nome}`, errore: err.message, quando: Date.now() }]);
+          await togliFotoInAttesa(f.id);
+        }
+      }
+      // I codici dei clienti nuovi che nessuna foto aspetta più.
+      const servono = new Set(fotoInAttesa.map((f) => f.nuovo).filter(Boolean));
+      const restano = Object.fromEntries(Object.entries(codiciNuovi()).filter(([k]) => servono.has(k)));
+      if (Object.keys(restano).length) memoria.scrivi(K_CODICI_NUOVI, JSON.stringify(restano)); else memoria.togli(K_CODICI_NUOVI);
+      return arrivate;
+    })().catch(() => 0).finally(() => { mandandoFoto = null; });
+    // Arrivate: via l'orologio dalle miniature (e dal riquadro in home).
+    mandandoFoto.then((n) => {
+      if (n && dati && $('finestra').hidden && !staiScrivendo() && ['cliente', 'home', 'giri'].includes((history.state || {}).s)) disegna(history.state);
+    });
+    return mandandoFoto;
+  }
+  // Prima la coda (i clienti nuovi prendono il codice), poi le foto.
+  const mandaTutto = () => mandaCoda().then(() => mandaFoto()).catch(() => {});
+
+  // Le foto di un cliente: quelle del foglio e, dopo, quelle ancora da mandare.
+  function fotoDi(codice) {
+    const delFoglio = ((dati && dati.foto) || []).filter((f) => f.codice === codice);
+    const ancora = fotoInAttesa.filter((f) => codiceFoto(f) === codice && !delFoglio.some((x) => x.id === f.id))
+      .map((f) => ({ id: f.id, codice, descrizione: f.descrizione || '', quando: '', chi: f.chi || '', attesa: true }));
+    return [...delFoglio, ...ancora];
+  }
+  const urlMini = (f) => (f.attesa ? (fotoInAttesa.find((x) => x.id === f.id) || {}).url : urlFoto.get(indirizzoFoto(f.id, true)));
+
+  // Il tasto «Aggiungi foto»: il telefono chiede se fotocamera o galleria.
+  const tastoFoto = (id, testo = 'Aggiungi foto') => `<label class="btn tasto-foto">${icona('fotocamera')} ${testo}<input type="file" accept="image/*" multiple id="${id}"></label>`;
+  const miniature = (lista, conTogli = false) => `<div class="foto-griglia">${lista.map((f) => {
+    const u = f.url || urlMini(f);
+    return `<div class="foto-mini${f.attesa ? ' attesa' : ''}">
+      <button type="button" data-foto="${esc(f.id)}" aria-label="Apri la foto${f.descrizione ? ': ' + esc(f.descrizione) : ''}"><img alt="" data-mini="${esc(f.id)}"${u ? ` src="${u}"` : ''}></button>
+      ${f.attesa ? `<span class="foto-orologio" title="Non ancora nel foglio">${icona('orologio')}</span>` : ''}
+      ${f.descrizione ? `<span class="foto-desc">${esc(f.descrizione)}</span>` : ''}
+      ${conTogli ? `<button type="button" class="foto-x" data-foto-togli="${esc(f.id)}" aria-label="Togli questa foto">×</button>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+  // Le miniature del foglio che il telefono non ha ancora: si scaricano.
+  function riempiMiniature() {
+    schermo.querySelectorAll('img[data-mini]:not([src])').forEach((img) => {
+      immagineFoto(img.dataset.mini, true).then((u) => { img.src = u; }).catch(() => { img.closest('.foto-mini').classList.add('senza'); });
+    });
+  }
+
+  // Le foto scelte: ridotte, poi «cosa si vede?» (facoltativo). `poi` riceve la lista.
+  async function preparaFoto(files, poi) {
+    const scelte = [...files].slice(0, 10);
+    messaggio(scelte.length === 1 ? 'Preparo la foto…' : `Preparo ${scelte.length} foto…`, { durata: 60000 });
+    const pronte = [];
+    for (const file of scelte) {
+      try {
+        const { grande, piccola } = await riduciFoto(file);
+        pronte.push({ id: nuovoIdFoto(), grande, piccola, url: URL.createObjectURL(piccola), descrizione: '' });
+      } catch { /* una foto che il telefono non sa aprire */ }
+    }
+    $('messaggio').hidden = true;
+    if (!pronte.length) { messaggio('Non riesco ad aprire questa foto. Prova a farla con la fotocamera.', { errore: true, durata: 8000 }); return; }
+    chiediDescrizioni(pronte, poi);
+    if (files.length > 10) messaggio('Al massimo 10 foto per volta: ho preso le prime 10.', { durata: 8000 });
+    else if (pronte.length < scelte.length) messaggio(`${scelte.length - pronte.length} foto non si aprono: le altre sì.`, { errore: true, durata: 8000 });
+  }
+  function chiediDescrizioni(pronte, poi, { pulsante = '' } = {}) {
+    apriFinestra(`
+      <h3>Cosa si vede?</h3>
+      <p>Facoltativo: due parole aiutano chi ci va dopo («sotto il lavello», «spazio per l'impianto», «rubinetto»).</p>
+      <div class="foto-da-salvare">${pronte.map((f, i) => `
+        <label class="foto-riga"><img src="${f.url}" alt=""><input data-desc="${i}" maxlength="200" placeholder="Cosa si vede?" value="${esc(f.descrizione)}"></label>`).join('')}</div>
+      <button class="btn pieno grande" type="button" id="salva-foto">${icona('spunta')} ${esc(pulsante || (pronte.length === 1 ? 'Salva la foto' : `Salva le ${pronte.length} foto`))}</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('salva-foto').onclick = () => {
+      $('finestra').querySelectorAll('[data-desc]').forEach((x) => { pronte[+x.dataset.desc].descrizione = x.value.trim().replace(/\s+/g, ' ').slice(0, 200); });
+      chiudiFinestra();
+      poi(pronte);
+    };
+  }
+
+  // Nella scheda del cliente: le miniature e «Aggiungi foto».
+  function riquadroFoto(c) {
+    const lista = fotoDi(c.codice);
+    return `<h3 class="titoletto">Foto${lista.length ? ` (${lista.length})` : ''}</h3>
+      ${lista.length ? miniature(lista) : '<p class="spiega">Lavello, sotto il lavello, impianto vecchio: così chi va a montare sa cosa serve.</p>'}
+      ${tastoFoto('file-foto')}`;
+  }
+  function collegaFoto(c) {
+    riempiMiniature();
+    schermo.querySelectorAll('[data-foto]').forEach((b) => { b.onclick = () => apriFoto(c, b.dataset.foto); });
+    const file = $('file-foto');
+    if (!file) return;
+    file.onchange = () => {
+      const scelte = [...file.files];
+      file.value = '';
+      if (scelte.length) preparaFoto(scelte, (pronte) => aggiungiFoto(c, pronte));
+    };
+  }
+  async function aggiungiFoto(c, pronte) {
+    await mettiFotoInAttesa(pronte.map((f) => ({ ...f, codice: c.codice, nuovo: '', nome: c.nome, quando: Date.now(), chi: io() })));
+    disegna(history.state);
+    messaggio(pronte.length === 1 ? 'Foto salvata ✓' : `${pronte.length} foto salvate ✓`);
+    mandaFoto();
+  }
+
+  // Una foto grande, con la sua descrizione, chi l'ha fatta, le frecce per
+  // le altre del cliente, «Cambia la descrizione» e «Togli la foto».
+  function apriFoto(c, id) {
+    const lista = fotoDi(c.codice);
+    const i = lista.findIndex((f) => f.id === id);
+    if (i < 0) return;
+    const f = lista[i];
+    const attesa = f.attesa && fotoInAttesa.find((x) => x.id === f.id);
+    const chi = [f.chi ? `Fatta ${daChi(f.chi)}` : 'Fatta', f.quando ? `il ${f.quando.replace(' ', ' alle ')}` : ''].filter(Boolean).join(' ');
+    apriFinestra(`
+      <div class="foto-vista"><img id="foto-grande" alt="${esc(f.descrizione || 'Foto')}"${urlMini(f) ? ` src="${urlMini(f)}"` : ''}></div>
+      ${lista.length > 1 ? `<div class="foto-frecce">
+        <button class="btn" type="button" id="foto-prima" aria-label="La foto prima"${i === 0 ? ' disabled' : ''}>${icona('frecciaSx')}</button>
+        <span>${i + 1} di ${lista.length}</span>
+        <button class="btn" type="button" id="foto-dopo" aria-label="La foto dopo"${i === lista.length - 1 ? ' disabled' : ''}>${icona('frecciaDx')}</button>
+      </div>` : ''}
+      ${f.descrizione ? `<p class="foto-testo"><strong>${esc(f.descrizione)}</strong></p>` : ''}
+      <p class="foto-chi" id="foto-chi">${attesa ? 'Non ancora nel foglio: parte da sola appena c\'è campo.' : esc(chi)}</p>
+      <button class="btn" type="button" id="foto-desc">${icona('matita')} ${f.descrizione ? 'Cambia la descrizione' : 'Scrivi cosa si vede'}</button>
+      <button class="btn btn-rosso" type="button" id="foto-togli">${icona('cestino')} Togli la foto</button>
+      <button class="btn leggero" type="button" id="foto-chiudi">Chiudi</button>`);
+    const img = $('foto-grande');
+    if (attesa) img.src = URL.createObjectURL(attesa.grande);
+    else {
+      immagineFoto(f.id, false).then((u) => { if (img.isConnected) img.src = u; }).catch((err) => {
+        if (!img.isConnected) return;
+        $('foto-chi').textContent = err.linea ? 'Senza campo: la foto grande si vede quando torna la linea.' : err.message;
+        if (!img.getAttribute('src')) immagineFoto(f.id, true).then((u) => { if (img.isConnected) img.src = u; }).catch(() => {});
+      });
+    }
+    if ($('foto-prima')) $('foto-prima').onclick = () => apriFoto(c, lista[i - 1].id);
+    if ($('foto-dopo')) $('foto-dopo').onclick = () => apriFoto(c, lista[i + 1].id);
+    $('foto-chiudi').onclick = chiudiFinestra;
+    $('foto-desc').onclick = () => chiediDescrizioneFoto(c, f);
+    $('foto-togli').onclick = (e) => conPulsante(e.currentTarget, 'Tolgo…', () => togliLaFoto(c, f));
+  }
+
+  function chiediDescrizioneFoto(c, f) {
+    apriFinestra(`
+      <h3>Cosa si vede?</h3>
+      <label class="campo"><span>Descrizione <em>(facoltativa)</em></span><input id="foto-descrizione" maxlength="200" value="${esc(f.descrizione)}"></label>
+      <button class="btn pieno grande" type="button" id="salva">${icona('spunta')} Salva</button>
+      <button class="btn leggero" type="button" id="no">Torna alla foto</button>`);
+    $('no').onclick = () => apriFoto(c, f.id);
+    $('salva').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+      const descrizione = $('foto-descrizione').value.trim().replace(/\s+/g, ' ').slice(0, 200);
+      if (descrizione === f.descrizione) { apriFoto(c, f.id); return; }
+      const attesa = fotoInAttesa.find((x) => x.id === f.id);
+      if (attesa) {
+        await mettiFotoInAttesa([{ ...attesa, descrizione }]);
+      } else {
+        try {
+          const { r, voce } = await manda('foto', { id: f.id, codice: c.codice, descrizione }, `Descrizione di una foto: ${c.nome}`);
+          if (r) APPLICA.foto(dati, { id: f.id, descrizione: r.foto.descrizione });
+          salvaDati();
+          if (voce) messaggio('Salvata.' + fuoriLinea(voce), { durata: 8000 });
+        } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); return; }
+      }
+      apriFoto(c, f.id);
+      disegna(history.state);
+    });
+  }
+
+  // «Togli»: nel foglio la riga resta, segnata «Tolta il», e l'annulla la
+  // rimette. Una ancora da mandare si toglie dal telefono e basta.
+  async function togliLaFoto(c, f) {
+    const attesa = fotoInAttesa.find((x) => x.id === f.id);
+    if (attesa) {
+      await togliFotoInAttesa(f.id);
+      chiudiFinestra();
+      disegna(history.state);
+      messaggio('Foto tolta.', { azione: { testo: 'Annulla', fai: () => mettiFotoInAttesa([attesa]).then(() => { disegna(history.state); mandaFoto(); }) } });
+      return;
+    }
+    const copia = { ...f };
+    try {
+      const { voce } = await manda('togliFoto', { id: f.id, codice: c.codice }, `Foto tolta: ${c.nome}`);
+      if (!voce) APPLICA.togliFoto(dati, { id: f.id });
+      salvaDati();
+      chiudiFinestra();
+      disegna(history.state);
+      const annulla = async () => {
+        if (voce && leggiLista(K_CODA).some((v) => v.id === voce.id)) {
+          annullaInCoda(voce, () => APPLICA.rimettiFoto(dati, { id: f.id, foto: copia }));
+          return;
+        }
+        try {
+          const { r, voce: v2 } = await manda('rimettiFoto', { id: f.id, codice: c.codice, foto: copia }, `Foto rimessa: ${c.nome}`);
+          if (r) APPLICA.rimettiFoto(dati, { id: f.id, foto: r.foto });
+          salvaDati();
+          disegna(history.state);
+          messaggio('Foto rimessa.' + (r ? '' : fuoriLinea(v2)));
+        } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
+      };
+      messaggio('Foto tolta.' + (voce ? fuoriLinea(voce) : ''), { azione: { testo: 'Annulla', fai: annulla }, durata: 8000 });
+    } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
   }
 
   // Scheda di un cliente perso: solo i dati e i contatti, più "È tornato cliente".
@@ -2641,6 +3057,8 @@
       c && c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>' : '',
       c && t.lavoro === 'Manutenzione' && !c.avviso ? `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>` : '',
       !c && t.contatto ? '<span class="etichetta grigio">Contatto</span>' : '',
+      // Le foto del sopralluogo: si vede dal giro che ci sono (26 ott 2026).
+      c && fotoDi(c.codice).length ? `<span class="etichetta blu">${icona('fotocamera')} ${fotoDi(c.codice).length} foto</span>` : '',
       rimasta ? `<span class="etichetta arancio">${esc(quandoTappa(t, false))}</span>` : '',
       l.lat == null ? '<span class="etichetta grigio">Non è sulla mappa</span>' : '',
     ].join('');
@@ -4057,9 +4475,30 @@
         <div class="campo"><span>Manutenzione</span>
           <div class="scelta">${scelteMesi.map((m) => `<button type="button" data-mesi="${m}" aria-pressed="${m === mesi}">Ogni ${m} mesi</button>`).join('')}</div></div>
         <label class="campo"><span>Note o prezzo <em>(facoltativo)</em></span><textarea name="note">${esc(c ? c.note : '')}</textarea></label>
+        ${c ? '' : `<div class="campo"><span>Foto <em>(facoltative: lavello, sotto il lavello, impianto vecchio…)</em></span>
+          <div id="foto-nuove"></div>${tastoFoto('file-foto-nuovo')}</div>`}
         <button class="btn verde grande" style="width:100%">${icona('spunta')} ${c ? 'Salva le modifiche' : 'Salva il cliente'}</button>
       </form>`;
     const f = $('f-modulo');
+    // Le foto del cliente nuovo (26 ott 2026): restano nel modulo finché non si salva.
+    let fotoNuove = [];
+    function disegnaFotoNuove() {
+      $('foto-nuove').innerHTML = fotoNuove.length ? miniature(fotoNuove, true) : '';
+      $('foto-nuove').querySelectorAll('[data-foto]').forEach((b) => {
+        b.onclick = () => { const x = fotoNuove.find((y) => y.id === b.dataset.foto); chiediDescrizioni([x], disegnaFotoNuove, { pulsante: 'Fatto' }); };
+      });
+      $('foto-nuove').querySelectorAll('[data-foto-togli]').forEach((b) => {
+        b.onclick = () => { fotoNuove = fotoNuove.filter((y) => y.id !== b.dataset.fotoTogli); disegnaFotoNuove(); };
+      });
+    }
+    if (!c) {
+      const file = $('file-foto-nuovo');
+      file.onchange = () => {
+        const scelte = [...file.files];
+        file.value = '';
+        if (scelte.length) preparaFoto(scelte, (pronte) => { fotoNuove = fotoNuove.concat(pronte); disegnaFotoNuove(); });
+      };
+    }
     f.querySelectorAll('[data-mesi]').forEach((b) => {
       b.onclick = () => {
         mesi = +b.dataset.mesi;
@@ -4090,35 +4529,59 @@
     }
 
     async function salvaNuovo() {
+      // Le foto vanno nel telefono PRIMA del cliente, legate alla sua voce:
+      // se l'app si chiude mentre salva, ripartono con lui.
+      const idVoce = nuovoIdVoce();
+      const nome = v('nome').toUpperCase();
+      const conFoto = fotoNuove.slice();
+      await mettiFotoInAttesa(conFoto.map((x) => ({ ...x, codice: '', nuovo: idVoce, nome, quando: Date.now(), chi: io() })));
+      const senzaFoto = async () => { for (const x of conFoto) await togliFotoInAttesa(x.id); };
+      const conLeFoto = (testo) => (conFoto.length ? `${testo} Le foto partono da sole.` : testo);
       try {
         const { r, voce } = await manda('nuovo', {
           nome: v('nome'), telefono: v('telefono'), indirizzo: v('indirizzo'), citta: v('citta'),
           tipo: v('tipo'), installazione: v('installazione'), frequenza: mesi, note: v('note'),
-        }, `Cliente nuovo: ${v('nome').toUpperCase()}`);
+        }, `Cliente nuovo: ${nome}`, { id: idVoce });
         if (voce) {
           // Il codice C0xx lo dà il foglio: la scheda nasce quando arriva.
           history.replaceState({ s: 'home' }, '', location.pathname + location.hash);
           disegna(history.state);
-          messaggio('Cliente segnato ✓' + fuoriLinea(voce), { durata: 8000 });
+          messaggio('Cliente segnato ✓' + fuoriLinea(voce) + (conFoto.length ? ' Le foto partono con lui.' : ''), { durata: 8000 });
           return;
         }
         if (r.giaPresente) {
+          // Le foto restano nel modulo (un altro «Salva» le rimette in
+          // attesa), o vanno a lui se si apre la sua scheda.
+          await senzaFoto();
           apriFinestra(`
             <h3>${r.perso ? 'È fra i clienti persi' : 'C\'è già un cliente con questo nome'}</h3>
             <p><strong>${esc(r.nome)}</strong> (${esc(r.codice)}) ${r.perso
               ? 'è fra i clienti persi. Non l\'ho aggiunto di nuovo: apri la sua scheda e tocca «È tornato cliente».'
-              : 'è già nell\'elenco. Non l\'ho aggiunto di nuovo.'}</p>
+              : `è già nell'elenco. Non l'ho aggiunto di nuovo.${conFoto.length ? ' Se apri la sua scheda, le foto le metto lì.' : ''}`}</p>
             <button class="btn pieno grande" type="button" id="apri">Apri la sua scheda</button>
             <button class="btn leggero" type="button" id="no">Torna al modulo</button>`);
           $('no').onclick = chiudiFinestra;
-          $('apri').onclick = () => { history.replaceState({ s: 'cliente', codice: r.codice }, '', location.pathname + location.hash); chiudiFinestra(); disegna(history.state); };
+          $('apri').onclick = async () => {
+            if (!r.perso && conFoto.length) {
+              await mettiFotoInAttesa(conFoto.map((x) => ({ ...x, codice: r.codice, nuovo: '', nome: r.nome, quando: Date.now(), chi: io() })));
+              mandaFoto();
+            }
+            history.replaceState({ s: 'cliente', codice: r.codice }, '', location.pathname + location.hash);
+            chiudiFinestra();
+            disegna(history.state);
+          };
           return;
         }
+        segnaCodiceNuovo(idVoce, r.codice);
         await carica().catch(() => {});
+        mandaFoto();
         history.replaceState({ s: 'cliente', codice: r.codice }, '', location.pathname + location.hash);
         disegna(history.state);
-        messaggio(`Cliente salvato ✓ (${r.codice})`, { durata: 6000 });
-      } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
+        messaggio(conLeFoto(`Cliente salvato ✓ (${r.codice}).`), { durata: 6000 });
+      } catch (err) {
+        await senzaFoto();
+        messaggio(err.message, { errore: true, durata: 8000 });
+      }
     }
   }
 
@@ -4130,6 +4593,13 @@
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/gestione/sw.js', { scope: '/gestione/' }).catch(() => {});
 
   disegna(history.state);
+
+  // Le foto rimaste da mandare: si vedono (scheda, riquadro in home) e partono.
+  caricaFotoInAttesa().then(() => {
+    if (!fotoInAttesa.length || !chiave) return;
+    if (dati && $('finestra').hidden && !staiScrivendo()) disegna(history.state);
+    mandaFoto();
+  });
 
   if (chiave && dati) {
     // Mostra subito i dati salvati, intanto rilegge il foglio.
@@ -4145,7 +4615,7 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible' || !chiave) return;
     mandaPosizioniInAttesa();
-    mandaCoda();
+    mandaTutto();
     if (Date.now() - (aggiornatoAlle || 0) > 120000) aggiornaInSottofondo();
   });
 })();

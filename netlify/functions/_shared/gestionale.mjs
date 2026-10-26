@@ -385,6 +385,11 @@ export async function leggiTutto(foglio) {
     console.error('Magazzino non letto:', err);
     return null;
   });
+  // Le foto dei clienti (dal 26 ott 2026), senza le tolte: idem.
+  const foto = leggiFoto(foglio).then((l) => l.filter((f) => !f.tolta).map(fotoPerApp)).catch((err) => {
+    console.error('Foto non lette:', err);
+    return [];
+  });
   const [{ griglia: gc, mappa: mc }, { griglia: gl, mappa: ml }] = await Promise.all([
     leggiClienti(foglio),
     leggiLead(foglio),
@@ -456,7 +461,7 @@ export async function leggiTutto(foglio) {
 
   return {
     oggi: serialeDa(...Object.values(oggi())), clienti, lead, persi, stati: STATI_LEAD, storico: await storico, pagamenti: PAGAMENTI,
-    tappe, lavori: LAVORI, magazzino: await magazzino,
+    tappe, lavori: LAVORI, magazzino: await magazzino, foto: await foto,
   };
 }
 
@@ -977,8 +982,8 @@ export async function salvaAccessi(foglio, { persona, nome, permessi = {} }, { c
 // portare via la lista dei clienti, né i costi del magazzino; i prezzi ai
 // clienti sì (le note: servono per farsi pagare). Chi non ha «Vede tutti i
 // clienti» riceve solo i clienti e i contatti delle SUE tappe (fatte o da
-// fare, da GIORNI_VISIBILI giorni fa in poi), il loro storico e i loro
-// materiali, le sue tappe e basta; niente clienti persi. E le azioni le può
+// fare, da GIORNI_VISIBILI giorni fa in poi), il loro storico, i loro
+// materiali e le loro foto, le sue tappe e basta; niente clienti persi. E le azioni le può
 // fare solo su quei clienti (riferimentiFuori): con un codice inventato
 // («C123») non tocca né legge nessun altro. Chi non ha «Vede i costi» riceve
 // gli articoli del magazzino senza costo.
@@ -1012,6 +1017,7 @@ export function perPersona(tutto, accesso) {
     lead: t.lead.filter((l) => v.contatti.has(chiaveContatto(l))),
     persi: [],
     storico: t.storico.filter((s) => v.codici.has(s.codice)),
+    foto: (t.foto || []).filter((f) => v.codici.has(f.codice)),
     tappe: t.tappe.filter((x) => x.chi === p),
     magazzino: t.magazzino && { ...t.magazzino, movimenti: (t.magazzino.movimenti || []).filter(suoMovimento) },
     soloSuoi: true,
@@ -1070,9 +1076,14 @@ const NOMI_AZIONI = {
   nota: 'Nota contatto', pagamento: 'Pagamento', assegna: 'Giro', tappa: 'Tappa', togliTappa: 'Tappa tolta', articolo: 'Articolo magazzino',
   magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
   annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
+  foto: 'Foto', togliFoto: 'Foto tolta', rimettiFoto: 'Foto rimessa',
 };
 const breveValore = (v) => testo(typeof v === 'object' ? JSON.stringify(v) : v).replace(/\s+/g, ' ').slice(0, 80);
+// «26/10/2026 10:32», ora di Roma.
+const adessoRoma = () => new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
 function cosaRegistro(azione, dati, r) {
+  // Le immagini (in base64) no: solo se è nuova e la descrizione.
+  if (azione === 'foto') return [dati.grande ? 'foto nuova' : 'descrizione cambiata', breveValore(dati.descrizione)].filter(Boolean).join(': ');
   if (azione === 'modifica' && r && Array.isArray(r.cambi)) {
     return r.cambi.map((x) => `${x.campo}: «${breveValore(x.prima)}» → «${breveValore(x.dopo)}»`).join('; ');
   }
@@ -1087,7 +1098,7 @@ function cosaRegistro(azione, dati, r) {
   return parti.join(', ');
 }
 export async function registra(foglio, { chi, nome = '', azione, dati, r }) {
-  const quando = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+  const quando = adessoRoma();
   const codici = [...riferimenti(azione, dati).codici];
   const riga = [quando, nome || nomePersona(chi), NOMI_AZIONI[azione] || azione, codici.slice(0, 5).join(' '), cosaRegistro(azione, dati, r).slice(0, 500)];
   await foglio.accoda(TAB_REGISTRO, INTESTAZIONI_REGISTRO, riga);
@@ -2159,6 +2170,122 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
   if (aggiorna.length) await foglio.scrivi(aggiorna, 'RAW');
   if (nuove.length) await foglio.accodaRighe(TAB_COORDINATE, INTESTAZIONI_COORDINATE, nuove);
   return { ok: true, salvate: aggiorna.length + nuove.length, saltate };
+}
+
+// ---------------------------------------------------------------------------
+//  Foto dei clienti
+// ---------------------------------------------------------------------------
+// Dal 26 ott 2026 (Matteo: «caricare delle foto nella pagina cliente, così
+// quando babbo fa un sopralluogo può aggiungere un nuovo cliente con le foto
+// del lavello ecc., e quando vado io a montare so cosa mi serve»).
+// Le immagini non stanno nel foglio: stanno nell'archivio di Netlify (Netlify
+// Blobs, store "foto-clienti" in Europa, aperto da gestione.mjs), due per
+// foto: `<id>` (lato lungo 1600 px) e `<id>-mini` (400 px, per le
+// miniature), col codice del cliente nei metadati. Le riduce il telefono
+// prima di mandarle. Nella scheda "Foto" del Gestionale una riga per foto.
+// «Togli» non cancella niente: scrive «Tolta il» (l'annulla la svuota) e
+// l'immagine resta nell'archivio. L'Id lo sceglie il telefono, come per le
+// tappe: la stessa foto arrivata due volte non fa due righe. Nessuna
+// automazione del foglio legge questa scheda.
+export const TAB_FOTO = 'Foto';
+const INTESTAZIONI_FOTO = ['Id', 'Codice', 'Cliente', 'Descrizione', 'Fatta il', 'Da', 'Tolta il'];
+const F = Object.fromEntries(INTESTAZIONI_FOTO.map((h, i) => [h, i]));
+const ID_FOTO = /^[\w-]{8,60}$/;
+// Quanto può pesare una foto già ridotta dal telefono (con tanto margine).
+const MAX_FOTO = 3 * 1024 * 1024;
+const MAX_MINI = 300 * 1024;
+
+async function leggiFoto(foglio) {
+  let griglia;
+  try {
+    griglia = await foglio.leggi(`'${TAB_FOTO}'!A1:G5000`, 'UNFORMATTED_VALUE');
+  } catch (err) {
+    if (err.status === 400) return []; // scheda non ancora creata
+    throw err;
+  }
+  const foto = [];
+  for (let i = 1; i < griglia.length; i++) {
+    const r = griglia[i] || [];
+    const id = testo(r[F.Id]);
+    if (!ID_FOTO.test(id)) continue;
+    foto.push({
+      riga: i + 1, id, codice: testo(r[F.Codice]).toUpperCase(), descrizione: testo(r[F.Descrizione]),
+      quando: testo(r[F['Fatta il']]), chi: testo(r[F.Da]).toLowerCase(), tolta: testo(r[F['Tolta il']]),
+    });
+  }
+  return foto;
+}
+const fotoPerApp = ({ riga, tolta, ...f }) => f;
+
+// Una foto mandata dal telefono: un JPEG in base64, entro il peso massimo.
+function immagine(b64, max) {
+  const s = testo(b64);
+  if (!s || s.length > max * 1.4) throw problema('La foto non è arrivata bene. Riprova.');
+  const buf = Buffer.from(s, 'base64');
+  if (buf.length < 100 || buf.length > max || buf[0] !== 0xff || buf[1] !== 0xd8 || buf[2] !== 0xff) throw problema('La foto non è arrivata bene. Riprova.');
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+}
+
+// Aggiunge una foto a un cliente (con `grande` e `piccola`), o ne cambia la
+// descrizione (stesso Id, senza immagini). Prima l'archivio, poi il foglio:
+// una riga non punta mai a un'immagine che non c'è.
+export async function salvaFoto(foglio, dati, { chi = 'app', archivio = null } = {}) {
+  const id = testo(dati.id);
+  if (!ID_FOTO.test(id)) throw problema('Foto non valida.');
+  const codice = testo(dati.codice).toUpperCase();
+  const descrizione = testo(dati.descrizione).replace(/\s+/g, ' ').slice(0, 200);
+  const [{ griglia, mappa }, tutte] = await Promise.all([leggiClienti(foglio), leggiFoto(foglio)]);
+  const riga = trovaCliente(griglia, mappa, codice);
+  const prima = tutte.find((f) => f.id === id) || null;
+  if (prima && prima.codice !== codice) throw problema('Foto non valida.');
+  const conImmagini = dati.grande != null || dati.piccola != null;
+  if (!prima && !conImmagini) throw problema('Questa foto non è più nel foglio.', 404);
+  if (conImmagini) {
+    if (!archivio) throw problema('L\'archivio delle foto non risponde. Riprova tra poco.', 503);
+    const grande = immagine(dati.grande, MAX_FOTO);
+    const piccola = immagine(dati.piccola, MAX_MINI);
+    await archivio.set(id, grande, { metadata: { codice } });
+    await archivio.set(`${id}-mini`, piccola, { metadata: { codice } });
+  }
+  const nome = testo((griglia[riga - 1] || [])[mappa.col.NOME - 1]);
+  if (!prima) {
+    const quando = adessoRoma();
+    await foglio.accodaRighe(TAB_FOTO, INTESTAZIONI_FOTO, [[id, codice, nome, descrizione, quando, nomePersona(chi), '']]);
+    return { ok: true, nome, foto: { id, codice, descrizione, quando, chi }, annulla: { id, codice } };
+  }
+  // Arrivata due volte (senza campo), o solo la descrizione cambiata.
+  if (descrizione !== prima.descrizione && !conImmagini) {
+    await foglio.scrivi([{ range: `'${TAB_FOTO}'!D${prima.riga}`, values: [[descrizione]] }], 'RAW');
+  }
+  return { ok: true, nome, foto: fotoPerApp({ ...prima, descrizione: conImmagini ? prima.descrizione : descrizione }), annulla: { id, codice, descrizione: prima.descrizione } };
+}
+
+// «Togli la foto»: la riga resta, con quando e chi l'ha tolta. Codice e Id
+// devono combaciare (chi vede solo i suoi clienti non tocca le altre).
+async function trovaFoto(foglio, { id, codice }) {
+  const f = (await leggiFoto(foglio)).find((x) => x.id === testo(id));
+  if (!f || f.codice !== testo(codice).toUpperCase()) throw problema('Questa foto non è più nel foglio.', 404);
+  return f;
+}
+export async function togliFoto(foglio, dati, { chi = 'app' } = {}) {
+  const f = await trovaFoto(foglio, dati);
+  if (!f.tolta) await foglio.scrivi([{ range: `'${TAB_FOTO}'!G${f.riga}`, values: [[`${adessoRoma()} (${nomePersona(chi)})`]] }], 'RAW');
+  return { ok: true, annulla: { id: f.id, codice: f.codice } };
+}
+export async function rimettiFoto(foglio, dati) {
+  const f = await trovaFoto(foglio, dati);
+  if (f.tolta) await foglio.svuota(`'${TAB_FOTO}'!G${f.riga}`);
+  return { ok: true, foto: fotoPerApp(f) };
+}
+
+// L'immagine di una foto (o la sua miniatura) e il codice del suo cliente,
+// per controllare chi la chiede. null = non c'è.
+export async function leggiImmagine(archivio, id, mini = false) {
+  const k = testo(id);
+  if (!ID_FOTO.test(k)) return null;
+  const r = await archivio.getWithMetadata(mini ? `${k}-mini` : k, { type: 'arrayBuffer' });
+  if (!r || !r.data) return null;
+  return { dati: r.data, codice: testo(r.metadata && r.metadata.codice).toUpperCase() };
 }
 
 // ---------------------------------------------------------------------------

@@ -13,9 +13,10 @@
 // chiave su Netlify, si rifà il deploy, e quella non apre più niente (le
 // altre continuano a funzionare).
 //
-// Qui dietro c'è tutta l'anagrafica clienti (nomi, telefoni, indirizzi):
-// niente scorciatoie sull'accesso.
+// Qui dietro c'è tutta l'anagrafica clienti (nomi, telefoni, indirizzi) e,
+// dal 26 ott 2026, le foto delle loro case: niente scorciatoie sull'accesso.
 import { timingSafeEqual, createHash } from 'node:crypto';
+import { getStore } from '@netlify/blobs';
 import {
   leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
@@ -24,7 +25,14 @@ import {
   cancellaIntervento, annullaCancellazione, cancellaLavoro, annullaCancellaLavoro, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
   perPersona, riferimentiFuori, registra, conAccessiDiBase,
+  salvaFoto, togliFoto, rimettiFoto, leggiImmagine,
 } from './_shared/gestionale.mjs';
+
+// L'archivio delle foto dei clienti (26 ott 2026): Netlify Blobs, in Europa
+// (la regione va ripetuta a ogni apertura, se no si legge un archivio vuoto
+// negli Stati Uniti). Ci arriva solo questa funzione, dopo il controllo
+// della chiave: le foto delle case dei clienti non hanno un indirizzo pubblico.
+const archivioNetlify = () => getStore({ name: 'foto-clienti', region: 'eu-central-1', consistency: 'strong' });
 
 // Tentativi sbagliati per IP in un'ora. In memoria dell'istanza (come in
 // lead.mjs): non è una contabilità esatta, serve a rendere inutile provare
@@ -102,6 +110,9 @@ const AZIONI = {
   cancellaLavoro, // un lavoro fatto, dal Giro del giorno
   annullaCancellaLavoro,
   accessi: salvaAccessi, // le impostazioni (solo Matteo)
+  foto: salvaFoto, // una foto nuova del cliente, o la sua descrizione (26 ott 2026)
+  togliFoto,
+  rimettiFoto,
 };
 
 // Le azioni che chiedono un permesso degli Accessi. Le altre le può fare
@@ -120,9 +131,9 @@ const PERMESSO_PER = {
 // e l'annulla di un movimento (lo decide annullaMagazzino: dipende da cos'era).
 const CON_ACCESSI = new Set([...Object.keys(PERMESSO_PER), 'tappa', 'assegna', 'accessi', 'annullaMagazzino']);
 
-// creaFoglio è un parametro solo per il server di prova in locale
-// (scripts/gestione-locale.mjs), che scrive su una copia in memoria.
-export const creaGestore = (creaFoglio) => async (req) => {
+// creaFoglio e apriArchivio sono parametri solo per il server di prova in
+// locale (scripts/gestione-locale.mjs), che scrive su una copia in memoria.
+export const creaGestore = (creaFoglio, apriArchivio = archivioNetlify) => async (req) => {
   const ip =
     req.headers.get('x-nf-client-connection-ip') ||
     (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'sconosciuto';
@@ -141,9 +152,12 @@ export const creaGestore = (creaFoglio) => async (req) => {
   const tutti = persone();
   // Chi ha un giro e non è stato spento.
   const giranti = (acc) => acc.filter((a) => a.giro && a.attivo).map((a) => a.persona);
+  // GET ?foto=<id>[&mini=1]: l'immagine di una foto, non tutto il foglio.
+  const url = new URL(req.url);
+  const fotoChiesta = req.method === 'GET' ? url.searchParams.get('foto') : null;
   // La lettura completa parte subito (in parallelo agli Accessi), ma conta
   // solo se gli Accessi dicono che si può.
-  const tuttoP = req.method === 'GET' ? leggiTutto(foglio) : null;
+  const tuttoP = req.method === 'GET' && !fotoChiesta ? leggiTutto(foglio) : null;
   if (tuttoP) tuttoP.catch(() => {});
   try {
     // Gli Accessi a ogni richiesta (22 ott 2026): chi Matteo ha spento non
@@ -161,6 +175,19 @@ export const creaGestore = (creaFoglio) => async (req) => {
     const mio = acc.find((a) => a.persona === chi) || accessiDiBase([chi])[0];
     if (!mio.attivo) return risposta({ ok: false, sospeso: true, errore: 'Il tuo accesso all\'app è stato sospeso. Chiedi a Matteo.' }, 403);
     const permessi = Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]]));
+
+    // Una foto: solo a chi può vedere quel cliente. Il telefono la tiene in
+    // una sua memoria (che svuota se l'accesso viene spento), il browser no.
+    if (fotoChiesta) {
+      const img = await leggiImmagine(apriArchivio(), fotoChiesta, url.searchParams.get('mini') === '1');
+      if (!img) return risposta({ ok: false, errore: 'Foto non trovata.' }, 404);
+      if (!mio.tuttiClienti && (!img.codice || (await riferimentiFuori(foglio, 'foto', { codice: img.codice }, chi)).length)) {
+        return risposta({ ok: false, errore: 'Questo cliente non è fra i tuoi. Chiedi a Matteo.' }, 403);
+      }
+      return new Response(img.dati, {
+        headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex', 'X-Content-Type-Options': 'nosniff' },
+      });
+    }
 
     // io: chi sta usando l'app; persone: chi ha un giro (fra chi si dividono
     // le manutenzioni); nomi: come si chiama ognuno («babbo» → «Stefano»);
@@ -194,7 +221,10 @@ export const creaGestore = (creaFoglio) => async (req) => {
     // Chi non vede i costi non li manda e non li riceve.
     const senzaCosti = !mio.costi && body.azione === 'articolo';
     if (senzaCosti) delete dati.costo;
-    const ctx = { chi, tutti, permessi, persone: CON_ACCESSI.has(body.azione) ? giranti(acc) : tutti };
+    const ctx = {
+      chi, tutti, permessi, persone: CON_ACCESSI.has(body.azione) ? giranti(acc) : tutti,
+      archivio: body.azione === 'foto' ? apriArchivio() : null,
+    };
     const r = await azione(foglio, dati, ctx);
     if (senzaCosti && r) {
       if (r.articolo) delete r.articolo.costo;

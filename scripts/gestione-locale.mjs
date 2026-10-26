@@ -32,7 +32,7 @@ process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000,segretaria:provalocale-segre-0000,dipendente:provalocale-dipen-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
-const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI, TAB_MAGAZZINO, TAB_MOVIMENTI } =
+const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI, TAB_MAGAZZINO, TAB_MOVIMENTI, TAB_FOTO } =
   await import('../netlify/functions/_shared/gestionale.mjs');
 
 // ---------------------------------------------------------------------------
@@ -71,8 +71,9 @@ async function creaFoglioFinto() {
     const giri = await vero.leggi(`'${TAB_GIRI}'!A1:Q3000`, 'UNFORMATTED_VALUE');
     if (giri.length) schede[TAB_GIRI] = giri;
   } catch { /* scheda non ancora creata */ }
-  // Il magazzino (dal 20 ott 2026), se nel foglio c'è già.
-  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000']]) {
+  // Il magazzino (dal 20 ott 2026) e le foto (dal 26 ott, solo le righe:
+  // le immagini stanno su Netlify), se nel foglio ci sono già.
+  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000'], [TAB_FOTO, 'A1:G5000']]) {
     try {
       const g = await vero.leggi(`'${tab}'!${celle}`, 'FORMULA');
       if (g.length) schede[tab] = g;
@@ -194,8 +195,23 @@ async function creaFoglioFinto() {
   return finto;
 }
 
+// L'archivio delle foto (Netlify Blobs in produzione): qui in memoria, con
+// gli stessi metodi che usa il motore. Si svuota quando il server si ferma.
+const immagini = new Map();
+const archivioFinto = {
+  async set(k, dati, { metadata = {} } = {}) {
+    immagini.set(k, { dati, metadata });
+    console.log(`  archivio: ${k} (${Math.round(dati.byteLength / 1024)} KB)`);
+    return { modified: true };
+  },
+  async getWithMetadata(k) {
+    const v = immagini.get(k);
+    return v ? { data: v.dati, metadata: v.metadata, etag: k } : null;
+  },
+};
+
 const finto = VERO ? null : await creaFoglioFinto();
-const gestore = creaGestore(VERO ? creaFoglioGoogle : () => finto);
+const gestore = creaGestore(VERO ? creaFoglioGoogle : () => finto, () => archivioFinto);
 
 // ---------------------------------------------------------------------------
 //  Server
