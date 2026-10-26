@@ -1609,7 +1609,7 @@
     const fatti = interventi().filter((x) => x.codice === c.codice);
     const riquadroAvviso = !c.avviso ? '' : `
       <div class="avviso-cliente ${c.avviso === 'Urgente' ? 'rosso' : 'grigio'}">
-        <div><b>${icona(c.avviso === 'Urgente' ? 'allarme' : 'pausa')} ${c.avviso === 'Urgente' ? 'URGENTE' : 'MANUTENZIONE SOSPESA'}</b>
+        <div><b>${icona(c.avviso === 'Urgente' ? 'allarme' : 'pausa')} ${c.avviso === 'Urgente' ? 'GUASTO URGENTE' : 'MANUTENZIONE SOSPESA'}</b>
           ${mo.quando ? `<span>dal ${esc(mo.quando)}</span>` : ''}${mo.perche ? `<p>${esc(mo.perche)}</p>` : ''}</div>
         <button class="btn" type="button" id="togli-avviso">${c.avviso === 'Urgente' ? `${icona('spunta')} Fatto` : 'Riattiva'}</button>
       </div>`;
@@ -1627,9 +1627,9 @@
       </div>
       ${giranti().length ? riquadroTappe(tappeDi((t) => t.codice === c.codice)) : ''}
       <button class="btn verde grande" id="fatta" style="width:100%">${icona('spunta')} Manutenzione fatta</button>
-      <button class="btn" id="riparazione" style="width:100%;margin-top:10px">${icona('attrezzi')} Riparazione fatta (senza manutenzione)</button>
+      ${c.avviso === 'Urgente' ? `<button class="btn verde grande" id="riparazione" style="width:100%;margin-top:10px">${icona('attrezzi')} Riparazione fatta</button>` : ''}
       ${daFare ? `<button class="btn" id="rimanda" style="width:100%;margin-top:10px">${icona('orologio')} Rimanda la manutenzione</button>` : ''}
-      ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} È urgente: guasto o fretta</button>` : ''}
+      ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Guasto urgente</button>` : ''}
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
@@ -1656,7 +1656,7 @@
     if ($('urgente')) $('urgente').onclick = () => chiediAvviso(c, 'Urgente');
     // «Fatto» di un urgente chiede cosa è stato fatto (21 ott 2026); «Riattiva» no.
     if ($('togli-avviso')) $('togli-avviso').onclick = (e) => (c.avviso === 'Urgente' ? chiediCosaHaiFatto(c) : conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', '')));
-    if ($('riparazione')) $('riparazione').onclick = () => confermaRiparazione(c);
+    if ($('riparazione')) $('riparazione').onclick = () => chiediAncheManutenzione(c);
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
     if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
@@ -2588,13 +2588,13 @@
   function chiediAvviso(c, avviso) {
     const urgente = avviso === 'Urgente';
     apriFinestra(`
-      <h3>${urgente ? 'È urgente?' : 'Sospendere la manutenzione?'}</h3>
+      <h3>${urgente ? 'Guasto urgente?' : 'Sospendere la manutenzione?'}</h3>
       <p><strong>${esc(c.nome)}</strong><br>${urgente
-        ? 'Lo metto fra gli <strong>urgenti</strong>, in cima alla schermata iniziale, finché non tocchi «Fatto».'
+        ? 'Lo metto fra gli <strong>urgenti</strong>, in cima alle manutenzioni scadute, finché non tocchi «Riparazione fatta» o «Fatto».'
         : 'Non comparirà più fra le scadute: lo trovi nella pagina <strong>Sospese</strong> finché non tocchi «Riattiva».'}</p>
-      <label class="campo"><span>${urgente ? 'Cosa c\'è da fare?' : 'Perché?'} <em>(facoltativo)</em></span>
-        <textarea id="motivo" placeholder="${urgente ? 'Es. perde acqua sotto il lavello, oppure: manutenzione entro venerdì' : 'Es. ha venduto casa, richiama lui'}"></textarea></label>
-      <button class="btn ${urgente ? 'btn-rosso-pieno' : 'pieno'} grande" type="button" id="si">${icona(urgente ? 'allarme' : 'pausa')} ${urgente ? 'Sì, è urgente' : 'Sì, sospendi'}</button>
+      <label class="campo"><span>${urgente ? 'Che guasto c\'è?' : 'Perché?'} <em>(facoltativo)</em></span>
+        <textarea id="motivo" placeholder="${urgente ? 'Es. perde acqua sotto il lavello' : 'Es. ha venduto casa, richiama lui'}"></textarea></label>
+      <button class="btn ${urgente ? 'btn-rosso-pieno' : 'pieno'} grande" type="button" id="si">${icona(urgente ? 'allarme' : 'pausa')} ${urgente ? 'Sì, segna il guasto' : 'Sì, sospendi'}</button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     $('no').onclick = chiudiFinestra;
     $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
@@ -2605,7 +2605,7 @@
   async function salvaAvviso(c, avviso, motivo) {
     try {
       const prima = c.avviso;
-      const testo = avviso === 'Urgente' ? 'Segnato urgente' : avviso === 'Sospesa' ? 'Manutenzione sospesa'
+      const testo = avviso === 'Urgente' ? 'Segnato guasto urgente' : avviso === 'Sospesa' ? 'Manutenzione sospesa'
         : prima === 'Urgente' ? 'Non più urgente ✓' : 'Riattivata ✓';
       // Il motivo parte già col giorno: se arriva dopo (senza campo) resta quello giusto.
       const m = String(motivo || '').replace(/\s+/g, ' ').trim();
@@ -2814,6 +2814,25 @@
       if (tappa) { chiudiFinestra(); segnaTappaFatta(tappa, { soloTappa: true }); return; }
       conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', ''));
     };
+    $('no').onclick = chiudiFinestra;
+  }
+
+  // «Riparazione fatta» nella scheda (26 ott 2026, Matteo): verde come
+  // «Manutenzione fatta», c'è solo se è segnato un guasto urgente, e prima
+  // chiede se è stata fatta anche la manutenzione ordinaria. Sì = la solita
+  // «Manutenzione fatta» (la prossima si sposta e il guasto si chiude), no =
+  // solo la riparazione (la data della prossima resta).
+  function chiediAncheManutenzione(c) {
+    const mo = leggiMotivo(c);
+    const mesi = c.frequenza ? `${c.frequenza} mesi` : 'sei o dodici mesi';
+    apriFinestra(`
+      <h3>È stata fatta anche la manutenzione ordinaria?</h3>
+      <p><strong>${esc(c.nome)}</strong>${mo.perche ? `<br>${esc(mo.perche)}` : ''}</p>
+      <button class="btn verde scelta-lavoro" type="button" id="anche-si">${icona('spunta')}<span>Sì, anche la manutenzione<small>La prossima si sposta di ${esc(mesi)}.</small></span></button>
+      <button class="btn pieno scelta-lavoro" type="button" id="anche-no">${icona('attrezzi')}<span>No, solo la riparazione<small>La prossima manutenzione resta ${c.prossima ? `il ${esc(c.prossima)}` : 'com\'è'}.</small></span></button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('anche-si').onclick = () => chiediFatta(c);
+    $('anche-no').onclick = () => confermaRiparazione(c);
     $('no').onclick = chiudiFinestra;
   }
 
