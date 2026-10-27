@@ -113,5 +113,15 @@
     "url": null,
     "fatto": "- Nell'articolo «Si può bere l'acqua del rubinetto a Firenze? Facciamo chiarezza» ho cambiato il titolo che si legge su Google: tolto «Acqua del Rubinetto a Firenze: si può Bere? | Acquadirete», messo «Acqua Potabile a Firenze: si può Bere dal Rubinetto?».\n- Nello stesso articolo ho cambiato la descrizione sotto il titolo su Google: tolta «L'acqua del rubinetto a Firenze è potabile e controllata. Allora perché sa di cloro e lascia calcare? Cosa sapere davvero e quando ha senso un depuratore.», messa «Sì, l'acqua del rubinetto a Firenze è potabile: l'acquedotto la controlla fino al contatore, poi ci sono i tubi di casa. Perché sa di cloro e lascia calcare?».",
     "decisa": "2026-10-26T08:15:39.835Z"
+  },
+  {
+    "ramo": "proposta/seo-mese-2026-10-27",
+    "tipo": "SEO",
+    "titolo": "3 correzioni",
+    "creata": "2026-10-27T11:44:21.738Z",
+    "stato": "in attesa",
+    "sha": "a00eafefb9880ad3e152026dba39d740c0cc50d6",
+    "url": null,
+    "fatto": "- Nell'articolo «Ogni quanto cambiare i filtri del depuratore», nella parte\n  \"Il nostro approccio (e cosa possiamo fare per te)\", le parole «un piano di\n  manutenzione programmata» ora portano alla pagina Assistenza. Nessuna\n  parola aggiunta o tolta.\n- Nella guida «Carboni attivi o osmosi inversa?», nella parte \"Cosa fanno\n  davvero i carboni attivi\", le parole «Un depuratore a carboni attivi» ora\n  portano alla pagina del depuratore a carboni attivi. Nessuna parola\n  aggiunta o tolta.\n- Tre vecchi indirizzi del sito di una volta, che davano \"pagina non\n  trovata\", ora portano a una pagina di oggi: contatti.aspx alla pagina\n  Contatti, ufficio.htm alla pagina per uffici e ristoranti,\n  addolcitori_acqua.htm alla home. Il controllo del lunedì li sorveglia."
   }
 ]
