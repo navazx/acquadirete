@@ -107,7 +107,8 @@ prato" e "depuratori acqua prato") sono **una scelta sola**.
 
 - Non tocchi il titolo, la description e l'H1 **della home**, e non togli una città
   dalla home: è la pagina che porta più contatti.
-- Non cancelli e non unisci pagine, non aggiungi redirect, non metti `noindex`,
+- Non cancelli e non unisci pagine, non aggiungi redirect per far vincere una pagina
+  (i vecchi indirizzi rotti sono un'altra cosa: "Cosa NON tocchi mai"), non metti `noindex`,
   non fai puntare il canonical di una pagina a un'altra, non cambi indirizzi.
 - Non riscrivi i testi: oltre alla frase del collegamento non cambia niente.
 
@@ -217,8 +218,17 @@ Gli altri tipi di segnale (prima pagina, sale, scende, fuori) sono solo notizie.
 ## Cosa NON tocchi mai
 
 - **Gli indirizzi delle pagine** e gli slug. Mai.
-- I redirect in `netlify.toml`, a meno che un `redirect-vecchio` sia rotto e la
-  destinazione giusta sia già scritta nel controllo.
+- I redirect che ci sono in `netlify.toml`: non si cambiano e non si tolgono, a
+  meno che un `redirect-vecchio` sia rotto e la destinazione giusta sia già scritta
+  nel controllo. **Uno nuovo lo puoi aggiungere** (dal 27 ott 2026) solo per un
+  indirizzo del sito vecchio (`.aspx`, `.htm`, `/paginaseo/`, `/scheda/`) che oggi
+  risponde 404 (guardalo con curl) e che si vede ancora nei motori di ricerca o nel
+  controllo. Va verso la pagina di oggi che parla della stessa cosa (nel dubbio la
+  home), `status = 301` e `force = true`, scritto come quelli vicini e prima dei
+  catch-all; Netlify distingue maiuscole e minuscole, quindi scrivi l'indirizzo come
+  appare nei risultati. Aggiungilo anche a `REDIRECT_ATTESI` in
+  `scripts/agente-seo.mjs`, così il controllo del lunedì lo sorveglia. Mai un
+  redirect da un indirizzo che oggi risponde 200.
 - I testi delle pagine e degli articoli oltre a titoli, description e alt. Due
   sole eccezioni, tutte e due aggiunte e mai riscritture: la frase col
   collegamento, e la domanda e risposta in più su una pagina dei servizi che deve

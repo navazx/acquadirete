@@ -14,6 +14,12 @@ porti a Matteo le correzioni già pronte.
 Matteo vuole che la SEO sia gestita e migliorata dagli agenti, con decisioni che fanno
 vendere (16 ott 2026). Il metro non sono le visite: sono i contatti e i clienti.
 
+**Quello che puoi fare tu, lo fai tu** (Matteo, 27 ott 2026: "le cose che mi ha chiesto
+di fare deve farle lui"). A Matteo resta solo quello che richiede i suoi conti o una sua
+decisione: le schede fuori dal sito e le pagine che Google non ha nell'indice. Tutto il
+resto va nella proposta o, se oggi non si può, nella sezione per l'agente del lunedì.
+Mai "se ti va è una decisione tua" per una cosa che le regole ti lasciano fare.
+
 **Non pubblicare niente e non toccare mai il ramo `main`.** Il sito cambia solo se
 Matteo risponde APPROVA su Telegram. Il tuo lavoro finisce con un rapporto in `/tmp` e,
 se ci sono correzioni da fare, il push di un ramo `proposta/seo-mese-<data>`.
@@ -47,6 +53,8 @@ Poi, per intero:
   fare, ed è stato fatto?
 - `agenti/ordini.md` (le priorità del mese di Matteo), `agenti/bacheca.md` (le note
   degli ultimi 30 giorni), `CLAUDE.md`.
+- `agenti/seo/schede-fuori.md` — le schede fuori dal sito già chieste a Matteo, e
+  cosa ha fatto lui.
 
 ## PASSO 2 — Le otto analisi
 
@@ -55,9 +63,15 @@ la velocità, se l'API di PageSpeed non è accesa), dillo e vai avanti.
 
 1. **Indicizzazione.** Pagine non indicizzate, canonical scelto da Google diverso dal
    nostro, pagine che Google non visita da più di 60 giorni (`ultimaVisita`). Per le
-   non indicizzate e per quelle cambiate di recente e non ancora riviste, tieni il
-   `link`: Matteo apre la pagina in Search Console e preme "Richiedi indicizzazione"
-   (da fuori Google non lo permette).
+   **non indicizzate** tieni il `link`: Matteo apre la pagina in Search Console e
+   preme "Richiedi indicizzazione" (da fuori Google non lo permette).
+   Le pagine **cambiate e non ancora riviste non si chiedono a Matteo**: dal 26 ott
+   2026 la mappa del sito dà a Google il giorno vero di ogni modifica (`updatedAt`
+   negli articoli, `lib/aggiornamenti.ts` per le pagine) e Google ripassa da solo.
+   Nel rapporto le scrivi come informazione. Guarda però con curl
+   (`https://www.acquadirete.it/sitemap.xml`) che la data di quelle pagine sia
+   giusta: se una pagina cambiata ha ancora la data vecchia è un guasto, e lo scrivi
+   nel rapporto.
 2. **Velocità sul telefono.** Conta prima `velocita.persone`: come va per le persone
    vere (FAST, AVERAGE, SLOW). Se è FAST, la pagina va bene anche se il laboratorio
    (`lcp`, un telefono lento simulato) dice 3 secondi: non proporre lavori di
@@ -92,9 +106,14 @@ la velocità, se l'API di PageSpeed non è accesa), dillo e vai avanti.
    si perdono clienti. Le pagine che portano contatti sono quelle da spingere.
 8. **Fuori dal sito.** Con WebSearch cerca "Acquadirete" e "Acquadirete Montespertoli":
    le schede nelle directory (Cylex, PagineGialle, Bing, Apple, Facebook) hanno lo
-   stesso nome, indirizzo e telefono del sito (`lib/siteConfig.ts`)? Una scheda con un
-   telefono vecchio o un indirizzo diverso va sistemata a mano da Matteo: scrivi quale
-   e cosa c'è di sbagliato.
+   stesso nome, indirizzo e telefono del sito (`lib/siteConfig.ts`)? Le schede si
+   cambiano solo coi conti di Matteo: è la sola cosa di questa analisi che resta a lui.
+   Confronta con `agenti/seo/schede-fuori.md`: a Matteo chiedi **solo** le schede
+   nuove, e quelle che lui ha già sistemato o chiesto di correggere ma che dopo 30
+   giorni sono ancora sbagliate. Le altre stanno in una riga "in attesa". Poi riscrivi
+   il file aggiornato in `/tmp/seo-mese/schede-fuori.md` (stessa forma, una riga per
+   scheda: cosa c'è di sbagliato, quando l'hai chiesto, cosa ha fatto Matteo): il
+   workflow lo mette su main col rapporto.
 
 ## PASSO 3 — Le priorità
 
@@ -128,10 +147,14 @@ correzioni di questi tipi, al massimo cinque:
   massimo due per articolo;
 - **un errore tecnico che Google segnala davvero** (dati strutturati, una causa di
   lentezza comune a più pagine), se la correzione è piccola, la capisci fino in fondo e
-  il build passa.
+  il build passa;
+- **reindirizzamenti per i vecchi indirizzi** del sito vecchio che oggi danno "pagina
+  non trovata" e si vedono ancora nei motori di ricerca, alle condizioni di
+  `agenti/seo/REGOLE.md` ("Cosa NON tocchi mai", i redirect).
 
 Mai: titolo, description e H1 della home; indirizzi delle pagine; cancellare o unire
-pagine; `noindex`; redirect nuovi; riscrivere testi; prezzi o promesse nuove.
+pagine; `noindex`; cambiare o togliere i redirect che ci sono; riscrivere testi;
+prezzi o promesse nuove.
 
 Per ogni correzione: guarda con curl com'è online, trova il punto con grep, correggi,
 conta con node i caratteri di titoli e description. Per i collegamenti nati da una
@@ -153,7 +176,9 @@ Rileggila da critico (METODO, punto 4), poi `npm ci` e `npm run build`. Se il bu
 fallisce e non riesci a correggerlo, **non spingere niente** e scrivilo nel rapporto.
 Commit con la prima riga esattamente `SEO: <quante> correzioni`, poi
 `git push origin proposta/seo-mese-<data>`. Se il push fallisce non provare altre strade:
-scrivi l'errore nel rapporto.
+scrivi l'errore in `/tmp/seo-mese/proposta-non-partita.txt` (una riga) e le correzioni
+nella sezione per l'agente del lunedì. Il workflow passa il guasto al Meccanico: non è
+un lavoro per Matteo.
 
 ## PASSO 5 — Il rapporto del mese
 
@@ -184,8 +209,9 @@ I numeri di contatti per pagina vanno bene.
 (i buchi della mappa e gli articoli da rinforzare, con la ricerca e i numeri)
 
 ## Per Matteo, a mano
-(le pagine da far indicizzare, le schede da sistemare fuori dal sito: solo cose che
-può fare solo lui)
+(solo le pagine che Google NON ha nell'indice, col link, e le schede fuori dal sito
+nuove o ancora sbagliate dopo 30 giorni. Niente che puoi fare tu o un altro agente.
+Se non c'è niente: "Niente questo mese.")
 
 ## Rispetto al mese scorso
 (cosa avevi proposto, cosa è stato fatto, cosa è cambiato nei numeri)
@@ -194,9 +220,9 @@ può fare solo lui)
 ## PASSO 6 — Il messaggio per Matteo
 
 Scrivi `/tmp/seo-mese/telegram.txt`, al massimo 2.500 caratteri, da leggere sul
-telefono: com'è andato in tre righe, le priorità in una riga l'una, cosa fa lui a mano
-(con i link di Search Console per le pagine da far indicizzare, uno per riga) e se è in
-arrivo una proposta da approvare. **Non cominciare col tuo nome**: la firma la mette
+telefono: com'è andato in tre righe, le priorità in una riga l'una, "Cosa ho fatto:"
+(la proposta in arrivo da approvare, in una riga per correzione), e solo dopo cosa fa
+lui a mano (le pagine non indicizzate col link, le schede nuove), se c'è. **Non cominciare col tuo nome**: la firma la mette
 il programma che lo manda. Niente codice, niente nomi di file.
 
 ## Ultimo passo — Le note sulla bacheca

@@ -433,7 +433,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'acqua a osmosi inversa va bene per il latte del neonato? Rispondiamo con onestà, separando i fatti generali dalle valutazioni che spettano al pediatra.',
     publishedAt: '2026-06-26',
-    updatedAt: '2026-07-08',
+    updatedAt: '2026-10-19',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'carboni', 'depuratore'],
     relatedPosts: ['osmosi-inversa-fa-male', 'carboni-attivi-vs-osmosi-inversa'],

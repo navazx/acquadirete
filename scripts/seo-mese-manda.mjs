@@ -64,11 +64,25 @@ async function main() {
   }
 
   if (rapporto) {
+    // Lo stato delle schede fuori dal sito lo tiene l'agente: cosa ha chiesto a
+    // Matteo e quando, così il mese dopo non glielo richiede.
+    const schede = leggi(join(CARTELLA, 'schede-fuori.md'));
     suMain('SEO: rapporto del controllo del mese [skip netlify]', (dir) => {
       writeFileSync(join(dir, 'agenti/seo/mese.md'), `${rapporto}\n`);
-      return ['agenti/seo/mese.md'];
+      if (schede) writeFileSync(join(dir, 'agenti/seo/schede-fuori.md'), `${schede}\n`);
+      return ['agenti/seo/mese.md', ...(schede ? ['agenti/seo/schede-fuori.md'] : [])];
     }, { autore: 'agente-seo' });
     console.log('Rapporto messo su main.');
+  }
+
+  // Una proposta pronta e non partita è un guasto, non un lavoro per Matteo.
+  const nonPartita = leggi(join(CARTELLA, 'proposta-non-partita.txt'));
+  if (nonPartita) {
+    const { chiamaMeccanico } = await import('./lib/meccanico.mjs');
+    const errore = await chiamaMeccanico('Agente SEO', [{ tipo: 'fallito', nome: 'Controllo SEO del mese', workflow: 'seo-mese.yml', giro: Number(process.env.GITHUB_RUN_ID) || undefined, testo: `La proposta del mese era pronta ma non è partita: ${nonPartita}. Le correzioni sono nel rapporto (agenti/seo/mese.md), sezione "Per l'agente SEO del lunedì".` }]);
+    finale += errore
+      ? "\n\nLa proposta era pronta ma non è partita, e non sono riuscito a chiamare il Meccanico: la rifà l'agente SEO lunedì."
+      : "\n\nLa proposta era pronta ma non è partita: l'ho passato al Meccanico, e intanto la rifà l'agente SEO lunedì.";
   }
 
   for (let i = 0; i < finale.length; i += 3800) await messaggio(finale.slice(i, i + 3800));

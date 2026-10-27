@@ -28,11 +28,16 @@ permissions:
   # Per chiamare il Meccanico se l'analisi non riesce.
   actions: write
 
+# Due lavori separati, come in agente-seo.yml (dal 27 ott 2026). Al primo giro
+# vero (27 ott) dati e agente stavano nello stesso lavoro, e il push del ramo
+# della proposta è stato rifiutato (403): le correzioni sono arrivate a Matteo
+# come cose da fare a mano. L'unica differenza con l'agente del lunedì, che
+# spinge senza problemi, era il push su main fatto prima nello stesso checkout:
+# ora l'agente parte da un checkout pulito, come il lunedì.
 jobs:
-  mese:
+  dati:
     runs-on: ubuntu-latest
-    # Tempo largo: Matteo ha chiesto qualità, non velocità (agenti/METODO.md).
-    timeout-minutes: 120
+    timeout-minutes: 30
     steps:
       # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
       - name: Checkout del repository
@@ -58,6 +63,36 @@ jobs:
           git commit -m "SEO: dati del controllo del mese [skip netlify]"
           git pull --rebase origin main
           git push origin HEAD:main
+
+      # In prova i dati non vanno su main: il lavoro dopo li prende da qui.
+      - name: Passa i dati al lavoro dopo
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: seo-mese-dati
+          path: agenti/seo/mese.json
+          retention-days: 3
+
+  studio:
+    needs: dati
+    runs-on: ubuntu-latest
+    # Tempo largo: Matteo ha chiesto qualità, non velocità (agenti/METODO.md).
+    timeout-minutes: 120
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      - name: Prendi i dati del mese
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: seo-mese-dati
+          path: agenti/seo
 
       # NON passare github_token: il push del ramo proposta/seo-mese-* deve far
       # partire "Proposta - presentala a Matteo" (vedi agente-seo.yml). In prova
