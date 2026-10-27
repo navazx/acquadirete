@@ -365,10 +365,11 @@ function clienteDaRiga(r, col, numeroRiga) {
 }
 
 export async function leggiTutto(foglio) {
-  // Le posizioni per la mappa: se la scheda non si legge, l'app va lo stesso.
-  const posizioni = leggiCoordinate(foglio).catch((err) => {
+  // Le posizioni per la mappa (dei clienti e, dal 27 ott 2026, dei contatti
+  // segnate al sopralluogo): se la scheda non si legge, l'app va lo stesso.
+  const posizioni = leggiTabellaCoordinate(foglio).catch((err) => {
     console.error('Coordinate non lette:', err);
-    return new Map();
+    return { codici: new Map(), contatti: new Map() };
   });
   // Lo storico degli interventi (e come hanno pagato): idem.
   const storico = leggiStorico(foglio).catch((err) => {
@@ -403,7 +404,7 @@ export async function leggiTutto(foglio) {
   // Una posizione vale solo se l'indirizzo è ancora quello cercato; se no
   // il cliente risulta "da cercare" e il telefono la ricerca. Quella segnata
   // sul posto vale finché il paese è lo stesso (gpsNelPaese).
-  const pos = await posizioni;
+  const { codici: pos, contatti: posContatti } = await posizioni;
   for (const c of clienti) {
     const p = pos.get(c.codice.toUpperCase());
     if (!p) continue;
@@ -430,6 +431,10 @@ export async function leggiTutto(foglio) {
       // "gg/mm/aaaa" dell'ultimo cambio di stato; vuoto = mai cambiato (vale data).
       dataStato: ml.col.DATA_STATO ? v('DATA_STATO') : '',
     });
+    // Il «Sono qui» del sopralluogo (dal 27 ott 2026).
+    const l = lead[lead.length - 1];
+    const p = posContatti.get(chiaveContatto(l));
+    if (p && p.lat != null) Object.assign(l, { lat: p.lat, lng: p.lng, prec: 'gps' });
   }
 
   // I clienti persi: se la scheda non c'è o non si legge, l'app va lo stesso.
@@ -1017,12 +1022,15 @@ export function perPersona(tutto, accesso) {
     lead: t.lead.filter((l) => v.contatti.has(chiaveContatto(l))),
     persi: [],
     storico: t.storico.filter((s) => v.codici.has(s.codice)),
-    foto: (t.foto || []).filter((f) => v.codici.has(f.codice)),
+    foto: (t.foto || []).filter((f) => v.codici.has(f.codice) || v.contatti.has(f.contatto)),
     tappe: t.tappe.filter((x) => x.chi === p),
     magazzino: t.magazzino && { ...t.magazzino, movimenti: (t.magazzino.movimenti || []).filter(suoMovimento) },
     soloSuoi: true,
   };
 }
+// Le azioni dove `contatto` è un contatto ("data|nome"): la tappa, e dal 27
+// ott 2026 le foto e la posizione dei contatti.
+const AZIONI_COL_CONTATTO = new Set(['tappa', 'foto', 'togliFoto', 'rimettiFoto', 'posizioneContatto']);
 // I clienti e i contatti nominati in una richiesta (codice, codici, posizioni,
 // la tappa, il contatto di stato/nota), a qualunque profondità.
 function riferimenti(azione, dati) {
@@ -1034,7 +1042,7 @@ function riferimenti(azione, dati) {
     for (const [k, val] of Object.entries(x)) {
       if ((k === 'codice' || k === 'cliente') && /^C\d+$/i.test(testo(val))) codici.add(testo(val).toUpperCase());
       else if (k === 'codici' && Array.isArray(val)) val.forEach((c) => { if (/^C\d+$/i.test(testo(c))) codici.add(testo(c).toUpperCase()); });
-      else if (k === 'contatto' && testo(val) && azione === 'tappa') contatti.add(testo(val));
+      else if (k === 'contatto' && testo(val) && AZIONI_COL_CONTATTO.has(azione)) contatti.add(testo(val));
       else if (typeof val === 'object') visita(val, prof + 1);
     }
   };
@@ -1076,7 +1084,7 @@ const NOMI_AZIONI = {
   nota: 'Nota contatto', pagamento: 'Pagamento', assegna: 'Giro', tappa: 'Tappa', togliTappa: 'Tappa tolta', articolo: 'Articolo magazzino',
   magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
   annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
-  foto: 'Foto', togliFoto: 'Foto tolta', rimettiFoto: 'Foto rimessa',
+  foto: 'Foto', togliFoto: 'Foto tolta', rimettiFoto: 'Foto rimessa', posizioneContatto: 'Posizione contatto',
 };
 const breveValore = (v) => testo(typeof v === 'object' ? JSON.stringify(v) : v).replace(/\s+/g, ' ').slice(0, 80);
 // «26/10/2026 10:32», ora di Roma.
@@ -1964,6 +1972,16 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
       installazione: '',
       frequenza: '',
     });
+    // Le foto e la posizione del sopralluogo passano al cliente (27 ott 2026,
+    // Matteo: «una volta diventato cliente le foto devono rimanere»). Se non
+    // riesce, il cliente c'è lo stesso: le foto restano nella scheda del contatto.
+    if (cliente && cliente.codice) {
+      try {
+        cliente.passati = await passaAlCliente(foglio, chiaveContatto({ data: v('DATA'), nome: v('NOME') }), cliente.codice);
+      } catch (err) {
+        console.error('Foto e posizione del contatto non passate al cliente:', err);
+      }
+    }
   }
 
   await foglio.scrivi([{ range: `'${TAB_LEAD}'!${lettera(mappa.col.STATO)}${r}`, values: [[stato]] }], 'RAW');
@@ -2096,27 +2114,105 @@ const PRECISIONI = ['gps', 'civico', 'via', 'paese', 'nessuna'];
 export const indirizzoCercato = (indirizzo, citta) => [testo(indirizzo), testo(citta)].filter(Boolean).join(', ');
 
 // Codice → { riga, lat, lng, prec, cercato }. Se un codice compare due
-// volte (due telefoni insieme), vale l'ultima riga.
-async function leggiCoordinate(foglio) {
+// volte (due telefoni insieme), vale l'ultima riga. Dal 27 ott 2026 la
+// colonna G «Contatto» ha la posizione dei contatti (lead) segnata col «Sono
+// qui» al sopralluogo: quelle righe hanno il Codice vuoto finché il
+// contatto non diventa cliente (passaAlCliente), e stanno in `contatti`.
+async function leggiTabellaCoordinate(foglio) {
   let griglia;
   try {
-    griglia = await foglio.leggi(`'${TAB_COORDINATE}'!A1:F3000`, 'UNFORMATTED_VALUE');
+    griglia = await foglio.leggi(`'${TAB_COORDINATE}'!A1:G3000`, 'UNFORMATTED_VALUE');
   } catch (err) {
-    if (err.status === 400) return new Map(); // scheda non ancora creata
+    if (err.status === 400) return { codici: new Map(), contatti: new Map() }; // scheda non ancora creata
     throw err;
   }
-  const posizioni = new Map();
+  const codici = new Map();
+  const contatti = new Map();
   for (let i = 1; i < griglia.length; i++) {
     const r = griglia[i] || [];
     const codice = testo(r[0]).toUpperCase();
     const prec = testo(r[3]);
-    if (!/^C\d+$/.test(codice) || !PRECISIONI.includes(prec)) continue;
+    if (!PRECISIONI.includes(prec)) continue;
     const lat = r[1] === '' || r[1] == null ? NaN : Number(r[1]);
     const lng = r[2] === '' || r[2] == null ? NaN : Number(r[2]);
     const trovata = prec !== 'nessuna' && isFinite(lat) && isFinite(lng);
-    posizioni.set(codice, { riga: i + 1, lat: trovata ? lat : null, lng: trovata ? lng : null, prec: trovata ? prec : 'nessuna', cercato: testo(r[4]) });
+    const p = { riga: i + 1, codice, lat: trovata ? lat : null, lng: trovata ? lng : null, prec: trovata ? prec : 'nessuna', cercato: testo(r[4]) };
+    if (/^C\d+$/.test(codice)) codici.set(codice, p);
+    if (testo(r[6])) contatti.set(testo(r[6]), p);
   }
-  return posizioni;
+  return { codici, contatti };
+}
+const leggiCoordinate = async (foglio) => (await leggiTabellaCoordinate(foglio)).codici;
+
+// Scrive l'intestazione `nome` nella cella `lettera`1 di una scheda nata
+// prima che quella colonna servisse (se la scheda non c'è, niente: la crea
+// chi accoda, con tutte le intestazioni).
+async function intestazioneMancante(foglio, tab, lettera, nome) {
+  let v;
+  try { v = await foglio.leggi(`'${tab}'!${lettera}1`, 'FORMATTED_VALUE'); } catch { return; }
+  if (testo(((v || [])[0] || [])[0])) return;
+  await foglio.scrivi([{ range: `'${tab}'!${lettera}1`, values: [[nome]] }], 'RAW');
+}
+
+// Un contatto (lead) si riconosce da "data|nome", come nelle tappe
+// (chiaveContatto): deve esserci ancora in Lead-Contatti. Torna il nome.
+async function nomeDelContatto(foglio, chiave) {
+  const s = testo(chiave);
+  const i = s.indexOf('|');
+  if (i <= 0 || i === s.length - 1 || s.length > 200) throw problema('Contatto non valido.');
+  const { griglia, mappa } = await leggiLead(foglio);
+  const r = trovaLead(griglia, mappa, { data: s.slice(0, i), nome: s.slice(i + 1) });
+  return testo((griglia[r - 1] || [])[mappa.col.NOME - 1]);
+}
+
+// «Sono qui» dalla scheda di un contatto (27 ott 2026, Matteo: «anche
+// segnare la posizione nel sopralluogo»): il contatto non ha un indirizzo
+// nel foglio, quindi la posizione è il modo di ritrovare la casa. Una riga
+// della scheda Coordinate col Codice vuoto e il contatto in G, precisione
+// "gps". `togli` la svuota (l'annulla di una posizione nuova). Quando il
+// contatto diventa cliente la riga prende il suo codice (passaAlCliente).
+export async function salvaPosizioneContatto(foglio, dati) {
+  const contatto = testo(dati.contatto);
+  await nomeDelContatto(foglio, contatto);
+  const { contatti } = await leggiTabellaCoordinate(foglio);
+  const e = contatti.get(contatto) || null;
+  const prima = e && e.lat != null ? { lat: e.lat, lng: e.lng } : null;
+  if (dati.togli) {
+    if (e && !e.codice) await foglio.svuota(`'${TAB_COORDINATE}'!A${e.riga}:G${e.riga}`);
+    return { ok: true, posizione: null, annulla: prima ? { contatto, ...prima } : null };
+  }
+  const lat = Math.round(Number(dati.lat) * 1e6) / 1e6;
+  const lng = Math.round(Number(dati.lng) * 1e6) / 1e6;
+  // Fuori dall'Italia (con margine) è un errore del telefono.
+  if (!(lat > 35 && lat < 48 && lng > 6 && lng < 19)) throw problema('Posizione non valida: riprova all\'aperto.');
+  const riga = [e ? e.codice : '', lat, lng, 'gps', e ? e.cercato : '', testoData(oggi()), contatto];
+  if (e) {
+    await foglio.scrivi([{ range: `'${TAB_COORDINATE}'!A${e.riga}:G${e.riga}`, values: [riga] }], 'RAW');
+  } else {
+    await intestazioneMancante(foglio, TAB_COORDINATE, 'G', 'Contatto');
+    await foglio.accodaRighe(TAB_COORDINATE, [...INTESTAZIONI_COORDINATE, 'Contatto'], [riga]);
+  }
+  return { ok: true, posizione: { lat, lng, prec: 'gps' }, annulla: prima ? { contatto, ...prima } : { contatto, togli: true } };
+}
+
+// Il contatto è diventato cliente: le sue foto e la sua posizione passano
+// al cliente (le foto restano anche nella scheda del contatto). Una
+// posizione «Sono qui» che il cliente ha già non si tocca.
+async function passaAlCliente(foglio, contatto, codice) {
+  const [foto, { codici, contatti }] = await Promise.all([leggiFoto(foglio), leggiTabellaCoordinate(foglio)]);
+  const scritture = foto.filter((f) => f.contatto === contatto && !f.codice)
+    .map((f) => ({ range: `'${TAB_FOTO}'!B${f.riga}`, values: [[codice]] }));
+  const nFoto = scritture.length;
+  const p = contatti.get(contatto);
+  let posizione = false;
+  if (p && p.lat != null && !p.codice) {
+    const suo = codici.get(codice);
+    if (!suo) scritture.push({ range: `'${TAB_COORDINATE}'!A${p.riga}`, values: [[codice]] });
+    else if (suo.prec !== 'gps') scritture.push({ range: `'${TAB_COORDINATE}'!B${suo.riga}:D${suo.riga}`, values: [[p.lat, p.lng, 'gps']] });
+    posizione = !suo || suo.prec !== 'gps';
+  }
+  if (scritture.length) await foglio.scrivi(scritture, 'RAW');
+  return { foto: nFoto, posizione };
 }
 
 // Salva le posizioni trovate dal telefono (al massimo 50 per volta). Ognuna
@@ -2187,8 +2283,14 @@ export async function salvaPosizioni(foglio, { posizioni = [] }) {
 // l'immagine resta nell'archivio. L'Id lo sceglie il telefono, come per le
 // tappe: la stessa foto arrivata due volte non fa due righe. Nessuna
 // automazione del foglio legge questa scheda.
+// Dal 27 ott 2026 anche i contatti (Matteo: «quando faccio il sopralluogo
+// faccio le foto ma non è ancora detto che vendo l'impianto»): la colonna H
+// «Contatto» ("data|nome", come nelle tappe) e il Codice vuoto. Quando il
+// contatto diventa cliente dall'app il Codice si riempie (passaAlCliente) e
+// la foto si vede in tutte e due le schede. Se lo si fa a mano nel foglio
+// (l'onEdit di Apps Script), le foto restano solo nella scheda del contatto.
 export const TAB_FOTO = 'Foto';
-const INTESTAZIONI_FOTO = ['Id', 'Codice', 'Cliente', 'Descrizione', 'Fatta il', 'Da', 'Tolta il'];
+const INTESTAZIONI_FOTO = ['Id', 'Codice', 'Cliente', 'Descrizione', 'Fatta il', 'Da', 'Tolta il', 'Contatto'];
 const F = Object.fromEntries(INTESTAZIONI_FOTO.map((h, i) => [h, i]));
 const ID_FOTO = /^[\w-]{8,60}$/;
 // Quanto può pesare una foto già ridotta dal telefono (con tanto margine).
@@ -2198,7 +2300,7 @@ const MAX_MINI = 300 * 1024;
 async function leggiFoto(foglio) {
   let griglia;
   try {
-    griglia = await foglio.leggi(`'${TAB_FOTO}'!A1:G5000`, 'UNFORMATTED_VALUE');
+    griglia = await foglio.leggi(`'${TAB_FOTO}'!A1:H5000`, 'UNFORMATTED_VALUE');
   } catch (err) {
     if (err.status === 400) return []; // scheda non ancora creata
     throw err;
@@ -2211,9 +2313,15 @@ async function leggiFoto(foglio) {
     foto.push({
       riga: i + 1, id, codice: testo(r[F.Codice]).toUpperCase(), descrizione: testo(r[F.Descrizione]),
       quando: testo(r[F['Fatta il']]), chi: testo(r[F.Da]).toLowerCase(), tolta: testo(r[F['Tolta il']]),
+      contatto: testo(r[F.Contatto]),
     });
   }
   return foto;
+}
+// Il cliente e/o il contatto di una foto, per il controllo di chi la chiede.
+export async function fotoDaId(foglio, id) {
+  const f = (await leggiFoto(foglio)).find((x) => x.id === testo(id));
+  return f ? { codice: f.codice, contatto: f.contatto } : null;
 }
 const fotoPerApp = ({ riga, tolta, ...f }) => f;
 
@@ -2226,51 +2334,66 @@ function immagine(b64, max) {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 }
 
-// Aggiunge una foto a un cliente (con `grande` e `piccola`), o ne cambia la
-// descrizione (stesso Id, senza immagini). Prima l'archivio, poi il foglio:
-// una riga non punta mai a un'immagine che non c'è.
+// La foto è di questo cliente (codice) o di questo contatto?
+const fotoDi = (f, { codice = '', contatto = '' }) => (!!codice && f.codice === codice) || (!!contatto && f.contatto === contatto);
+
+// Aggiunge una foto a un cliente (`codice`) o a un contatto (`contatto`),
+// con `grande` e `piccola`, o ne cambia la descrizione (stesso Id, senza
+// immagini). Prima l'archivio, poi il foglio: una riga non punta mai a
+// un'immagine che non c'è.
 export async function salvaFoto(foglio, dati, { chi = 'app', archivio = null } = {}) {
   const id = testo(dati.id);
   if (!ID_FOTO.test(id)) throw problema('Foto non valida.');
-  const codice = testo(dati.codice).toUpperCase();
+  const contatto = testo(dati.contatto);
+  let codice = contatto ? '' : testo(dati.codice).toUpperCase();
   const descrizione = testo(dati.descrizione).replace(/\s+/g, ' ').slice(0, 200);
-  const [{ griglia, mappa }, tutte] = await Promise.all([leggiClienti(foglio), leggiFoto(foglio)]);
-  const riga = trovaCliente(griglia, mappa, codice);
+  const tutte = await leggiFoto(foglio);
+  let nome;
+  if (contatto) {
+    nome = await nomeDelContatto(foglio, contatto);
+    // Già diventato cliente (le sue altre foto hanno il codice): va anche a lui.
+    codice = (tutte.find((f) => f.contatto === contatto && f.codice) || {}).codice || '';
+  } else {
+    const { griglia, mappa } = await leggiClienti(foglio);
+    nome = testo((griglia[trovaCliente(griglia, mappa, codice) - 1] || [])[mappa.col.NOME - 1]);
+  }
   const prima = tutte.find((f) => f.id === id) || null;
-  if (prima && prima.codice !== codice) throw problema('Foto non valida.');
+  if (prima && !fotoDi(prima, contatto ? { contatto } : { codice })) throw problema('Foto non valida.');
   const conImmagini = dati.grande != null || dati.piccola != null;
   if (!prima && !conImmagini) throw problema('Questa foto non è più nel foglio.', 404);
   if (conImmagini) {
     if (!archivio) throw problema('L\'archivio delle foto non risponde. Riprova tra poco.', 503);
     const grande = immagine(dati.grande, MAX_FOTO);
     const piccola = immagine(dati.piccola, MAX_MINI);
-    await archivio.set(id, grande, { metadata: { codice } });
-    await archivio.set(`${id}-mini`, piccola, { metadata: { codice } });
+    const metadata = contatto ? { contatto } : { codice };
+    await archivio.set(id, grande, { metadata });
+    await archivio.set(`${id}-mini`, piccola, { metadata });
   }
-  const nome = testo((griglia[riga - 1] || [])[mappa.col.NOME - 1]);
   if (!prima) {
     const quando = adessoRoma();
-    await foglio.accodaRighe(TAB_FOTO, INTESTAZIONI_FOTO, [[id, codice, nome, descrizione, quando, nomePersona(chi), '']]);
-    return { ok: true, nome, foto: { id, codice, descrizione, quando, chi }, annulla: { id, codice } };
+    // La scheda nata il 26 ott ha 7 colonne: l'intestazione «Contatto» la prima volta che serve.
+    if (contatto) await intestazioneMancante(foglio, TAB_FOTO, 'H', 'Contatto');
+    await foglio.accodaRighe(TAB_FOTO, INTESTAZIONI_FOTO, [[id, codice, nome, descrizione, quando, nomePersona(chi), '', contatto]]);
+    return { ok: true, nome, foto: { id, codice, contatto, descrizione, quando, chi }, annulla: { id, codice, contatto } };
   }
   // Arrivata due volte (senza campo), o solo la descrizione cambiata.
   if (descrizione !== prima.descrizione && !conImmagini) {
     await foglio.scrivi([{ range: `'${TAB_FOTO}'!D${prima.riga}`, values: [[descrizione]] }], 'RAW');
   }
-  return { ok: true, nome, foto: fotoPerApp({ ...prima, descrizione: conImmagini ? prima.descrizione : descrizione }), annulla: { id, codice, descrizione: prima.descrizione } };
+  return { ok: true, nome, foto: fotoPerApp({ ...prima, descrizione: conImmagini ? prima.descrizione : descrizione }), annulla: { id, codice, contatto, descrizione: prima.descrizione } };
 }
 
-// «Togli la foto»: la riga resta, con quando e chi l'ha tolta. Codice e Id
-// devono combaciare (chi vede solo i suoi clienti non tocca le altre).
-async function trovaFoto(foglio, { id, codice }) {
+// «Togli la foto»: la riga resta, con quando e chi l'ha tolta. Id e cliente
+// (o contatto) devono combaciare: chi vede solo i suoi clienti non tocca le altre.
+async function trovaFoto(foglio, { id, codice, contatto }) {
   const f = (await leggiFoto(foglio)).find((x) => x.id === testo(id));
-  if (!f || f.codice !== testo(codice).toUpperCase()) throw problema('Questa foto non è più nel foglio.', 404);
+  if (!f || !fotoDi(f, { codice: testo(codice).toUpperCase(), contatto: testo(contatto) })) throw problema('Questa foto non è più nel foglio.', 404);
   return f;
 }
 export async function togliFoto(foglio, dati, { chi = 'app' } = {}) {
   const f = await trovaFoto(foglio, dati);
   if (!f.tolta) await foglio.scrivi([{ range: `'${TAB_FOTO}'!G${f.riga}`, values: [[`${adessoRoma()} (${nomePersona(chi)})`]] }], 'RAW');
-  return { ok: true, annulla: { id: f.id, codice: f.codice } };
+  return { ok: true, annulla: { id: f.id, codice: f.codice, contatto: f.contatto } };
 }
 export async function rimettiFoto(foglio, dati) {
   const f = await trovaFoto(foglio, dati);

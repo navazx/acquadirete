@@ -25,7 +25,7 @@ import {
   cancellaIntervento, annullaCancellazione, cancellaLavoro, annullaCancellaLavoro, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
   perPersona, riferimentiFuori, registra, conAccessiDiBase,
-  salvaFoto, togliFoto, rimettiFoto, leggiImmagine,
+  salvaFoto, togliFoto, rimettiFoto, leggiImmagine, fotoDaId, salvaPosizioneContatto,
 } from './_shared/gestionale.mjs';
 
 // L'archivio delle foto dei clienti (26 ott 2026): Netlify Blobs, in Europa
@@ -110,9 +110,10 @@ const AZIONI = {
   cancellaLavoro, // un lavoro fatto, dal Giro del giorno
   annullaCancellaLavoro,
   accessi: salvaAccessi, // le impostazioni (solo Matteo)
-  foto: salvaFoto, // una foto nuova del cliente, o la sua descrizione (26 ott 2026)
+  foto: salvaFoto, // una foto nuova del cliente o del contatto, o la sua descrizione (26-27 ott 2026)
   togliFoto,
   rimettiFoto,
+  posizioneContatto: salvaPosizioneContatto, // «Sono qui» dalla scheda del contatto, al sopralluogo (27 ott 2026)
 };
 
 // Le azioni che chiedono un permesso degli Accessi. Le altre le può fare
@@ -176,13 +177,20 @@ export const creaGestore = (creaFoglio, apriArchivio = archivioNetlify) => async
     if (!mio.attivo) return risposta({ ok: false, sospeso: true, errore: 'Il tuo accesso all\'app è stato sospeso. Chiedi a Matteo.' }, 403);
     const permessi = Object.fromEntries(PERMESSI.map((p) => [p.id, !!mio[p.id]]));
 
-    // Una foto: solo a chi può vedere quel cliente. Il telefono la tiene in
-    // una sua memoria (che svuota se l'accesso viene spento), il browser no.
+    // Una foto: solo a chi può vedere quel cliente o quel contatto. Il
+    // telefono la tiene in una sua memoria (che svuota se l'accesso viene
+    // spento), il browser no. Chi vede solo i suoi clienti: di chi è la foto
+    // lo dice la scheda Foto (una foto del contatto diventato cliente è di
+    // tutti e due), e basta che uno dei due sia suo.
     if (fotoChiesta) {
       const img = await leggiImmagine(apriArchivio(), fotoChiesta, url.searchParams.get('mini') === '1');
       if (!img) return risposta({ ok: false, errore: 'Foto non trovata.' }, 404);
-      if (!mio.tuttiClienti && (!img.codice || (await riferimentiFuori(foglio, 'foto', { codice: img.codice }, chi)).length)) {
-        return risposta({ ok: false, errore: 'Questo cliente non è fra i tuoi. Chiedi a Matteo.' }, 403);
+      if (!mio.tuttiClienti) {
+        const di = await fotoDaId(foglio, fotoChiesta);
+        const suo = async (rif) => !!(rif.codice || rif.contatto) && !(await riferimentiFuori(foglio, 'foto', rif, chi)).length;
+        if (!di || !((await suo({ codice: di.codice })) || (await suo({ contatto: di.contatto })))) {
+          return risposta({ ok: false, errore: 'Questo cliente non è fra i tuoi. Chiedi a Matteo.' }, 403);
+        }
       }
       return new Response(img.dati, {
         headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex', 'X-Content-Type-Options': 'nosniff' },

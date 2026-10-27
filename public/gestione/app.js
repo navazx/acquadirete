@@ -1066,7 +1066,11 @@
   function luogoTappa(t) {
     const c = t.codice && clienteIn(dati, t.codice);
     if (c) return { nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, provincia: c.provincia, lat: c.lat, lng: c.lng, telefono: c.contatto, cliente: c };
-    return { nome: t.nome, indirizzo: t.indirizzo, citta: t.citta, provincia: '', lat: t.lat, lng: t.lng, telefono: t.telefono, cliente: null };
+    // Un contatto con la posizione segnata al sopralluogo («Sono qui», dal 27
+    // ott 2026): vale quella, come per un cliente segnato sul posto.
+    const l = t.contatto && leadDaChiave(t.contatto);
+    const qui = l && l.lat != null ? { lat: l.lat, lng: l.lng, gps: true } : { lat: t.lat, lng: t.lng };
+    return { nome: t.nome, indirizzo: t.indirizzo, citta: t.citta, provincia: '', ...qui, telefono: t.telefono, cliente: null };
   }
   const puntoTappa = (t) => { const l = luogoTappa(t); return l.lat != null ? { lat: l.lat, lng: l.lng } : null; };
   // Le tappe con l'ora vanno in fila per ora; quelle senza si infilano dove
@@ -1224,7 +1228,7 @@
   function linkGiro(tappe) {
     const dove = (t) => {
       const l = luogoTappa(t);
-      return (l.cliente && sulPosto(l.cliente)) || (l.indirizzo
+      return (l.cliente && sulPosto(l.cliente)) || (l.gps ? `${(+l.lat).toFixed(6)},${(+l.lng).toFixed(6)}` : '') || (l.indirizzo
         ? [l.indirizzo, senzaCap(l.citta) ? l.citta : '', l.provincia].filter(Boolean).join(', ')
         : l.lat != null ? `${l.lat},${l.lng}` : senzaCap(l.citta));
     };
@@ -1594,7 +1598,7 @@
     if (dove) html += `<a class="btn" ${linkPortami(dove)}>${icona('mappa')} Portami lì</a>`;
     // La mappa dell'app, centrata su di lui (17 ott 2026): per vedere chi gli
     // sta vicino e metterlo nel giro. Solo se ha una posizione.
-    if (cliente && cliente.lat != null) html += `<button class="btn" type="button" id="sulla-mappa">${icona('cartina')} Sulla mappa</button>`;
+    if (cliente && cliente.codice && cliente.lat != null) html += `<button class="btn" type="button" id="sulla-mappa">${icona('cartina')} Sulla mappa</button>`;
     if (mail) html += `<a class="btn" href="mailto:${esc(mail)}">${icona('posta')} Email</a>`;
     return html;
   }
@@ -1647,7 +1651,7 @@
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
-      ${riquadroFoto(c)}
+      ${riquadroFoto(diCliente(c))}
       ${fatti.length ? `<h3 class="titoletto">Interventi fatti</h3>
       <div class="lista">${fatti.map((x) => voceIntervento(x, false)).join('')}</div>` : ''}
       ${mag() && lottiDi(c.codice).length ? `<h3 class="titoletto">Materiali usati</h3>
@@ -1676,7 +1680,7 @@
     collegaTappe({ cliente: c });
     collegaInterventi();
     collegaLotti();
-    collegaFoto(c);
+    collegaFoto(diCliente(c));
   }
 
   // «Sono qui»: dal cliente, il punto dove sta il telefono diventa la sua
@@ -1721,6 +1725,50 @@
           fai: () => segnaPosizione(c, prima).then(() => { disegna(history.state); messaggio('Annullato.'); }),
         };
         messaggio(r ? 'Posizione salvata ✓' : 'Posizione segnata ✓ Qui non c\'è campo: la mando al foglio appena torna.', { durata: annulla ? 15000 : r ? 5000 : 9000, azione: annulla });
+      });
+    });
+  }
+
+  // «Sono qui» dalla scheda di un contatto, al sopralluogo (27 ott 2026,
+  // Matteo). Il contatto non ha un indirizzo nel foglio: la posizione serve
+  // a ritrovarlo («Portami lì», i puntini del giro) e, se diventa cliente,
+  // passa a lui. Senza campo va in coda come le altre azioni.
+  function chiediSonoQuiContatto(l, btn) {
+    conPulsante(btn, 'Cerco dove sei…', async () => {
+      let qui;
+      try { qui = await doveSono({ fresca: true }); } catch (err) { messaggio(err.message, { errore: true, durata: 15000 }); return; }
+      if (qui.margine > 100) {
+        messaggio(`Il telefono sa dove sei solo con un margine di ${qui.margine} metri: troppo. Esci all'aperto, aspetta qualche secondo e riprova.`, { errore: true, durata: 12000 });
+        return;
+      }
+      apriFinestra(`
+        <h3>Segno la posizione?</h3>
+        <p><strong>${esc(l.nome)}</strong><br>Il punto dove sei adesso diventa la sua posizione (margine ${qui.margine} metri). Se diventa cliente, passa a lui.</p>
+        <button class="btn verde grande" type="button" id="si">${icona('spunta')} Sì, è qui</button>
+        <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+      $('no').onclick = chiudiFinestra;
+      $('si').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
+        const contatto = chiaveLead(l);
+        const indietro = l.lat != null ? { contatto, lat: l.lat, lng: l.lng } : { contatto, togli: true };
+        const nuova = { contatto, lat: qui.lat, lng: qui.lng };
+        try {
+          const { r, voce } = await manda('posizioneContatto', nuova, `Posizione di ${l.nome}`);
+          if (r) APPLICA.posizioneContatto(dati, nuova);
+          salvaDati();
+          chiudiFinestra();
+          disegna(history.state);
+          const annulla = async () => {
+            if (voce && leggiLista(K_CODA).some((v) => v.id === voce.id)) { annullaInCoda(voce, () => APPLICA.posizioneContatto(dati, indietro)); return; }
+            try {
+              const { r: r2, voce: v2 } = await manda('posizioneContatto', indietro, `Annulla la posizione di ${l.nome}`);
+              if (r2) APPLICA.posizioneContatto(dati, indietro);
+              salvaDati();
+              disegna(history.state);
+              messaggio('Annullato.' + (v2 ? fuoriLinea(v2) : ''));
+            } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
+          };
+          messaggio('Posizione salvata ✓' + (voce ? fuoriLinea(voce) : ''), { durata: 15000, azione: { testo: 'Annulla', fai: annulla } });
+        } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
       });
     });
   }
@@ -2019,6 +2067,13 @@
       d.foto = d.foto || [];
       if (x.foto && !d.foto.some((y) => y.id === x.id)) d.foto.push(x.foto);
     },
+    // Il «Sono qui» di un contatto (27 ott 2026); `togli` = l'annulla di una posizione nuova.
+    posizioneContatto(d, x) {
+      const l = (d.lead || []).find((y) => chiaveLead(y) === x.contatto);
+      if (!l) return;
+      if (x.togli) { delete l.lat; delete l.lng; delete l.prec; return; }
+      Object.assign(l, { lat: x.lat, lng: x.lng, prec: 'gps' });
+    },
     // nuovo, nuovoLead e annulla non cambiano lo schermo: il cliente o il
     // contatto nuovo compare quando arriva al foglio.
   };
@@ -2306,8 +2361,10 @@
       let arrivate = 0;
       for (const f of [...fotoInAttesa]) {
         if (!chiave) break;
-        const codice = codiceFoto(f);
-        if (!codice) {
+        // Di un contatto (dal 27 ott 2026) o di un cliente.
+        const codice = f.contatto ? '' : codiceFoto(f);
+        const rif = f.contatto ? { contatto: f.contatto } : { codice };
+        if (!f.contatto && !codice) {
           // Il cliente nuovo è ancora in coda (o sta per avere il codice,
           // appena salvato col campo): la foto aspetta lui.
           if (leggiLista(K_CODA).some((v) => v.id === f.nuovo) || Date.now() - (f.quando || 0) < 60000) continue;
@@ -2316,17 +2373,17 @@
           continue;
         }
         try {
-          const r = await api('foto', { id: f.id, codice, descrizione: f.descrizione || '', grande: await base64(f.grande), piccola: await base64(f.piccola) }, 90000);
+          const r = await api('foto', { id: f.id, ...rif, descrizione: f.descrizione || '', grande: await base64(f.grande), piccola: await base64(f.piccola) }, 90000);
           // Tolta dal telefono mentre partiva: si toglie anche dal foglio.
           const ora = fotoInAttesa.find((x) => x.id === f.id);
           if (!ora) {
-            manda('togliFoto', { id: f.id, codice }, `Foto tolta: ${f.nome}`).catch(() => {});
+            manda('togliFoto', { id: f.id, ...rif }, `Foto tolta: ${f.nome}`).catch(() => {});
             continue;
           }
           // E la descrizione cambiata intanto.
           if ((ora.descrizione || '') !== (f.descrizione || '')) {
             r.foto.descrizione = ora.descrizione || '';
-            manda('foto', { id: f.id, codice, descrizione: r.foto.descrizione }, `Descrizione di una foto: ${f.nome}`).catch(() => {});
+            manda('foto', { id: f.id, ...rif, descrizione: r.foto.descrizione }, `Descrizione di una foto: ${f.nome}`).catch(() => {});
           }
           // Già nel telefono: non si riscarica per vederla.
           urlFoto.set(indirizzoFoto(f.id, true), f.url);
@@ -2351,18 +2408,27 @@
     })().catch(() => 0).finally(() => { mandandoFoto = null; });
     // Arrivate: via l'orologio dalle miniature (e dal riquadro in home).
     mandandoFoto.then((n) => {
-      if (n && dati && $('finestra').hidden && !staiScrivendo() && ['cliente', 'home', 'giri'].includes((history.state || {}).s)) disegna(history.state);
+      if (n && dati && $('finestra').hidden && !staiScrivendo() && ['cliente', 'schedaLead', 'home', 'giri'].includes((history.state || {}).s)) disegna(history.state);
     });
     return mandandoFoto;
   }
   // Prima la coda (i clienti nuovi prendono il codice), poi le foto.
   const mandaTutto = () => mandaCoda().then(() => mandaFoto()).catch(() => {});
 
-  // Le foto di un cliente: quelle del foglio e, dopo, quelle ancora da mandare.
-  function fotoDi(codice) {
-    const delFoglio = ((dati && dati.foto) || []).filter((f) => f.codice === codice);
-    const ancora = fotoInAttesa.filter((f) => codiceFoto(f) === codice && !delFoglio.some((x) => x.id === f.id))
-      .map((f) => ({ id: f.id, codice, descrizione: f.descrizione || '', quando: '', chi: f.chi || '', attesa: true }));
+  // Di chi sono le foto: un cliente { codice, nome } o, dal 27 ott 2026, un
+  // contatto { contatto: "data|nome", nome } (le foto del sopralluogo).
+  // Attenzione: c.contatto di un cliente è il suo telefono, non un contatto.
+  const diCliente = (c) => ({ codice: c.codice, nome: c.nome });
+  const diContatto = (l) => ({ contatto: chiaveLead(l), nome: l.nome });
+  const rifDi = (s) => (s.contatto ? { contatto: s.contatto } : { codice: s.codice });
+
+  // Le sue foto: quelle del foglio e, dopo, quelle ancora da mandare. Una
+  // foto del contatto diventato cliente ha tutti e due e si vede in tutte e due le schede.
+  function fotoDi(s) {
+    const sua = (f) => (s.codice && f.codice === s.codice) || (s.contatto && f.contatto === s.contatto);
+    const delFoglio = ((dati && dati.foto) || []).filter(sua);
+    const ancora = fotoInAttesa.filter((f) => (s.contatto ? f.contatto === s.contatto : !f.contatto && codiceFoto(f) === s.codice) && !delFoglio.some((x) => x.id === f.id))
+      .map((f) => ({ id: f.id, ...rifDi(s), descrizione: f.descrizione || '', quando: '', chi: f.chi || '', attesa: true }));
     return [...delFoglio, ...ancora];
   }
   const urlMini = (f) => (f.attesa ? (fotoInAttesa.find((x) => x.id === f.id) || {}).url : urlFoto.get(indirizzoFoto(f.id, true)));
@@ -2418,35 +2484,37 @@
     };
   }
 
-  // Nella scheda del cliente: le miniature e «Aggiungi foto».
-  function riquadroFoto(c) {
-    const lista = fotoDi(c.codice);
+  // Nella scheda del cliente o del contatto: le miniature e «Aggiungi foto».
+  function riquadroFoto(s) {
+    const lista = fotoDi(s);
     return `<h3 class="titoletto">Foto${lista.length ? ` (${lista.length})` : ''}</h3>
-      ${lista.length ? miniature(lista) : '<p class="spiega">Lavello, sotto il lavello, impianto vecchio: così chi va a montare sa cosa serve.</p>'}
+      ${lista.length ? miniature(lista) : `<p class="spiega">${s.contatto
+        ? 'Le foto del sopralluogo (lavello, sotto il lavello, impianto vecchio): se diventa cliente, passano a lui.'
+        : 'Lavello, sotto il lavello, impianto vecchio: così chi va a montare sa cosa serve.'}</p>`}
       ${tastoFoto('file-foto')}`;
   }
-  function collegaFoto(c) {
+  function collegaFoto(s) {
     riempiMiniature();
-    schermo.querySelectorAll('[data-foto]').forEach((b) => { b.onclick = () => apriFoto(c, b.dataset.foto); });
+    schermo.querySelectorAll('[data-foto]').forEach((b) => { b.onclick = () => apriFoto(s, b.dataset.foto); });
     const file = $('file-foto');
     if (!file) return;
     file.onchange = () => {
       const scelte = [...file.files];
       file.value = '';
-      if (scelte.length) preparaFoto(scelte, (pronte) => aggiungiFoto(c, pronte));
+      if (scelte.length) preparaFoto(scelte, (pronte) => aggiungiFoto(s, pronte));
     };
   }
-  async function aggiungiFoto(c, pronte) {
-    await mettiFotoInAttesa(pronte.map((f) => ({ ...f, codice: c.codice, nuovo: '', nome: c.nome, quando: Date.now(), chi: io() })));
+  async function aggiungiFoto(s, pronte) {
+    await mettiFotoInAttesa(pronte.map((f) => ({ ...f, ...rifDi(s), nuovo: '', nome: s.nome, quando: Date.now(), chi: io() })));
     disegna(history.state);
     messaggio(pronte.length === 1 ? 'Foto salvata ✓' : `${pronte.length} foto salvate ✓`);
     mandaFoto();
   }
 
   // Una foto grande, con la sua descrizione, chi l'ha fatta, le frecce per
-  // le altre del cliente, «Cambia la descrizione» e «Togli la foto».
+  // le altre del cliente (o del contatto), «Cambia la descrizione» e «Togli la foto».
   function apriFoto(c, id) {
-    const lista = fotoDi(c.codice);
+    const lista = fotoDi(c);
     const i = lista.findIndex((f) => f.id === id);
     if (i < 0) return;
     const f = lista[i];
@@ -2495,7 +2563,7 @@
         await mettiFotoInAttesa([{ ...attesa, descrizione }]);
       } else {
         try {
-          const { r, voce } = await manda('foto', { id: f.id, codice: c.codice, descrizione }, `Descrizione di una foto: ${c.nome}`);
+          const { r, voce } = await manda('foto', { id: f.id, ...rifDi(c), descrizione }, `Descrizione di una foto: ${c.nome}`);
           if (r) APPLICA.foto(dati, { id: f.id, descrizione: r.foto.descrizione });
           salvaDati();
           if (voce) messaggio('Salvata.' + fuoriLinea(voce), { durata: 8000 });
@@ -2519,7 +2587,7 @@
     }
     const copia = { ...f };
     try {
-      const { voce } = await manda('togliFoto', { id: f.id, codice: c.codice }, `Foto tolta: ${c.nome}`);
+      const { voce } = await manda('togliFoto', { id: f.id, ...rifDi(c) }, `Foto tolta: ${c.nome}`);
       if (!voce) APPLICA.togliFoto(dati, { id: f.id });
       salvaDati();
       chiudiFinestra();
@@ -2530,7 +2598,7 @@
           return;
         }
         try {
-          const { r, voce: v2 } = await manda('rimettiFoto', { id: f.id, codice: c.codice, foto: copia }, `Foto rimessa: ${c.nome}`);
+          const { r, voce: v2 } = await manda('rimettiFoto', { id: f.id, ...rifDi(c), foto: copia }, `Foto rimessa: ${c.nome}`);
           if (r) APPLICA.rimettiFoto(dati, { id: f.id, foto: r.foto });
           salvaDati();
           disegna(history.state);
@@ -3099,13 +3167,15 @@
     // A chi si può passare: il mio giro prima, poi gli altri (di solito uno solo).
     const verso = ordineGiri().filter((q) => q !== p).slice(0, 2);
     const rimasta = (serialeGiorno(giornoDi(t)) ?? 0) < serialeOggi();
+    // Le foto del cliente, o del contatto (un sopralluogo, dal 27 ott 2026).
+    const nFoto = c ? fotoDi({ codice: c.codice }).length : t.contatto ? fotoDi({ contatto: t.contatto }).length : 0;
     const etichette = [
       etichettaLavoro(t),
       c && c.avviso === 'Urgente' ? '<span class="etichetta rosso">Urgente</span>' : '',
       c && t.lavoro === 'Manutenzione' && !c.avviso ? `<span class="etichetta ${s.classe}">${esc(s.testo)}</span>` : '',
       !c && t.contatto ? '<span class="etichetta grigio">Contatto</span>' : '',
       // Le foto del sopralluogo: si vede dal giro che ci sono (26 ott 2026).
-      c && fotoDi(c.codice).length ? `<span class="etichetta blu">${icona('fotocamera')} ${fotoDi(c.codice).length} foto</span>` : '',
+      nFoto ? `<span class="etichetta blu">${icona('fotocamera')} ${nFoto} foto</span>` : '',
       rimasta ? `<span class="etichetta arancio">${esc(quandoTappa(t, false))}</span>` : '',
       l.lat == null ? '<span class="etichetta grigio">Non è sulla mappa</span>' : '',
     ].join('');
@@ -4325,8 +4395,11 @@
       .join('\n');
     schermo.innerHTML = `
       <div class="testa"><h2>${esc(l.nome || 'Senza nome')}</h2><p>Arrivato il ${esc(String(l.data).split(',')[0])}${l.provenienza ? ' da ' + esc(l.provenienza) : ''}</p></div>
-      <div class="azioni">${pulsantiContatto(l.contatto, '')}</div>
+      <div class="azioni">${pulsantiContatto(l.contatto, '', l.lat != null ? { prec: 'gps', lat: l.lat, lng: l.lng } : null)}</div>
       ${giranti().length ? riquadroTappe(tappeDi((t) => t.contatto === chiaveLead(l))) : ''}
+      <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
+      <p class="nota-posizione">${l.lat != null ? 'Posizione segnata sul posto ✓ Se diventa cliente, passa a lui.' : 'Al sopralluogo tocca «Sono qui»: così lo ritrovi, e se diventa cliente la posizione passa a lui.'}</p>
+      ${riquadroFoto(diContatto(l))}
       <h3 class="titoletto">Com'è andata?</h3>
       <div class="stati">${(dati.stati || Object.keys(ETICHETTE_STATO)).map((s) => `
         <button class="stato" data-stato="${esc(s)}" aria-pressed="${attuale === s}">
@@ -4345,6 +4418,8 @@
       </dl>`;
 
     collegaTappe({ lead: l });
+    collegaFoto(diContatto(l));
+    $('sono-qui').onclick = (e) => chiediSonoQuiContatto(l, e.currentTarget);
     schermo.querySelectorAll('[data-stato]').forEach((b) => {
       b.onclick = () => {
         const nuovo = b.dataset.stato;
@@ -4352,7 +4427,8 @@
         if (nuovo === 'Cliente') {
           const f = apriFinestra(`
             <h3>È diventato cliente?</h3>
-            <p>Aggiungo <strong>${esc(l.nome)}</strong> all'elenco dei clienti, poi ti apro la sua scheda per scrivere indirizzo e impianto.</p>
+            <p>Aggiungo <strong>${esc(l.nome)}</strong> all'elenco dei clienti, poi ti apro la sua scheda per scrivere indirizzo e impianto.${fotoDi(diContatto(l)).length || l.lat != null
+              ? ` ${fotoDi(diContatto(l)).length && l.lat != null ? 'Le foto e la posizione' : fotoDi(diContatto(l)).length ? 'Le foto' : 'La posizione'} del sopralluogo passano a lui.` : ''}</p>
             <button class="btn verde grande" type="button" id="si">${icona('spunta')} Sì, aggiungilo</button>
             <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
           $('no').onclick = chiudiFinestra;

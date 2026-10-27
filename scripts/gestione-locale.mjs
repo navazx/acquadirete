@@ -59,7 +59,7 @@ async function creaFoglioFinto() {
   };
   // Le posizioni già trovate, così la mappa non le ricerca tutte a ogni avvio.
   try {
-    const coordinate = await vero.leggi(`'${TAB_COORDINATE}'!A1:F3000`, 'UNFORMATTED_VALUE');
+    const coordinate = await vero.leggi(`'${TAB_COORDINATE}'!A1:G3000`, 'UNFORMATTED_VALUE');
     if (coordinate.length) schede[TAB_COORDINATE] = coordinate;
   } catch { /* scheda non ancora creata */ }
   // Lo storico degli interventi, per la pagina «Interventi fatti», e i giri.
@@ -73,7 +73,7 @@ async function creaFoglioFinto() {
   } catch { /* scheda non ancora creata */ }
   // Il magazzino (dal 20 ott 2026) e le foto (dal 26 ott, solo le righe:
   // le immagini stanno su Netlify), se nel foglio ci sono già.
-  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000'], [TAB_FOTO, 'A1:G5000']]) {
+  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000'], [TAB_FOTO, 'A1:H5000']]) {
     try {
       const g = await vero.leggi(`'${tab}'!${celle}`, 'FORMULA');
       if (g.length) schede[tab] = g;
