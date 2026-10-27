@@ -13,7 +13,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'Carboni attivi o osmosi inversa? Le differenze reali, spiegate senza tecnicismi, per capire quale soluzione serve davvero alla tua acqua.',
     publishedAt: '2026-06-21',
-    updatedAt: '2026-07-28',
+    updatedAt: '2026-10-27',
     readingMinutes: 6,
     relatedServices: ['carboni', 'osmosi', 'depuratore'],
     relatedPosts: ['acqua-rubinetto-firenze-si-puo-bere', 'quanto-costa-depuratore-osmosi-inversa'],
@@ -27,7 +27,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Cosa fanno davvero i carboni attivi',
         paragraphs: [
-          'Un depuratore a carboni attivi fa passare l\'acqua del rubinetto attraverso un filtro che trattiene cloro, sedimenti, odori e molte sostanze che ne rovinano gusto e qualità. È lo stesso principio che usano le caraffe filtranti, ma con una capacità e una precisione molto superiori.',
+          '[Un depuratore a carboni attivi](/depuratore-carboni-attivi-firenze/) fa passare l\'acqua del rubinetto attraverso un filtro che trattiene cloro, sedimenti, odori e molte sostanze che ne rovinano gusto e qualità. È lo stesso principio che usano le caraffe filtranti, ma con una capacità e una precisione molto superiori.',
           'Il punto chiave: i carboni attivi non toccano i sali minerali naturali dell\'acqua. Bevi un\'acqua più buona e più sicura, ma con la stessa "composizione" di base del tuo rubinetto — solo senza cloro e senza ciò che ne peggiora il sapore.',
           'Vantaggi pratici: impianto semplice, nessuno scarto d\'acqua, nessuna corrente elettrica necessaria, costi più contenuti sia all\'acquisto che nel tempo.',
         ],
@@ -495,7 +495,7 @@ export const BLOG_POSTS: BlogPost[] = [
     "metaDescription": "Quando cambiare i filtri del tuo depuratore? Indicazioni generali, i segnali da non ignorare e come funziona una manutenzione fatta bene. Guida onesta.",
     "excerpt": "Filtri a carboni, membrane osmotiche e prefiltri: ti spieghiamo ogni quanto vanno cambiati, i segnali da non sottovalutare e cosa comprende una manutenzione seria.",
     "publishedAt": "2026-07-06",
-    "updatedAt": "2026-07-15",
+    "updatedAt": "2026-10-27",
     "readingMinutes": 5,
     "relatedServices": [
       "depuratore",
@@ -542,7 +542,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         "heading": "Il nostro approccio (e cosa possiamo fare per te)",
         "paragraphs": [
-          "Con Acquadirete puoi avere un piano di manutenzione programmata, così non devi ricordarti tu le scadenze: ti contattiamo noi al momento giusto. Se invece hai comprato un impianto da qualcun altro che è \"sparito\", possiamo comunque valutare se prenderlo in carico, ovviamente dopo un controllo.",
+          "Con Acquadirete puoi avere [un piano di manutenzione programmata](/assistenza-depuratore-firenze/), così non devi ricordarti tu le scadenze: ti contattiamo noi al momento giusto. Se invece hai comprato un impianto da qualcun altro che è \"sparito\", possiamo comunque valutare se prenderlo in carico, ovviamente dopo un controllo.",
           "Se non sei sicuro di ogni quanto cambiare i filtri del tuo depuratore, o sospetti che siano da un pezzo che nessuno li tocca, fissa un sopralluogo gratuito e senza impegno a Firenze, Prato o Pistoia. Diamo un'occhiata all'impianto, ti diciamo onestamente cosa serve e decidi con calma tu. Nessuna pressione."
         ]
       }

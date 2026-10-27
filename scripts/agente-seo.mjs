@@ -60,6 +60,10 @@ const REDIRECT_ATTESI = [
   ['/default.aspx', '/'],
   ['/scheda/23.modelli-a-colonna-da-terra-per-ufficio', '/depuratore-acqua-uffici-firenze/'],
   ['/Foto/Pagine/26/Marmaris/', '/'],
+  // Aggiunti il 27 ott 2026 (controllo SEO del mese): prima davano 404.
+  ['/contatti.aspx', '/contatti/'],
+  ['/ufficio.htm', '/depuratore-acqua-uffici-firenze/'],
+  ['/addolcitori_acqua.htm', '/'],
 ];
 
 const prova = process.argv.includes('--prova');
