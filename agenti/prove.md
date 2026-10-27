@@ -75,3 +75,10 @@ il repository è pubblico.
 - Come si misura: in Search Console dal 23 novembre, clic e posizione dell'articolo per quelle ricerche nelle quattro settimane prima, contro quelle dal 26 settembre al 23 ottobre. I numeri sono piccoli: un clic o due di differenza può essere un caso.
 - Si controlla dal: 2026-11-23
 - Esito: da vedere
+
+## 2026-10-27 · SEO · «3 correzioni»
+- Cosa è cambiato: approvata da Matteo su Telegram (proposta/seo-mese-2026-10-27)
+- Cosa ci si aspetta: più visite arrivate da un'altra pagina del sito su Assistenza e su Carboni attivi (dal 16 al 27 ottobre sono state 5 e 10), e i tre vecchi indirizzi che portano a una pagina vera invece dell'errore. Sui contatti è troppo presto: con questi numeri una differenza si vede solo in mesi.
+- Come si misura: col contatore del sito, quattro settimane dopo l'approvazione: visite di Assistenza e Carboni attivi che non sono ingressi, e moduli o WhatsApp partiti da quelle due pagine. I tre indirizzi li guarda il controllo del lunedì ogni settimana.
+- Si controlla dal: 2026-11-24
+- Esito: da vedere
