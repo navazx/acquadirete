@@ -48,6 +48,27 @@
   status = 301
   force = true
 
+# --- Altre pagine del sito vecchio che rispondevano 404 e si vedevano ancora nei
+#     motori di ricerca (controllo SEO del mese, 27 ott 2026) ---
+[[redirects]]
+  from = "/contatti.aspx"
+  to = "/contatti/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/ufficio.htm"
+  to = "/depuratore-acqua-uffici-firenze/"
+  status = 301
+  force = true
+
+# Gli addolcitori non hanno una pagina sul sito di oggi: va alla home.
+[[redirects]]
+  from = "/addolcitori_acqua.htm"
+  to = "/"
+  status = 301
+  force = true
+
 # --- /paginaseo/* → pagina servizio/città più pertinente ---
 [[redirects]]
   from = "/paginaseo/3.vendita-depuratori-acqua-prato*"
