@@ -1,0 +1,4969 @@
+{
+ "letto": "2026-10-27T07:33:28.394Z",
+ "come_si_legge": "Una voce per ogni pagina della sitemap. indicizzazione = ispezione di Search Console (esito PASS = indicizzata, link = apre la pagina in Search Console). velocita = PageSpeed sul telefono: punteggio, lcp (secondi), cls e tbt (millisecondi) sono del laboratorio, un telefono lento simulato e più severo del vero; persone = come va per le persone vere (FAST, AVERAGE, SLOW), della pagina o di tutto il sito (campo \"di\"). Conta prima persone. collegamenti.nelTesto = le pagine che portano qui dal testo (non dal menu), con le parole del collegamento. google = 90 giorni di Search Console. contatti90 = contatti nati da quella pagina negli ultimi 90 giorni (Gestionale). visite = contatore del sito, partito il 16 ott 2026.",
+ "velocita": "misurata",
+ "riassunto": {
+  "pagine": 28,
+  "indicizzate": 28,
+  "nonIndicizzate": [],
+  "canonicalScelteDaGoogleDiverse": [],
+  "velocitaMedia": 94,
+  "lente": [],
+  "senzaCollegamentiNelTesto": [
+   "/contatti/",
+   "/chi-siamo/"
+  ]
+ },
+ "meseScorso": null,
+ "collegamentiDelMenu": [
+  "/",
+  "/acqua-frizzante-firenze/",
+  "/assistenza-depuratore-firenze/",
+  "/blog/",
+  "/chi-siamo/",
+  "/contatti/",
+  "/cookie-policy/",
+  "/depuratore-acqua-firenze/",
+  "/depuratore-acqua-pistoia/",
+  "/depuratore-acqua-prato/",
+  "/depuratore-acqua-uffici-firenze/",
+  "/depuratore-carboni-attivi-firenze/",
+  "/note-legali/",
+  "/osmosi-inversa-firenze/",
+  "/prezzi-depuratori/",
+  "/privacy-policy/",
+  "/recensioni/"
+ ],
+ "pagine": [
+  {
+   "pagina": "/",
+   "risponde": 200,
+   "titolo": "Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete",
+   "h1": "Depuratori acqua a Firenze e Prato: acqua buona dal rubinetto, ogni giorno.",
+   "parole": 1131,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-25",
+    "canonicalGoogle": "/",
+    "canonicalNostro": "/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/+-/,,+BHD+,-820,,/-+96-+,580-+,-34/Rich-Tc/09/480-,+,G1M+,-31,-+54,+/-+157-nhuc,+/-+897,,+-,ONB+-/,,-3665470.htm",
+     "/scheda/23.Modelli-a-colonna-da-terra-per-ufficio.aspx",
+     "/url/4010089E09",
+     "/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=dJKcxOe09VRAuFx7EhfZQw&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 93,
+    "lcp": 2.9,
+    "cls": 0,
+    "tbt": 0,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 0,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/depuratore-acqua-firenze/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-prato/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-pistoia/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/osmosi-inversa-firenze/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-uffici-firenze/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/assistenza-depuratore-firenze/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/depuratore-carboni-attivi-firenze/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/acqua-frizzante-firenze/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Home"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "Home"
+      ]
+     }
+    ],
+    "escono": [
+     "/depuratore-acqua-firenze/",
+     "/depuratore-acqua-prato/",
+     "/depuratore-acqua-pistoia/",
+     "/prezzi-depuratori/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-acqua-uffici-firenze/",
+     "/assistenza-depuratore-firenze/"
+    ]
+   },
+   "google": {
+    "viste": 1261,
+    "clic": 108,
+    "posizione": 8.7
+   },
+   "contatti90": {
+    "contatti": 9,
+    "daAnnuncio": 1,
+    "clienti": 5
+   },
+   "visite": {
+    "viste": 73,
+    "ingressi": 67,
+    "daGoogle": 29,
+    "moduliIniziati": 2,
+    "moduliInviati": 2,
+    "chiama": 0,
+    "whatsapp": 1
+   }
+  },
+  {
+   "pagina": "/depuratore-acqua-firenze/",
+   "risponde": 200,
+   "titolo": "Depuratore Acqua Firenze | 130+ Recensioni, Media 4,9",
+   "h1": "Depuratore acqua a Firenze, a casa tua",
+   "parole": 1069,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-25",
+    "canonicalGoogle": "/depuratore-acqua-firenze/",
+    "canonicalNostro": "/depuratore-acqua-firenze/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/privacy-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=c8Q43dTXnJmF1Fb07DQOfQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 91,
+    "lcp": 3.2,
+    "cls": 0,
+    "tbt": 46,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "Depuratore acqua a Firenze"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-prato/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-pistoia/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/osmosi-inversa-firenze/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/assistenza-depuratore-firenze/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/depuratore-carboni-attivi-firenze/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/acqua-frizzante-firenze/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Firenze e provincia"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "Depuratore Acqua Firenze"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/depuratore-acqua-prato/",
+     "/depuratore-acqua-pistoia/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/noleggio-vs-acquisto-depuratore/"
+    ]
+   },
+   "google": {
+    "viste": 495,
+    "clic": 8,
+    "posizione": 6.7
+   },
+   "contatti90": {
+    "contatti": 1,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 6,
+    "ingressi": 4,
+    "daGoogle": 2,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/depuratore-acqua-prato/",
+   "risponde": 200,
+   "titolo": "Depuratore Acqua Prato | 130+ Recensioni, Media 4,9",
+   "h1": "Depuratore acqua a Prato: acqua buona dal rubinetto, senza pensieri",
+   "parole": 1106,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-17",
+    "canonicalGoogle": "/depuratore-acqua-prato/",
+    "canonicalNostro": "/depuratore-acqua-prato/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/recensioni/",
+     "/cookie-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Ece1KppPCnXRptAXSugKhg&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 86,
+    "lcp": 3.8,
+    "cls": 0,
+    "tbt": 51,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "Depuratore acqua a Prato"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-firenze/",
+      "parole": [
+       "Depuratore Acqua Prato"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-pistoia/",
+      "parole": [
+       "Depuratore Acqua Prato"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Prato e provincia"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Depuratore Acqua Prato"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/depuratore-acqua-pistoia/",
+     "/depuratore-acqua-firenze/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/noleggio-vs-acquisto-depuratore/"
+    ]
+   },
+   "google": {
+    "viste": 322,
+    "clic": 3,
+    "posizione": 8.8
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 7,
+    "ingressi": 5,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/depuratore-acqua-pistoia/",
+   "risponde": 200,
+   "titolo": "Depuratore Acqua a Pistoia | Acquadirete",
+   "h1": "Depuratore acqua a Pistoia: acqua buona dal rubinetto, senza pensieri",
+   "parole": 1103,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-17",
+    "canonicalGoogle": "/depuratore-acqua-pistoia/",
+    "canonicalNostro": "/depuratore-acqua-pistoia/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/blog/quanto-costa-depuratore-osmosi-inversa/",
+     "/blog/installatore-depuratore-scomparso-cosa-fare/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Y3en60YfjkprjZPNh5IFcQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 90,
+    "lcp": 3.6,
+    "cls": 0,
+    "tbt": 19,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "a Pistoia"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-firenze/",
+      "parole": [
+       "Depuratore Acqua Pistoia"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-prato/",
+      "parole": [
+       "Depuratore Acqua Pistoia"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Pistoia e provincia"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/depuratore-acqua-firenze/",
+     "/depuratore-acqua-prato/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/noleggio-vs-acquisto-depuratore/"
+    ]
+   },
+   "google": {
+    "viste": 265,
+    "clic": 3,
+    "posizione": 7.8
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": null
+  },
+  {
+   "pagina": "/osmosi-inversa-firenze/",
+   "risponde": 200,
+   "titolo": "Osmosi Inversa Firenze | Installazione e 10 Anni di Garanzia",
+   "h1": "Osmosi inversa a Firenze: come funziona e perché conviene",
+   "parole": 1092,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-17",
+    "canonicalGoogle": "/osmosi-inversa-firenze/",
+    "canonicalNostro": "/osmosi-inversa-firenze/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/privacy-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Zxr04a06qFroovpa6v1paQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 90,
+    "lcp": 3.6,
+    "cls": 0,
+    "tbt": 15,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "Osmosi Spiegata"
+      ]
+     },
+     {
+      "da": "/depuratore-carboni-attivi-firenze/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Osmosi inversa"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Osmosi Inversa"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/blog/osmosi-inversa-fa-male/"
+    ]
+   },
+   "google": {
+    "viste": 380,
+    "clic": 5,
+    "posizione": 9.1
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 41,
+    "ingressi": 33,
+    "daGoogle": 2,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/depuratore-acqua-uffici-firenze/",
+   "risponde": 200,
+   "titolo": "Depuratori Acqua per Uffici e Bar a Firenze | Senza Boccioni",
+   "h1": "Erogatori d'acqua per uffici e ristoranti a Firenze, Prato e Pistoia",
+   "parole": 1090,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-18",
+    "canonicalGoogle": "/depuratore-acqua-uffici-firenze/",
+    "canonicalNostro": "/depuratore-acqua-uffici-firenze/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/depuratore-acqua-uffici-firenze",
+     "/recensioni/",
+     "/cookie-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=TNKkU1BEBnNP2Ycb3FZG0g&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 94,
+    "lcp": 3.2,
+    "cls": 0,
+    "tbt": 62,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "Soluzioni Business"
+      ]
+     },
+     {
+      "da": "/acqua-frizzante-firenze/",
+      "parole": [
+       "Uffici e Ristoranti"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Uffici, bar e ristoranti"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Uffici e Ristoranti"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "Uffici e Ristoranti"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/acqua-frizzante-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/"
+    ]
+   },
+   "google": {
+    "viste": 237,
+    "clic": 0,
+    "posizione": 9
+   },
+   "contatti90": {
+    "contatti": 1,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 5,
+    "ingressi": 4,
+    "daGoogle": 1,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/assistenza-depuratore-firenze/",
+   "risponde": 200,
+   "titolo": "Assistenza e Manutenzione Depuratori a Firenze | Acquadirete",
+   "h1": "Manutenzione e assistenza depuratori a Firenze, Prato e Pistoia",
+   "parole": 1064,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-27",
+    "canonicalGoogle": "/assistenza-depuratore-firenze/",
+    "canonicalNostro": "/assistenza-depuratore-firenze/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/cookie-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=0MBV5ndXEX17vKu3ZGV19Q&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 96,
+    "lcp": 2.9,
+    "cls": 0,
+    "tbt": 5,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "Servizio Assistenza"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-uffici-firenze/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Manutenzione e assistenza"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Assistenza"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "Assistenza"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/depuratore-acqua-firenze/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/blog/installatore-depuratore-scomparso-cosa-fare/",
+     "/blog/depuratore-acqua-gratis-contratti/"
+    ]
+   },
+   "google": {
+    "viste": 441,
+    "clic": 12,
+    "posizione": 11.8
+   },
+   "contatti90": {
+    "contatti": 2,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 17,
+    "ingressi": 12,
+    "daGoogle": 4,
+    "moduliIniziati": 1,
+    "moduliInviati": 1,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/depuratore-carboni-attivi-firenze/",
+   "risponde": 200,
+   "titolo": "Depuratore a Carboni Attivi Firenze | Senza Scarto d'Acqua",
+   "h1": "Depuratori a carboni attivi a Firenze, Prato e Pistoia",
+   "parole": 1165,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-27",
+    "canonicalGoogle": "/depuratore-carboni-attivi-firenze/",
+    "canonicalNostro": "/depuratore-carboni-attivi-firenze/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/privacy-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=2h4Cgun3agkqpdjF8HZ1jQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 94,
+    "lcp": 3.1,
+    "cls": 0,
+    "tbt": 11,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "Scopri Dettagli"
+      ]
+     },
+     {
+      "da": "/osmosi-inversa-firenze/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     },
+     {
+      "da": "/assistenza-depuratore-firenze/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Carboni attivi"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Carboni Attivi"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/blog/osmosi-inversa-fa-male/"
+    ]
+   },
+   "google": {
+    "viste": 167,
+    "clic": 3,
+    "posizione": 12.1
+   },
+   "contatti90": {
+    "contatti": 1,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 15,
+    "ingressi": 5,
+    "daGoogle": 2,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 1
+   }
+  },
+  {
+   "pagina": "/acqua-frizzante-firenze/",
+   "risponde": 200,
+   "titolo": "Acqua Frizzante e Refrigerata a Firenze | Acquadirete",
+   "h1": "Acqua frizzante e refrigerata a Firenze, Prato e Pistoia",
+   "parole": 1116,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-07",
+    "canonicalGoogle": "/acqua-frizzante-firenze/",
+    "canonicalNostro": "/acqua-frizzante-firenze/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/depuratore-acqua-uffici-firenze/",
+     "/note-legali/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=lpLcCf0ylCMtvVtcrszj7Q&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 94,
+    "lcp": 3.1,
+    "cls": 0,
+    "tbt": 13,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/depuratore-acqua-uffici-firenze/",
+      "parole": [
+       "Acqua Frizzante"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Acqua fredda e frizzante"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Acqua Frizzante"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "Acqua Frizzante"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/recensioni/",
+     "/depuratore-acqua-uffici-firenze/",
+     "/depuratore-acqua-firenze/"
+    ]
+   },
+   "google": {
+    "viste": 246,
+    "clic": 8,
+    "posizione": 7.6
+   },
+   "contatti90": {
+    "contatti": 2,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 9,
+    "ingressi": 8,
+    "daGoogle": 2,
+    "moduliIniziati": 1,
+    "moduliInviati": 1,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/recensioni/",
+   "risponde": 200,
+   "titolo": "Recensioni Acquadirete | 130+ su Google, media 4,9",
+   "h1": "Oltre 130 recensioni su Google, media 4,9",
+   "parole": 527,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Review",
+     "Rating"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-20",
+    "canonicalGoogle": "/recensioni/",
+    "canonicalNostro": "/recensioni/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/depuratore-acqua-firenze/",
+     "/cookie-policy/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=WUAxY4jKt2KaLePzl-UQog&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 95,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 29,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/depuratore-acqua-firenze/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-prato/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-pistoia/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/osmosi-inversa-firenze/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-uffici-firenze/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/assistenza-depuratore-firenze/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/depuratore-carboni-attivi-firenze/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/acqua-frizzante-firenze/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "Vedi tutte le recensioni su Google"
+      ]
+     }
+    ],
+    "escono": []
+   },
+   "google": {
+    "viste": 105,
+    "clic": 1,
+    "posizione": 5.2
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 2,
+    "ingressi": 2,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/contatti/",
+   "risponde": 200,
+   "titolo": "Contatti | Depuratori Firenze, Prato e Pistoia | Acquadirete",
+   "h1": "Contatta Acquadirete",
+   "parole": 216,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-25",
+    "canonicalGoogle": "/contatti/",
+    "canonicalNostro": "/contatti/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/depuratore-acqua-prato/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=cu0R-woGOKzOnQyiF8MtnQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 98,
+    "lcp": 2.4,
+    "cls": 0,
+    "tbt": 3,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [],
+    "escono": []
+   },
+   "google": {
+    "viste": 288,
+    "clic": 2,
+    "posizione": 3.6
+   },
+   "contatti90": {
+    "contatti": 2,
+    "daAnnuncio": 0,
+    "clienti": 1
+   },
+   "visite": {
+    "viste": 7,
+    "ingressi": 5,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 5,
+    "whatsapp": 1
+   }
+  },
+  {
+   "pagina": "/prezzi-depuratori/",
+   "risponde": 200,
+   "titolo": "Prezzi Depuratori Acqua: da 400 € Installato | Acquadirete",
+   "h1": "Quanto costa un depuratore? Te lo diciamo subito",
+   "parole": 686,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-12",
+    "canonicalGoogle": "/prezzi-depuratori/",
+    "canonicalNostro": "/prezzi-depuratori/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=EFxGQipUhu-pX7hdwVXU4Q&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 95,
+    "lcp": 2.4,
+    "cls": 0,
+    "tbt": 50,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/",
+      "parole": [
+       "prezzi"
+      ]
+     },
+     {
+      "da": "/chi-siamo/",
+      "parole": [
+       "Prezzi"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "un acquisto diretto dello stesso impianto"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "il prezzo dell'impianto"
+      ]
+     }
+    ],
+    "escono": [
+     "/blog/domande-prima-contratto-depuratore/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/"
+    ]
+   },
+   "google": {
+    "viste": 113,
+    "clic": 0,
+    "posizione": 10.2
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 14,
+    "ingressi": 6,
+    "daGoogle": 2,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/chi-siamo/",
+   "risponde": 200,
+   "titolo": "Chi Siamo: Stefano e Matteo, Depuratori | Acquadirete",
+   "h1": "Acquadirete siamo noi due: Stefano e Matteo",
+   "parole": 471,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "AboutPage"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-14",
+    "canonicalGoogle": "/chi-siamo/",
+    "canonicalNostro": "/chi-siamo/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=n1AhAQow3-pHlTEIVjDIQA&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 95,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 58,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [],
+    "escono": [
+     "/depuratore-acqua-firenze/",
+     "/depuratore-acqua-prato/",
+     "/depuratore-acqua-pistoia/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/acqua-frizzante-firenze/",
+     "/depuratore-acqua-uffici-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/prezzi-depuratori/"
+    ]
+   },
+   "google": {
+    "viste": 37,
+    "clic": 1,
+    "posizione": 1.9
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 2,
+    "ingressi": 1,
+    "daGoogle": 1,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/",
+   "risponde": 200,
+   "titolo": "Blog | Guide su Depuratori e Trattamento Acqua | Acquadirete",
+   "h1": "Guide sul trattamento dell'acqua",
+   "parole": 566,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-12",
+    "canonicalGoogle": "/blog/",
+    "canonicalNostro": "/blog/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/blog/installatore-depuratore-scomparso-cosa-fare/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=S07HCAWhSXAp-OIQs76W0A&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.5,
+    "cls": 0,
+    "tbt": 45,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 1,
+    "dalMenu": true,
+    "nelTesto": [
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Blog"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "Blog"
+      ]
+     }
+    ],
+    "escono": [
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/",
+     "/blog/installatore-depuratore-scomparso-cosa-fare/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/blog/osmosi-inversa-fa-male/",
+     "/blog/osmosi-inversa-neonati/",
+     "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+     "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+     "/blog/acqua-frizzante-bar-ristoranti/",
+     "/blog/depuratore-casa-in-affitto/",
+     "/blog/erogatore-frizzante-ufficio-costi/",
+     "/blog/domande-prima-contratto-depuratore/",
+     "/blog/truffa-bonus-regione-depuratore/"
+    ]
+   },
+   "google": {
+    "viste": 112,
+    "clic": 0,
+    "posizione": 3.3
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 1,
+    "ingressi": 1,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/carboni-attivi-vs-osmosi-inversa/",
+   "risponde": 200,
+   "titolo": "Carboni Attivi o Osmosi Inversa? | Acquadirete",
+   "h1": "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto",
+   "parole": 1375,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-26",
+    "canonicalGoogle": "/blog/carboni-attivi-vs-osmosi-inversa/",
+    "canonicalNostro": "/blog/carboni-attivi-vs-osmosi-inversa/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/sitemap.xml"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=IyjSY19EGWiCihUkmyticA&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 91,
+    "lcp": 3,
+    "cls": 0,
+    "tbt": 94,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/osmosi-inversa-firenze/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     },
+     {
+      "da": "/depuratore-carboni-attivi-firenze/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto Car"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "\"Carboni attivi o osmosi inversa?\"",
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "Carboni attivi o osmosi inversa? La guida per scegliere il depuratore giusto"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 363,
+    "clic": 5,
+    "posizione": 5.7
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 5,
+    "ingressi": 5,
+    "daGoogle": 3,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+   "risponde": 200,
+   "titolo": "Depuratore Gratis: Come Funzionano i Contratti | Acquadirete",
+   "h1": "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti",
+   "parole": 1155,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-20",
+    "canonicalGoogle": "/blog/depuratore-acqua-gratis-contratti/",
+    "canonicalNostro": "/blog/depuratore-acqua-gratis-contratti/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/blog/installatore-depuratore-scomparso-cosa-fare/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=ZIUVjb9Hne8Ovsad6z8bJw&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 96,
+    "lcp": 2.7,
+    "cls": 0,
+    "tbt": 61,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/depuratore-acqua-firenze/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-prato/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-pistoia/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/assistenza-depuratore-firenze/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/prezzi-depuratori/",
+      "parole": [
+       "come funzionano i contratti «gratis»"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti Telefonate e"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "guida sui contratti \"depuratore gratis\"",
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "guida sui contratti \"depuratore gratis\"",
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-casa-in-affitto/",
+      "parole": [
+       "guida sui contratti \"depuratore gratis\"",
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "articolo sul depuratore \"gratis\"",
+       "articolo sui contratti del depuratore \"gratis\"",
+       "Depuratore acqua \"gratis\"? Come funzionano davvero questi contratti"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/prezzi-depuratori/",
+     "/blog/truffa-bonus-regione-depuratore/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/",
+     "/blog/installatore-depuratore-scomparso-cosa-fare/",
+     "/blog/domande-prima-contratto-depuratore/",
+     "/depuratore-acqua-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 3564,
+    "clic": 25,
+    "posizione": 8.6
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 6,
+    "ingressi": 6,
+    "daGoogle": 2,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+   "risponde": 200,
+   "titolo": "Quanto Costa un Depuratore a Osmosi Inversa | Acquadirete",
+   "h1": "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi",
+   "parole": 1068,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-09-11",
+    "canonicalGoogle": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+    "canonicalNostro": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/blog/noleggio-vs-acquisto-depuratore/"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=nDp8AIp2_ahJLC-pEnCfoQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 0,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/depuratore-acqua-uffici-firenze/",
+      "parole": [
+       "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi"
+      ]
+     },
+     {
+      "da": "/prezzi-depuratori/",
+      "parole": [
+       "quanto costa un'osmosi inversa"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi Quanto costa davver"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi"
+      ]
+     },
+     {
+      "da": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "parole": [
+       "Quanto costa un depuratore a osmosi inversa? Guida ai prezzi"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/blog/depuratore-casa-in-affitto/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 148,
+    "clic": 5,
+    "posizione": 5.8
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 2,
+    "ingressi": 2,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+   "risponde": 200,
+   "titolo": "Installatore Depuratore Scomparso? | Acquadirete",
+   "h1": "Il tuo installatore del depuratore è scomparso? Ecco cosa fare",
+   "parole": 1306,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-06-22",
+    "canonicalGoogle": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+    "canonicalNostro": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=JyZker1113mtjXad5rUNCQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 13,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/assistenza-depuratore-firenze/",
+      "parole": [
+       "Il tuo installatore del depuratore è scomparso? Ecco cosa fare"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "Il tuo installatore del depuratore è scomparso? Ecco cosa fare Il tuo installato"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Il tuo installatore del depuratore è scomparso? Ecco cosa fare"
+      ]
+     },
+     {
+      "da": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "parole": [
+       "Il tuo installatore del depuratore è scomparso? Ecco cosa fare"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/domande-prima-contratto-depuratore/",
+     "/assistenza-depuratore-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 1,
+    "clic": 0,
+    "posizione": 2
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 2,
+    "ingressi": 2,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/noleggio-vs-acquisto-depuratore/",
+   "risponde": 200,
+   "titolo": "Noleggio o Acquisto Depuratore? | Acquadirete",
+   "h1": "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare",
+   "parole": 1245,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-09-25",
+    "canonicalGoogle": "/blog/noleggio-vs-acquisto-depuratore/",
+    "canonicalNostro": "/blog/noleggio-vs-acquisto-depuratore/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/sitemap.xml"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=NxOPR96394tk55XNdN1ScA&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 0,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/depuratore-acqua-firenze/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-prato/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-pistoia/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/depuratore-acqua-uffici-firenze/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/prezzi-depuratori/",
+      "parole": [
+       "noleggio o acquisto"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare T"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "guida su noleggio e acquisto del depuratore",
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Noleggio o acquisto del depuratore? Perché scegliamo di vendere, non affittare"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/prezzi-depuratori/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/depuratore-casa-in-affitto/",
+     "/blog/erogatore-frizzante-ufficio-costi/",
+     "/depuratore-acqua-firenze/",
+     "/osmosi-inversa-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 164,
+    "clic": 1,
+    "posizione": 7.2
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": null
+  },
+  {
+   "pagina": "/blog/osmosi-inversa-fa-male/",
+   "risponde": 200,
+   "titolo": "L'Osmosi Inversa Fa Male? Cosa Sapere | Acquadirete",
+   "h1": "L'osmosi inversa fa male? Quello che c'è davvero da sapere",
+   "parole": 1286,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-19",
+    "canonicalGoogle": "/blog/osmosi-inversa-fa-male/",
+    "canonicalNostro": "/blog/osmosi-inversa-fa-male/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/sitemap.xml"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=fmUexxctY6Pi8a6w5iFA_A&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 93,
+    "lcp": 2.9,
+    "cls": 0,
+    "tbt": 0,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/osmosi-inversa-firenze/",
+      "parole": [
+       "L'osmosi inversa fa male? Quello che c'è davvero da sapere"
+      ]
+     },
+     {
+      "da": "/depuratore-carboni-attivi-firenze/",
+      "parole": [
+       "L'osmosi inversa fa male? Quello che c'è davvero da sapere"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "L'osmosi inversa fa male? Quello che c'è davvero da sapere L'osmosi inversa fa m"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-neonati/",
+      "parole": [
+       "L'osmosi inversa fa male? Quello che c'è davvero da sapere"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/blog/osmosi-inversa-neonati/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 239,
+    "clic": 0,
+    "posizione": 9.1
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 3,
+    "ingressi": 1,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/osmosi-inversa-neonati/",
+   "risponde": 200,
+   "titolo": "Osmosi Inversa per Neonati: è Sicura? | Acquadirete",
+   "h1": "Osmosi inversa e neonati: l'acqua è sicura per il latte in formula?",
+   "parole": 1248,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-15",
+    "canonicalGoogle": "/blog/osmosi-inversa-neonati/",
+    "canonicalNostro": "/blog/osmosi-inversa-neonati/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/sitemap.xml"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": [
+       "ERROR: La recensione ha più valutazioni aggregate",
+       "ERROR: La recensione ha più valutazioni aggregate"
+      ]
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=QVd7r2W5yAYFQ6PwyAKYhA&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 33,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Osmosi inversa e neonati: l'acqua è sicura per il latte in formula? L'acqua a os"
+      ]
+     },
+     {
+      "da": "/blog/osmosi-inversa-fa-male/",
+      "parole": [
+       "Osmosi inversa e neonati: l'acqua è sicura per il latte in formula?"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/osmosi-inversa-fa-male/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/osmosi-inversa-firenze/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/depuratore-acqua-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 42,
+    "clic": 3,
+    "posizione": 6.1
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 1,
+    "ingressi": 1,
+    "daGoogle": 0,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+   "risponde": 200,
+   "titolo": "Ogni quanto cambiare i filtri depuratore | Acquadirete",
+   "h1": "Ogni quanto cambiare i filtri del depuratore: guida onesta alla manutenzione",
+   "parole": 1353,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-07-28",
+    "canonicalGoogle": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+    "canonicalNostro": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=E47xJ7nwMfnncsbH6yFmEg&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 96,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 15,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Ogni quanto cambiare i filtri del depuratore: guida onesta alla manutenzione Fil"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/blog/installatore-depuratore-scomparso-cosa-fare/",
+     "/depuratore-acqua-firenze/",
+     "/osmosi-inversa-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 990,
+    "clic": 4,
+    "posizione": 7.6
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": null
+  },
+  {
+   "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+   "risponde": 200,
+   "titolo": "Acqua Potabile a Firenze: si può Bere dal Rubinetto?",
+   "h1": "Si può bere l'acqua del rubinetto a Firenze? Facciamo chiarezza",
+   "parole": 1843,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-19",
+    "canonicalGoogle": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+    "canonicalNostro": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/sitemap.xml"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=e-mUGsm_t9JpXWNHV8Wfjw&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 41,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Si può bere l'acqua del rubinetto a Firenze? Facciamo chiarezza L'acqua di Firen"
+      ]
+     },
+     {
+      "da": "/blog/carboni-attivi-vs-osmosi-inversa/",
+      "parole": [
+       "Si può bere l'acqua del rubinetto a Firenze? Facciamo chiarezza"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Si può bere l'acqua del rubinetto a Firenze? Facciamo chiarezza"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/blog/quanto-costa-depuratore-osmosi-inversa/",
+     "/depuratore-acqua-firenze/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/osmosi-inversa-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 2810,
+    "clic": 137,
+    "posizione": 4.3
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 18,
+    "ingressi": 18,
+    "daGoogle": 12,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/acqua-frizzante-bar-ristoranti/",
+   "risponde": 200,
+   "titolo": "Acqua Frizzante per Bar e Ristoranti | Acquadirete",
+   "h1": "Acqua microfiltrata per bar e ristoranti: conviene davvero?",
+   "parole": 1448,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-07-29",
+    "canonicalGoogle": "/blog/acqua-frizzante-bar-ristoranti/",
+    "canonicalNostro": "/blog/acqua-frizzante-bar-ristoranti/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=1WKjQqgki4ESTLZbYjHOiA&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 92,
+    "lcp": 2.9,
+    "cls": 0,
+    "tbt": 120,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Acqua microfiltrata per bar e ristoranti: conviene davvero? Servire acqua microf"
+      ]
+     },
+     {
+      "da": "/blog/erogatore-frizzante-ufficio-costi/",
+      "parole": [
+       "guida sull'acqua microfiltrata in sala",
+       "Acqua microfiltrata per bar e ristoranti: conviene davvero?"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/blog/erogatore-frizzante-ufficio-costi/",
+     "/acqua-frizzante-firenze/",
+     "/depuratore-acqua-uffici-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 89,
+    "clic": 4,
+    "posizione": 7
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 1,
+    "ingressi": 1,
+    "daGoogle": 1,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  },
+  {
+   "pagina": "/blog/depuratore-casa-in-affitto/",
+   "risponde": 200,
+   "titolo": "Depuratore in Casa in Affitto: si può? | Acquadirete",
+   "h1": "Depuratore in casa in affitto: si può installare?",
+   "parole": 1646,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-19",
+    "canonicalGoogle": "/blog/depuratore-casa-in-affitto/",
+    "canonicalNostro": "/blog/depuratore-casa-in-affitto/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [
+     "/sitemap.xml"
+    ],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=4r-U6brhHKhsLo4q8CXBRA&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 93,
+    "lcp": 2.9,
+    "cls": 0,
+    "tbt": 0,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Depuratore in casa in affitto: si può installare? Vivi in affitto e hai messo da"
+      ]
+     },
+     {
+      "da": "/blog/quanto-costa-depuratore-osmosi-inversa/",
+      "parole": [
+       "Depuratore in casa in affitto: si può installare?"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Depuratore in casa in affitto: si può installare?"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/carboni-attivi-vs-osmosi-inversa/",
+     "/depuratore-acqua-firenze/",
+     "/depuratore-acqua-prato/",
+     "/depuratore-carboni-attivi-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 58,
+    "clic": 0,
+    "posizione": 7.1
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": null
+  },
+  {
+   "pagina": "/blog/erogatore-frizzante-ufficio-costi/",
+   "risponde": 200,
+   "titolo": "Erogatore Frizzante Ufficio: Cosa Costa | Acquadirete",
+   "h1": "Quanto costa un erogatore d'acqua frizzante in ufficio? Cosa incide sul prezzo",
+   "parole": 1359,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-09-23",
+    "canonicalGoogle": "/blog/erogatore-frizzante-ufficio-costi/",
+    "canonicalNostro": "/blog/erogatore-frizzante-ufficio-costi/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=YmgHVnizHlVblCxxURiH5A&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 97,
+    "lcp": 2.6,
+    "cls": 0,
+    "tbt": 2,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Quanto costa un erogatore d'acqua frizzante in ufficio? Cosa incide sul prezzo U"
+      ]
+     },
+     {
+      "da": "/blog/noleggio-vs-acquisto-depuratore/",
+      "parole": [
+       "Quanto costa un erogatore d'acqua frizzante in ufficio? Cosa incide sul prezzo"
+      ]
+     },
+     {
+      "da": "/blog/acqua-frizzante-bar-ristoranti/",
+      "parole": [
+       "Quanto costa un erogatore d'acqua frizzante in ufficio? Cosa incide sul prezzo"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/acqua-frizzante-bar-ristoranti/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/depuratore-acqua-uffici-firenze/",
+     "/acqua-frizzante-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 20,
+    "clic": 1,
+    "posizione": 4.9
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": null
+  },
+  {
+   "pagina": "/blog/domande-prima-contratto-depuratore/",
+   "risponde": 200,
+   "titolo": "Contratto Depuratore: Cosa Chiedere Prima di Firmare",
+   "h1": "Prima di firmare per un depuratore: le domande da fare e come confrontare due preventivi",
+   "parole": 1467,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-07",
+    "canonicalGoogle": "/blog/domande-prima-contratto-depuratore/",
+    "canonicalNostro": "/blog/domande-prima-contratto-depuratore/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=QoMqR51glnugcPuPGMTevQ&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 96,
+    "lcp": 2.8,
+    "cls": 0,
+    "tbt": 27,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": []
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/prezzi-depuratori/",
+      "parole": [
+       "le domande da fare prima di firmare"
+      ]
+     },
+     {
+      "da": "/blog/",
+      "parole": [
+       "Prima di firmare per un depuratore: le domande da fare e come confrontare due pr"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "Prima di firmare per un depuratore: le domande da fare e come confrontare due pr"
+      ]
+     },
+     {
+      "da": "/blog/installatore-depuratore-scomparso-cosa-fare/",
+      "parole": [
+       "Prima di firmare per un depuratore: le domande da fare e come confrontare due pr"
+      ]
+     },
+     {
+      "da": "/blog/truffa-bonus-regione-depuratore/",
+      "parole": [
+       "Prima di firmare per un depuratore: le domande da fare e come confrontare due pr"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/noleggio-vs-acquisto-depuratore/",
+     "/blog/truffa-bonus-regione-depuratore/",
+     "/depuratore-acqua-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/osmosi-inversa-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 233,
+    "clic": 0,
+    "posizione": 6.1
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": null
+  },
+  {
+   "pagina": "/blog/truffa-bonus-regione-depuratore/",
+   "risponde": 200,
+   "titolo": "Bonus Depuratore Acqua 2026: Telefonate e Pubblicità",
+   "h1": "Depuratore gratis col \"bonus della Regione\"? Quel bonus non esiste",
+   "parole": 1655,
+   "datiStrutturati": {
+    "tipi": [
+     "LocalBusiness",
+     "Person",
+     "PostalAddress",
+     "AggregateRating",
+     "Article",
+     "Organization",
+     "ImageObject",
+     "FAQPage",
+     "Question",
+     "Answer",
+     "BreadcrumbList",
+     "ListItem"
+    ],
+    "errori": []
+   },
+   "indicizzazione": {
+    "esito": "PASS",
+    "stato": "Inviata e indicizzata",
+    "ultimaVisita": "2026-10-05",
+    "canonicalGoogle": "/blog/truffa-bonus-regione-depuratore/",
+    "canonicalNostro": "/blog/truffa-bonus-regione-depuratore/",
+    "robots": "ALLOWED",
+    "lettura": "SUCCESSFUL",
+    "trovataDa": [],
+    "risultatiArricchiti": [
+     {
+      "tipo": "Breadcrumb",
+      "problemi": []
+     },
+     {
+      "tipo": "Snippet di recensioni",
+      "problemi": []
+     }
+    ],
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=PRpF9NC8g_Hvr3hsJgdp6A&utm_medium=link&utm_source=api"
+   },
+   "velocita": {
+    "punteggio": 93,
+    "lcp": 2.9,
+    "cls": 0,
+    "tbt": 24,
+    "persone": {
+     "di": "tutto il sito",
+     "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
+     "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "AVERAGE",
+     "FIRST_CONTENTFUL_PAINT_MS": "FAST",
+     "INTERACTION_TO_NEXT_PAINT": "FAST",
+     "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
+    },
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
+   },
+   "collegamenti": {
+    "clicDallaHome": 2,
+    "dalMenu": false,
+    "nelTesto": [
+     {
+      "da": "/blog/",
+      "parole": [
+       "Depuratore gratis col \"bonus della Regione\"? Quel bonus non esiste Una telefonat"
+      ]
+     },
+     {
+      "da": "/blog/depuratore-acqua-gratis-contratti/",
+      "parole": [
+       "bonus della Regione Toscana",
+       "Depuratore gratis col \"bonus della Regione\"? Quel bonus non esiste"
+      ]
+     },
+     {
+      "da": "/blog/domande-prima-contratto-depuratore/",
+      "parole": [
+       "Depuratore gratis col \"bonus della Regione\"? Quel bonus non esiste"
+      ]
+     }
+    ],
+    "escono": [
+     "/",
+     "/blog/",
+     "/blog/depuratore-acqua-gratis-contratti/",
+     "/blog/domande-prima-contratto-depuratore/",
+     "/depuratore-acqua-firenze/",
+     "/assistenza-depuratore-firenze/",
+     "/recensioni/"
+    ]
+   },
+   "google": {
+    "viste": 1057,
+    "clic": 21,
+    "posizione": 5.4
+   },
+   "contatti90": {
+    "contatti": 0,
+    "daAnnuncio": 0,
+    "clienti": 0
+   },
+   "visite": {
+    "viste": 11,
+    "ingressi": 11,
+    "daGoogle": 10,
+    "moduliIniziati": 0,
+    "moduliInviati": 0,
+    "chiama": 0,
+    "whatsapp": 0
+   }
+  }
+ ],
+ "contattiFuoriSitemap": {},
+ "visite": {
+  "contatoreAttivoDal": "2026-10-16",
+  "periodo": {
+   "da": "2026-07-29",
+   "a": "2026-10-27"
+  },
+  "avvertenza": "Visualizzazioni = pagine viste; Ingressi = prima pagina della visita, divisi per provenienza. Niente cookie: chi torna conta di nuovo."
+ },
+ "ricerche": {
+  "periodo": {
+   "da": "2026-07-27",
+   "a": "2026-10-24"
+  },
+  "avvertenza": "Senza le ricerche del marchio e dei numeri di telefono. Solo quelle con almeno 3 viste, le prime 400.",
+  "elenco": [
+   {
+    "ricerca": "depuratore acqua gratis",
+    "viste": 514,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 511,
+      "clic": 1,
+      "posizione": 9.9
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 18.3
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua osmosi inversa gratis",
+    "viste": 239,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 239,
+      "clic": 0,
+      "posizione": 9.6
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori acqua firenze",
+    "viste": 156,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 63,
+      "clic": 1,
+      "posizione": 14.1
+     },
+     {
+      "pagina": "/depuratore-acqua-firenze/",
+      "viste": 22,
+      "clic": 0,
+      "posizione": 30.2
+     },
+     {
+      "pagina": "/osmosi-inversa-firenze/",
+      "viste": 19,
+      "clic": 0,
+      "posizione": 74.5
+     },
+     {
+      "pagina": "/depuratore-carboni-attivi-firenze/",
+      "viste": 15,
+      "clic": 0,
+      "posizione": 58.5
+     },
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 13,
+      "clic": 0,
+      "posizione": 70.8
+     },
+     {
+      "pagina": "/depuratore-acqua-uffici-firenze/",
+      "viste": 13,
+      "clic": 0,
+      "posizione": 50.4
+     },
+     {
+      "pagina": "/acqua-frizzante-firenze/",
+      "viste": 6,
+      "clic": 0,
+      "posizione": 90.7
+     },
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 2,
+      "clic": 0,
+      "posizione": 18
+     },
+     {
+      "pagina": "/contatti/",
+      "viste": 2,
+      "clic": 0,
+      "posizione": 66.5
+     },
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 23
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua casa gratis",
+    "viste": 149,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 148,
+      "clic": 0,
+      "posizione": 10.4
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 3
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua gratis province",
+    "viste": 118,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 92,
+      "clic": 0,
+      "posizione": 9.9
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 26,
+      "clic": 0,
+      "posizione": 6.1
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua firenze potabile",
+    "viste": 88,
+    "clic": 3,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 88,
+      "clic": 3,
+      "posizione": 4.7
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua potabile firenze",
+    "viste": 82,
+    "clic": 2,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 82,
+      "clic": 2,
+      "posizione": 6.5
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua firenze",
+    "viste": 79,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 37,
+      "clic": 0,
+      "posizione": 12.7
+     },
+     {
+      "pagina": "/depuratore-acqua-firenze/",
+      "viste": 10,
+      "clic": 0,
+      "posizione": 33.4
+     },
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 55.4
+     },
+     {
+      "pagina": "/depuratore-carboni-attivi-firenze/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 73.4
+     },
+     {
+      "pagina": "/osmosi-inversa-firenze/",
+      "viste": 7,
+      "clic": 0,
+      "posizione": 65
+     },
+     {
+      "pagina": "/depuratore-acqua-uffici-firenze/",
+      "viste": 6,
+      "clic": 0,
+      "posizione": 35.8
+     },
+     {
+      "pagina": "/acqua-frizzante-firenze/",
+      "viste": 2,
+      "clic": 0,
+      "posizione": 93.5
+     },
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 4
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori acqua prato",
+    "viste": 65,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/depuratore-acqua-prato/",
+      "viste": 33,
+      "clic": 0,
+      "posizione": 17.9
+     },
+     {
+      "pagina": "/",
+      "viste": 29,
+      "clic": 0,
+      "posizione": 29.2
+     },
+     {
+      "pagina": "/paginaseo/13.depuratori-a-osmosi-inversa-a-prato.aspx",
+      "viste": 2,
+      "clic": 0,
+      "posizione": 41.5
+     },
+     {
+      "pagina": "/osmosi-inversa-firenze/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 45
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore gratis",
+    "viste": 55,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 54,
+      "clic": 0,
+      "posizione": 10.4
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 3
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua gratis toscana",
+    "viste": 53,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 30,
+      "clic": 0,
+      "posizione": 8.3
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 21,
+      "clic": 0,
+      "posizione": 4.2
+     },
+     {
+      "pagina": "/",
+      "viste": 2,
+      "clic": 0,
+      "posizione": 34
+     }
+    ]
+   },
+   {
+    "ricerca": "l'acqua di firenze è potabile",
+    "viste": 50,
+    "clic": 4,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 50,
+      "clic": 4,
+      "posizione": 2.5
+     }
+    ]
+   },
+   {
+    "ricerca": "firenze acqua potabile",
+    "viste": 50,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 50,
+      "clic": 1,
+      "posizione": 2.4
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua rubinetto firenze",
+    "viste": 49,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 49,
+      "clic": 1,
+      "posizione": 3.9
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori acqua gratis",
+    "viste": 41,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 41,
+      "clic": 0,
+      "posizione": 11.1
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore d'acqua gratis",
+    "viste": 34,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 34,
+      "clic": 0,
+      "posizione": 9.6
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua rubinetto firenze potabile",
+    "viste": 33,
+    "clic": 3,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 33,
+      "clic": 3,
+      "posizione": 1.9
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore gratuito",
+    "viste": 29,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 29,
+      "clic": 0,
+      "posizione": 10.3
+     }
+    ]
+   },
+   {
+    "ricerca": "bando regionale depuratori acqua domestici",
+    "viste": 28,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 28,
+      "clic": 0,
+      "posizione": 7.8
+     }
+    ]
+   },
+   {
+    "ricerca": "l'acqua del rubinetto di firenze è potabile",
+    "viste": 27,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 27,
+      "clic": 1,
+      "posizione": 1.7
+     }
+    ]
+   },
+   {
+    "ricerca": "riparazione addolcitori a firenze",
+    "viste": 24,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 24,
+      "clic": 0,
+      "posizione": 24.4
+     }
+    ]
+   },
+   {
+    "ricerca": "verifica apparecchi per acqua calda a firenze",
+    "viste": 24,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 23,
+      "clic": 0,
+      "posizione": 37.8
+     },
+     {
+      "pagina": "/acqua-frizzante-firenze/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 31
+     }
+    ]
+   },
+   {
+    "ricerca": "purificatore d'acqua gratis",
+    "viste": 23,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 22,
+      "clic": 0,
+      "posizione": 10.8
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 1
+     }
+    ]
+   },
+   {
+    "ricerca": "durezza acqua firenze",
+    "viste": 22,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 22,
+      "clic": 0,
+      "posizione": 18.7
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua gratis comune",
+    "viste": 20,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 17,
+      "clic": 0,
+      "posizione": 10.7
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 9.7
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua prato",
+    "viste": 20,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/depuratore-acqua-prato/",
+      "viste": 12,
+      "clic": 0,
+      "posizione": 14.7
+     },
+     {
+      "pagina": "/",
+      "viste": 6,
+      "clic": 0,
+      "posizione": 12
+     },
+     {
+      "pagina": "/osmosi-inversa-firenze/",
+      "viste": 2,
+      "clic": 0,
+      "posizione": 41
+     }
+    ]
+   },
+   {
+    "ricerca": "installazione addolcitori a firenze",
+    "viste": 20,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 19,
+      "clic": 0,
+      "posizione": 47.8
+     },
+     {
+      "pagina": "/depuratore-acqua-firenze/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 42
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori uffici",
+    "viste": 19,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/depuratore-acqua-uffici-firenze/",
+      "viste": 19,
+      "clic": 0,
+      "posizione": 29.5
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua gratuito",
+    "viste": 18,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 18,
+      "clic": 0,
+      "posizione": 8.9
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua domestico gratis",
+    "viste": 16,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 15,
+      "clic": 0,
+      "posizione": 8.8
+     },
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 1
+     }
+    ]
+   },
+   {
+    "ricerca": "purificatore acqua gratis",
+    "viste": 16,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 16,
+      "clic": 0,
+      "posizione": 11.3
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori acqua domestici firenze",
+    "viste": 15,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 15,
+      "clic": 1,
+      "posizione": 11.2
+     }
+    ]
+   },
+   {
+    "ricerca": "osmosi inversa è pericolosa",
+    "viste": 12,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 12,
+      "clic": 0,
+      "posizione": 13.7
+     }
+    ]
+   },
+   {
+    "ricerca": "l'acqua a firenze è potabile",
+    "viste": 11,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 11,
+      "clic": 1,
+      "posizione": 2
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua depurata con osmosi inversa fa male",
+    "viste": 11,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 11,
+      "clic": 0,
+      "posizione": 10.4
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua toscana",
+    "viste": 11,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 10,
+      "clic": 0,
+      "posizione": 28.3
+     },
+     {
+      "pagina": "/depuratore-acqua-firenze/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 61
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua rubinetto gratis",
+    "viste": 10,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 10,
+      "clic": 0,
+      "posizione": 10.1
+     }
+    ]
+   },
+   {
+    "ricerca": "assistenza depuratore acqua",
+    "viste": 9,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 8,
+      "clic": 1,
+      "posizione": 11.9
+     },
+     {
+      "pagina": "/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 4
+     }
+    ]
+   },
+   {
+    "ricerca": "bonus filtro acqua 2026",
+    "viste": 9,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 9,
+      "clic": 0,
+      "posizione": 10.1
+     }
+    ]
+   },
+   {
+    "ricerca": "bando regionale depuratori",
+    "viste": 8,
+    "clic": 1,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 8,
+      "clic": 1,
+      "posizione": 4.9
+     }
+    ]
+   },
+   {
+    "ricerca": "analisi acqua firenze",
+    "viste": 8,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 15.3
+     }
+    ]
+   },
+   {
+    "ricerca": "bonus toscana 2026",
+    "viste": 8,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 4.8
+     }
+    ]
+   },
+   {
+    "ricerca": "ogni quanto cambiare filtro depuratore acqua",
+    "viste": 8,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 7.9
+     }
+    ]
+   },
+   {
+    "ricerca": "ogni quanto si cambiano i filtri del depuratore acqua",
+    "viste": 8,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 9.1
+     }
+    ]
+   },
+   {
+    "ricerca": "regione calabria depuratore acqua gratis",
+    "viste": 8,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 8,
+      "clic": 0,
+      "posizione": 8.9
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua sottolavello gratis",
+    "viste": 7,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 7,
+      "clic": 0,
+      "posizione": 10.3
+     }
+    ]
+   },
+   {
+    "ricerca": "osmosi inversa opinioni mediche",
+    "viste": 6,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 6,
+      "clic": 0,
+      "posizione": 14
+     }
+    ]
+   },
+   {
+    "ricerca": "purificatore acqua gratis piemonte",
+    "viste": 6,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 6,
+      "clic": 0,
+      "posizione": 13.2
+     }
+    ]
+   },
+   {
+    "ricerca": "assistenza depuratori acqua",
+    "viste": 5,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 5,
+      "clic": 0,
+      "posizione": 26.8
+     }
+    ]
+   },
+   {
+    "ricerca": "bere acqua del rubinetto",
+    "viste": 5,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 5,
+      "clic": 0,
+      "posizione": 11.2
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori acqua domestici gratis",
+    "viste": 5,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/depuratore-acqua-gratis-contratti/",
+      "viste": 5,
+      "clic": 0,
+      "posizione": 9.6
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori osmosi inversa pro e contro",
+    "viste": 5,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 5,
+      "clic": 0,
+      "posizione": 9.2
+     }
+    ]
+   },
+   {
+    "ricerca": "progettazione impianti di depurazione pistoia",
+    "viste": 5,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/depuratore-acqua-pistoia/",
+      "viste": 5,
+      "clic": 0,
+      "posizione": 38.6
+     }
+    ]
+   },
+   {
+    "ricerca": "promo regione depuratore acqua",
+    "viste": 5,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 5,
+      "clic": 0,
+      "posizione": 4
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua depurata fa male",
+    "viste": 4,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 4,
+      "clic": 0,
+      "posizione": 9.8
+     }
+    ]
+   },
+   {
+    "ricerca": "bonus depuratore 2026",
+    "viste": 4,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 4,
+      "clic": 0,
+      "posizione": 9.8
+     }
+    ]
+   },
+   {
+    "ricerca": "depur joy ogni quanto cambiare filtro",
+    "viste": 4,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/ogni-quanto-cambiare-filtri-depuratore/",
+      "viste": 4,
+      "clic": 0,
+      "posizione": 10.5
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori osmosi alessandria",
+    "viste": 4,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 4,
+      "clic": 0,
+      "posizione": 63.8
+     }
+    ]
+   },
+   {
+    "ricerca": "tecnico depuratore acqua",
+    "viste": 4,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 5.3
+     },
+     {
+      "pagina": "/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 4
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua osmosi inversa fa male",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 11
+     }
+    ]
+   },
+   {
+    "ricerca": "acqua potabile",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 7.7
+     }
+    ]
+   },
+   {
+    "ricerca": "assistenza depuratori",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 6.3
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratore acqua 2026",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/truffa-bonus-regione-depuratore/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 11.7
+     }
+    ]
+   },
+   {
+    "ricerca": "depuratori acqua osmosi alessandria",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 64.3
+     }
+    ]
+   },
+   {
+    "ricerca": "firenze",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 3
+     }
+    ]
+   },
+   {
+    "ricerca": "l acqua del rubinetto a firenze è potabile",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/acqua-rubinetto-firenze-si-puo-bere/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 2.7
+     }
+    ]
+   },
+   {
+    "ricerca": "osmosi inversa",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/assistenza-depuratore-firenze/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 10
+     },
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 3
+     },
+     {
+      "pagina": "/osmosi-inversa-firenze/",
+      "viste": 1,
+      "clic": 0,
+      "posizione": 9
+     }
+    ]
+   },
+   {
+    "ricerca": "osmosi inversa e salute",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 28.7
+     }
+    ]
+   },
+   {
+    "ricerca": "osmosi inversa effetti collaterali",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 11.3
+     }
+    ]
+   },
+   {
+    "ricerca": "osmosi inversa vantaggi e svantaggi",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/blog/osmosi-inversa-fa-male/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 15.7
+     }
+    ]
+   },
+   {
+    "ricerca": "preventivo depuratori acqua",
+    "viste": 3,
+    "clic": 0,
+    "pagine": [
+     {
+      "pagina": "/prezzi-depuratori/",
+      "viste": 3,
+      "clic": 0,
+      "posizione": 21
+     }
+    ]
+   }
+  ]
+ }
+}
