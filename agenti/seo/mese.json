@@ -1,8 +1,21 @@
 {
- "letto": "2026-10-27T07:33:28.394Z",
+ "letto": "2026-10-27T11:30:45.299Z",
  "come_si_legge": "Una voce per ogni pagina della sitemap. indicizzazione = ispezione di Search Console (esito PASS = indicizzata, link = apre la pagina in Search Console). velocita = PageSpeed sul telefono: punteggio, lcp (secondi), cls e tbt (millisecondi) sono del laboratorio, un telefono lento simulato e più severo del vero; persone = come va per le persone vere (FAST, AVERAGE, SLOW), della pagina o di tutto il sito (campo \"di\"). Conta prima persone. collegamenti.nelTesto = le pagine che portano qui dal testo (non dal menu), con le parole del collegamento. google = 90 giorni di Search Console. contatti90 = contatti nati da quella pagina negli ultimi 90 giorni (Gestionale). visite = contatore del sito, partito il 16 ott 2026.",
  "velocita": "misurata",
  "riassunto": {
+  "pagine": 28,
+  "indicizzate": 28,
+  "nonIndicizzate": [],
+  "canonicalScelteDaGoogleDiverse": [],
+  "velocitaMedia": 93,
+  "lente": [],
+  "senzaCollegamentiNelTesto": [
+   "/contatti/",
+   "/chi-siamo/"
+  ]
+ },
+ "meseScorso": {
+  "letto": "2026-10-27T07:33:28.394Z",
   "pagine": 28,
   "indicizzate": 28,
   "nonIndicizzate": [],
@@ -12,9 +25,206 @@
   "senzaCollegamentiNelTesto": [
    "/contatti/",
    "/chi-siamo/"
-  ]
+  ],
+  "perPagina": {
+   "/": {
+    "indicizzata": true,
+    "velocita": 93,
+    "lcp": 2.9,
+    "viste": 1261,
+    "clic": 108
+   },
+   "/depuratore-acqua-firenze/": {
+    "indicizzata": true,
+    "velocita": 91,
+    "lcp": 3.2,
+    "viste": 495,
+    "clic": 8
+   },
+   "/depuratore-acqua-prato/": {
+    "indicizzata": true,
+    "velocita": 86,
+    "lcp": 3.8,
+    "viste": 322,
+    "clic": 3
+   },
+   "/depuratore-acqua-pistoia/": {
+    "indicizzata": true,
+    "velocita": 90,
+    "lcp": 3.6,
+    "viste": 265,
+    "clic": 3
+   },
+   "/osmosi-inversa-firenze/": {
+    "indicizzata": true,
+    "velocita": 90,
+    "lcp": 3.6,
+    "viste": 380,
+    "clic": 5
+   },
+   "/depuratore-acqua-uffici-firenze/": {
+    "indicizzata": true,
+    "velocita": 94,
+    "lcp": 3.2,
+    "viste": 237,
+    "clic": 0
+   },
+   "/assistenza-depuratore-firenze/": {
+    "indicizzata": true,
+    "velocita": 96,
+    "lcp": 2.9,
+    "viste": 441,
+    "clic": 12
+   },
+   "/depuratore-carboni-attivi-firenze/": {
+    "indicizzata": true,
+    "velocita": 94,
+    "lcp": 3.1,
+    "viste": 167,
+    "clic": 3
+   },
+   "/acqua-frizzante-firenze/": {
+    "indicizzata": true,
+    "velocita": 94,
+    "lcp": 3.1,
+    "viste": 246,
+    "clic": 8
+   },
+   "/recensioni/": {
+    "indicizzata": true,
+    "velocita": 95,
+    "lcp": 2.6,
+    "viste": 105,
+    "clic": 1
+   },
+   "/contatti/": {
+    "indicizzata": true,
+    "velocita": 98,
+    "lcp": 2.4,
+    "viste": 288,
+    "clic": 2
+   },
+   "/prezzi-depuratori/": {
+    "indicizzata": true,
+    "velocita": 95,
+    "lcp": 2.4,
+    "viste": 113,
+    "clic": 0
+   },
+   "/chi-siamo/": {
+    "indicizzata": true,
+    "velocita": 95,
+    "lcp": 2.6,
+    "viste": 37,
+    "clic": 1
+   },
+   "/blog/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.5,
+    "viste": 112,
+    "clic": 0
+   },
+   "/blog/carboni-attivi-vs-osmosi-inversa/": {
+    "indicizzata": true,
+    "velocita": 91,
+    "lcp": 3,
+    "viste": 363,
+    "clic": 5
+   },
+   "/blog/depuratore-acqua-gratis-contratti/": {
+    "indicizzata": true,
+    "velocita": 96,
+    "lcp": 2.7,
+    "viste": 3564,
+    "clic": 25
+   },
+   "/blog/quanto-costa-depuratore-osmosi-inversa/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.6,
+    "viste": 148,
+    "clic": 5
+   },
+   "/blog/installatore-depuratore-scomparso-cosa-fare/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.6,
+    "viste": 1,
+    "clic": 0
+   },
+   "/blog/noleggio-vs-acquisto-depuratore/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.6,
+    "viste": 164,
+    "clic": 1
+   },
+   "/blog/osmosi-inversa-fa-male/": {
+    "indicizzata": true,
+    "velocita": 93,
+    "lcp": 2.9,
+    "viste": 239,
+    "clic": 0
+   },
+   "/blog/osmosi-inversa-neonati/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.6,
+    "viste": 42,
+    "clic": 3
+   },
+   "/blog/ogni-quanto-cambiare-filtri-depuratore/": {
+    "indicizzata": true,
+    "velocita": 96,
+    "lcp": 2.6,
+    "viste": 990,
+    "clic": 4
+   },
+   "/blog/acqua-rubinetto-firenze-si-puo-bere/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.6,
+    "viste": 2810,
+    "clic": 137
+   },
+   "/blog/acqua-frizzante-bar-ristoranti/": {
+    "indicizzata": true,
+    "velocita": 92,
+    "lcp": 2.9,
+    "viste": 89,
+    "clic": 4
+   },
+   "/blog/depuratore-casa-in-affitto/": {
+    "indicizzata": true,
+    "velocita": 93,
+    "lcp": 2.9,
+    "viste": 58,
+    "clic": 0
+   },
+   "/blog/erogatore-frizzante-ufficio-costi/": {
+    "indicizzata": true,
+    "velocita": 97,
+    "lcp": 2.6,
+    "viste": 20,
+    "clic": 1
+   },
+   "/blog/domande-prima-contratto-depuratore/": {
+    "indicizzata": true,
+    "velocita": 96,
+    "lcp": 2.8,
+    "viste": 233,
+    "clic": 0
+   },
+   "/blog/truffa-bonus-regione-depuratore/": {
+    "indicizzata": true,
+    "velocita": 93,
+    "lcp": 2.9,
+    "viste": 1057,
+    "clic": 21
+   }
+  }
  },
- "meseScorso": null,
  "collegamentiDelMenu": [
   "/",
   "/acqua-frizzante-firenze/",
@@ -73,13 +283,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=dJKcxOe09VRAuFx7EhfZQw&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=F7Q8w_EOpoHbfAwnXW3k2w&utm_medium=link&utm_source=api"
    },
    "velocita": {
     "punteggio": 93,
     "lcp": 2.9,
     "cls": 0,
-    "tbt": 0,
+    "tbt": 29,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -299,13 +509,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=c8Q43dTXnJmF1Fb07DQOfQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=767tMAz2J6kGfNyVpR48cQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 91,
-    "lcp": 3.2,
+    "punteggio": 90,
+    "lcp": 3.3,
     "cls": 0,
-    "tbt": 46,
+    "tbt": 43,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -512,13 +722,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Ece1KppPCnXRptAXSugKhg&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=2_atscukD-ILEbm9G6vfZw&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 86,
-    "lcp": 3.8,
+    "punteggio": 90,
+    "lcp": 3.6,
     "cls": 0,
-    "tbt": 51,
+    "tbt": 21,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -527,7 +737,9 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": []
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
    },
    "collegamenti": {
     "clicDallaHome": 1,
@@ -635,13 +847,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Y3en60YfjkprjZPNh5IFcQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=HX3AHYXHwHl6yF_RFLzQHA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 90,
-    "lcp": 3.6,
+    "punteggio": 87,
+    "lcp": 3.7,
     "cls": 0,
-    "tbt": 19,
+    "tbt": 7,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -743,13 +955,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Zxr04a06qFroovpa6v1paQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=dbvwzCi0c-fFxOyXMotIsA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 90,
+    "punteggio": 85,
     "lcp": 3.6,
     "cls": 0,
-    "tbt": 15,
+    "tbt": 0,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -900,13 +1112,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=TNKkU1BEBnNP2Ycb3FZG0g&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Ai_guxLaKUfp5hL90SJ9sA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 94,
-    "lcp": 3.2,
+    "punteggio": 90,
+    "lcp": 3.3,
     "cls": 0,
-    "tbt": 62,
+    "tbt": 1,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1019,13 +1231,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=0MBV5ndXEX17vKu3ZGV19Q&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=FSkgIQ_hx8Yv3rkX9WbjsA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 96,
-    "lcp": 2.9,
+    "punteggio": 92,
+    "lcp": 3,
     "cls": 0,
-    "tbt": 5,
+    "tbt": 29,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1034,9 +1246,7 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": [
-     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
-    ]
+    "daMigliorare": []
    },
    "collegamenti": {
     "clicDallaHome": 1,
@@ -1191,13 +1401,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=2h4Cgun3agkqpdjF8HZ1jQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=x247NrOjXVYsb7IzlLMRaw&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 94,
-    "lcp": 3.1,
+    "punteggio": 91,
+    "lcp": 3.2,
     "cls": 0,
-    "tbt": 11,
+    "tbt": 58,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1338,13 +1548,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=lpLcCf0ylCMtvVtcrszj7Q&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=S7MVYLBbJqv_0BE28YnTmA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 94,
-    "lcp": 3.1,
+    "punteggio": 93,
+    "lcp": 3.2,
     "cls": 0,
-    "tbt": 13,
+    "tbt": 73,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1446,13 +1656,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=WUAxY4jKt2KaLePzl-UQog&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=WlTFi8Q8CL2-haY2Q75DVQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 95,
-    "lcp": 2.6,
+    "punteggio": 94,
+    "lcp": 2.5,
     "cls": 0,
-    "tbt": 29,
+    "tbt": 49,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1654,13 +1864,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=cu0R-woGOKzOnQyiF8MtnQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=egFXnkzVTwONMOO88JeRhA&utm_medium=link&utm_source=api"
    },
    "velocita": {
     "punteggio": 98,
-    "lcp": 2.4,
+    "lcp": 2.3,
     "cls": 0,
-    "tbt": 3,
+    "tbt": 4,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1669,9 +1879,7 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": [
-     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
-    ]
+    "daMigliorare": []
    },
    "collegamenti": {
     "clicDallaHome": 1,
@@ -1729,13 +1937,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=EFxGQipUhu-pX7hdwVXU4Q&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=ZKeS0EKzGi_ktlVqbfgu2g&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 95,
+    "punteggio": 96,
     "lcp": 2.4,
     "cls": 0,
-    "tbt": 50,
+    "tbt": 0,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1833,13 +2041,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=n1AhAQow3-pHlTEIVjDIQA&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=lwvMBsVTGBmpkJ0ia3ZuPg&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 95,
-    "lcp": 2.6,
+    "punteggio": 98,
+    "lcp": 2.4,
     "cls": 0,
-    "tbt": 58,
+    "tbt": 63,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1918,13 +2126,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=S07HCAWhSXAp-OIQs76W0A&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=MbX0hIOBuZ7SjKts4m6rFQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.5,
+    "punteggio": 98,
+    "lcp": 2.3,
     "cls": 0,
-    "tbt": 45,
+    "tbt": 23,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -1933,9 +2141,7 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": [
-     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
-    ]
+    "daMigliorare": []
    },
    "collegamenti": {
     "clicDallaHome": 1,
@@ -2107,13 +2313,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=IyjSY19EGWiCihUkmyticA&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=b7p6-HEcFfuqwggZQUO1gQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 91,
-    "lcp": 3,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 94,
+    "tbt": 27,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2122,9 +2328,7 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": [
-     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
-    ]
+    "daMigliorare": []
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -2255,13 +2459,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=ZIUVjb9Hne8Ovsad6z8bJw&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=akCWLUuhYhfDFUxmuGLtLg&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 96,
-    "lcp": 2.7,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 61,
+    "tbt": 30,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2270,9 +2474,7 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": [
-     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
-    ]
+    "daMigliorare": []
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -2415,7 +2617,7 @@
    "indicizzazione": {
     "esito": "PASS",
     "stato": "Inviata e indicizzata",
-    "ultimaVisita": "2026-09-11",
+    "ultimaVisita": "2026-10-27",
     "canonicalGoogle": "/blog/quanto-costa-depuratore-osmosi-inversa/",
     "canonicalNostro": "/blog/quanto-costa-depuratore-osmosi-inversa/",
     "robots": "ALLOWED",
@@ -2433,13 +2635,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=nDp8AIp2_ahJLC-pEnCfoQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=0c3FcoBsgM1micPBMDXytQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.6,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 0,
+    "tbt": 14,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2448,7 +2650,9 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": []
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -2571,13 +2775,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=JyZker1113mtjXad5rUNCQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=ZA0rV9W6BDO9-BrJPPDHWw&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.6,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 13,
+    "tbt": 79,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2586,9 +2790,7 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": [
-     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
-    ]
+    "daMigliorare": []
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -2693,13 +2895,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=NxOPR96394tk55XNdN1ScA&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=8Hb_HkDMxR3g7_LkKec2aA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.6,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 0,
+    "tbt": 29,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2846,13 +3048,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=fmUexxctY6Pi8a6w5iFA_A&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=gDFOFyNCaidRNrIQr9ieXQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
     "punteggio": 93,
     "lcp": 2.9,
     "cls": 0,
-    "tbt": 0,
+    "tbt": 17,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2972,13 +3174,13 @@
       ]
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=QVd7r2W5yAYFQ6PwyAKYhA&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=36oPhZR_s5bBnWyRwNwPtA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.6,
+    "punteggio": 92,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 33,
+    "tbt": 42,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -2987,7 +3189,9 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": []
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -3079,13 +3283,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=E47xJ7nwMfnncsbH6yFmEg&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=CDnIpvfDGbxzc7MMExUpIA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 96,
+    "punteggio": 97,
     "lcp": 2.6,
     "cls": 0,
-    "tbt": 15,
+    "tbt": 0,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -3176,13 +3380,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=e-mUGsm_t9JpXWNHV8Wfjw&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=uSqlcFSTsk9DB85C1q8BNQ&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.6,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 41,
+    "tbt": 51,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -3191,7 +3395,9 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": []
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -3289,13 +3495,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=1WKjQqgki4ESTLZbYjHOiA&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=-hxvKKDeLIY5oBQ7yNP1Sw&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 92,
+    "punteggio": 93,
     "lcp": 2.9,
     "cls": 0,
-    "tbt": 120,
+    "tbt": 32,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -3304,7 +3510,9 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": []
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -3400,13 +3608,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=4r-U6brhHKhsLo4q8CXBRA&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=atKS2AEDe4Ljqc5k9rFiWA&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 93,
-    "lcp": 2.9,
+    "punteggio": 97,
+    "lcp": 2.6,
     "cls": 0,
-    "tbt": 0,
+    "tbt": 21,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -3506,13 +3714,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=YmgHVnizHlVblCxxURiH5A&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=yeqygW36dp_A2Pdpj_B53A&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 97,
-    "lcp": 2.6,
+    "punteggio": 93,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 2,
+    "tbt": 60,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -3521,7 +3729,9 @@
      "INTERACTION_TO_NEXT_PAINT": "FAST",
      "LARGEST_CONTENTFUL_PAINT_MS": "FAST"
     },
-    "daMigliorare": []
+    "daMigliorare": [
+     "Riduci il codice JavaScript inutilizzato (circa 0.3 s)"
+    ]
    },
    "collegamenti": {
     "clicDallaHome": 2,
@@ -3611,13 +3821,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=QoMqR51glnugcPuPGMTevQ&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=Rodk3TZ_bnAqOyAj9r8q8g&utm_medium=link&utm_source=api"
    },
    "velocita": {
-    "punteggio": 96,
-    "lcp": 2.8,
+    "punteggio": 92,
+    "lcp": 2.9,
     "cls": 0,
-    "tbt": 27,
+    "tbt": 13,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
@@ -3729,13 +3939,13 @@
       "problemi": []
      }
     ],
-    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=PRpF9NC8g_Hvr3hsJgdp6A&utm_medium=link&utm_source=api"
+    "link": "https://search.google.com/search-console/inspect?resource_id=https://www.acquadirete.it/&id=lETk14YrEHt0GUYXO2gxjw&utm_medium=link&utm_source=api"
    },
    "velocita": {
     "punteggio": 93,
     "lcp": 2.9,
     "cls": 0,
-    "tbt": 24,
+    "tbt": 21,
     "persone": {
      "di": "tutto il sito",
      "CUMULATIVE_LAYOUT_SHIFT_SCORE": "FAST",
