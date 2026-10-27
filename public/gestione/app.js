@@ -9,6 +9,9 @@
   'use strict';
 
   const API = '/api/gestione';
+  // La versione dell'app (il ?v= di index.html), scritta in fondo alla home:
+  // così si sa se un telefono ha già preso l'ultima (27 ott 2026).
+  const VERSIONE = (() => { try { return new URL(document.currentScript.src).searchParams.get('v') || ''; } catch { return ''; } })();
   const K_CHIAVE = 'gestione-chiave';
   const K_DATI = 'gestione-dati';
 
@@ -573,7 +576,7 @@
         </button>
       </div>
       ${dati.soloSuoi ? '<p class="spiega">Vedi i clienti e i contatti dei tuoi giri (dell\'ultimo mese e futuri). Per gli altri chiedi a Matteo.</p>' : ''}
-      <p class="aggiornato">${io() ? `Stai usando l'app come <b>${esc(nomeChi(io()))}</b><br>` : ''}${alle ? `Dati aggiornati alle ${alle}` : ''}<br><button id="ricarica">Aggiorna adesso</button>
+      <p class="aggiornato">${io() ? `Stai usando l'app come <b>${esc(nomeChi(io()))}</b><br>` : ''}${alle ? `Dati aggiornati alle ${alle}` : ''}${VERSIONE ? ` · versione ${esc(VERSIONE)}` : ''}<br><button id="ricarica">Aggiorna adesso</button>
         ${dati.titolare ? `<br><button data-vai="impostazioni">${icona('ingranaggio')} Impostazioni</button>` : ''}</p>`;
     schermo.querySelectorAll('[data-vai]').forEach((b) => { b.onclick = () => vai({ s: b.dataset.vai, vista: b.dataset.vista }); });
     $('aggiungi').onclick = chiediCosaAggiungere;
