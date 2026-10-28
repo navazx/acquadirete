@@ -91,7 +91,7 @@ La bacheca sta nella stessa pagina del cruscotto, e Matteo vuole i numeri della
 scheda "Numeri" aggiornati ogni giorno. Ogni mattina `cruscotto-oggi.yml`
 (`scripts/cruscotto-oggi.mjs`) legge contatti, spesa di Google e Meta e Search
 Console, li mette su main in `agenti/cruscotto/oggi.enc` **chiusi a chiave** (ci
-sono nomi di clienti e cifre in euro, e il repo è pubblico) e sveglia il postino
+sono cifre in euro, e il repo è pubblico; i nomi dei clienti non ci sono: la pagina è una panoramica) e sveglia il postino
 con la chiave nel messaggio, `CRUSCOTTO-CHIAVE <64 caratteri>`. Il postino apre il
 file con `scripts/cruscotto-apri.mjs` e lo copia nel database della pagina,
 documento `cruscotto/oggi`; la pagina ricalcola e ridisegna tutto da lì. La chiave

@@ -5,13 +5,15 @@
 //  Matteo: "l'artefatto cruscotto si deve aggiornare ogni giorno". La pagina
 //  (https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL, scheda Numeri) prende i
 //  numeri dal suo database, documento cruscotto/oggi. Qui li si prepara:
-//    - i contatti di Lead-Contatti (nome, provenienza, zona, stato);
+//    - i contatti di Lead-Contatti, senza nomi (data, provenienza, stato): la
+//      pagina è una panoramica dell'andamento e di cosa fare, non un elenco di
+//      clienti (Matteo, 28 ott);
 //    - la spesa di Google Ads e Meta da quando sono partite le campagne;
 //    - Search Console: 28 giorni contro i 28 prima, 90 giorni, settimane,
 //      pagine e ricerche;
 //    - recensioni, clienti nel Gestionale, articoli, prossimi controlli delle prove.
 //
-//  Dentro ci sono nomi di clienti e cifre in euro, e il repo è pubblico: i dati
+//  Dentro ci sono cifre in euro e numeri dell'azienda, e il repo è pubblico: i dati
 //  vanno su main CHIUSI A CHIAVE (agenti/cruscotto/oggi.enc, AES-256-GCM, una
 //  chiave nuova ogni giorno). La chiave non va nel repo né nei log: la porta il
 //  messaggio con cui si sveglia il postino, l'unico che scrive sulla pagina.
@@ -53,55 +55,20 @@ export function fonte(provenienza) {
   return 'Altro';
 }
 
-/** Una riga corta per la tabella: zona, depuratore in casa, interesse, da dove. */
-export function riassunto(interesse, note) {
-  const pezzi = [];
-  // "Zona: Z2 — Scandicci, Sesto… — altra domanda: risposta": il nome della zona
-  // è il pezzo dopo il codice, se non è già un'altra domanda (con i due punti).
-  const parti = note.split(/\s+—\s+/);
-  const i = parti.findIndex((p) => /^Zona:\s*Z\w+/.test(p));
-  if (i >= 0) {
-    const codice = parti[i].match(/:\s*(Z\w+)/)[1];
-    const nome = parti[i + 1] && !parti[i + 1].includes(':') ? ` ${parti[i + 1].trim()}` : '';
-    pezzi.push(codice === 'ZX' ? 'fuori zona' : `${codice}${nome}`);
-  }
-  const citta = note.match(/Città:\s*([^—]+)/);
-  if (citta) pezzi.push(citta[1].trim().replace(/\s*\d{5}$/, ''));
-  // I moduli Meta di luglio chiedevano la provincia e la casa.
-  const provincia = note.match(/in_che_provincia_abiti\?:\s*([^—(]+)/i);
-  if (provincia && i < 0) pezzi.push(provincia[1].trim().replace(/^./, (c) => c.toUpperCase()));
-  const casa = note.match(/propriet[àa]_o_in_affitto\?:\s*(\w+)/i);
-  if (casa) pezzi.push(/affitto/i.test(casa[1]) ? 'in affitto' : 'casa di proprietà');
-  const dep = note.match(/possiedi_gi[aà]_un_depuratore[^:]*:\s*(s[iì]|no)/i);
-  if (dep) pezzi.push(/^s/i.test(dep[1]) ? 'ha già un depuratore' : 'non ha un depuratore');
-  if (interesse && !/^[-—]$/.test(interesse)) pezzi.push(interesse);
-  if (/annuncio google/i.test(note)) pezzi.push('da un annuncio Google');
-  // Una nota scritta a mano (senza le domande dei moduli): la prima frase, senza numeri lunghi.
-  if (!pezzi.length && note && !/\?:/.test(note)) {
-    const libera = note.replace(/\(scritto dall'app[^)]*\)/gi, '').replace(/\d{6,}/g, '').replace(/^[\s—-]+|[\s—-]+$/g, '').trim();
-    if (libera) pezzi.push(libera);
-  }
-  if (/scritto dall'app/i.test(note)) pezzi.push("scritto nell'app");
-  const testo = pezzi.join(' · ');
-  return testo.length > 120 ? `${testo.slice(0, 117)}…` : testo || '—';
-}
-
 async function contatti(token) {
   const righe = await leggi(token, 'Lead-Contatti!A4:H1000');
   const [testa, ...dati] = righe;
   const col = (nome) => testa.indexOf(nome);
-  const c = { data: col('Data'), nome: col('Nome'), prov: col('Provenienza'), int: col('Interesse'), stato: col('Stato'), note: col('Note'), dataStato: col('Data stato') };
+  const c = { data: col('Data'), nome: col('Nome'), prov: col('Provenienza'), stato: col('Stato'), dataStato: col('Data stato') };
   return dati
     .map((r) => {
       const quando = dataItaliana(r[c.data]);
-      const nome = (r[c.nome] || '').trim();
-      if (!quando || !nome) return null;
+      // una riga senza nome è vuota o a metà: non è un contatto
+      if (!quando || !(r[c.nome] || '').trim()) return null;
       const statoDal = dataItaliana(r[c.dataStato] || '');
       return {
         d: ymdLocale(quando),
-        nome,
         src: fonte(r[c.prov] || ''),
-        int: riassunto((r[c.int] || '').trim(), (r[c.note] || '').trim()),
         stato: (r[c.stato] || '').trim() || 'Nuovo',
         ...(statoDal ? { dal: ymdLocale(statoDal) } : {}),
       };
