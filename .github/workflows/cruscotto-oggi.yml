@@ -1,0 +1,43 @@
+name: Cruscotto di ogni mattina
+
+# Ogni mattina i numeri della scheda "Numeri" del cruscotto online
+# (https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL), dal 28 ott 2026: Matteo
+# vuole la pagina aggiornata ogni giorno. scripts/cruscotto-oggi.mjs legge
+# contatti, spesa e Search Console, li mette su main chiusi a chiave e sveglia il
+# postino con la chiave; il postino li porta nel database della pagina.
+# Lo fa partire la sveglia su Netlify (netlify/functions/_shared/orari.mjs);
+# rilanciarlo non fa danni, scrive solo numeri più freschi.
+on:
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: 'Solo prova: legge i dati e stampa i conteggi, non scrive niente'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  cruscotto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      # TZ: le date dei contatti e delle settimane sono quelle di Roma.
+      - name: Prepara i numeri e sveglia il postino
+        env:
+          TZ: Europe/Rome
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
+          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/cruscotto-oggi.mjs ${{ inputs.prova == true && '--prova' || '' }}

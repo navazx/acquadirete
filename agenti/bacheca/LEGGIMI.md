@@ -84,3 +84,16 @@ genera Matteo, non è mai scritto nel repo). A ogni giro:
 Le note degli agenti su GitHub arrivano sulla bacheca in un paio di minuti se il
 postino viene svegliato, altrimenti entro 3 ore. Le note di Matteo verso gli
 agenti su GitHub arrivano al giro dopo del postino, quindi anche quelle entro 3 ore.
+
+### I numeri del cruscotto (dal 28 ott 2026)
+
+La bacheca sta nella stessa pagina del cruscotto, e Matteo vuole i numeri della
+scheda "Numeri" aggiornati ogni giorno. Ogni mattina `cruscotto-oggi.yml`
+(`scripts/cruscotto-oggi.mjs`) legge contatti, spesa di Google e Meta e Search
+Console, li mette su main in `agenti/cruscotto/oggi.enc` **chiusi a chiave** (ci
+sono nomi di clienti e cifre in euro, e il repo è pubblico) e sveglia il postino
+con la chiave nel messaggio, `CRUSCOTTO-CHIAVE <64 caratteri>`. Il postino apre il
+file con `scripts/cruscotto-apri.mjs` e lo copia nel database della pagina,
+documento `cruscotto/oggi`; la pagina ricalcola e ridisegna tutto da lì. La chiave
+non sta da nessuna parte nel repo: senza il messaggio di quella mattina il file non
+si apre. Se il giro salta, la pagina lo dice da sola dopo 36 ore.
