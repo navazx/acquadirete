@@ -199,8 +199,17 @@ Le ha tolte la revisione dei testi del 14 ott 2026; non vanno rimesse.
 - "Ideale per neonati" o qualsiasi promessa per bambini: sui neonati decide il pediatra.
 - "Definitiva", "ultra", "altissima qualità", "sistemi certificati": parole da depliant,
   non nostre.
-- Allarmismi sull'acqua del rubinetto: "non è più sicura", elenchi di metalli pesanti,
-  pesticidi, batteri, "senza microplastiche". Si parla di sapore, cloro e calcare.
+- Allarmismi sull'acqua del rubinetto: "non è più sicura", "nell'acqua di Firenze ci
+  sono…", "senza microplastiche" detto come promessa, i batteri. Per l'acqua di casa si
+  parla di sapore, cloro e calcare.
+- **Cosa trattiene l'osmosi si può dire** (Matteo, 29 ott 2026: nominare metalli
+  pesanti e il resto perché è vero che l'osmosi li toglie, senza dire che per forza ci
+  sono nell'acquedotto). Metalli pesanti, nitrati, pesticidi, microplastiche si possono
+  nominare come cose che la membrana trattiene: è una caratteristica della macchina,
+  detta con "riduce" o "trattiene", mai "elimina tutto". Non si legano mai all'acqua di
+  una città o dell'acquedotto e non fanno capire che il rubinetto non è sicuro: se in
+  una casa ci sono davvero lo dice l'analisi gratuita. I batteri restano fuori: sono
+  una promessa sulla salute.
 - "Per sempre", "si ripaga", "la maggior parte delle persone preferisce…": promesse e
   statistiche che non possiamo dimostrare.
 

@@ -152,10 +152,10 @@ Per 1, 2, 3 e 4 nell'anteprima: "Cosa ci si aspetta" più visite arrivate da un'
    - «depuratori acqua gratis» 41 volte, 11,1°;
    - «purificatore d'acqua gratis» 23 volte, 10,8°.
    Compaiono anche «sottolavello», «domestico», «rubinetto», e una domanda scritta per intero: «quali aziende offrono depuratori d'acqua con installazione e manutenzione inclusi?». L'articolo che esce primo per «depuratore acqua gratis contratto» (un'azienda del Lazio) fa il conto: somma su dieci anni le voci di un contratto "gratis" e le mette accanto all'acquisto, in tabella, con 10 domande frequenti. Noi le cifre non le possiamo inventare, ma possiamo dare il metodo del conto: quali voci sommare e per quanti anni, come fa già l'articolo «Prima di firmare». L'articolo porta ai prezzi con un collegamento nel testo dal 17 ottobre: la parte nuova deve lasciare quella strada in vista.
-2. **«Carboni attivi o osmosi inversa?»**: tre passaggi contro le regole del 14 ottobre, da correggere senza riscrivere il resto:
-   - in "Cosa fa davvero l'osmosi inversa", l'elenco «metalli pesanti, nitrati, pesticidi, batteri»;
-   - fra i punti di "Le differenze in pratica", «Metalli pesanti, nitrati, microplastiche»;
+2. **«Carboni attivi o osmosi inversa?»**: due passaggi contro le regole, da correggere senza riscrivere il resto:
+   - in "Cosa fa davvero l'osmosi inversa", dall'elenco «metalli pesanti, nitrati, pesticidi, batteri» vanno tolti solo i batteri: il resto dal 29 ottobre si può dire, perché è quello che la membrana trattiene (Matteo);
    - in "Quando conviene l'osmosi inversa", «per il latte dei più piccoli».
+   «Metalli pesanti, nitrati, microplastiche» fra i punti di "Le differenze in pratica" resta com'è.
    L'articolo ha anche cinque righe a elenco puntato, che gli articoli nuovi non usano più. 363 volte in 90 giorni al 5,7° posto. Se Matteo approva la proposta di oggi, nella prima frase di "Cosa fanno davvero i carboni attivi" ci sarà un collegamento: va lasciato com'è.
 3. **Acqua del rubinetto di Firenze**, non prima del 23 novembre (prova del titolo in corso). «Durezza acqua firenze» esce 22 volte al 18,7° posto e «analisi acqua firenze» 8 volte al 15,3°: l'articolo non dà un valore di durezza. L'agente Scheda Google ha segnalato il 12 ottobre che la Carta dell'acqua di Publiacqua dà per Firenze una durezza media, mentre l'articolo dice «da mediamente dura a dura»: va controllato sulla fonte.
 4. **Filtri** (candidato per dicembre, non prima di quattro settimane dal collegamento di oggi): 990 volte in 90 giorni, 4 clic, ricerche fra il 7,9° e il 10,5° posto. È vicino all'acquisto: lo legge chi un depuratore ce l'ha già.
