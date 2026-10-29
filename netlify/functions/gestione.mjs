@@ -25,7 +25,7 @@ import {
   cancellaIntervento, annullaCancellazione, cancellaLavoro, annullaCancellaLavoro, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
   perPersona, riferimentiFuori, registra, conAccessiDiBase,
-  salvaFoto, togliFoto, rimettiFoto, leggiImmagine, fotoDaId, salvaPosizioneContatto,
+  salvaFoto, togliFoto, rimettiFoto, leggiImmagine, fotoDaId, salvaPosizioneContatto, rinominaContatti,
 } from './_shared/gestionale.mjs';
 
 // L'archivio delle foto dei clienti (26 ott 2026): Netlify Blobs, in Europa
@@ -114,6 +114,7 @@ const AZIONI = {
   togliFoto,
   rimettiFoto,
   posizioneContatto: salvaPosizioneContatto, // «Sono qui» dalla scheda del contatto, al sopralluogo (27 ott 2026)
+  rinominaContatti, // una volta sola: i contatti vecchi col cognome davanti (29 ott 2026, solo Matteo)
 };
 
 // Le azioni che chiedono un permesso degli Accessi. Le altre le può fare

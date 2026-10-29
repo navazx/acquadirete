@@ -1139,6 +1139,7 @@ const NOMI_AZIONI = {
   magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
   annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
   foto: 'Foto', togliFoto: 'Foto tolta', rimettiFoto: 'Foto rimessa', posizioneContatto: 'Posizione contatto',
+  rinominaContatti: 'Contatti col cognome davanti',
 };
 const breveValore = (v) => testo(typeof v === 'object' ? JSON.stringify(v) : v).replace(/\s+/g, ' ').slice(0, 80);
 // «26/10/2026 10:32», ora di Roma.
@@ -2052,6 +2053,63 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
     }
   }
   return { ok: true, stato, cliente, dataStato };
+}
+
+// Una volta sola (29 ott 2026, Matteo: «sì, girali»): i contatti arrivati
+// prima che il nome arrivasse già col cognome davanti. Solo il titolare.
+// `cambi`: [{ data, nome, nuovo }], l'elenco lo prepara Claude dal PC con
+// cognomeDavanti e lo controlla prima; `prova`: dice cosa farebbe senza
+// scrivere. Il nome nuovo deve avere le stesse parole in un altro ordine.
+// Col nome cambia la chiave "data|nome" che lega le tappe (Giri: Contatto e
+// Nome), le foto (Foto: Contatto e Cliente) e la posizione (Coordinate:
+// Contatto): tutto in una scrittura sola. Rifatta, salta quelli già girati.
+export async function rinominaContatti(foglio, { cambi = [], prova = false }, { chi } = {}) {
+  if (chi !== TITOLARE) throw problema('Solo Matteo può farlo.', 403);
+  if (!Array.isArray(cambi) || !cambi.length || cambi.length > 200) throw problema('Elenco non valido.');
+  const [{ griglia: gl, mappa: ml }, giri, foto, coord] = await Promise.all([
+    leggiLead(foglio),
+    foglio.leggi(`'${TAB_GIRI}'!A1:${ULTIMA_GIRI}3000`, 'UNFORMATTED_VALUE').catch(() => []),
+    foglio.leggi(`'${TAB_FOTO}'!A1:H5000`, 'UNFORMATTED_VALUE').catch(() => []),
+    foglio.leggi(`'${TAB_COORDINATE}'!A1:G3000`, 'UNFORMATTED_VALUE').catch(() => []),
+  ]);
+  const parole = (s) => normalizza(s).split(' ').sort().join(' ');
+  const scritture = [];
+  const fatti = [];
+  const saltati = [];
+  for (const c of cambi) {
+    const data = testo(c.data);
+    const nome = testo(c.nome);
+    const nuovo = testo(c.nuovo).replace(/\s+/g, ' ');
+    if (!nuovo || nuovo === nome || parole(nuovo) !== parole(nome)) { saltati.push({ nome, perche: 'non sono le stesse parole' }); continue; }
+    let r;
+    try { r = trovaLead(gl, ml, { data, nome }); } catch { saltati.push({ nome, perche: 'non c\'è più, o è già girato' }); continue; }
+    const vecchia = chiaveContatto({ data, nome });
+    const nuova = chiaveContatto({ data, nome: nuovo });
+    scritture.push({ range: `'${TAB_LEAD}'!${lettera(ml.col.NOME)}${r}`, values: [[nuovo]] });
+    let tappe = 0;
+    giri.forEach((x, i) => {
+      if (i === 0 || testo((x || [])[G.Contatto]) !== vecchia) return;
+      tappe++;
+      scritture.push({ range: `'${TAB_GIRI}'!G${i + 1}`, values: [[nuova]] });
+      if (normalizza(x[G.Nome]) === normalizza(nome)) scritture.push({ range: `'${TAB_GIRI}'!H${i + 1}`, values: [[nuovo]] });
+    });
+    let nFoto = 0;
+    foto.forEach((x, i) => {
+      if (i === 0 || testo((x || [])[F.Contatto]) !== vecchia) return;
+      nFoto++;
+      scritture.push({ range: `'${TAB_FOTO}'!H${i + 1}`, values: [[nuova]] });
+      if (normalizza(x[F.Cliente]) === normalizza(nome)) scritture.push({ range: `'${TAB_FOTO}'!C${i + 1}`, values: [[nuovo]] });
+    });
+    let posizioni = 0;
+    coord.forEach((x, i) => {
+      if (i === 0 || testo((x || [])[6]) !== vecchia) return;
+      posizioni++;
+      scritture.push({ range: `'${TAB_COORDINATE}'!G${i + 1}`, values: [[nuova]] });
+    });
+    fatti.push({ nome, nuovo, riga: r, tappe, foto: nFoto, posizioni });
+  }
+  if (!prova && scritture.length) await foglio.scrivi(scritture, 'RAW');
+  return { ok: true, prova, scritto: !prova && scritture.length > 0, celle: scritture.length, fatti, saltati };
 }
 
 // Contatto nuovo scritto a mano (chi telefona o scrive senza compilare il
