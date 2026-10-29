@@ -3330,7 +3330,7 @@
       </div>
       <p class="spiega">Con l'ora la tappa va in fila per ora. Se il cliente dà una fascia («fra le 9 e le 11»), scrivi anche fino a che ora; se no lascia vuoto «Fino alle».</p>
       ${libero ? `
-        <label class="campo"><span>Nome</span><input id="t-nome" autocapitalize="words" value="${v((t0 && t0.nome) || (l && l.nome))}"></label>
+        <label class="campo"><span>Cognome e nome <em>(o la ditta)</em></span><input id="t-nome" autocapitalize="words" value="${v((t0 && t0.nome) || (l && l.nome))}"></label>
         <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
         <label class="campo"><span>Città</span><input id="t-citta" value="${v((t0 && t0.citta) || cittaLead)}"></label>
         <label class="campo"><span>Telefono <em>(facoltativo)</em></span><input id="t-tel" inputmode="tel" value="${v((t0 && t0.telefono) || (l && l.contatto))}"></label>` : ''}
@@ -4313,7 +4313,7 @@
     let provenienza = 'Passaparola';
     schermo.innerHTML = `
       <form id="f-lead" novalidate>
-        <label class="campo"><span>Nome e cognome</span><input name="nome" autocomplete="off" autocapitalize="words" required></label>
+        <label class="campo"><span>Cognome e nome</span><input name="nome" autocomplete="off" autocapitalize="words" placeholder="Es. Rossi Mario" required></label>
         <p class="errore-campo" id="err-nome" hidden>Scrivi almeno il nome.</p>
         <label class="campo"><span>Telefono</span><input name="telefono" type="tel" inputmode="tel" autocomplete="off"></label>
         <label class="campo"><span>Email <em>(facoltativo)</em></span><input name="email" type="email" inputmode="email" autocomplete="off" autocapitalize="none"></label>
@@ -4586,7 +4586,7 @@
     schermo.innerHTML = `
       ${c ? `<div class="testa" style="margin-bottom:16px"><h2>${esc(c.nome)}</h2></div>` : ''}
       <form id="f-modulo" novalidate>
-        ${c ? '' : `<label class="campo"><span>Cognome e nome</span><input name="nome" autocomplete="off" autocapitalize="characters" required></label>
+        ${c ? '' : `<label class="campo"><span>Cognome e nome</span><input name="nome" autocomplete="off" autocapitalize="characters" placeholder="Es. ROSSI MARIO" required></label>
         <p class="errore-campo" id="err-nome" hidden>Scrivi almeno il nome.</p>`}
         <label class="campo"><span>Telefono</span><input name="telefono" type="tel" inputmode="tel" autocomplete="off" ${valore(c && c.contatto)}></label>
         <label class="campo"><span>Indirizzo <em>(via e numero)</em></span><input name="indirizzo" autocomplete="off" ${valore(c && c.indirizzo)}></label>
