@@ -7,6 +7,7 @@
 // già presenti nella scheda del foglio: non cambiarli qui senza aggiornare
 // anche il foglio (e viceversa).
 import { appendOrMergeRow, assicuraIntestazione, nowInItaly, nomeProprio } from './_shared/google-sheets.mjs';
+import { nomeContattoInArrivo } from './_shared/gestionale.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 
 const TAB = 'Lead-Contatti';
@@ -117,6 +118,9 @@ export default async (req) => {
   ].filter(Boolean).join(' — ');
 
   try {
+    // "Cognome Nome" come nel Gestionale, anche se l'ha scritto al contrario
+    // (29 ott 2026, Matteo).
+    const nomeScritto = await nomeContattoInArrivo(nomeProprio(clip(nome, 200)));
     // Se la stessa persona ha già scritto di recente, la sua riga viene
     // completata invece di crearne una seconda.
     const esito = await appendOrMergeRow(
@@ -124,7 +128,7 @@ export default async (req) => {
       HEADERS,
       [
         nowInItaly(),
-        nomeProprio(clip(nome, 200)),
+        nomeScritto,
         contatto,
         'Sito web',
         clip(servizio, 100),
@@ -139,7 +143,7 @@ export default async (req) => {
     if (colonnaClic) await assicuraIntestazione(TAB, HEADERS[0], 'I', 'Clic annuncio Google').catch(() => {});
     const righe = [
       esito.doppione ? '🔁 Ha riscritto dal SITO (già in lista)' : '🔔 Nuovo contatto dal SITO',
-      `👤 ${nomeProprio(clip(nome, 200))}`,
+      `👤 ${nomeScritto}`,
       `📞 ${contatto}`,
       zona ? `📍 ${clip(zona, 100)}` : '',
       servizio ? `🚰 ${clip(servizio, 100)}` : '',

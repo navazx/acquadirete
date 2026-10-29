@@ -17,6 +17,7 @@
 //                      X-Hub-Signature-256 di ogni chiamata.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { appendOrMergeRow, nomeProprio } from './_shared/google-sheets.mjs';
+import { nomeContattoInArrivo } from './_shared/gestionale.mjs';
 import { notifyTelegram } from './_shared/telegram.mjs';
 import { etichettaZona } from './_shared/zone.mjs';
 
@@ -130,7 +131,8 @@ async function saveLead({ leadgen_id, ad_id, form_id }) {
   };
   // I moduli reali della pagina usano nomi diversi per lo stesso campo
   // ("phone" nel modulo di luglio, "phone_number" in quello di giugno).
-  const nome = nomeProprio(take('full_name', 'nome_e_cognome', 'nome'));
+  // "Cognome Nome" come nel Gestionale (29 ott 2026, Matteo).
+  const nome = await nomeContattoInArrivo(nomeProprio(take('full_name', 'nome_e_cognome', 'nome')));
   const telefono = take('phone_number', 'phone', 'telefono', 'numero_di_telefono');
   const email = take('email', 'indirizzo_email');
   // La domanda sulla zona è personalizzata: Meta ne ricava il nome del campo

@@ -184,15 +184,69 @@ const testo = (v) => (v == null ? '' : String(v)).trim();
 export function cognomePrimo(nome, nomiClienti) {
   const parti = testo(nome).toUpperCase().split(/\s+/).filter(Boolean);
   if (parti.length < 2) return parti.join(' ');
+  const conta = nomiDiBattesimo(nomiClienti);
+  const primo = conta[parti[0]] || 0;
+  const ultimo = conta[parti[parti.length - 1]] || 0;
+  return primo > ultimo ? [...parti.slice(1), parti[0]].join(' ') : parti.join(' ');
+}
+// Quante volte ogni parola fa da nome di battesimo fra i clienti (in
+// "COGNOME NOME" è l'ultima parola).
+function nomiDiBattesimo(nomiClienti) {
   const conta = {};
   for (const n of nomiClienti) {
     const p = String(n ?? '').toUpperCase().replace(/\([^)]*\)/g, ' ').split(/\/|\sE\s/)[0]
       .replace(/[^A-ZÀ-Ü' ]+/g, ' ').trim().split(/\s+/).filter(Boolean);
     if (p.length >= 2) conta[p[p.length - 1]] = (conta[p[p.length - 1]] || 0) + 1;
   }
-  const primo = conta[parti[0]] || 0;
-  const ultimo = conta[parti[parti.length - 1]] || 0;
-  return primo > ultimo ? [...parti.slice(1), parti[0]].join(' ') : parti.join(' ');
+  return conta;
+}
+
+// Un contatto che arriva (dal sito, da Facebook o dall'app) si scrive già
+// "Cognome Nome" (29 ott 2026, Matteo: «giralo già quando arriva»; prima lo
+// giravano a mano nel foglio, o lo girava cognomePrimo quando diventava
+// cliente). Stessa regola dei nomi di battesimo dei clienti, ma prudente:
+// con due parole si gira se la prima fa da nome più spesso dell'ultima; con
+// tre o più si porta davanti l'ultima solo se la prima è un nome e l'ultima
+// non lo è mai («Maria Grazia Rossi» → «Rossi Maria Grazia»); nel dubbio
+// resta com'è. Un cognome con la particella si sposta tutto insieme
+// («Riccardo Lo Bue» → «Lo Bue Riccardo», non «Bue Riccardo Lo»). Le
+// maiuscole restano quelle scritte. Già girato, cognomePrimo non lo rigira
+// (la prima parola è un cognome).
+const PARTICELLE = new Set(['LO', 'LA', 'LE', 'LI', 'DE', 'DI', 'DA', 'DEL', 'DELLA', 'DELLE', 'DEGLI', 'DEI', 'DAL', 'DALLA', 'DALLE', 'DAGLI', 'DAI']);
+export function cognomeDavanti(nome, nomiClienti) {
+  const parti = testo(nome).split(/\s+/).filter(Boolean);
+  if (parti.length < 2) return parti.join(' ');
+  const conta = nomiDiBattesimo(nomiClienti);
+  const n = (w) => conta[w.toUpperCase()] || 0;
+  const primo = parti[0];
+  const k = parti.findIndex((w, i) => i > 0 && i < parti.length - 1 && PARTICELLE.has(w.toUpperCase()));
+  if (k > 0) return n(primo) > 0 ? [...parti.slice(k), ...parti.slice(0, k)].join(' ') : parti.join(' ');
+  const ultimo = parti[parti.length - 1];
+  if (parti.length === 2) return n(primo) > n(ultimo) ? `${ultimo} ${primo}` : parti.join(' ');
+  return n(primo) > 0 && n(ultimo) === 0 ? [ultimo, ...parti.slice(0, -1)].join(' ') : parti.join(' ');
+}
+// I nomi dei clienti, per cognomeDavanti.
+export async function nomiDeiClienti(foglio) {
+  const { griglia, mappa } = await leggiClienti(foglio);
+  return griglia.slice(mappa.riga).map((r) => (r || [])[mappa.col.NOME - 1]).filter(Boolean);
+}
+// Per lead.mjs e meta-leads.mjs: il nome col cognome davanti, o com'era se
+// il foglio non risponde o ci mette più di 4 secondi (un contatto non si
+// perde né si fa aspettare per questo).
+export async function nomeContattoInArrivo(nome) {
+  let timer;
+  try {
+    const nomi = await Promise.race([
+      nomiDeiClienti(creaFoglioGoogle(process.env.GESTIONE_SHEET_ID || process.env.LEADS_SHEET_ID)),
+      new Promise((_, ko) => { timer = setTimeout(() => ko(new Error('il foglio non ha risposto in 4 secondi')), 4000); }),
+    ]);
+    return cognomeDavanti(nome, nomi);
+  } catch (err) {
+    console.error('Nome del contatto non girato:', err);
+    return testo(nome);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Il valore che hanno gli altri clienti della stessa città, se sono almeno 2
@@ -2011,7 +2065,7 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
 // modulo del sito lo sa da solo, le chiamate no: lo dice chi risponde).
 const PROVENIENZE = ['Meta / Facebook', 'Sito web', 'Annuncio Google (WhatsApp/telefono)', 'Passaparola'];
 export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
-  const nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200);
+  let nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200);
   const telefono = testo(dati.telefono).slice(0, 50);
   const email = testo(dati.email).slice(0, 200);
   if (!nome) throw problema('Scrivi almeno il nome.');
@@ -2024,6 +2078,9 @@ export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
     const n = p.replace(/^(\+39|0039)/, '').replace(/\D/g, '').length;
     if (n < 8 || n > 11) throw problema(`Il telefono sembra sbagliato: ha ${n} cifre. Un cellulare ne ha 10, un fisso di solito 9 o 10 col prefisso.`);
   }
+  // "COGNOME NOME" anche se scritto al contrario (29 ott 2026). Se i clienti
+  // non si leggono, resta come è stato scritto.
+  nome = cognomeDavanti(nome, await nomiDeiClienti(foglio).catch(() => []));
 
   const citta = testo(dati.citta).slice(0, 80);
   let zona = '';
