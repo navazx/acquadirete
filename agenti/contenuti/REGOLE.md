@@ -181,10 +181,12 @@ conto, "te lo diciamo col sopralluogo gratuito". Nessuna cifra.
   dare: far scorrere l'acqua dopo lunghe soste.
 - **Cosa misura il sopralluogo** (Matteo, 29 ott 2026): solo la **conducibilità
   elettrica** dell'acqua, cioè quanti sali ci sono sciolti. Non dice cosa contiene.
-  Si scrive "misuriamo la tua acqua" o "ti facciamo vedere quanti sali contiene", mai
-  che il sopralluogo trova o esclude metalli, nitrati, pesticidi, cloro o batteri, né
-  che dice se l'acqua è buona o sicura. Niente "analisi completa" né "sapere com'è
-  davvero la tua acqua".
+  Nei testi si resta **generici, con un'aria da lavoro serio** (Matteo, stesso
+  giorno): "analizziamo la tua acqua", "la controlliamo sul posto con i nostri
+  strumenti", "vogliamo vedere la tua acqua prima di consigliarti". Mai il dettaglio
+  della misura, e mai cosa trova: niente metalli, nitrati, pesticidi, cloro o batteri
+  trovati o esclusi, niente "ti diciamo se è buona o sicura", "analisi completa",
+  "sapere com'è davvero la tua acqua" o "ti spieghiamo esattamente cosa cambierebbe".
 - Il sopralluogo è gratuito. Dura una decina di minuti (Matteo, 22 ott 2026): si può scrivere "bastano una decina di minuti".
 - **Macchina sostitutiva: solo se necessario** (Matteo, 18 set 2026). Mai "in caso di
   guasto" detto come se valesse sempre, mai "non resti mai senz'acqua": si scrive

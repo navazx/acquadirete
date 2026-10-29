@@ -433,7 +433,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'acqua a osmosi inversa va bene per il latte del neonato? Rispondiamo con onestà, separando i fatti generali dalle valutazioni che spettano al pediatra.',
     publishedAt: '2026-06-26',
-    updatedAt: '2026-10-19',
+    updatedAt: '2026-10-29',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'carboni', 'depuratore'],
     relatedPosts: ['osmosi-inversa-fa-male', 'carboni-attivi-vs-osmosi-inversa'],
@@ -469,7 +469,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Cosa possiamo dirti noi (e cosa no)',
         paragraphs: [
           'Possiamo dirti con certezza come funziona il nostro impianto, che tipo di acqua produce e come regoliamo i minerali. Quello che non facciamo è darti consigli medici: se hai dubbi sull\'alimentazione del tuo bambino, su quantità, temperature o esigenze particolari, la persona giusta a cui chiedere è il pediatra che lo segue.',
-          'Se vuoi, durante il sopralluogo gratuito analizziamo la tua acqua e ti spieghiamo esattamente cosa cambierebbe con un nostro impianto: avrai informazioni chiare e concrete da portare anche al pediatra, per decidere con tutti gli elementi in mano.',
+          'Se vuoi, durante il sopralluogo gratuito controlliamo la tua acqua sul posto e ti spieghiamo come funziona un nostro impianto e come regoliamo il residuo fisso: informazioni chiare da portare anche al pediatra, che resta chi decide.',
         ],
       },
     ],
@@ -571,7 +571,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       'L\'acqua di Firenze è potabile, ma tra cloro e calcare in tanti la comprano in bottiglia. Ti spieghiamo com\'è davvero e quando un depuratore ha senso.',
     publishedAt: '2026-07-15',
-    updatedAt: '2026-10-26',
+    updatedAt: '2026-10-29',
     readingMinutes: 7,
     relatedServices: ['depuratore', 'carboni', 'osmosi'],
     relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'quanto-costa-depuratore-osmosi-inversa'],
@@ -630,9 +630,9 @@ export const BLOG_POSTS: BlogPost[] = [
         ],
       },
       {
-        heading: 'Vuoi sapere com\'è davvero la tua acqua? Te lo diciamo gratis',
+        heading: 'Vuoi capire se ti serve un depuratore? Veniamo a vedere gratis',
         paragraphs: [
-          'La durezza e la qualità dell\'acqua cambiano da zona a zona, a volte da strada a strada. L\'unico modo per sapere com\'è davvero la tua è analizzarla: durante il sopralluogo gratuito a Firenze, Prato e Pistoia lo facciamo direttamente a casa tua, e ti diciamo onestamente se e quale impianto avrebbe senso — anche quando la risposta è "la tua acqua va già bene così".',
+          'L\'acqua cambia da zona a zona, a volte da strada a strada: per questo, prima di consigliarti qualcosa, vogliamo vedere la tua. Durante il sopralluogo gratuito a Firenze, Prato e Pistoia la controlliamo direttamente a casa tua con i nostri strumenti, e ti diciamo onestamente se e quale impianto avrebbe senso — anche quando la risposta è "non ti serve niente".',
         ],
       },
     ],
