@@ -176,9 +176,15 @@ conto, "te lo diciamo col sopralluogo gratuito". Nessuna cifra.
 - L'acqua dell'acquedotto è controllata e sicura **fino al contatore**. Da lì in poi
   colonna montante del condominio e tubature di casa sono rete privata, responsabilità
   del proprietario. Spiega perché due case nella stessa via hanno acqua diversa, e
-  porta a "l'acqua che conta è quella al tuo rubinetto, ed è quella che analizziamo
+  porta a "l'acqua che conta è quella al tuo rubinetto, ed è quella che misuriamo
   gratis". Senza allarmismi: sapore, sedimenti, non pericolo. Consiglio gratuito da
   dare: far scorrere l'acqua dopo lunghe soste.
+- **Cosa misura il sopralluogo** (Matteo, 29 ott 2026): solo la **conducibilità
+  elettrica** dell'acqua, cioè quanti sali ci sono sciolti. Non dice cosa contiene.
+  Si scrive "misuriamo la tua acqua" o "ti facciamo vedere quanti sali contiene", mai
+  che il sopralluogo trova o esclude metalli, nitrati, pesticidi, cloro o batteri, né
+  che dice se l'acqua è buona o sicura. Niente "analisi completa" né "sapere com'è
+  davvero la tua acqua".
 - Il sopralluogo è gratuito. Dura una decina di minuti (Matteo, 22 ott 2026): si può scrivere "bastano una decina di minuti".
 - **Macchina sostitutiva: solo se necessario** (Matteo, 18 set 2026). Mai "in caso di
   guasto" detto come se valesse sempre, mai "non resti mai senz'acqua": si scrive
@@ -207,9 +213,9 @@ Le ha tolte la revisione dei testi del 14 ott 2026; non vanno rimesse.
   sono nell'acquedotto). Metalli pesanti, nitrati, pesticidi, microplastiche si possono
   nominare come cose che la membrana trattiene: è una caratteristica della macchina,
   detta con "riduce" o "trattiene", mai "elimina tutto". Non si legano mai all'acqua di
-  una città o dell'acquedotto e non fanno capire che il rubinetto non è sicuro: se in
-  una casa ci sono davvero lo dice l'analisi gratuita. I batteri restano fuori: sono
-  una promessa sulla salute.
+  una città o dell'acquedotto e non fanno capire che il rubinetto non è sicuro. Non
+  si legano neanche al sopralluogo, che misura solo la conducibilità (vedi sopra). I
+  batteri restano fuori: sono una promessa sulla salute.
 - "Per sempre", "si ripaga", "la maggior parte delle persone preferisce…": promesse e
   statistiche che non possiamo dimostrare.
 
