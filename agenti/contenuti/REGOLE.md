@@ -4,6 +4,8 @@ L'agente le rilegge ogni volta, prima di scrivere. Non sono gusti: sono le cose 
 Matteo ha già fatto togliere dagli articoli veri, e i fatti che ha confermato lui.
 Se una regola va cambiata, si cambia qui.
 
+**Gli articoli servono a vendere** (Matteo, 29 ott 2026: «tutto ciò serve per vendere, non esagerare con le sicurezze»). I divieti qui sotto sono pochi e precisi: le cose false o che non possiamo dimostrare. Tutto il resto si scrive con convinzione: vantaggi chiari, toni decisi, inviti a chiamare. Non riempire i testi di "dipende", "in molti casi", "non possiamo garantire" e avvertenze dove nessuna regola le chiede: un articolo prudente su tutto non porta clienti.
+
 **Prima di tutto leggi `agenti/ordini.md`**: le priorità del mese scelte dal
 Direttore e approvate da Matteo. Se una riguarda i contenuti, quel lavoro viene
 prima dell'elenco qui sotto. Se in cima c'è scritto "in attesa di Matteo", non
