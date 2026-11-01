@@ -124,5 +124,14 @@
     "url": null,
     "fatto": "- Nell'articolo «Ogni quanto cambiare i filtri del depuratore», nella parte\n  \"Il nostro approccio (e cosa possiamo fare per te)\", le parole «un piano di\n  manutenzione programmata» ora portano alla pagina Assistenza. Nessuna\n  parola aggiunta o tolta.\n- Nella guida «Carboni attivi o osmosi inversa?», nella parte \"Cosa fanno\n  davvero i carboni attivi\", le parole «Un depuratore a carboni attivi» ora\n  portano alla pagina del depuratore a carboni attivi. Nessuna parola\n  aggiunta o tolta.\n- Tre vecchi indirizzi del sito di una volta, che davano \"pagina non\n  trovata\", ora portano a una pagina di oggi: contatti.aspx alla pagina\n  Contatti, ufficio.htm alla pagina per uffici e ristoranti,\n  addolcitori_acqua.htm alla home. Il controllo del lunedì li sorveglia.",
     "decisa": "2026-10-27T12:00:51.047Z"
+  },
+  {
+    "ramo": "proposta/ordini-2026-11",
+    "tipo": "ORDINI",
+    "titolo": "novembre 2026",
+    "creata": "2026-11-01T06:18:38.117Z",
+    "stato": "in attesa",
+    "sha": "bf831efa97279c525d5c6d26dbd902c19731d674",
+    "url": null
   }
 ]
