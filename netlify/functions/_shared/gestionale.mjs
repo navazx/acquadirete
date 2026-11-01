@@ -20,7 +20,7 @@ import { etichettaZona } from './zone.mjs';
 export const TAB_CLIENTI = 'Clienti-Impianti';
 export const TAB_LEAD = 'Lead-Contatti';
 export const TAB_STORICO = 'Storico-Interventi';
-const INTESTAZIONI_STORICO = ['Data', 'Codice', 'Cliente', 'Prossima manutenzione', 'Segnata da', 'Pagamento', 'Scadenza prima', 'Lavoro'];
+const INTESTAZIONI_STORICO = ['Data', 'Codice', 'Cliente', 'Prossima manutenzione', 'Segnata da', 'Pagamento', 'Scadenza prima', 'Lavoro', 'Importo'];
 // Come ha pagato il cliente (dal 19 ott 2026, richiesta di Matteo): l'app lo
 // chiede subito dopo «Manutenzione fatta». «Da risentire» = non ha ancora
 // pagato, va richiamato; si cambia dopo dallo storico. Vuoto = segnata prima
@@ -33,6 +33,30 @@ const pagamentoDa = (v) => {
   const trovato = PAGAMENTI.find((x) => normalizza(x) === normalizza(p));
   if (!trovato) throw problema('Pagamento non valido.');
   return trovato;
+};
+// Quanto ha pagato (1 nov 2026, Matteo: «dopo che ho selezionato il
+// pagamento mi deve chiedere quanto ha pagato il cliente»): colonna
+// "Importo" dello storico, in euro coi centesimi. Solo con Contanti, POS o
+// Fattura: in garanzia e da risentire resta vuota. Dal telefono arriva un
+// numero; dal foglio può essere «80», «80,5» o «€ 1.200,00».
+const PAGAMENTI_SENZA_IMPORTO = ['Gratis in garanzia', 'Da risentire'];
+const pagaConImporto = (pag) => !!pag && !PAGAMENTI_SENZA_IMPORTO.includes(pag);
+const importoDa = (v) => {
+  if (v === '' || v == null) return null;
+  if (typeof v === 'number') return isFinite(v) ? Math.round(v * 100) / 100 : null;
+  let s = testo(v).replace(/[\s€]/g, '');
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  const n = Number(s);
+  return s && isFinite(n) ? Math.round(n * 100) / 100 : null;
+};
+// L'importo da scrivere: '' se non c'è o se quel pagamento non lo vuole.
+// Un'app di prima del 1 nov 2026 non lo manda: si accetta lo stesso.
+const importoScritto = (pag, v) => {
+  if (!pagaConImporto(pag) || v === '' || v == null) return '';
+  const n = importoDa(v);
+  if (n == null || n <= 0 || n > 100000) throw problema('Controlla quanto ha pagato: il numero non va bene.');
+  return n;
 };
 
 // Stessa mappa di COLONNE_CLIENTI in gestionale-lead-a-cliente.gs, più
@@ -554,7 +578,7 @@ async function leggiGrigliaStorico(foglio, celle = 'A1:J5000') {
 const colonneStorico = (griglia) => {
   const testa = ((griglia && griglia[0]) || []).map(normalizza);
   const c = (nome) => testa.indexOf(normalizza(nome));
-  return { data: c('Data'), codice: c('Codice'), nome: c('Cliente'), prossima: c('Prossima manutenzione'), da: c('Segnata da'), pagamento: c('Pagamento'), prima: c('Scadenza prima'), lavoro: c('Lavoro'), larghezza: testa.length };
+  return { data: c('Data'), codice: c('Codice'), nome: c('Cliente'), prossima: c('Prossima manutenzione'), da: c('Segnata da'), pagamento: c('Pagamento'), prima: c('Scadenza prima'), lavoro: c('Lavoro'), importo: c('Importo'), larghezza: testa.length };
 };
 // La colonna "Lavoro" (dal 21 ott 2026): "Manutenzione" o "Guasto" (una
 // riparazione, segnaRiparazione). Vuota = manutenzione, le righe di prima.
@@ -573,7 +597,7 @@ async function leggiStorico(foglio) {
     const r = g[i] || [];
     const codice = v(r, k.codice).toUpperCase();
     if (!codice) continue; // riga svuotata da un annulla
-    lista.push({ riga: i + 1, data: v(r, k.data), codice, nome: v(r, k.nome), prossima: v(r, k.prossima), chi: chiDaSegnata(v(r, k.da)), pagamento: v(r, k.pagamento), prima: v(r, k.prima), lavoro: lavoroStorico(v(r, k.lavoro)) });
+    lista.push({ riga: i + 1, data: v(r, k.data), codice, nome: v(r, k.nome), prossima: v(r, k.prossima), chi: chiDaSegnata(v(r, k.da)), pagamento: v(r, k.pagamento), importo: importoDa(v(r, k.importo)), prima: v(r, k.prima), lavoro: lavoroStorico(v(r, k.lavoro)) });
   }
   return lista;
 }
@@ -614,7 +638,9 @@ function rigaIntervento(g, k, riga, cod, data) {
   return n;
 }
 
-export async function cambiaPagamento(foglio, { riga, codice, data, pagamento }) {
+// Dal 1 nov 2026 anche quanto ha pagato: un'app vecchia che non manda
+// `importo` lo lascia com'era (o vuoto, se il pagamento nuovo non lo vuole).
+export async function cambiaPagamento(foglio, { riga, codice, data, pagamento, importo }) {
   const pag = pagamentoDa(pagamento);
   const cod = testo(codice).toUpperCase();
   const g = await leggiGrigliaStorico(foglio);
@@ -622,9 +648,18 @@ export async function cambiaPagamento(foglio, { riga, codice, data, pagamento })
   const k = colonneStorico(g);
   const n = rigaIntervento(g, k, riga, cod, data);
   const prima = k.pagamento >= 0 ? testo((g[n - 1] || [])[k.pagamento]) : '';
+  const importoPrima = k.importo >= 0 ? importoDa((g[n - 1] || [])[k.importo]) : null;
+  const imp = importo === undefined ? (pagaConImporto(pag) && importoPrima > 0 ? importoPrima : '') : importoScritto(pag, importo);
   const c = k.pagamento >= 0 ? k.pagamento + 1 : await colonnaPagamento(foglio);
-  await foglio.scrivi([{ range: `'${TAB_STORICO}'!${lettera(c)}${n}`, values: [[pag]] }], 'RAW');
-  return { ok: true, riga: n, pagamento: pag, annulla: { riga: n, codice: cod, data: testo(data), pagamento: prima } };
+  const cI = k.importo >= 0 ? k.importo + 1 : await colonnaStorico(foglio, 'Importo');
+  await foglio.scrivi([
+    { range: `'${TAB_STORICO}'!${lettera(c)}${n}`, values: [[pag]] },
+    { range: `'${TAB_STORICO}'!${lettera(cI)}${n}`, values: [[imp]] },
+  ], 'RAW');
+  return {
+    ok: true, riga: n, pagamento: pag, importo: imp === '' ? null : imp,
+    annulla: { riga: n, codice: cod, data: testo(data), pagamento: prima, importo: importoPrima > 0 ? importoPrima : '' },
+  };
 }
 
 // Cancellare un intervento fatto (21 ott 2026, Matteo: a lui, a babbo e alla
@@ -1358,10 +1393,11 @@ async function rimettiTappe(foglio, ids) {
 // manutenzione" diventa data + frequenza, come chiede il foglio stesso
 // ("Aggiornala quando fai l'intervento"). Restituisce quel che serve per
 // annullare.
-export async function segnaFatta(foglio, { codice, data, frequenza, pagamento }, { chi = 'app' } = {}) {
+export async function segnaFatta(foglio, { codice, data, frequenza, pagamento, importo }, { chi = 'app' } = {}) {
   const quando = data ? leggiDataUtente(data) : oggi();
   if (!quando) throw problema('Data non valida.');
   const pag = pagamentoDa(pagamento);
+  const imp = importoScritto(pag, importo);
   const serQuando = serialeDa(quando.a, quando.m, quando.g);
   const serOggi = serialeDa(...Object.values(oggi()));
   if (serQuando > serOggi) throw problema('La data è nel futuro: scegli oggi o un giorno passato.');
@@ -1404,16 +1440,18 @@ export async function segnaFatta(foglio, { codice, data, frequenza, pagamento },
   let storico = null;
   try {
     const rigaStorico = [testoData(quando), testo(codice).toUpperCase(), nome, testoData(prossima), `App (${chi})`];
-    // Il pagamento e la scadenza di prima nelle loro colonne (la sesta e la
-    // settima, se la scheda nasce adesso).
+    // Il pagamento, la scadenza di prima e quanto ha pagato nelle loro
+    // colonne (la sesta, la settima e la nona, se la scheda nasce adesso).
     const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.indexOf('Pagamento') + 1;
     const cS = (await colonnaStorico(foglio, 'Scadenza prima')) || INTESTAZIONI_STORICO.indexOf('Scadenza prima') + 1;
     const cL = (await colonnaStorico(foglio, 'Lavoro')) || INTESTAZIONI_STORICO.indexOf('Lavoro') + 1;
+    const cI = (await colonnaStorico(foglio, 'Importo')) || INTESTAZIONI_STORICO.indexOf('Importo') + 1;
     const serPrima = serialeDaCella(r[col.MANUTENZIONE - 1]);
-    while (rigaStorico.length < Math.max(cP, cS, cL)) rigaStorico.push('');
+    while (rigaStorico.length < Math.max(cP, cS, cL, cI)) rigaStorico.push('');
     rigaStorico[cP - 1] = pag;
     rigaStorico[cS - 1] = serPrima == null ? '' : testoData(dataDaSeriale(serPrima));
     rigaStorico[cL - 1] = 'Manutenzione';
+    rigaStorico[cI - 1] = imp;
     storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO, rigaStorico);
   } catch (err) {
     // Lo storico è un di più: se non si scrive, la manutenzione è segnata lo stesso.
@@ -1433,6 +1471,7 @@ export async function segnaFatta(foglio, { codice, data, frequenza, pagamento },
     fatta: testoData(quando),
     prossima: testoData(prossima),
     pagamento: pag,
+    importo: imp === '' ? null : imp,
     annulla: { codice: testo(codice).toUpperCase(), prima, scritto: serProssima, frequenzaScritta, storico, avvisoPrima, chiPrima, tappeFatte },
   };
 }
@@ -1492,10 +1531,11 @@ export async function rimandaManutenzione(foglio, { codice, mesi, data }) {
 // La stessa richiesta arrivata due volte (stesso cliente, giorno e lavoro)
 // non scrive un'altra riga. Se c'è stata anche la manutenzione, l'app usa
 // segnaFatta, che fa già tutto questo.
-export async function segnaRiparazione(foglio, { codice, data, pagamento }, { chi = 'app' } = {}) {
+export async function segnaRiparazione(foglio, { codice, data, pagamento, importo }, { chi = 'app' } = {}) {
   const quando = data ? leggiDataUtente(data) : oggi();
   if (!quando) throw problema('Data non valida.');
   const pag = pagamentoDa(pagamento);
+  const imp = importoScritto(pag, importo);
   const serQuando = serialeDa(quando.a, quando.m, quando.g);
   const serOggi = serialeDa(...Object.values(oggi()));
   if (serQuando > serOggi) throw problema('La data è nel futuro: scegli oggi o un giorno passato.');
@@ -1514,16 +1554,18 @@ export async function segnaRiparazione(foglio, { codice, data, pagamento }, { ch
   // Qui lo storico è l'intervento stesso: se non si scrive, è un errore.
   const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.indexOf('Pagamento') + 1;
   const cL = (await colonnaStorico(foglio, 'Lavoro')) || INTESTAZIONI_STORICO.indexOf('Lavoro') + 1;
+  const cI = (await colonnaStorico(foglio, 'Importo')) || INTESTAZIONI_STORICO.indexOf('Importo') + 1;
   const rigaStorico = [giorno, cod, nome, '', `App (${chi})`];
-  while (rigaStorico.length < Math.max(cP, cL)) rigaStorico.push('');
+  while (rigaStorico.length < Math.max(cP, cL, cI)) rigaStorico.push('');
   rigaStorico[cP - 1] = pag;
   rigaStorico[cL - 1] = 'Guasto';
+  rigaStorico[cI - 1] = imp;
   const storico = await foglio.accoda(TAB_STORICO, INTESTAZIONI_STORICO, rigaStorico);
 
   const avvisoPrima = await togliAvviso(foglio, mappa, riga, r, ['Urgente']);
   const tappeFatte = await segnaTappeFatte(foglio, cod, serQuando, (t) => normalizza(t.lavoro) === 'guasto')
     .catch((err) => { console.error('Tappe non segnate:', err); return []; });
-  return { ok: true, nome, fatta: giorno, pagamento: pag, annulla: { codice: cod, data: giorno, storico, avvisoPrima, tappeFatte } };
+  return { ok: true, nome, fatta: giorno, pagamento: pag, importo: imp === '' ? null : imp, annulla: { codice: cod, data: giorno, storico, avvisoPrima, tappeFatte } };
 }
 
 // «Annulla» della riparazione: la riga dello storico si svuota (solo se è

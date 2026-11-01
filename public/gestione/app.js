@@ -461,9 +461,26 @@
   ];
   const breve = (p) => (PAGAMENTI.find((x) => x[0] === p) || [p, p, p])[2];
   const icoPagamento = (v) => (v === DA_RISENTIRE ? 'orologio' : v === GARANZIA ? 'scudo' : 'euro');
-  const etichettaPagamento = (p) => (p === DA_RISENTIRE ? `<span class="etichetta arancio">${esc(breve(p))}</span>`
+  // «Quanto ha pagato?» (1 nov 2026, Matteo: «dopo che ho selezionato il
+  // pagamento mi deve chiedere quanto ha pagato il cliente»): dopo Contanti,
+  // POS o Fattura, non in garanzia né da risentire. Va nella colonna
+  // «Importo» dello storico, come fa il motore (importoScritto).
+  const conImporto = (p) => !!p && p !== DA_RISENTIRE && p !== GARANZIA;
+  // 80 → «80 €», 80.5 → «80,50 €», 1200 → «1.200 €».
+  const euro = (n) => `${Number(n).toLocaleString('it-IT', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2, useGrouping: 'always' })} €`;
+  // «Contanti · 80 €»; senza importo solo come ha pagato.
+  const pagatoCon = (p, importo) => breve(p) + (conImporto(p) && importo != null ? ` · ${euro(importo)}` : '');
+  // Scritto da babbo: «80», «80,50», «€ 80.50», «1.200» → numero; altro → null.
+  function importoLetto(v) {
+    let s = String(v == null ? '' : v).replace(/[\s€]/g, '');
+    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    const n = Number(s);
+    return s && isFinite(n) && n > 0 && n <= 100000 ? Math.round(n * 100) / 100 : null;
+  }
+  const etichettaPagamento = (p, importo) => (p === DA_RISENTIRE ? `<span class="etichetta arancio">${esc(breve(p))}</span>`
     : p === GARANZIA ? `<span class="etichetta blu">${esc(breve(p))}</span>`
-    : p ? `<span class="etichetta verde">${esc(breve(p))}</span>` : '<span class="etichetta grigio">Pagamento non segnato</span>');
+    : p ? `<span class="etichetta verde">${esc(pagatoCon(p, importo))}</span>` : '<span class="etichetta grigio">Pagamento non segnato</span>');
   // "19/10/2026" → numero ordinabile.
   const quandoFatto = (s) => { const m = String(s.data).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0; };
   const daPagare = () => (dati.storico || []).filter((s) => s.pagamento === DA_RISENTIRE);
@@ -1876,7 +1893,7 @@
     const lavoro = x.lavoro === 'Guasto' ? 'Guasto' : '';
     d.storico = d.storico || [];
     if (d.storico.some((s) => s.codice === x.codice && s.data === data && (s.lavoro || '') === lavoro)) return;
-    d.storico.push({ riga: null, data, codice: x.codice, nome: c.nome, prossima: lavoro ? '' : c.prossima, chi: d.io || '', pagamento: x.pagamento || '', prima, lavoro });
+    d.storico.push({ riga: null, data, codice: x.codice, nome: c.nome, prossima: lavoro ? '' : c.prossima, chi: d.io || '', pagamento: x.pagamento || '', importo: conImporto(x.pagamento) ? x.importo ?? null : null, prima, lavoro });
   };
   // Come cambiano i dati per ogni azione, finché il foglio non risponde.
   const APPLICA = {
@@ -1922,9 +1939,14 @@
       d.tappe = (d.tappe || []).filter((t) => t.id !== x.id);
       if (String(x.id).startsWith('col-')) { const c = clienteIn(d, x.codice); if (c) c.chiVa = ''; }
     },
+    // Come cambiaPagamento: senza `importo` (una voce di prima del 1 nov
+    // 2026) resta quello che c'era, se il pagamento nuovo lo vuole.
     pagamento(d, x) {
       const s = (d.storico || []).find((v) => v.codice === x.codice && v.data === x.data && (x.lavoro == null || (v.lavoro || '') === x.lavoro));
-      if (s) s.pagamento = x.pagamento || '';
+      if (!s) return;
+      s.pagamento = x.pagamento || '';
+      const importo = x.importo === undefined ? s.importo : x.importo === '' ? null : x.importo;
+      s.importo = conImporto(s.pagamento) ? importo ?? null : null;
     },
     // Come muoviMagazzino nel motore: stessi Id dei movimenti, così non si
     // conta due volte una voce già arrivata e riletta dal foglio.
@@ -2782,8 +2804,68 @@
     confermaFatta(c, null);
   }
 
+  // Il secondo passo della finestra del pagamento: toccato Contanti, POS o
+  // Fattura, al posto dei pulsanti (#passo-pagamento) compare «Quanto ha
+  // pagato?», e «Indietro» torna ai pulsanti. In garanzia e da risentire si
+  // salva subito, come prima. `importo` = quello già segnato (cambiando il
+  // pagamento di un intervento); senza, il tasto con quanto ha pagato
+  // l'ultima volta lo scrive nel campo. `salva(btn, pagamento, importo)`.
+  const htmlImporto = () => `
+    <div id="passo-importo" hidden>
+      <p class="domanda">Quanto ha pagato?</p>
+      <p id="importo-come"></p>
+      <label class="campo"><span>Euro</span>
+        <input id="importo" type="text" inputmode="decimal" autocomplete="off" placeholder="Es. 80"></label>
+      <p class="errore-campo" id="importo-errore" hidden>Scrivi quanto ha pagato, per esempio 80 o 80,50.</p>
+      <button class="btn" type="button" id="importo-ultima" hidden></button>
+      <button class="btn verde" type="button" id="importo-ok">${icona('spunta')} Salva</button>
+      <button class="btn leggero" type="button" id="importo-indietro">Indietro</button>
+    </div>`;
+  // L'ultima volta che il cliente ha pagato lo stesso lavoro (una
+  // riparazione non costa come una manutenzione): l'intervento, o null.
+  const ultimoImporto = (codice, lavoro) => interventi()
+    .find((s) => s.codice === codice && (s.lavoro || '') === lavoro && conImporto(s.pagamento) && s.importo != null) || null;
+  // 85.5 → «85,50» nel campo.
+  const importoNelCampo = (n) => String(n % 1 ? n.toFixed(2) : n).replace('.', ',');
+  function scegliPagamento(f, { codice, lavoro = '', importo = null, salva }) {
+    const passo1 = f.querySelector('#passo-pagamento');
+    const passo2 = f.querySelector('#passo-importo');
+    const campo = f.querySelector('#importo');
+    const errore = f.querySelector('#importo-errore');
+    const ultima = f.querySelector('#importo-ultima');
+    let scelto = '';
+    f.querySelectorAll('[data-pag]').forEach((b) => {
+      b.onclick = (e) => {
+        const p = b.dataset.pag;
+        if (!conImporto(p)) { salva(e.currentTarget, p, null); return; }
+        scelto = p;
+        passo1.hidden = true;
+        passo2.hidden = false;
+        f.querySelector('#importo-come').innerHTML = `${icona('euro')} ${esc(breve(p))}`;
+        campo.value = importo != null ? importoNelCampo(importo) : '';
+        errore.hidden = true;
+        const u = importo == null ? ultimoImporto(codice, lavoro) : null;
+        ultima.hidden = !u;
+        if (u) {
+          ultima.textContent = `Come l'ultima volta: ${euro(u.importo)} (${u.data})`;
+          ultima.onclick = () => { campo.value = importoNelCampo(u.importo); errore.hidden = true; };
+        }
+        campo.focus();
+      };
+    });
+    const conferma = () => {
+      const n = importoLetto(campo.value);
+      if (n == null) { errore.hidden = false; campo.focus(); return; }
+      salva(f.querySelector('#importo-ok'), scelto, n);
+    };
+    f.querySelector('#importo-ok').onclick = conferma;
+    campo.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); conferma(); } };
+    f.querySelector('#importo-indietro').onclick = () => { passo2.hidden = true; passo1.hidden = false; };
+  }
+
   // «Come ha pagato?» (19 ott 2026, Matteo) sta nella stessa finestra: la
-  // risposta toccata è anche il «sì, fatta». Così resta un tocco solo.
+  // risposta toccata è anche il «sì, fatta». Dal 1 nov 2026 dopo Contanti,
+  // POS o Fattura chiede anche quanto (scegliPagamento).
   function confermaFatta(c, frequenzaNuova) {
     const mesi = c.frequenza || frequenzaNuova;
     const o = oggi();
@@ -2794,10 +2876,13 @@
         <label class="campo"><span>Che giorno l'hai fatta?</span>
           <input type="date" id="giorno" max="${isoDa(o)}" value="${isoDa(o)}"></label>
       </div>
-      <p class="domanda">Come ha pagato?</p>
-      ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(icoPagamento(v))} ${esc(t)}</button>`).join('')}
-      <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
-      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+      <div id="passo-pagamento">
+        <p class="domanda">Come ha pagato?</p>
+        ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(icoPagamento(v))} ${esc(t)}</button>`).join('')}
+        <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
+        <button class="btn leggero" type="button" id="no">Lascia stare</button>
+      </div>
+      ${htmlImporto()}`);
     let giorno = null;
     $('altro').onclick = () => {
       $('altro-giorno').hidden = false;
@@ -2814,8 +2899,7 @@
     }
     $('giorno').onchange = aggiornaGiorno;
     $('no').onclick = chiudiFinestra;
-    f.querySelectorAll('[data-pag]').forEach((b) => { b.onclick = (e) => salva(e.currentTarget, b.dataset.pag); });
-    const salva = (btn, pagamento) => conPulsante(btn, 'Salvo…', async () => {
+    const salva = (btn, pagamento, importo) => conPulsante(btn, 'Salvo…', async () => {
       try {
         // Lo schermo torna com'era: il cliente e lo storico del telefono.
         const ripristinaCliente = fotografia(c);
@@ -2827,7 +2911,7 @@
         };
         // Sempre col giorno: se parte domani (senza campo) resta quello di oggi.
         const fattaIl = giorno || oggi();
-        const datiFatta = { codice: c.codice, data: isoDa(fattaIl), frequenza: frequenzaNuova || undefined, pagamento };
+        const datiFatta = { codice: c.codice, data: isoDa(fattaIl), frequenza: frequenzaNuova || undefined, pagamento, importo: importo ?? undefined };
         const { r, voce } = await manda('fatta', datiFatta, `Manutenzione fatta il ${testoData(fattaIl)}: ${c.nome}`);
         chiudiFinestra();
         if (r) {
@@ -2852,7 +2936,7 @@
         // arriva quando quella finestra si chiude, e annulla tutte e due.
         const avvisa = (mov) => {
           disegna(history.state);
-          messaggio(`Segnata ✓ ${breve(pagamento)} · Prossima: ${c.prossima}` + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+          messaggio(`Segnata ✓ ${pagatoCon(pagamento, importo)} · Prossima: ${c.prossima}` + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
             durata: 15000,
             azione: puoiAnnullare || mov ? { testo: 'Annulla', fai: async () => { if (mov) await annullaMovimento(mov, { zitto: puoiAnnullare }); if (puoiAnnullare) annullaFatta(); } } : null,
           });
@@ -2864,6 +2948,7 @@
         messaggio(err.message, { errore: true, durata: 8000 });
       }
     });
+    scegliPagamento(f, { codice: c.codice, lavoro: '', salva });
   }
 
   // ---------------------------------------------------------------------
@@ -2918,7 +3003,7 @@
   }
 
   // Un guasto riparato senza la manutenzione: come ha pagato (la risposta
-  // è anche il «sì»), poi i materiali, come per «Manutenzione fatta».
+  // è anche il «sì») e quanto, poi i materiali, come per «Manutenzione fatta».
   function confermaRiparazione(c) {
     const o = oggi();
     const f = apriFinestra(`
@@ -2928,10 +3013,13 @@
         <label class="campo"><span>Che giorno l'hai fatta?</span>
           <input type="date" id="giorno" max="${isoDa(o)}" value="${isoDa(o)}"></label>
       </div>
-      <p class="domanda">Come ha pagato?</p>
-      ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(icoPagamento(v))} ${esc(t)}</button>`).join('')}
-      <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
-      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+      <div id="passo-pagamento">
+        <p class="domanda">Come ha pagato?</p>
+        ${PAGAMENTI.map(([v, t]) => `<button class="btn ${v === DA_RISENTIRE ? 'arancio' : 'verde'}" type="button" data-pag="${esc(v)}">${icona(icoPagamento(v))} ${esc(t)}</button>`).join('')}
+        <button class="btn" type="button" id="altro">L'ho fatta un altro giorno</button>
+        <button class="btn leggero" type="button" id="no">Lascia stare</button>
+      </div>
+      ${htmlImporto()}`);
     let giorno = null;
     const aggiornaGiorno = () => {
       const g = daIso($('giorno').value);
@@ -2942,14 +3030,14 @@
     $('altro').onclick = () => { $('altro-giorno').hidden = false; $('altro').hidden = true; $('giorno').focus(); aggiornaGiorno(); };
     $('giorno').onchange = aggiornaGiorno;
     $('no').onclick = chiudiFinestra;
-    const salva = (btn, pagamento) => conPulsante(btn, 'Salvo…', async () => {
+    const salva = (btn, pagamento, importo) => conPulsante(btn, 'Salvo…', async () => {
       try {
         const fotoCliente = fotografia(c);
         const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
         const fotoStorico = (dati.storico || []).slice();
         const ripristina = () => { fotoCliente(); dati.tappe = fotoTappe; dati.storico = fotoStorico; };
         const fattaIl = giorno || oggi();
-        const d = { codice: c.codice, data: isoDa(fattaIl), pagamento };
+        const d = { codice: c.codice, data: isoDa(fattaIl), pagamento, importo: importo ?? undefined };
         const { r, voce } = await manda('riparazione', d, `Riparazione fatta il ${testoData(fattaIl)}: ${c.nome}`);
         chiudiFinestra();
         if (r && !r.giaSegnata) { APPLICA.riparazione(dati, d); salvaDati(); }
@@ -2967,7 +3055,7 @@
             .catch((err) => messaggio(err.message, { errore: true, durata: 8000 }));
         const avvisa = (mov) => {
           disegna(history.state);
-          messaggio(`Riparazione segnata ✓ ${breve(pagamento)}` + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+          messaggio(`Riparazione segnata ✓ ${pagatoCon(pagamento, importo)}` + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
             durata: 15000,
             azione: puoiAnnullare || mov ? { testo: 'Annulla', fai: async () => { if (mov) await annullaMovimento(mov, { zitto: puoiAnnullare }); if (puoiAnnullare) annullaRiparazione(); } } : null,
           });
@@ -2979,7 +3067,7 @@
         messaggio(err.message, { errore: true, durata: 8000 });
       }
     });
-    f.querySelectorAll('[data-pag]').forEach((b) => { b.onclick = (e) => salva(e.currentTarget, b.dataset.pag); });
+    scegliPagamento(f, { codice: c.codice, lavoro: 'Guasto', salva });
   }
 
   // Annulla di «fatta» o «rimanda» già arrivate al foglio. Senza campo va
@@ -3094,7 +3182,7 @@
     const apri = (t.codice && clienteIn(dati, t.codice)) || (t.contatto && leadDaChiave(t.contatto));
     apriFinestra(`
       <h3>${esc(l.nome)}</h3>
-      <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? breve(x.pagamento) : 'pagamento non segnato')}.` : ''}</p>
+      <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
       ${usati ? `<p>Materiali: ${esc(usati)}</p>` : ''}
       ${apri ? '<button class="btn" type="button" id="apri-lavoro">Apri la scheda</button>' : ''}
       ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-lavoro">${icona('cestino')} Cancella questo lavoro</button>` : ''}
@@ -3402,7 +3490,7 @@
       <b>${esc(conNome ? x.nome || x.codice : x.data)}</b>
       ${riga2.filter(Boolean).length ? `<span class="riga2">${esc(riga2.filter(Boolean).join(' · '))}</span>` : ''}
       ${usati ? `<span class="riga2">${icona('scatola')} ${esc(usati)}</span>` : ''}
-      <span class="riga3">${etichettaPagamento(x.pagamento)}</span>
+      <span class="riga3">${etichettaPagamento(x.pagamento, x.importo)}</span>
     </button>`;
   }
   function collegaInterventi() {
@@ -3444,24 +3532,33 @@
   }
 
   // Un intervento toccato: com'è andata, e si cambia il pagamento (chi era
-  // «da risentire» e poi paga, o un pagamento segnato sbagliato).
+  // «da risentire» e poi paga, o un pagamento segnato sbagliato) e quanto
+  // ha pagato (dal 1 nov 2026: col pagamento uguale si cambia solo quello).
   function chiediPagamento(x) {
     const c = clienteIn(dati, x.codice);
     const tel = c && x.pagamento === DA_RISENTIRE ? telefoni(c.contatto)[0] : null;
     const f = apriFinestra(`
       <h3>${esc(x.nome || x.codice)}</h3>
-      <p>${tipoIntervento(x)} del <strong>${esc(x.data)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}.<br>Pagamento: <strong>${esc(x.pagamento ? breve(x.pagamento) : 'non segnato')}</strong></p>
-      ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
-      <p class="domanda">Come ha pagato?</p>
-      ${PAGAMENTI.map(([v, t]) => `<button class="btn${v === x.pagamento ? ' scelto' : ''}" type="button" data-pag="${esc(v)}">${v === x.pagamento ? `${icona('spunta')} ` : ''}${esc(t)}</button>`).join('')}
-      ${mag() ? `<p class="domanda">Materiali usati</p>
-        <p>${esc(materialiDi(x.codice, x.data, x.lavoro) || 'Nessuno segnato.')}</p>
-        <button class="btn" type="button" id="materiali-intervento">${icona('scatola')} ${materialiDi(x.codice, x.data, x.lavoro) ? 'Cambia i materiali' : 'Segna materiali usati'}</button>` : ''}
-      ${c && !(history.state && history.state.s === 'cliente' && history.state.codice === x.codice) ? '<button class="btn" type="button" id="apri-scheda">Apri la scheda del cliente</button>' : ''}
-      ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-intervento">${icona('cestino')} Cancella questo intervento</button>` : ''}
-      <button class="btn leggero" type="button" id="no">Chiudi</button>`);
-    f.querySelectorAll('[data-pag]').forEach((b) => {
-      b.onclick = (e) => (b.dataset.pag === x.pagamento ? chiudiFinestra() : conPulsante(e.currentTarget, 'Salvo…', () => salvaPagamento(x, b.dataset.pag)));
+      <p>${tipoIntervento(x)} del <strong>${esc(x.data)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}.<br>Pagamento: <strong>${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'non segnato')}</strong></p>
+      <div id="passo-pagamento">
+        ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
+        <p class="domanda">Come ha pagato?</p>
+        ${PAGAMENTI.map(([v, t]) => `<button class="btn${v === x.pagamento ? ' scelto' : ''}" type="button" data-pag="${esc(v)}">${v === x.pagamento ? `${icona('spunta')} ` : ''}${esc(t)}</button>`).join('')}
+        ${mag() ? `<p class="domanda">Materiali usati</p>
+          <p>${esc(materialiDi(x.codice, x.data, x.lavoro) || 'Nessuno segnato.')}</p>
+          <button class="btn" type="button" id="materiali-intervento">${icona('scatola')} ${materialiDi(x.codice, x.data, x.lavoro) ? 'Cambia i materiali' : 'Segna materiali usati'}</button>` : ''}
+        ${c && !(history.state && history.state.s === 'cliente' && history.state.codice === x.codice) ? '<button class="btn" type="button" id="apri-scheda">Apri la scheda del cliente</button>' : ''}
+        ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-intervento">${icona('cestino')} Cancella questo intervento</button>` : ''}
+        <button class="btn leggero" type="button" id="no">Chiudi</button>
+      </div>
+      ${htmlImporto()}`);
+    scegliPagamento(f, {
+      codice: x.codice,
+      lavoro: x.lavoro || '',
+      importo: conImporto(x.pagamento) ? x.importo ?? null : null,
+      salva: (btn, pagamento, importo) => (pagamento === x.pagamento && (importo ?? null) === (conImporto(x.pagamento) ? x.importo ?? null : null)
+        ? chiudiFinestra()
+        : conPulsante(btn, 'Salvo…', () => salvaPagamento(x, pagamento, importo))),
     });
     if ($('apri-scheda')) $('apri-scheda').onclick = () => vai({ s: 'cliente', codice: x.codice });
     if ($('cancella-intervento')) $('cancella-intervento').onclick = () => chiediCancellaIntervento(x);
@@ -3548,24 +3645,25 @@
     });
   }
 
-  async function salvaPagamento(x, pagamento) {
+  async function salvaPagamento(x, pagamento, importo = null) {
     const prima = x.pagamento || '';
+    const importoPrima = x.importo ?? null;
     // Col lavoro: una manutenzione e una riparazione lo stesso giorno sono due.
     const quale = { codice: x.codice, data: x.data, lavoro: x.lavoro || '' };
-    const metti = (p) => { APPLICA.pagamento(dati, { ...quale, pagamento: p }); salvaDati(); };
+    const metti = (p, i) => { APPLICA.pagamento(dati, { ...quale, pagamento: p, importo: i ?? null }); salvaDati(); };
     try {
-      const { r, voce } = await manda('pagamento', { riga: x.riga, ...quale, pagamento }, `Pagamento (${breve(pagamento)}): ${x.nome || x.codice}`);
-      if (r) metti(r.pagamento);
+      const { r, voce } = await manda('pagamento', { riga: x.riga, ...quale, pagamento, importo: importo ?? '' }, `Pagamento (${pagatoCon(pagamento, importo)}): ${x.nome || x.codice}`);
+      if (r) metti(r.pagamento, r.importo);
       chiudiFinestra();
       disegna(history.state);
-      messaggio(`Segnato: ${breve(pagamento)}` + (voce ? fuoriLinea(voce) : ''), {
+      messaggio(`Segnato: ${pagatoCon(pagamento, importo)}` + (voce ? fuoriLinea(voce) : ''), {
         durata: 10000,
         azione: {
           testo: 'Annulla',
           fai: voce
-            ? () => annullaInCoda(voce, () => APPLICA.pagamento(dati, { ...quale, pagamento: prima }))
+            ? () => annullaInCoda(voce, () => APPLICA.pagamento(dati, { ...quale, pagamento: prima, importo: importoPrima }))
             : () => manda('pagamento', r.annulla, `Pagamento rimesso com'era: ${x.nome || x.codice}`)
-              .then(({ r: r2 }) => { if (r2) metti(prima); disegna(history.state); messaggio('Annullato.'); })
+              .then(({ r: r2 }) => { if (r2) metti(prima, importoPrima); disegna(history.state); messaggio('Annullato.'); })
               .catch((err) => messaggio(err.message, { errore: true, durata: 8000 })),
         },
       });
