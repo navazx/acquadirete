@@ -17,8 +17,8 @@ il repository è pubblico.
 - Cosa è cambiato: tre annunci su cinque (Gruppo di annunci 1, Prezzi, Confronto) mandano alla pagina nuova /sopralluogo-gratuito/, con prezzo in alto, modulo corto e Chiama/WhatsApp. Osmosi Inversa e Prato restano sulle loro pagine e fanno da confronto. Prima: 513 clic in quattro settimane e 2 contatti, entrambi da Osmosi e Prato.
 - Cosa ci si aspetta: più contatti dagli annunci spostati, a parità di clic.
 - Come si misura: contatti "arrivato da un annuncio Google" dalla pagina /sopralluogo-gratuito/ nel Gestionale, conversioni di Google Ads per annuncio, visite della pagina dal contatore. Prima lettura il 28 ottobre, giudizio dopo quattro settimane.
-- Si controlla dal: 2026-10-28
-- Esito: da vedere
+- Si controlla dal: 2026-11-18
+- Esito: da vedere (1 nov 2026, Direttore: troppo presto). Prima lettura, dal 16 ottobre (il contatore parte quel giorno) al 31: la pagina ha avuto 177 ingressi da annuncio, 1 modulo iniziato, 0 inviati, 1 tocco su Chiama e 4 su WhatsApp; nel Gestionale nessun contatto col modulo da questa pagina. Le pagine di confronto: Osmosi 44 ingressi da annuncio e nessun modulo, chiamata o WhatsApp; Prato 5 e niente. Dal 21 ottobre ci sono 5 contatti «Annuncio Google (WhatsApp/telefono)», ma non si sa da quale pagina. Prima del cambio chiamate e WhatsApp non si contavano, quindi per loro non c'è un "prima" da confrontare. Siamo lontani dai 15 contatti per versione, e il 22 ottobre la pagina è cambiata (il modulo si apre da un pulsante): si giudica il 18 novembre con l'agente Ads, coi numeri di Google Ads annuncio per annuncio. Quello che già si vede: qui il modulo non lo usa quasi nessuno, chi si muove usa WhatsApp. La data resta "da vedere" apposta, così il registro la ripresenta.
 
 ## 2026-10-14 · ADS · 14 ricerche escluse
 - Cosa è cambiato: approvate da Matteo su Telegram le 14 esclusioni proposte dall'agente Ads (marchi di concorrenti e ricerche di chi si informa e non compra).
