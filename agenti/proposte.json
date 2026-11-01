@@ -130,8 +130,9 @@
     "tipo": "ORDINI",
     "titolo": "novembre 2026",
     "creata": "2026-11-01T06:18:38.117Z",
-    "stato": "in attesa",
+    "stato": "approvata",
     "sha": "bf831efa97279c525d5c6d26dbd902c19731d674",
-    "url": null
+    "url": null,
+    "decisa": "2026-11-01T17:15:37.260Z"
   }
 ]

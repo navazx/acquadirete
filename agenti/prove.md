@@ -82,3 +82,10 @@ il repository è pubblico.
 - Come si misura: col contatore del sito, quattro settimane dopo l'approvazione: visite di Assistenza e Carboni attivi che non sono ingressi, e moduli o WhatsApp partiti da quelle due pagine. I tre indirizzi li guarda il controllo del lunedì ogni settimana.
 - Si controlla dal: 2026-11-24
 - Esito: da vedere
+
+## 2026-11-01 · ORDINI · «novembre 2026»
+- Cosa è cambiato: approvata da Matteo su Telegram (proposta/ordini-2026-11)
+- Cosa ci si aspetta: a novembre Google Ads porta almeno 6 contatti e 3 clienti con il costo per cliente sotto il tetto anche coi soldi in più; Meta, se resta acceso a metà, porta un cliente o a dicembre si spegne; la scelta sulla pagina degli annunci è fatta entro il 25 novembre; dei 10 preventivi aperti al massimo 3 restano senza risposta.
+- Come si misura: il 1° dicembre, nel Gestionale e nel cruscotto (contatti, clienti e costo per cliente per canale; preventivi ancora fermi a "Preventivo inviato"), e nel contatore del sito (contatti ogni 100 visite dagli annunci, oggi fra 2 e 2,5). Il giudizio sul budget si fa sui tre mesi, a fine gennaio.
+- Si controlla dal: 2026-11-29
+- Esito: da vedere
