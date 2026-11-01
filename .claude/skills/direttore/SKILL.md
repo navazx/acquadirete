@@ -158,14 +158,19 @@ Crea da `main` il ramo `proposta/ordini-<AAAA-MM del mese che comincia>`.
    facciamo"; poi il giudizio sul mese prima.
 2. **`agenti/anteprime/ordini-<AAAA-MM>.md`** — lo stesso contenuto per Matteo, che
    lo legge sul telefono: italiano semplice, frasi corte, senza codice e senza nomi
-   di file del progetto.
-3. **`/tmp/direttore-numeri.txt`** — una pagina sola, solo per Matteo: i numeri
-   del mese **con gli euro** (spesa Google e Meta, costo per cliente per canale),
-   contatti, clienti, Google gratuito, post e articoli usciti. Poi l'imbuto dei 90
-   giorni in una riga per canale ("Meta: 29 contatti, 28 sentiti, 3 preventivi, 0
-   clienti, tot euro") con il passo dove si perde di più, e la proposta sul budget
-   con gli euro prima e dopo. Testo semplice, niente markdown: va su Telegram così
-   com'è. Questo file NON va nel repo.
+   di file del progetto. **In cima "In breve", al massimo 5 righe**: le 3 cose che
+   gli chiedi, una riga a testa, e cosa deve fare lui. Poi ogni priorità in
+   **al massimo 6 righe** (cosa, perché con uno o due numeri, chi, misura). Il
+   giudizio sul mese prima e "di cosa non sono sicuro" in fondo, in poche righe.
+   Vale la regola dei messaggi di `agenti/METODO.md` (1° nov 2026: le anteprime
+   lunghe e piene di numeri a Matteo sembrano confuse).
+3. **`/tmp/direttore-numeri.txt`** — solo per Matteo, **al massimo 6 righe**, una
+   cosa per riga, in parole: quanto ha speso il mese su Google e su Meta, quanti
+   clienti ha portato ciascuno, quanto è costato un cliente da ciascuno (e se sta
+   sotto il tetto), e cosa cambia in euro con la proposta sul budget. Per esempio
+   "Google: X euro spesi, 3 clienti, X euro a cliente, sotto il tetto". Niente
+   imbuti, tabelle o elenchi di numeri. Testo semplice, niente markdown: va su
+   Telegram così com'è. Questo file NON va nel repo.
 
 **Mai una cifra in euro nei file del repo e nel messaggio di commit**: il repo è
 pubblico. Nel repo scrivi "Meta costa più di Google per cliente", "la spesa è

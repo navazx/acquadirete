@@ -22,7 +22,9 @@ export const AGENTI = [
   { nome: 'Controllo SEO del lunedì', workflow: 'agente-seo.yml', cron: '5 7 * * 1', nota: 'seo' },
   { nome: 'Bozza del post social', workflow: 'social-bozza.yml', cron: '30 7 * * 6' },
   { nome: 'Direttore (priorità del mese)', workflow: 'direttore.yml', cron: '0 6 1 * *', nota: 'direttore' },
-  { nome: 'Report SEO del mese', workflow: 'seo-report.yml', cron: '10 7 1 * *' },
+  // Il Report SEO del mese (seo-report.yml, il 1° alle 07:10) è spento dal 1° nov 2026:
+  // mandava elenchi grezzi di Search Console e Matteo li trovava confusi. I numeri
+  // stanno nel cruscotto ogni giorno, l'analisi la fa il Controllo SEO del 27.
   // Dal 17 ott 2026: il controllo SEO approfondito, prima del Direttore (il 1°) e di Contenuti (il 5).
   { nome: 'Controllo SEO del mese', workflow: 'seo-mese.yml', cron: '30 7 27 * *', inputs: { prova: 'false' }, nota: 'seo' },
   { nome: 'Revisione Ads', workflow: 'agente-ads.yml', cron: '0 7 18 * *', inputs: { prova: 'false' }, nota: 'ads' },

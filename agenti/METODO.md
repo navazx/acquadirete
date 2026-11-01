@@ -42,6 +42,16 @@ puoi toccare, cosa no) restano quelle del tuo file: questo dice *come* lavorare.
 - Un titolo o una descrizione per Google: conta i caratteri sul testo finale.
 - Un messaggio per Matteo: lo legge sul telefono, in mezzo al lavoro. La
   conclusione sta nella prima riga, in italiano semplice, senza nomi di file.
+- **Ogni messaggio Telegram in tre parti** (Matteo, 1° nov 2026: «molto
+  confusionari, con dati grezzi poco comprensibili»): **cosa è successo**, **cosa
+  vuol dire** per gli affari, **cosa devi fare tu** (o "niente, ci penso io").
+  Al massimo 3 o 4 numeri, e ogni numero ha accanto cosa significa ("38 contatti,
+  9 più di settembre"). Mai elenchi di ricerche, pagine, posizioni o tabelle
+  copiate da Google, Meta o dal Gestionale: quelli stanno nel cruscotto. Se un
+  messaggio supera le 10 righe, è troppo lungo: taglia.
+- Un file allegato (anteprima) comincia con **"In breve"**: al massimo 5 righe
+  che bastano per decidere, con quello che chiedi a Matteo. Il resto è per chi
+  vuole il dettaglio, e anche lì frasi corte e niente numeri senza spiegazione.
 
 ## 4. Rileggi da critico, e correggi
 
