@@ -3459,8 +3459,14 @@
       // massimo 8 secondi; senza campo la tappa resta fuori dalla mappa).
       const cambiato = !t0 || t0.indirizzo !== nuovo.indirizzo || t0.citta !== nuovo.citta;
       if (libero && (cambiato || nuovo.lat == null)) {
+        // La provincia non è scritta da nessuna parte: si preferisce quella
+        // dove lavoriamo, fra i paesi omonimi (2 nov 2026: «San Donnino» di
+        // Gallo è a Campi Bisenzio, la tappa era finita in Garfagnana). È solo
+        // una preferenza: se lì non c'è, vale il primo risultato.
+        const dove = [l ? l.note : '', nuovo.citta].join(' ');
+        const provincia = /prato/i.test(dove) ? 'PO' : /pistoia/i.test(dove) ? 'PT' : 'FI';
         const p = await Promise.race([
-          cercaPosizione({ indirizzo: nuovo.indirizzo, citta: nuovo.citta, provincia: '' }).catch(() => null),
+          cercaPosizione({ indirizzo: nuovo.indirizzo, citta: nuovo.citta, provincia }).catch(() => null),
           new Promise((ok) => setTimeout(() => ok(null), 8000)),
         ]);
         if (p && p.lat != null) { nuovo.lat = p.lat; nuovo.lng = p.lng; } else if (cambiato) { nuovo.lat = null; nuovo.lng = null; }

@@ -536,6 +536,7 @@ export async function leggiTutto(foglio) {
   // (del 19 ott), come tappe di oggi senza ora, se il cliente non ha già una
   // tappa da fare. Senza `riga`: al telefono non serve.
   const { tappe: righeGiri } = await giri;
+  await collegaTappeAiClienti(foglio, righeGiri, lead, clienti).catch((err) => console.error('Tappe non collegate ai clienti:', err));
   const tappe = righeGiri.map(({ riga, ...t }) => t);
   for (const c of clienti) {
     if (!c.chiVa || tappe.some((t) => t.codice === c.codice && !t.stato)) continue;
@@ -1278,6 +1279,51 @@ async function leggiGiri(foglio) {
     });
   }
   return { griglia, tappe };
+}
+
+// Un contatto diventato cliente (2 nov 2026, Matteo: «nel giro di domani vedo
+// Gallo come contatto, ma se lo cerco è cliente»): le sue tappe ancora da fare
+// prendono il codice del cliente, così il giro mostra il cliente, col suo
+// indirizzo e la sua scheda. Si fa alla lettura (come il codice degli articoli
+// scritti a mano) perché vale anche per chi è diventato cliente a mano nel
+// foglio: l'onEdit non sa dei giri, e lì si può girare anche il nome del
+// contatto, così la chiave data|nome non combacia più (si ritrova dal giorno e
+// dalle parole del nome). Il cliente si riconosce da telefono e nome; nel
+// dubbio la tappa resta com'è. Le tappe già fatte non si toccano: i materiali
+// di un contatto sono segnati col suo nome, senza codice.
+const noveCifre = (s) => (String(s ?? '').match(/\d[\d\s./-]{7,}\d/g) || []).map((n) => n.replace(/\D/g, '').slice(-9)).filter((n) => n.length === 9);
+function leadDellaTappa(contatto, lead) {
+  const esatto = lead.find((l) => chiaveContatto(l) === contatto);
+  if (esatto) return esatto;
+  const taglio = contatto.lastIndexOf('|');
+  const stessi = lead.filter((l) => l.data === contatto.slice(0, taglio) && chiaveNome(l.nome) === chiaveNome(contatto.slice(taglio + 1)));
+  return stessi.length === 1 ? stessi[0] : null;
+}
+function clienteDelContatto(l, clienti) {
+  const tel = noveCifre(l.contatto);
+  const perTelefono = clienti.filter((c) => noveCifre(c.contatto).some((n) => tel.includes(n)));
+  const perNome = clienti.filter((c) => chiaveNome(c.nome) === chiaveNome(l.nome));
+  const tuttiE2 = perTelefono.filter((c) => perNome.includes(c));
+  const scelti = tuttiE2.length ? tuttiE2 : perNome.length ? perNome : perTelefono;
+  return scelti.length === 1 ? scelti[0] : null;
+}
+async function collegaTappeAiClienti(foglio, tappe, lead, clienti) {
+  const scritture = [];
+  const registro = [];
+  for (const t of tappe) {
+    if (t.codice || !t.contatto || t.stato) continue;
+    const l = leadDellaTappa(t.contatto, lead);
+    if (!l || normalizza(l.stato) !== 'cliente') continue;
+    const c = clienteDelContatto(l, clienti);
+    if (!c || !/^C\d+$/i.test(c.codice)) continue;
+    Object.assign(t, { codice: c.codice.toUpperCase(), contatto: chiaveContatto(l), nome: c.nome });
+    // Codice, Contatto e Nome sono colonne vicine.
+    scritture.push({ range: `'${TAB_GIRI}'!${lettera(G.Codice + 1)}${t.riga}:${lettera(G.Nome + 1)}${t.riga}`, values: [[t.codice, t.contatto, t.nome]] });
+    registro.push([adessoRoma(), 'App', 'Tappa collegata al cliente', t.codice, `giorno: ${t.giorno}, lavoro: ${t.lavoro}, contatto: ${l.nome}`]);
+  }
+  if (!scritture.length) return;
+  await foglio.scrivi(scritture, 'RAW');
+  await foglio.accodaRighe(TAB_REGISTRO, INTESTAZIONI_REGISTRO, registro).catch((err) => console.error('Registro non scritto:', err));
 }
 
 // La tappa vecchia della colonna "Chi ci va", finché non diventa una riga.
