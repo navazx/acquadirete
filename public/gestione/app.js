@@ -463,11 +463,13 @@
   const breve = (p) => (PAGAMENTI.find((x) => x[0] === p) || [p, p, p])[2];
   const icoPagamento = (v) => (v === DA_RISENTIRE ? 'orologio' : v === GARANZIA ? 'scudo' : 'euro');
   // «Quanto ha pagato?» (1 nov 2026, Matteo: «dopo che ho selezionato il
-  // pagamento mi deve chiedere quanto ha pagato il cliente»): dopo Contanti o
-  // POS, non in garanzia né da risentire, e dal 2 nov 2026 neanche con la
-  // fattura (Matteo: «non ha ancora pagato»). Va nella colonna «Importo»
-  // dello storico, come fa il motore (importoScritto).
-  const conImporto = (p) => !!p && p !== DA_RISENTIRE && p !== GARANZIA && p !== FATTURA;
+  // pagamento mi deve chiedere quanto ha pagato il cliente»): dopo Contanti,
+  // POS o Fattura, non in garanzia né da risentire. Va nella colonna
+  // «Importo» dello storico, come fa il motore (importoScritto). Con la
+  // fattura si può lasciare vuoto (2 nov 2026, Matteo: «non ha ancora
+  // pagato», «si può inserire l'importo ma anche non inserirlo»).
+  const conImporto = (p) => !!p && p !== DA_RISENTIRE && p !== GARANZIA;
+  const importoFacoltativo = (p) => p === FATTURA;
   // 80 → «80 €», 80.5 → «80,50 €», 1200 → «1.200 €».
   const euro = (n) => `${Number(n).toLocaleString('it-IT', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2, useGrouping: 'always' })} €`;
   // «Contanti · 80 €»; senza importo solo come ha pagato.
@@ -2846,21 +2848,22 @@
     confermaFatta(c, null);
   }
 
-  // Il secondo passo della finestra del pagamento: toccato Contanti o POS, al
-  // posto dei pulsanti (#passo-pagamento) compare «Quanto ha pagato?», e
-  // «Indietro» torna ai pulsanti. Fattura, in garanzia e da risentire si
-  // salvano subito. `importo` = quello già segnato (cambiando il
-  // pagamento di un intervento); senza, il tasto con quanto ha pagato
-  // l'ultima volta lo scrive nel campo. `salva(btn, pagamento, importo)`.
+  // Il secondo passo della finestra del pagamento: toccato Contanti, POS o
+  // Fattura, al posto dei pulsanti (#passo-pagamento) compare «Quanto ha
+  // pagato?», e «Indietro» torna ai pulsanti. Con la fattura diventa «Importo
+  // della fattura», vuoto va bene e il pulsante lo dice. In garanzia e da
+  // risentire si salva subito, come prima. `importo` = quello già segnato
+  // (cambiando il pagamento di un intervento); senza, il tasto con quanto ha
+  // pagato l'ultima volta lo scrive nel campo. `salva(btn, pagamento, importo)`.
   const htmlImporto = () => `
     <div id="passo-importo" hidden>
-      <p class="domanda">Quanto ha pagato?</p>
+      <p class="domanda" id="importo-domanda"></p>
       <p id="importo-come"></p>
-      <label class="campo"><span>Euro</span>
+      <label class="campo"><span id="importo-etichetta"></span>
         <input id="importo" type="text" inputmode="decimal" autocomplete="off" placeholder="Es. 80"></label>
-      <p class="errore-campo" id="importo-errore" hidden>Scrivi quanto ha pagato, per esempio 80 o 80,50.</p>
+      <p class="errore-campo" id="importo-errore" hidden></p>
       <button class="btn" type="button" id="importo-ultima" hidden></button>
-      <button class="btn verde" type="button" id="importo-ok">${icona('spunta')} Salva</button>
+      <button class="btn verde" type="button" id="importo-ok"></button>
       <button class="btn leggero" type="button" id="importo-indietro">Indietro</button>
     </div>`;
   // L'ultima volta che il cliente ha pagato lo stesso lavoro (una
@@ -2875,14 +2878,21 @@
     const campo = f.querySelector('#importo');
     const errore = f.querySelector('#importo-errore');
     const ultima = f.querySelector('#importo-ultima');
+    const ok = f.querySelector('#importo-ok');
     let scelto = '';
+    const vuotoVaBene = () => importoFacoltativo(scelto) && !campo.value.trim();
+    const testoOk = () => { ok.innerHTML = `${icona('spunta')} ${vuotoVaBene() ? 'Salva senza importo' : 'Salva'}`; };
     f.querySelectorAll('[data-pag]').forEach((b) => {
       b.onclick = (e) => {
         const p = b.dataset.pag;
         if (!conImporto(p)) { salva(e.currentTarget, p, null); return; }
         scelto = p;
+        const libero = importoFacoltativo(p);
         passo1.hidden = true;
         passo2.hidden = false;
+        f.querySelector('#importo-domanda').textContent = libero ? 'Importo della fattura' : 'Quanto ha pagato?';
+        f.querySelector('#importo-etichetta').textContent = libero ? 'Euro (se non lo sai, lascia vuoto)' : 'Euro';
+        errore.textContent = libero ? 'Scrivi un numero, per esempio 80 o 80,50, o lascia vuoto.' : 'Scrivi quanto ha pagato, per esempio 80 o 80,50.';
         f.querySelector('#importo-come').innerHTML = `${icona('euro')} ${esc(breve(p))}`;
         campo.value = importo != null ? importoNelCampo(importo) : '';
         errore.hidden = true;
@@ -2890,17 +2900,20 @@
         ultima.hidden = !u;
         if (u) {
           ultima.textContent = `Come l'ultima volta: ${euro(u.importo)} (${u.data})`;
-          ultima.onclick = () => { campo.value = importoNelCampo(u.importo); errore.hidden = true; };
+          ultima.onclick = () => { campo.value = importoNelCampo(u.importo); errore.hidden = true; testoOk(); };
         }
-        campo.focus();
+        testoOk();
+        // Con la fattura spesso non si scrive niente: niente tastiera sopra i pulsanti.
+        if (!libero) campo.focus();
       };
     });
     const conferma = () => {
       const n = importoLetto(campo.value);
-      if (n == null) { errore.hidden = false; campo.focus(); return; }
-      salva(f.querySelector('#importo-ok'), scelto, n);
+      if (n == null && !vuotoVaBene()) { errore.hidden = false; campo.focus(); return; }
+      salva(ok, scelto, n);
     };
-    f.querySelector('#importo-ok').onclick = conferma;
+    ok.onclick = conferma;
+    campo.oninput = testoOk;
     campo.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); conferma(); } };
     f.querySelector('#importo-indietro').onclick = () => { passo2.hidden = true; passo1.hidden = false; };
   }
