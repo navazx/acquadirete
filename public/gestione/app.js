@@ -1094,6 +1094,11 @@
     return { nome: t.nome, indirizzo: t.indirizzo, citta: t.citta, provincia: '', ...qui, telefono: t.telefono, cliente: null };
   }
   const puntoTappa = (t) => { const l = luogoTappa(t); return l.lat != null ? { lat: l.lat, lng: l.lng } : null; };
+  // «Altro» (2 nov 2026, Matteo: «cose che non c'entrano nulla con clienti,
+  // tipo andare dal medico, caricare le bombole, rimettere il magazzino, con
+  // l'orario»): una tappa senza cliente né contatto, col lavoro «Altro». Nome =
+  // cosa c'è da fare; il posto è facoltativo.
+  const eImpegno = (t) => !t.codice && !t.contatto && (t.lavoro || 'Altro') === 'Altro';
   // Le tappe con l'ora vanno in fila per ora; quelle senza si infilano dove
   // allungano meno il giro, da casa a casa; quelle senza posizione in fondo.
   // Una fascia oraria («dalle 9 alle 11», dal 21 ott 2026) va in fila per
@@ -1277,15 +1282,18 @@
   // tappa è l'arrivo. Indirizzi scritti (Google li trova meglio delle
   // coordinate di OpenStreetMap); le coordinate se la posizione è segnata
   // sul posto («Sono qui»), o se l'indirizzo manca.
+  function doveTappa(t) {
+    const l = luogoTappa(t);
+    return (l.cliente && sulPosto(l.cliente)) || (l.gps ? `${(+l.lat).toFixed(6)},${(+l.lng).toFixed(6)}` : '') || (l.indirizzo
+      ? [l.indirizzo, senzaCap(l.citta) ? l.citta : '', l.provincia].filter(Boolean).join(', ')
+      : l.lat != null ? `${l.lat},${l.lng}` : senzaCap(l.citta));
+  }
+  // Un «Altro» senza posto (il medico, se non si scrive dove) nel percorso non ci va.
+  const haLuogo = (t) => !!doveTappa(t);
   function linkGiro(tappe) {
-    const dove = (t) => {
-      const l = luogoTappa(t);
-      return (l.cliente && sulPosto(l.cliente)) || (l.gps ? `${(+l.lat).toFixed(6)},${(+l.lng).toFixed(6)}` : '') || (l.indirizzo
-        ? [l.indirizzo, senzaCap(l.citta) ? l.citta : '', l.provincia].filter(Boolean).join(', ')
-        : l.lat != null ? `${l.lat},${l.lng}` : senzaCap(l.citta));
-    };
-    const q = new URLSearchParams({ api: '1', travelmode: 'driving', destination: dove(tappe[tappe.length - 1]) });
-    if (tappe.length > 1) q.set('waypoints', tappe.slice(0, -1).map(dove).join('|'));
+    const punti = tappe.map(doveTappa).filter(Boolean);
+    const q = new URLSearchParams({ api: '1', travelmode: 'driving', destination: punti[punti.length - 1] });
+    if (punti.length > 1) q.set('waypoints', punti.slice(0, -1).join('|'));
     return `https://www.google.com/maps/dir/?${q}`;
   }
 
@@ -1402,7 +1410,7 @@
         ? `<div class="giro-testa"><b>${esc(giroDiNome(giroPrincipale()))}, oggi: ${tappe.length} ${tappe.length === 1 ? 'tappa' : 'tappe'}</b>
             <span><button class="link" id="elenco-giro">${elencoGiroAperto ? 'Chiudi elenco' : 'Elenco'}</button><button class="link" id="svuota-giro">Svuota</button></span></div>
           ${elencoGiroAperto ? `<p class="giro-tappe">${tappe.map((t, i) => `<span><b>${i + 1}</b>${t.ora ? `${esc(orarioTappa(t))} ` : ''}${esc(nome(t))} <i>${esc(titoloCitta(luogoTappa(t).citta))}</i></span>`).join('')}</p>` : ''}
-          <a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro di ${esc(nomeChi(giroPrincipale()))} in Google Maps</a>`
+          ${tappe.some(haLuogo) ? `<a class="btn pieno largo" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro di ${esc(nomeChi(giroPrincipale()))} in Google Maps</a>` : ''}`
         : giranti().length ? `<p class="giro-vuoto">Tocca un puntino e poi «Aggiungi al giro». Le tappe senza ora si mettono in ordine da sole: il giro di ${esc(nomeChi(giroPrincipale()))} parte da ${esc(partenzaDi(giroPrincipale()).nome)}.</p>` : '') + degliAltri;
       if ($('svuota-giro')) $('svuota-giro').onclick = () => chiediSvuota(giroPrincipale(), oggiTesto());
       if ($('elenco-giro')) $('elenco-giro').onclick = () => { elencoGiroAperto = !elencoGiroAperto; disegnaGiro(); };
@@ -3171,7 +3179,7 @@
         <div class="testa-giro"><h2 class="gruppo">${esc(giroDiNome(p))} (${tappe.length})</h2>
           ${tappe.length ? `<button class="link" type="button" data-svuota="${esc(p)}">Svuota</button>` : ''}</div>
         ${tappe.length ? `<div class="lista">${tappe.map((t, i) => voceTappa(t, i, p)).join('')}</div>
-          <a class="btn${mio ? ' pieno' : ''} apri-giro" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro di ${esc(nomeChi(p))} in Google Maps</a>`
+          ${tappe.some(haLuogo) ? `<a class="btn${mio ? ' pieno' : ''} apri-giro" href="${esc(linkGiro(tappe))}" target="_blank" rel="noopener">${icona('mappa')} Apri il giro di ${esc(nomeChi(p))} in Google Maps</a>` : ''}`
         : `<div class="vuoto">Nessuna tappa nel giro di ${esc(nomeChi(p))}.</div>`}`;
     };
     // I giri di chi ha il giro, più quello di chi l'ha perso ma ha ancora
@@ -3322,12 +3330,12 @@
       // Le foto del sopralluogo: si vede dal giro che ci sono (26 ott 2026).
       nFoto ? `<span class="etichetta blu">${icona('fotocamera')} ${nFoto} foto</span>` : '',
       rimasta ? `<span class="etichetta arancio">${esc(quandoTappa(t, false))}</span>` : '',
-      l.lat == null ? '<span class="etichetta grigio">Non è sulla mappa</span>' : '',
+      l.lat == null && haLuogo(t) ? '<span class="etichetta grigio">Non è sulla mappa</span>' : '',
     ].join('');
     return `<div class="tappa">
       <button class="voce" type="button" data-tappa-apri="${esc(t.id)}">
         <b><span class="numero${mio ? '' : ' suo'}">${i + 1}</span>${t.ora ? `<span class="ora">${esc(orarioTappa(t))}</span>` : ''}${esc(l.nome)}</b>
-        <span class="riga2">${esc(posto || '—')}${c && c.tipo ? ' · ' + esc(c.tipo) : ''}</span>
+        ${posto || !eImpegno(t) ? `<span class="riga2">${esc(posto || '—')}${c && c.tipo ? ' · ' + esc(c.tipo) : ''}</span>` : ''}
         <span class="riga3">${etichette}</span>
         ${t.note ? `<span class="riga2 nota-tappa">${esc(t.note)}</span>` : ''}
       </button>
@@ -3370,9 +3378,10 @@
     else if (t.contatto && leadDaChiave(t.contatto)) apriLeadDaChiave(t.contatto);
     else chiediTappa({ tappa: t });
   }
-  // Più di 10 tappe in un giorno Google Maps non le apre.
+  // Più di 10 tappe in un giorno Google Maps non le apre. Un «Altro» senza
+  // posto non ci va, quindi non conta.
   function troppe(chi, giorno, id) {
-    if (tappeDel(giorno, chi).filter((t) => t.id !== id).length < MAX_TAPPE) return false;
+    if (tappeDel(giorno, chi).filter((t) => t.id !== id && haLuogo(t)).length < MAX_TAPPE) return false;
     messaggio(`Il giro di ${nomeChi(chi)} di quel giorno ha già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
     return true;
   }
@@ -3384,8 +3393,9 @@
     if (!soloTappa && c && t.lavoro === 'Manutenzione' && !c.perso) { chiediFatta(c); return; }
     // Un guasto: manutenzione, riparazione o niente (21 ott 2026).
     if (!soloTappa && c && t.lavoro === 'Guasto' && !c.perso) { chiediCosaHaiFatto(c, { tappa: t }); return; }
-    const fai = (installazione = null) => salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`, {
-      materiali: { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
+    // Dal medico o a caricare le bombole non si usano materiali: niente domanda.
+    const fai = (installazione = null) => salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${eImpegno(t) ? '' : `${t.lavoro || 'Lavoro'}: `}${luogoTappa(t).nome}`, {
+      materiali: eImpegno(t) ? null : { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
       installazione,
     });
     // Un'installazione mette da sola la data sulla scheda (2 nov 2026). Se ce
@@ -3421,7 +3431,7 @@
       b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
         const t = trova(b.dataset.tappaPassa);
         const a = b.dataset.a;
-        if (!t || troppe(a, giornoDi(t), t.id)) return;
+        if (!t || (haLuogo(t) && troppe(a, giornoDi(t), t.id))) return;
         await salvaLaTappa({ ...t, giorno: giornoDi(t), chi: a }, `Passata a ${nomeChi(a)}: ${luogoTappa(t).nome}`);
       });
     });
@@ -3429,7 +3439,7 @@
   }
 
   // «Aggiungi una tappa» dalla pagina dei giri: si cerca il cliente o il
-  // contatto, oppure si scrive un indirizzo qualsiasi.
+  // contatto, oppure si scrive un indirizzo qualsiasi, oppure «Altro».
   function chiediCosaAlGiro(giorno) {
     apriFinestra(`
       <h3>Chi vai a trovare?</h3>
@@ -3437,6 +3447,7 @@
         <input id="cerca-tappa" autocomplete="off" placeholder="Nome, città o telefono"></label>
       <div class="lista" id="trovati-tappa"></div>
       <button class="btn" type="button" id="indirizzo-libero">${icona('mappa')} Un altro indirizzo</button>
+      <button class="btn scelta-lavoro" type="button" id="altro-impegno">${icona('registro')}<span>Altro<small>Medico, bombole, magazzino… senza un cliente</small></span></button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     const mostra = () => {
       const q = normalizza($('cerca-tappa').value);
@@ -3454,18 +3465,21 @@
     };
     $('cerca-tappa').oninput = mostra;
     $('indirizzo-libero').onclick = () => chiediTappa({ giorno });
+    $('altro-impegno').onclick = () => chiediTappa({ giorno, altro: true });
     $('no').onclick = chiudiFinestra;
     $('cerca-tappa').focus();
   }
 
   // Aggiungere o cambiare una tappa: di chi, che lavoro, quando, a che ora.
   // Per un contatto o un indirizzo qualsiasi anche nome e indirizzo (la
-  // posizione la cerca il telefono su OpenStreetMap, se c'è campo).
-  function chiediTappa({ tappa = null, cliente = null, lead = null, giorno = null } = {}) {
+  // posizione la cerca il telefono su OpenStreetMap, se c'è campo). «Altro»
+  // (`altro`, o una tappa che lo è già): cosa c'è da fare, e il posto se serve.
+  function chiediTappa({ tappa = null, cliente = null, lead = null, giorno = null, altro = false } = {}) {
     const t0 = tappa;
     const c = cliente || (t0 && t0.codice && clienteIn(dati, t0.codice)) || null;
     const l = lead || (t0 && t0.contatto && leadDaChiave(t0.contatto)) || null;
     const libero = !c;
+    const impegno = altro || !!(t0 && eImpegno(t0));
     const s = c && scadenza(c);
     let lavoro = t0 ? (t0.lavoro || 'Altro')
       : c ? (c.avviso === 'Urgente' ? 'Guasto' : s.giorni != null && s.giorni <= 60 ? 'Manutenzione' : 'Altro')
@@ -3479,10 +3493,11 @@
     apriFinestra(`
       <h3>${t0 ? 'Cambia la tappa' : 'Aggiungi al giro'}</h3>
       ${c ? `<p><strong>${esc(c.nome)}</strong><br>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p>` : ''}
+      ${impegno ? `<label class="campo"><span>Cosa devi fare?</span><input id="t-nome" autocapitalize="sentences" value="${v(t0 && t0.nome)}" placeholder="Es. medico, caricare le bombole"></label>` : ''}
       ${persone.length > 1 ? `<p class="domanda">Nel giro di</p>
         <div class="scelta scelta-chi" id="t-chi">${persone.map((p) => `<button type="button" data-v="${esc(p)}" aria-pressed="${chi === p}">${esc(nomeChi(p))}</button>`).join('')}</div>` : ''}
-      <p class="domanda">Che lavoro</p>
-      <div class="pillole pillole-lavoro" id="t-lavoro">${LAVORI.map((x) => `<button type="button" class="pillola" data-v="${x}" aria-pressed="${lavoro === x}">${x}</button>`).join('')}</div>
+      ${impegno ? '' : `<p class="domanda">Che lavoro</p>
+      <div class="pillole pillole-lavoro" id="t-lavoro">${LAVORI.map((x) => `<button type="button" class="pillola" data-v="${x}" aria-pressed="${lavoro === x}">${x}</button>`).join('')}</div>`}
       <p class="domanda">Quando</p>
       <div class="scelta scelta-giorno" id="t-giorno">
         <button type="button" data-v="${o}" aria-pressed="${ser === o}">Oggi</button>
@@ -3495,13 +3510,16 @@
         <label class="campo"><span>Alle, o dalle</span><input type="time" id="t-ora" value="${v(t0 && t0.ora)}"></label>
         <label class="campo"><span>Fino alle</span><input type="time" id="t-ora-fine" value="${v(t0 && t0.oraFine)}"></label>
       </div>
-      <p class="spiega">Con l'ora la tappa va in fila per ora. Se il cliente dà una fascia («fra le 9 e le 11»), scrivi anche fino a che ora; se no lascia vuoto «Fino alle».</p>
-      ${libero ? `
+      <p class="spiega">${impegno ? 'Con l\'ora va in fila per ora; senza, resta in fondo al giro.' : 'Con l\'ora la tappa va in fila per ora. Se il cliente dà una fascia («fra le 9 e le 11»), scrivi anche fino a che ora; se no lascia vuoto «Fino alle».'}</p>
+      ${impegno ? `
+        <p class="domanda">Dove <em>(facoltativo)</em></p>
+        <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
+        <label class="campo"><span>Città</span><input id="t-citta" value="${v(t0 && t0.citta)}"></label>` : libero ? `
         <label class="campo"><span>Cognome e nome <em>(o la ditta)</em></span><input id="t-nome" autocapitalize="words" value="${v((t0 && t0.nome) || (l && l.nome))}"></label>
         <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
         <label class="campo"><span>Città</span><input id="t-citta" value="${v((t0 && t0.citta) || cittaLead)}"></label>
         <label class="campo"><span>Telefono <em>(facoltativo)</em></span><input id="t-tel" inputmode="tel" value="${v((t0 && t0.telefono) || (l && l.contatto))}"></label>` : ''}
-      <label class="campo"><span>Note <em>(facoltative)</em></span><input id="t-note" value="${v(t0 && t0.note)}" placeholder="Es. citofono, cosa portare"></label>
+      <label class="campo"><span>Note <em>(facoltative)</em></span><input id="t-note" value="${v(t0 && t0.note)}" placeholder="${impegno ? 'Es. cosa portare' : 'Es. citofono, cosa portare'}"></label>
       <button class="btn pieno grande" type="button" id="t-salva">${icona('cartina')} ${t0 ? 'Salva' : 'Metti nel giro'}</button>
       ${t0 ? '<button class="btn btn-rosso" type="button" id="t-togli">Togli dal giro</button>' : ''}
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
@@ -3511,7 +3529,7 @@
       });
     };
     if ($('t-chi')) scegli('t-chi', (x) => { chi = x; });
-    scegli('t-lavoro', (x) => { lavoro = x; });
+    if ($('t-lavoro')) scegli('t-lavoro', (x) => { lavoro = x; });
     scegli('t-giorno', (x) => {
       if (x === 'altro') { $('t-data').hidden = false; const d = daIso($('t-data').value); if (d) ser = Math.max(serialeDa(d.a, d.m, d.g), o); $('t-data').focus(); return; }
       ser = +x; $('t-data').hidden = true;
@@ -3525,19 +3543,23 @@
         codice: c ? c.codice : '', contatto: l ? chiaveLead(l) : (t0 && t0.contatto) || '',
         nome: c ? c.nome : $('t-nome').value.replace(/\s+/g, ' ').trim(),
         indirizzo: c ? c.indirizzo : $('t-indirizzo').value.trim(), citta: c ? c.citta : $('t-citta').value.trim(),
-        telefono: c ? '' : $('t-tel').value.trim(), note: $('t-note').value.replace(/\s+/g, ' ').trim(),
+        telefono: c ? '' : $('t-tel') ? $('t-tel').value.trim() : (t0 && t0.telefono) || '', note: $('t-note').value.replace(/\s+/g, ' ').trim(),
         lat: t0 && !c ? t0.lat : null, lng: t0 && !c ? t0.lng : null, stato: '',
       };
-      if (!nuovo.nome) { messaggio('Scrivi il nome.', { errore: true }); return; }
+      if (!nuovo.nome) { messaggio(impegno ? 'Scrivi cosa devi fare.' : 'Scrivi il nome.', { errore: true }); return; }
       if (nuovo.oraFine && !nuovo.ora) { messaggio('Scrivi anche da che ora: la fascia comincia da lì.', { errore: true }); return; }
       if (nuovo.oraFine && nuovo.oraFine <= nuovo.ora) { messaggio('«Fino alle» deve venire dopo l\'ora d\'inizio.', { errore: true }); return; }
       if (nuovo.oraFine === nuovo.ora) nuovo.oraFine = '';
-      if (libero && !nuovo.indirizzo && !nuovo.citta) { messaggio('Scrivi almeno la città: se no non so dove andare.', { errore: true }); return; }
-      if (troppe(chi, nuovo.giorno, nuovo.id)) return;
+      const senzaPosto = libero && !nuovo.indirizzo && !nuovo.citta;
+      if (senzaPosto && !impegno) { messaggio('Scrivi almeno la città: se no non so dove andare.', { errore: true }); return; }
+      if (!senzaPosto && troppe(chi, nuovo.giorno, nuovo.id)) return;
       // Contatto o indirizzo qualsiasi: dove sta lo cerca il telefono (al
       // massimo 8 secondi; senza campo la tappa resta fuori dalla mappa).
       const cambiato = !t0 || t0.indirizzo !== nuovo.indirizzo || t0.citta !== nuovo.citta;
-      if (libero && (cambiato || nuovo.lat == null)) {
+      if (senzaPosto) {
+        nuovo.lat = null;
+        nuovo.lng = null;
+      } else if (libero && (cambiato || nuovo.lat == null)) {
         // La provincia non è scritta da nessuna parte: si preferisce quella
         // dove lavoriamo, fra i paesi omonimi (2 nov 2026: «San Donnino» di
         // Gallo è a Campi Bisenzio, la tappa era finita in Garfagnana). È solo
@@ -3553,6 +3575,7 @@
       chiudiFinestra();
       await salvaLaTappa(nuovo, `Nel giro di ${nomeChi(chi)} ${quandoTappa(nuovo)}: ${nuovo.nome}`);
     });
+    if (altro) $('t-nome').focus();
   }
 
   // ---------------------------------------------------------------------
