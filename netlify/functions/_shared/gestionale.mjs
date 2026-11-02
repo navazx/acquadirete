@@ -1175,7 +1175,7 @@ const NOMI_AZIONI = {
   magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
   annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
   foto: 'Foto', togliFoto: 'Foto tolta', rimettiFoto: 'Foto rimessa', posizioneContatto: 'Posizione contatto',
-  rinominaContatti: 'Contatti col cognome davanti',
+  rinominaContatti: 'Contatti col cognome davanti', installazione: 'Data di installazione', annullaInstallazione: 'Annullata data di installazione',
 };
 const breveValore = (v) => testo(typeof v === 'object' ? JSON.stringify(v) : v).replace(/\s+/g, ' ').slice(0, 80);
 // «26/10/2026 10:32», ora di Roma.
@@ -1665,15 +1665,8 @@ export async function impostaAvviso(foglio, { codice, avviso = '', motivo = '', 
   };
 }
 
-export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima, chiPrima, tappeFatte }) {
-  const { griglia, mappa } = await leggiClienti(foglio);
-  const riga = trovaCliente(griglia, mappa, codice);
-  const { col } = mappa;
-  const attuale = serialeDaCella((griglia[riga - 1] || [])[col.MANUTENZIONE - 1]);
-  if (attuale !== scritto) {
-    throw problema('Nel frattempo la data è cambiata: non la tocco. Controlla il foglio.', 409);
-  }
-  const cellaK = `'${TAB_CLIENTI}'!${lettera(col.MANUTENZIONE)}${riga}`;
+async function rimettiProssima(foglio, mappa, riga, prima) {
+  const cellaK = `'${TAB_CLIENTI}'!${lettera(mappa.col.MANUTENZIONE)}${riga}`;
   // Si rimette solo ciò che può esserci stato davvero: vuoto, una data
   // (seriale) o la formula EDATE delle automazioni. Nient'altro dal telefono.
   const formulaValida = typeof prima === 'string' && /^=IF\(OR\(\$[A-Z]+\d+="";\$[A-Z]+\d+=""\);"";EDATE\(\$[A-Z]+\d+;\$[A-Z]+\d+\)\)$/.test(prima);
@@ -1688,6 +1681,17 @@ export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaSc
   } else {
     await foglio.scrivi([{ range: cellaK, values: [[prima ?? '']] }], 'RAW');
   }
+}
+
+export async function annullaFatta(foglio, { codice, prima, scritto, frequenzaScritta, storico, avvisoPrima, chiPrima, tappeFatte }) {
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const riga = trovaCliente(griglia, mappa, codice);
+  const { col } = mappa;
+  const attuale = serialeDaCella((griglia[riga - 1] || [])[col.MANUTENZIONE - 1]);
+  if (attuale !== scritto) {
+    throw problema('Nel frattempo la data è cambiata: non la tocco. Controlla il foglio.', 409);
+  }
+  await rimettiProssima(foglio, mappa, riga, prima);
   if (frequenzaScritta) {
     await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(col.FREQUENZA)}${riga}`, values: [['']] }], 'RAW');
   }
@@ -1833,6 +1837,17 @@ export async function importaPersi(foglio, { righe = [] }, { chi } = {}) {
 // Scrive una riga nuova in fondo a Clienti-Impianti già completa di quello
 // che farebbe completaClienteAMano(): codice, formula della prossima
 // manutenzione, zona e provincia dagli altri clienti della stessa città.
+// Il numero di una data si vede come data solo se la cella ha quel formato, e
+// una riga lo prende da quella di sopra: il 2 nov 2026 due clienti avevano
+// «46328» in Installazione, nel foglio (per l'app era giusto, 02/11/2026).
+const cellaComeData = (foglio, riga, colonna) => foglio.aspetto(TAB_CLIENTI, (sheetId) => [{
+  repeatCell: {
+    range: { sheetId, startRowIndex: riga - 1, endRowIndex: riga, startColumnIndex: colonna - 1, endColumnIndex: colonna },
+    cell: { userEnteredFormat: { numberFormat: { type: 'DATE', pattern: 'dd/mm/yyyy' } } },
+    fields: 'userEnteredFormat.numberFormat',
+  },
+}]).catch((err) => console.error('Formato della data non messo:', err));
+
 async function aggiungiRigaCliente(foglio, campi) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const { col } = mappa;
@@ -1903,6 +1918,7 @@ async function aggiungiRigaCliente(foglio, campi) {
     { range: cella(col.FREQUENZA), values: [[campi.frequenza ?? '']] },
   ];
   await foglio.scrivi(numeri, 'RAW');
+  if (campi.installazione) await cellaComeData(foglio, riga, col.INSTALLAZIONE);
   // Stessa formula che mettono le automazioni del foglio (col ";" italiano).
   await foglio.scrivi([{
     range: cella(col.MANUTENZIONE),
@@ -2013,6 +2029,7 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
   if (!testi.length && !numeri.length) throw problema('Non hai cambiato niente.');
   if (testi.length) await foglio.scrivi(testi, 'RAW');
   if (numeri.length) await foglio.scrivi(numeri, 'RAW');
+  if (testo(campi.installazione)) await cellaComeData(foglio, riga, col.INSTALLAZIONE);
 
   // Se la prossima manutenzione è vuota (cliente appena passato da lead) e
   // ora ci sono installazione e frequenza, ci rimette la formula delle
@@ -2034,6 +2051,59 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
     ).catch((err) => console.error('Posizione sul posto non aggiornata:', err));
   }
   return { ok: true, codice: testo(codice).toUpperCase(), cambi: cambi.filter((x) => testo(x.prima) !== testo(x.dopo)) };
+}
+
+// Il «Fatto» di una tappa di installazione mette la data sulla scheda (2 nov
+// 2026, Matteo: «ho fatto Cherubini, che era un'installazione: quando ho messo
+// fatto mi deve mettere da solo la data»). Senza frequenza vale 12 mesi, come
+// nel modulo: se no la scadenza resterebbe vuota. `ricomincia`: il cliente
+// aveva già una data e l'impianto è nuovo (lo dice chi ha premuto «Fatto»),
+// quindi anche la prossima manutenzione riparte da qui, se no resterebbe
+// quella del vecchio. Si annulla con annullaInstallazione.
+export async function segnaInstallazione(foglio, { codice, data, ricomincia = false }) {
+  const d = leggiDataUtente(data);
+  if (!d) throw problema('Data di installazione non valida.');
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const { col } = mappa;
+  const riga = trovaCliente(griglia, mappa, codice);
+  const r = griglia[riga - 1] || [];
+  const cella = (c) => `'${TAB_CLIENTI}'!${lettera(c)}${riga}`;
+  const [[prossimaPrima = '']] = (await foglio.leggi(cella(col.MANUTENZIONE), 'FORMULA')).concat([['']]);
+  const scritta = serialeDa(d.a, d.m, d.g);
+  const senzaFrequenza = !(parseInt(testo(r[col.FREQUENZA - 1]), 10) > 0);
+  await foglio.scrivi([
+    { range: cella(col.INSTALLAZIONE), values: [[scritta]] },
+    ...(senzaFrequenza ? [{ range: cella(col.FREQUENZA), values: [[12]] }] : []),
+  ], 'RAW');
+  await cellaComeData(foglio, riga, col.INSTALLAZIONE);
+  if (ricomincia || !testo(prossimaPrima)) {
+    const cInst = lettera(col.INSTALLAZIONE);
+    const cFreq = lettera(col.FREQUENZA);
+    await foglio.scrivi([{
+      range: cella(col.MANUTENZIONE),
+      values: [[`=IF(OR($${cInst}${riga}="";$${cFreq}${riga}="");"";EDATE($${cInst}${riga};$${cFreq}${riga}))`]],
+    }], 'USER_ENTERED');
+  }
+  return {
+    ok: true, nome: testo(r[col.NOME - 1]),
+    annulla: { codice: testo(codice).toUpperCase(), scritta, installazione: r[col.INSTALLAZIONE - 1] ?? '', frequenzaScritta: senzaFrequenza, prossima: prossimaPrima },
+  };
+}
+export async function annullaInstallazione(foglio, { codice, scritta, installazione = '', frequenzaScritta, prossima = '' }) {
+  const { griglia, mappa } = await leggiClienti(foglio);
+  const { col } = mappa;
+  const riga = trovaCliente(griglia, mappa, codice);
+  if (serialeDaCella((griglia[riga - 1] || [])[col.INSTALLAZIONE - 1]) !== scritta) {
+    throw problema('Nel frattempo la data è cambiata: non la tocco. Controlla il foglio.', 409);
+  }
+  await rimettiProssima(foglio, mappa, riga, prossima);
+  const cella = (c) => `'${TAB_CLIENTI}'!${lettera(c)}${riga}`;
+  // In RAW: una data o un testo restano quello, mai una formula.
+  await foglio.scrivi([
+    { range: cella(col.INSTALLAZIONE), values: [[typeof installazione === 'number' ? installazione : testo(installazione).slice(0, 40)]] },
+    ...(frequenzaScritta ? [{ range: cella(col.FREQUENZA), values: [['']] }] : []),
+  ], 'RAW');
+  return { ok: true };
 }
 
 // Una posizione segnata sul posto («Sono qui») è più giusta di qualunque
@@ -2079,6 +2149,17 @@ function trovaLead(griglia, mappa, { riga, data, nome }) {
   throw problema('Non trovo più questo contatto nel foglio. Riapri l\'app e riprova.', 409);
 }
 
+// Il giorno (seriale) dell'ultima installazione fatta per quel contatto, o
+// null. Una tappa di domani segnata fatta oggi vale oggi.
+async function installazioneDelContatto(foglio, l) {
+  const { tappe } = await leggiGiri(foglio);
+  const giorni = tappe
+    .filter((t) => t.stato === 'Fatta' && t.lavoro === 'Installazione' && !t.codice && t.contatto && leadDellaTappa(t.contatto, [l]))
+    .map((t) => serialeDaCella(t.giorno))
+    .filter((s) => s != null);
+  return giorni.length ? Math.min(Math.max(...giorni), serialeDa(...Object.values(oggi()))) : null;
+}
+
 export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
   riga = parseInt(riga, 10);
   if (!STATI_LEAD.includes(stato)) throw problema('Stato non valido.');
@@ -2100,6 +2181,12 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
     else if (/firenze|scandicci|sesto fiorentino|bagno a ripoli|campi bisenzio|signa|empol|montespertoli|valdelsa/i.test(note)) provincia = 'FI';
     const zona = (note.match(/\bZ[1-8X]\b/) || [''])[0];
     const dataLead = v('DATA').split(',')[0].trim();
+    // Un'installazione già fatta quando era ancora un contatto (la tappa col
+    // suo «Fatto»): la data viene da lì, come per un cliente.
+    const installato = await installazioneDelContatto(foglio, { data: v('DATA'), nome: v('NOME') }).catch((err) => {
+      console.error('Tappe del contatto non lette:', err);
+      return null;
+    });
     cliente = await aggiungiRigaCliente(foglio, {
       nome: v('NOME'),
       daLead: true,
@@ -2112,8 +2199,8 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
       note: dataLead ? 'Da lead del ' + dataLead : '',
       // Come l'onEdit: data e frequenza restano da compilare, la formula
       // della prossima manutenzione parte appena ci sono.
-      installazione: '',
-      frequenza: '',
+      installazione: installato ?? '',
+      frequenza: installato != null ? 12 : '',
     });
     // Le foto e la posizione del sopralluogo passano al cliente (27 ott 2026,
     // Matteo: «una volta diventato cliente le foto devono rimanere»). Se non

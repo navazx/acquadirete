@@ -1150,13 +1150,16 @@
   // Salva una tappa (nuova o cambiata) e lo dice, con «Annulla».
   // `materiali`: dopo «Fatto» chiede che materiali sono stati usati (dal 20
   // ott 2026), e il messaggio con «Annulla» arriva dopo.
-  async function salvaLaTappa(t, testo, { materiali = null } = {}) {
+  // `installazione`: il «Fatto» di un'installazione mette anche la data sulla scheda.
+  async function salvaLaTappa(t, testo, { materiali = null, installazione = null } = {}) {
     const prima = (dati.tappe || []).find((x) => x.id === t.id);
     const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
     try {
       const { r, voce } = await manda('tappa', t, testo);
       if (r) { APPLICA.tappa(dati, r.tappa); salvaDati(); }
       disegna(history.state);
+      const inst = installazione ? await mettiInstallazione(installazione) : null;
+      if (inst) disegna(history.state);
       const indietro = () => {
         if (r.annulla && r.annulla.togli) return togliLaTappa(r.tappa, 'Annullato.');
         return salvaLaTappa({ ...(prima || r.annulla) }, 'Annullato.');
@@ -1164,9 +1167,16 @@
       const annullaTappa = voce ? () => annullaInCoda(voce, () => { dati.tappe = fotoTappe; }) : indietro;
       const avvisa = (mov) => {
         if (mov) disegna(history.state);
-        messaggio(testo + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+        messaggio(testo + (inst ? ` · ${inst.testo}` : '') + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
           durata: 10000,
-          azione: { testo: 'Annulla', fai: async () => { if (mov) await annullaMovimento(mov, { zitto: true }); annullaTappa(); } },
+          azione: {
+            testo: 'Annulla',
+            fai: async () => {
+              if (mov) await annullaMovimento(mov, { zitto: true });
+              if (inst && inst.annulla) await inst.annulla();
+              annullaTappa();
+            },
+          },
         });
       };
       if (materiali && mag()) chiediMateriali({ ...materiali, dopo: avvisa });
@@ -1175,6 +1185,27 @@
     } catch (err) {
       messaggio(err.message, { errore: true, durata: 8000 });
       return false;
+    }
+  }
+  // La data di installazione messa dal «Fatto»: restituisce cosa dire e come
+  // tornare indietro. Se non si salva, la tappa resta fatta: lo si dice e basta.
+  async function mettiInstallazione(x) {
+    const c = clienteIn(dati, x.codice);
+    if (!c) return null;
+    const foto = fotografia(c);
+    const indietro = () => { foto(); salvaDati(); };
+    try {
+      const { r, voce } = await manda('installazione', x, `Data di installazione: ${c.nome}`);
+      if (r) { APPLICA.installazione(dati, x); salvaDati(); }
+      return {
+        testo: `installato il ${c.installazione}${c.prossima ? `, prossima manutenzione ${c.prossima}` : ''}`,
+        annulla: voce ? () => annullaInCoda(voce, indietro)
+          : () => manda('annullaInstallazione', r.annulla, `Annullata la data di installazione: ${c.nome}`)
+            .then(indietro)
+            .catch((err) => messaggio(err.message, { errore: true, durata: 8000 })),
+      };
+    } catch (err) {
+      return { testo: 'la data di installazione non si è salvata: mettila da «Modifica i dati»', annulla: null };
     }
   }
   async function togliLaTappa(t, testo = 'Tolta dal giro.') {
@@ -1919,6 +1950,15 @@
       if (c.avviso === 'Urgente') { c.avviso = ''; c.motivo = ''; }
       nelloStorico(d, { ...x, lavoro: 'Guasto' }, c);
       chiudiTappe(d, x.codice, g, (t) => t.lavoro === 'Guasto');
+    },
+    // Come segnaInstallazione: la prossima riparte se è vuota, o se l'impianto è nuovo.
+    installazione(d, x) {
+      const c = clienteIn(d, x.codice);
+      const g = daIso(x.data);
+      if (!c || !g) return;
+      c.installazione = testoData(g);
+      if (!(parseInt(c.frequenza, 10) > 0)) c.frequenza = 12;
+      if (!c.prossima || x.ricomincia) conProssima(c, piuMesi(g, parseInt(c.frequenza, 10)));
     },
     annullaRiparazione(d, x) {
       d.storico = (d.storico || []).filter((s) => !(s.codice === x.codice && s.data === x.data && s.lavoro === 'Guasto'));
@@ -3193,10 +3233,12 @@
   }
   function chiediCancellaLavoro(t, x, usati) {
     const torna = x ? scadenzaSeCancello(x) : null;
+    const cl = t.codice && clienteIn(dati, t.codice);
     apriFinestra(`
       <h3>Cancellare questo lavoro?</h3>
       <p><strong>${esc(luogoTappa(t).nome)}</strong> · ${esc(t.lavoro || 'Altro')}${t.chi ? `, ${fattoA(t.lavoro)} ${esc(daChi(t.chi))}` : ''}. Sparisce dai lavori fatti del giro${x ? ' e dagli interventi fatti (nel foglio ne resta una copia)' : ''}.</p>
       ${torna != null ? `<p>Quella manutenzione aveva spostato la prossima al <strong>${esc(x.prossima)}</strong>. Se non è stata fatta davvero, rimettila al <strong>${esc(testoGiorno(torna))}</strong>.</p>` : ''}
+      ${t.lavoro === 'Installazione' && cl && cl.installazione ? `<p>La data di installazione (${esc(cl.installazione)}) resta sulla scheda: se è sbagliata si cambia da «Modifica i dati».</p>` : ''}
       ${usati ? `<p>I materiali segnati (${esc(usati)}) tornano in magazzino.</p>` : ''}
       ${bottoniCancella(x, torna)}
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
@@ -3327,9 +3369,31 @@
     if (!soloTappa && c && t.lavoro === 'Manutenzione' && !c.perso) { chiediFatta(c); return; }
     // Un guasto: manutenzione, riparazione o niente (21 ott 2026).
     if (!soloTappa && c && t.lavoro === 'Guasto' && !c.perso) { chiediCosaHaiFatto(c, { tappa: t }); return; }
-    salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`, {
+    const fai = (installazione = null) => salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${t.lavoro || 'Lavoro'}: ${luogoTappa(t).nome}`, {
       materiali: { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
+      installazione,
     });
+    // Un'installazione mette da sola la data sulla scheda (2 nov 2026). Se ce
+    // n'è già un'altra si chiede: su un cliente vecchio può essere un impianto
+    // nuovo o solo un pezzo in più, e un cliente scritto col modulo ha quella del sopralluogo.
+    if (c && t.lavoro === 'Installazione' && !c.perso) {
+      const ora = { codice: c.codice, data: isoDa(oggi()) };
+      if (!c.installazione) { fai(ora); return; }
+      if (c.installazione !== oggiTesto()) { chiediImpiantoNuovo(c, ora, fai); return; }
+    }
+    fai();
+  }
+  function chiediImpiantoNuovo(c, ora, fai) {
+    const mesi = parseInt(c.frequenza, 10) > 0 ? parseInt(c.frequenza, 10) : 12;
+    apriFinestra(`
+      <h3>È un impianto nuovo?</h3>
+      <p><strong>${esc(c.nome)}</strong> ha già «Installato il ${esc(c.installazione)}». Se è un impianto nuovo metto la data di oggi, <strong>${esc(oggiTesto())}</strong>, e la prossima manutenzione riparte da lì: <strong>${esc(testoData(piuMesi(oggi(), mesi)))}</strong>.</p>
+      <button class="btn pieno grande" type="button" id="si">Sì, impianto nuovo</button>
+      <button class="btn" type="button" id="no-data">No, lascia la data</button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    $('no').onclick = chiudiFinestra;
+    $('no-data').onclick = () => { chiudiFinestra(); fai(); };
+    $('si').onclick = () => { chiudiFinestra(); fai({ ...ora, ricomincia: true }); };
   }
 
   // I tasti delle tappe (pagina dei giri, scheda del cliente o del contatto).

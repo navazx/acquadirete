@@ -18,7 +18,7 @@
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import {
-  leggiTutto, segnaFatta, annullaFatta, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
+  leggiTutto, segnaFatta, annullaFatta, segnaInstallazione, annullaInstallazione, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
   nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
   salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, vistePerCategoria, creaFoglioGoogle,
@@ -90,6 +90,8 @@ const AZIONI = {
   importaPersi,
   nuovo: nuovoCliente,
   modifica: modificaCliente,
+  installazione: segnaInstallazione, // la data messa dal «Fatto» di un'installazione (2 nov 2026)
+  annullaInstallazione,
   nuovoLead,
   stato: cambiaStatoLead,
   nota: notaLead,
