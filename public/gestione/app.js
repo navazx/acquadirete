@@ -452,20 +452,22 @@
   // garanzia» (21 ott 2026, Matteo): fatta senza far pagare, è a posto così.
   const DA_RISENTIRE = 'Da risentire';
   const GARANZIA = 'Gratis in garanzia';
+  const FATTURA = 'Fattura e poi bonifico';
   const PAGAMENTI = [
     ['Contanti', 'Contanti', 'Contanti'],
     ['POS', 'POS (carta o bancomat)', 'POS'],
-    ['Fattura e poi bonifico', 'Fattura, poi bonifico', 'Fattura, poi bonifico'],
+    [FATTURA, 'Fattura, poi bonifico', 'Fattura, poi bonifico'],
     [GARANZIA, 'Gratis, in garanzia', 'In garanzia'],
     [DA_RISENTIRE, 'Da risentire per il pagamento', 'Da risentire per il pagamento'],
   ];
   const breve = (p) => (PAGAMENTI.find((x) => x[0] === p) || [p, p, p])[2];
   const icoPagamento = (v) => (v === DA_RISENTIRE ? 'orologio' : v === GARANZIA ? 'scudo' : 'euro');
   // «Quanto ha pagato?» (1 nov 2026, Matteo: «dopo che ho selezionato il
-  // pagamento mi deve chiedere quanto ha pagato il cliente»): dopo Contanti,
-  // POS o Fattura, non in garanzia né da risentire. Va nella colonna
-  // «Importo» dello storico, come fa il motore (importoScritto).
-  const conImporto = (p) => !!p && p !== DA_RISENTIRE && p !== GARANZIA;
+  // pagamento mi deve chiedere quanto ha pagato il cliente»): dopo Contanti o
+  // POS, non in garanzia né da risentire, e dal 2 nov 2026 neanche con la
+  // fattura (Matteo: «non ha ancora pagato»). Va nella colonna «Importo»
+  // dello storico, come fa il motore (importoScritto).
+  const conImporto = (p) => !!p && p !== DA_RISENTIRE && p !== GARANZIA && p !== FATTURA;
   // 80 → «80 €», 80.5 → «80,50 €», 1200 → «1.200 €».
   const euro = (n) => `${Number(n).toLocaleString('it-IT', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2, useGrouping: 'always' })} €`;
   // «Contanti · 80 €»; senza importo solo come ha pagato.
@@ -2844,10 +2846,10 @@
     confermaFatta(c, null);
   }
 
-  // Il secondo passo della finestra del pagamento: toccato Contanti, POS o
-  // Fattura, al posto dei pulsanti (#passo-pagamento) compare «Quanto ha
-  // pagato?», e «Indietro» torna ai pulsanti. In garanzia e da risentire si
-  // salva subito, come prima. `importo` = quello già segnato (cambiando il
+  // Il secondo passo della finestra del pagamento: toccato Contanti o POS, al
+  // posto dei pulsanti (#passo-pagamento) compare «Quanto ha pagato?», e
+  // «Indietro» torna ai pulsanti. Fattura, in garanzia e da risentire si
+  // salvano subito. `importo` = quello già segnato (cambiando il
   // pagamento di un intervento); senza, il tasto con quanto ha pagato
   // l'ultima volta lo scrive nel campo. `salva(btn, pagamento, importo)`.
   const htmlImporto = () => `
@@ -2904,8 +2906,8 @@
   }
 
   // «Come ha pagato?» (19 ott 2026, Matteo) sta nella stessa finestra: la
-  // risposta toccata è anche il «sì, fatta». Dal 1 nov 2026 dopo Contanti,
-  // POS o Fattura chiede anche quanto (scegliPagamento).
+  // risposta toccata è anche il «sì, fatta». Dal 1 nov 2026 dopo Contanti o
+  // POS chiede anche quanto (scegliPagamento).
   function confermaFatta(c, frequenzaNuova) {
     const mesi = c.frequenza || frequenzaNuova;
     const o = oggi();

@@ -36,10 +36,11 @@ const pagamentoDa = (v) => {
 };
 // Quanto ha pagato (1 nov 2026, Matteo: «dopo che ho selezionato il
 // pagamento mi deve chiedere quanto ha pagato il cliente»): colonna
-// "Importo" dello storico, in euro coi centesimi. Solo con Contanti, POS o
-// Fattura: in garanzia e da risentire resta vuota. Dal telefono arriva un
-// numero; dal foglio può essere «80», «80,5» o «€ 1.200,00».
-const PAGAMENTI_SENZA_IMPORTO = ['Gratis in garanzia', 'Da risentire'];
+// "Importo" dello storico, in euro coi centesimi. Solo con Contanti o POS: in
+// garanzia e da risentire resta vuota, e con la fattura pure (2 nov 2026,
+// Matteo: «non ha ancora pagato»). Dal telefono arriva un numero; dal foglio
+// può essere «80», «80,5» o «€ 1.200,00».
+const PAGAMENTI_SENZA_IMPORTO = ['Fattura e poi bonifico', 'Gratis in garanzia', 'Da risentire'];
 const pagaConImporto = (pag) => !!pag && !PAGAMENTI_SENZA_IMPORTO.includes(pag);
 const importoDa = (v) => {
   if (v === '' || v == null) return null;
