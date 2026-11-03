@@ -60,7 +60,10 @@ const importoScritto = (pag, v) => {
   return n;
 };
 // I pagamenti di un lavoro pagato a parti (l'installazione, nella scheda Giri):
-// dal telefono una lista di { data, come, importo }, nel foglio un testo.
+// dal telefono una lista di { data, come, importo }, nel foglio un testo. Qui
+// c'è anche il finanziamento (3 nov 2026, Matteo: «solo con la cifra totale»),
+// che le manutenzioni non hanno: da solo, e uguale al prezzo (lo controlla salvaTappa).
+const FINANZIAMENTO = 'Finanziamento';
 const testoParti = (parti = []) => parti.map((p) => `${p.data} ${p.come} ${String(p.importo).replace('.', ',')}`).join('; ');
 const sommaParti = (parti = []) => (parti.length ? Math.round(parti.reduce((s, p) => s + p.importo, 0) * 100) / 100 : '');
 const partiLette = (v) => testo(v).split(';').map((s) => s.trim().match(/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(.+?)\s+([\d.,]+)$/)).filter(Boolean)
@@ -70,7 +73,8 @@ const partiScritte = (v) => {
   if (!Array.isArray(v) || v.length > 30) throw problema('Pagamenti non validi.');
   return v.map((p) => {
     const d = leggiDataUtente(p && p.data);
-    const come = pagamentoDa(p && p.come);
+    const finanziato = normalizza(p && p.come) === normalizza(FINANZIAMENTO);
+    const come = finanziato ? FINANZIAMENTO : pagamentoDa(p && p.come);
     const importo = importoScritto(come, p && p.importo);
     if (!d || !importo) throw problema('Controlla i pagamenti: un importo o una data non vanno bene.');
     return { data: testoData(d), come, importo };
@@ -1528,6 +1532,9 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   const fatta = testo(dati.stato) === 'Fatta';
   const prezzo = fatta ? importoScritto('Contanti', dati.prezzo) : '';
   const pagamenti = fatta ? partiScritte(dati.pagamenti) : [];
+  if (pagamenti.some((p) => p.come === FINANZIAMENTO) && (pagamenti.length > 1 || pagamenti[0].importo !== prezzo)) {
+    throw problema('Il finanziamento va segnato con la cifra totale, senza altri pagamenti.');
+  }
   const tappa = {
     id, giorno: testoData(giorno), ora, oraFine, chi, lavoro, codice,
     contatto: testo(dati.contatto).slice(0, 120), nome, indirizzo: testo(dati.indirizzo).slice(0, 200), citta: testo(dati.citta).slice(0, 80),
