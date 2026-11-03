@@ -499,7 +499,7 @@
   document.addEventListener('paste', function (e) {
     if (!e.target.isContentEditable) return;
     e.preventDefault();
-    var t = (e.clipboardData || window.clipboardData).getData('text').replace(/s+/g, ' ');
+    var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\s+/g, ' ');
     document.execCommand('insertText', false, t);
   });
 
