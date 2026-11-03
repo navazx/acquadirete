@@ -3258,27 +3258,26 @@
     const parti = partiDi(t);
     const resto = restoDi(t);
     const vuoto = !parti.length && t.prezzo == null;
-    const finanziato = parti.some((p) => p.come === FINANZIAMENTO);
     const tel = resto > 0 ? telefoni(l.telefono)[0] : null;
     apriFinestra(`
       <h3>${esc(l.nome)}</h3>
       <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
       ${conto ? `<div class="conto">
         ${vuoto ? '<div class="conto-riga"><span>Pagamento non segnato</span></div>' : ''}
-        ${t.prezzo != null && !finanziato ? `<div class="conto-riga"><span>Prezzo totale</span><b>${esc(euro(t.prezzo))}</b></div>` : ''}
+        ${t.prezzo != null ? `<div class="conto-riga"><span>Prezzo totale</span><b>${esc(euro(t.prezzo))}</b></div>` : ''}
         ${parti.map((p, i) => `<div class="conto-riga"><span>${esc(p.data)}<br>${esc(breve(p.come))}</span><span class="conto-parte"><b>${esc(euro(p.importo))}</b><button class="link" type="button" data-togli-parte="${i}">Togli</button></span></div>`).join('')}
         ${resto > 0 ? `<div class="conto-riga conto-resta"><span>Restano</span><b>${esc(euro(resto))}</b></div>` : ''}
         ${resto === 0 ? '<div class="conto-riga conto-pari"><span>Pagato tutto</span></div>' : ''}
       </div>` : ''}
       ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
-      ${conto ? `<button class="btn${resto > 0 || vuoto ? ' verde' : ''}" type="button" id="parte-nuova">${icona('euro')} ${finanziato ? 'Cambia il finanziamento' : resto > 0 ? 'Ha pagato un\'altra parte' : vuoto ? 'Segna il pagamento' : 'Cambia il prezzo o aggiungi un pagamento'}</button>` : ''}
+      ${conto ? `<button class="btn${resto > 0 || vuoto ? ' verde' : ''}" type="button" id="parte-nuova">${icona('euro')} ${resto > 0 ? 'Ha pagato un\'altra parte' : vuoto ? 'Segna il pagamento' : 'Cambia il prezzo o aggiungi un pagamento'}</button>` : ''}
       ${usati ? `<p style="margin-top:14px">Materiali: ${esc(usati)}</p>` : ''}
       ${apri ? '<button class="btn" type="button" id="apri-lavoro">Apri la scheda</button>' : ''}
       ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-lavoro">${icona('cestino')} Cancella questo lavoro</button>` : ''}
       <button class="btn leggero" type="button" id="no">Chiudi</button>`);
     if ($('parte-nuova')) {
       $('parte-nuova').onclick = () => chiediParti(t, {
-        titolo: finanziato ? 'Il finanziamento' : vuoto ? 'Come ha pagato?' : 'Ha pagato un\'altra parte?',
+        titolo: vuoto ? 'Come ha pagato?' : 'Ha pagato un\'altra parte?',
         conGiorno: true,
         fatto: (nuovo, btn) => (JSON.stringify(nuovo.pagamenti) === JSON.stringify(parti) && nuovo.prezzo === (t.prezzo ?? null)
           ? chiudiFinestra()
@@ -3482,32 +3481,23 @@
       + (restoDi(t) > 0 ? `<span class="etichetta arancio">Restano ${esc(euro(restoDi(t)))}</span>` : '');
   };
   // Il prezzo e quanto ha pagato adesso: basta riempire quello che serve, e quello
-  // che manca si segna quando arriva. Con il finanziamento (3 nov 2026, Matteo: «solo
-  // con la cifra totale») c'è una cifra sola, il prezzo, tutto finanziato: niente
-  // parti, e non si mischia con gli altri pagamenti (lo ricontrolla il motore).
-  // `fatto({ prezzo, pagamenti }, pulsante)`.
+  // che manca si segna quando arriva. Il finanziamento (3 nov 2026, Matteo: «solo con
+  // la cifra totale», «possono pagare anche finanziamento e contanti») si unisce agli
+  // altri, ma è una cifra sola, non a rate: se c'è già, il suo campo la riporta e si
+  // corregge lì (lo ricontrolla il motore). `fatto({ prezzo, pagamenti }, pulsante)`.
   function chiediParti(t, { titolo, conGiorno = false, fatto }) {
     const fin = partiDi(t).find((p) => p.come === FINANZIAMENTO);
     const gia = partiDi(t).filter((p) => p !== fin);
-    const vie = PAGAMENTI.filter(([v]) => conImporto(v));
-    let modo = fin ? 'finanziamento' : 'parti';
-    const giorno = fin && serialeGiorno(fin.data) != null ? daSeriale(serialeGiorno(fin.data)) : oggi();
+    const vie = [...PAGAMENTI.filter(([v]) => conImporto(v)), [FINANZIAMENTO, 'Finanziamento, la cifra totale']];
     apriFinestra(`
       <h3>${esc(titolo)}</h3>
       <p><strong>${esc(luogoTappa(t).nome)}</strong>${gia.length ? `<br>Già pagati: <strong>${esc(euro(pagatoDi({ pagamenti: gia })))}</strong>` : ''}</p>
-      ${gia.length ? '' : `<p class="domanda">Come paga?</p>
-      <div class="scelta scelta-chi" id="parti-modo">
-        <button type="button" data-v="parti" aria-pressed="${modo === 'parti'}">Contanti, POS, fattura</button>
-        <button type="button" data-v="finanziamento" aria-pressed="${modo === 'finanziamento'}">Finanziamento</button>
-      </div>`}
-      <label class="campo"><span id="parti-etichetta"></span>
+      <label class="campo"><span>Prezzo totale, in euro <em>(se lo sai)</em></span>
         <input id="parti-prezzo" type="text" inputmode="decimal" autocomplete="off" placeholder="Es. 1500" value="${t.prezzo != null ? esc(importoNelCampo(t.prezzo)) : ''}"></label>
-      <div id="parti-campi">
-        <p class="domanda">${conGiorno ? 'Quanto ha pagato?' : 'Quanto ha pagato oggi?'}</p>
-        <p class="spiega">Riempi solo quelli che servono. Il resto lo segni quando arriva.</p>
-        ${vie.map(([v, testo]) => `<label class="campo"><span>${esc(testo)}</span><input data-come="${esc(v)}" type="text" inputmode="decimal" autocomplete="off" placeholder="Euro"></label>`).join('')}
-      </div>
-      ${conGiorno ? `<label class="campo"><span>Quando</span><input type="date" id="parti-giorno" max="${isoDa(oggi())}" value="${isoDa(giorno)}"></label>` : ''}
+      <p class="domanda">${conGiorno ? 'Quanto ha pagato?' : 'Quanto ha pagato oggi?'}</p>
+      <p class="spiega">Riempi solo quelli che servono. Il resto lo segni quando arriva.</p>
+      ${vie.map(([v, testo]) => `<label class="campo"><span>${esc(testo)}</span><input data-come="${esc(v)}" type="text" inputmode="decimal" autocomplete="off" placeholder="Euro" value="${v === FINANZIAMENTO && fin ? esc(importoNelCampo(fin.importo)) : ''}"></label>`).join('')}
+      ${conGiorno ? `<label class="campo"><span>Quando</span><input type="date" id="parti-giorno" max="${isoDa(oggi())}" value="${isoDa(oggi())}"></label>` : ''}
       <p class="conto-dopo" id="parti-resto" hidden></p>
       <p class="errore-campo" id="parti-errore" hidden></p>
       <button class="btn verde grande" type="button" id="parti-ok"></button>
@@ -3518,43 +3508,32 @@
       const prezzoScritto = $('parti-prezzo').value.trim();
       const prezzo = prezzoScritto ? importoLetto(prezzoScritto) : null;
       const quando = conGiorno && daIso($('parti-giorno').value) ? testoData(daIso($('parti-giorno').value)) : oggiTesto();
-      if (modo === 'finanziamento') {
-        return { prezzo, pagamenti: prezzo == null ? [] : [{ data: quando, come: FINANZIAMENTO, importo: prezzo }], sbagliato: !!prezzoScritto && prezzo == null };
-      }
-      const nuove = campi.filter((c) => c.value.trim()).map((c) => ({ data: quando, come: c.dataset.come, importo: importoLetto(c.value) }));
-      return { prezzo, pagamenti: [...gia, ...nuove], sbagliato: (!!prezzoScritto && prezzo == null) || nuove.some((p) => p.importo == null) };
+      const scritte = campi.filter((c) => c.value.trim()).map((c) => ({ data: quando, come: c.dataset.come, importo: importoLetto(c.value) }));
+      const finScritto = scritte.find((p) => p.come === FINANZIAMENTO);
+      // Il finanziamento che c'era resta al suo posto e col suo giorno, con la cifra scritta adesso.
+      const pagamenti = [
+        ...partiDi(t).flatMap((p) => (p !== fin ? [p] : finScritto ? [{ ...p, importo: finScritto.importo }] : [])),
+        ...scritte.filter((p) => p !== finScritto || !fin),
+      ];
+      return { prezzo, pagamenti, sbagliato: (!!prezzoScritto && prezzo == null) || scritte.some((p) => p.importo == null) };
     };
     const aggiorna = () => {
       const x = letto();
-      const finanziamento = modo === 'finanziamento';
-      $('parti-etichetta').innerHTML = finanziamento ? 'Cifra totale del finanziamento, in euro' : 'Prezzo totale, in euro <em>(se lo sai)</em>';
-      $('parti-campi').hidden = finanziamento;
       const resto = x.sbagliato ? null : restoDi(x);
       const troppo = x.sbagliato || x.prezzo == null ? 0 : Math.round((pagatoDi(x) - x.prezzo) * 100) / 100;
       $('parti-resto').hidden = resto == null;
       $('parti-resto').className = `conto-dopo${resto > 0 ? ' conto-resta' : ''}`;
       $('parti-resto').textContent = troppo > 0 ? `Hai scritto ${euro(troppo)} più del prezzo.` : resto > 0 ? `Restano ${euro(resto)}: finisce in «Da risentire».` : 'Pagato tutto.';
-      $('parti-ok').innerHTML = `${icona('spunta')} ${!finanziamento && x.prezzo == null && !x.pagamenti.length ? 'Salva senza pagamento' : 'Salva'}`;
+      $('parti-ok').innerHTML = `${icona('spunta')} ${x.prezzo == null && !x.pagamenti.length ? 'Salva senza pagamento' : 'Salva'}`;
     };
     $('parti-prezzo').oninput = aggiorna;
     campi.forEach((c) => { c.oninput = aggiorna; });
-    if ($('parti-modo')) {
-      $('parti-modo').querySelectorAll('[data-v]').forEach((b) => {
-        b.onclick = () => {
-          modo = b.dataset.v;
-          $('parti-modo').querySelectorAll('[data-v]').forEach((y) => y.setAttribute('aria-pressed', String(y === b)));
-          $('parti-errore').hidden = true;
-          aggiorna();
-        };
-      });
-    }
     aggiorna();
     $('no').onclick = chiudiFinestra;
     $('parti-ok').onclick = (e) => {
       const x = letto();
       const errore = x.sbagliato ? 'Scrivi dei numeri, per esempio 300 o 300,50.'
-        : modo === 'finanziamento' && x.prezzo == null ? 'Scrivi la cifra totale del finanziamento.'
-          : x.prezzo != null && pagatoDi(x) > x.prezzo ? 'I pagamenti sono più del prezzo: controlla i numeri.' : '';
+        : x.prezzo != null && pagatoDi(x) > x.prezzo ? 'I pagamenti sono più del prezzo: controlla i numeri.' : '';
       $('parti-errore').textContent = errore;
       $('parti-errore').hidden = !errore;
       if (!errore) fatto({ prezzo: x.prezzo, pagamenti: x.pagamenti }, e.currentTarget);

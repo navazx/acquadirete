@@ -61,8 +61,9 @@ const importoScritto = (pag, v) => {
 };
 // I pagamenti di un lavoro pagato a parti (l'installazione, nella scheda Giri):
 // dal telefono una lista di { data, come, importo }, nel foglio un testo. Qui
-// c'è anche il finanziamento (3 nov 2026, Matteo: «solo con la cifra totale»),
-// che le manutenzioni non hanno: da solo, e uguale al prezzo (lo controlla salvaTappa).
+// c'è anche il finanziamento (3 nov 2026, Matteo: «solo con la cifra totale»,
+// «possono pagare anche finanziamento e contanti»), che le manutenzioni non hanno:
+// si unisce agli altri, ma è una cifra sola, non a rate (lo controlla salvaTappa).
 const FINANZIAMENTO = 'Finanziamento';
 const testoParti = (parti = []) => parti.map((p) => `${p.data} ${p.come} ${String(p.importo).replace('.', ',')}`).join('; ');
 const sommaParti = (parti = []) => (parti.length ? Math.round(parti.reduce((s, p) => s + p.importo, 0) * 100) / 100 : '');
@@ -1532,8 +1533,8 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   const fatta = testo(dati.stato) === 'Fatta';
   const prezzo = fatta ? importoScritto('Contanti', dati.prezzo) : '';
   const pagamenti = fatta ? partiScritte(dati.pagamenti) : [];
-  if (pagamenti.some((p) => p.come === FINANZIAMENTO) && (pagamenti.length > 1 || pagamenti[0].importo !== prezzo)) {
-    throw problema('Il finanziamento va segnato con la cifra totale, senza altri pagamenti.');
+  if (pagamenti.filter((p) => p.come === FINANZIAMENTO).length > 1) {
+    throw problema('Il finanziamento si segna una volta sola, con la cifra totale.');
   }
   const tappa = {
     id, giorno: testoData(giorno), ora, oraFine, chi, lavoro, codice,
