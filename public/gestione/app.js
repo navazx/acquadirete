@@ -490,7 +490,11 @@
     : p ? `<span class="etichetta verde">${esc(pagatoCon(p, importo))}</span>` : '<span class="etichetta grigio">Pagamento non segnato</span>');
   // "19/10/2026" → numero ordinabile.
   const quandoFatto = (s) => { const m = String(s.data).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0; };
-  const daPagare = () => (dati.storico || []).filter((s) => s.pagamento === DA_RISENTIRE);
+  // Anche un'installazione con ancora qualcosa da pagare (3 nov 2026).
+  const daPagare = () => [
+    ...(dati.storico || []).filter((s) => s.pagamento === DA_RISENTIRE),
+    ...(dati.tappe || []).filter((t) => t.stato === 'Fatta' && chiedeConto(t) && restoDi(t) > 0),
+  ];
 
   // "01/10/2026 — perde acqua" → { quando: "01/10/2026", perche: "perde acqua", t: ordinabile }
   function leggiMotivo(c) {
@@ -3249,13 +3253,44 @@
     const usati = x ? materialiDi(x.codice, x.data, x.lavoro) : materialiTappa(t);
     const giaQui = history.state && history.state.s === 'cliente' && history.state.codice === t.codice;
     const apri = !giaQui && ((t.codice && clienteIn(dati, t.codice)) || (t.contatto && leadDaChiave(t.contatto)));
+    const conto = chiedeConto(t);
+    const parti = partiDi(t);
+    const resto = restoDi(t);
+    const vuoto = !parti.length && t.prezzo == null;
+    const tel = resto > 0 ? telefoni(l.telefono)[0] : null;
     apriFinestra(`
       <h3>${esc(l.nome)}</h3>
       <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
-      ${usati ? `<p>Materiali: ${esc(usati)}</p>` : ''}
+      ${conto ? `<div class="conto">
+        ${vuoto ? '<div class="conto-riga"><span>Pagamento non segnato</span></div>' : ''}
+        ${t.prezzo != null ? `<div class="conto-riga"><span>Prezzo totale</span><b>${esc(euro(t.prezzo))}</b></div>` : ''}
+        ${parti.map((p, i) => `<div class="conto-riga"><span>${esc(p.data)}<br>${esc(breve(p.come))}</span><span class="conto-parte"><b>${esc(euro(p.importo))}</b><button class="link" type="button" data-togli-parte="${i}">Togli</button></span></div>`).join('')}
+        ${resto > 0 ? `<div class="conto-riga conto-resta"><span>Restano</span><b>${esc(euro(resto))}</b></div>` : ''}
+        ${resto === 0 ? '<div class="conto-riga conto-pari"><span>Pagato tutto</span></div>' : ''}
+      </div>` : ''}
+      ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
+      ${conto ? `<button class="btn${resto > 0 || vuoto ? ' verde' : ''}" type="button" id="parte-nuova">${icona('euro')} ${resto > 0 ? 'Ha pagato un\'altra parte' : vuoto ? 'Segna il pagamento' : 'Cambia il prezzo o aggiungi un pagamento'}</button>` : ''}
+      ${usati ? `<p style="margin-top:14px">Materiali: ${esc(usati)}</p>` : ''}
       ${apri ? '<button class="btn" type="button" id="apri-lavoro">Apri la scheda</button>' : ''}
       ${puo('cancellaInterventi') ? `<button class="btn btn-rosso" type="button" id="cancella-lavoro">${icona('cestino')} Cancella questo lavoro</button>` : ''}
       <button class="btn leggero" type="button" id="no">Chiudi</button>`);
+    if ($('parte-nuova')) {
+      $('parte-nuova').onclick = () => chiediParti(t, {
+        titolo: vuoto ? 'Come ha pagato?' : 'Ha pagato un\'altra parte?',
+        conGiorno: true,
+        fatto: (nuovo, btn) => (nuovo.pagamenti.length === parti.length && nuovo.prezzo === (t.prezzo ?? null)
+          ? chiudiFinestra()
+          : conPulsante(btn, 'Salvo…', async () => {
+            if (await salvaLaTappa({ ...t, ...nuovo }, `Segnato: ${testoConto(nuovo)}`)) chiudiFinestra();
+          })),
+      });
+    }
+    $('finestra').querySelectorAll('[data-togli-parte]').forEach((b) => {
+      b.onclick = (e) => conPulsante(e.currentTarget, '…', async () => {
+        const i = +b.dataset.togliParte;
+        if (await salvaLaTappa({ ...t, pagamenti: parti.filter((_, j) => j !== i) }, `Tolto: ${euro(parti[i].importo)}, ${breve(parti[i].come)}`)) chiudiFinestra();
+      });
+    });
     $('no').onclick = chiudiFinestra;
     if ($('apri-lavoro')) $('apri-lavoro').onclick = () => apriTappa(t);
     if ($('cancella-lavoro')) $('cancella-lavoro').onclick = () => chiediCancellaLavoro(t, x, usati);
@@ -3402,19 +3437,97 @@
     // Dal medico o a caricare le bombole non si usano materiali: niente domanda.
     // Il giorno diventa oggi: una tappa rimasta da ieri è fatta oggi, e gli
     // Interventi fatti (3 nov 2026) mostrano questa data.
-    const fai = (installazione = null) => salvaLaTappa({ ...t, giorno: oggiTesto(), stato: 'Fatta' }, `Fatto ✓ ${eImpegno(t) ? '' : `${t.lavoro || 'Lavoro'}: `}${luogoTappa(t).nome}`, {
+    const fai = (installazione = null, pagato = null) => salvaLaTappa({ ...t, giorno: oggiTesto(), stato: 'Fatta', ...pagato }, `Fatto ✓ ${eImpegno(t) ? '' : `${t.lavoro || 'Lavoro'}: `}${luogoTappa(t).nome}${pagato && testoConto(pagato) ? ` · ${testoConto(pagato)}` : ''}`, {
       materiali: eImpegno(t) ? null : { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
       installazione,
     });
     // Un'installazione mette da sola la data sulla scheda (2 nov 2026). Se ce
     // n'è già un'altra si chiede: su un cliente vecchio può essere un impianto
     // nuovo o solo un pezzo in più, e un cliente scritto col modulo ha quella del sopralluogo.
+    // Poi il prezzo e quanto ha pagato (3 nov 2026), anche se è ancora un contatto.
+    // Dopo si aprono i materiali, se c'è il magazzino; se no la finestra si chiude qui.
+    const avanti = chiedeConto(t) ? (installazione = null) => chiediParti(t, {
+      titolo: `${t.lavoro} ${fattoA(t.lavoro)} oggi?`,
+      fatto: (pagato, btn) => conPulsante(btn, 'Salvo…', async () => {
+        if (await fai(installazione, pagato) && !mag()) chiudiFinestra();
+      }),
+    }) : fai;
     if (c && t.lavoro === 'Installazione' && !c.perso) {
       const ora = { codice: c.codice, data: isoDa(oggi()) };
-      if (!c.installazione) { fai(ora); return; }
-      if (c.installazione !== oggiTesto()) { chiediImpiantoNuovo(c, ora, fai); return; }
+      if (!c.installazione) { avanti(ora); return; }
+      if (c.installazione !== oggiTesto()) { chiediImpiantoNuovo(c, ora, avanti); return; }
     }
-    fai();
+    avanti();
+  }
+  // Il conto di un lavoro pagato a parti (3 nov 2026, Matteo: «le installazioni a
+  // volte le pagano una parte fattura e una parte contanti, la parte contanti a
+  // volte ce la facciamo dare in 2 o 3 volte»): il prezzo e i pagamenti, nella riga
+  // della tappa. Manutenzioni e riparazioni hanno il loro, nello storico. La parte
+  // con la fattura conta come pagata: il bonifico non si segue, come per le manutenzioni.
+  const chiedeConto = (t) => t.lavoro === 'Installazione';
+  const partiDi = (x) => x.pagamenti || [];
+  const pagatoDi = (x) => Math.round(partiDi(x).reduce((s, p) => s + p.importo, 0) * 100) / 100;
+  // Quanto resta: null se il prezzo non è segnato.
+  const restoDi = (x) => (x.prezzo == null ? null : Math.max(Math.round((x.prezzo - pagatoDi(x)) * 100) / 100, 0));
+  // [['Contanti', 500], ['Fattura e poi bonifico', 800]]
+  const partiPerVia = (x) => [...partiDi(x).reduce((m, p) => m.set(p.come, (m.get(p.come) || 0) + p.importo), new Map())];
+  // «Contanti · 500 € · restano 200 €»
+  const testoConto = (x) => [...partiPerVia(x).map(([c, n]) => pagatoCon(c, n)), restoDi(x) > 0 ? `restano ${euro(restoDi(x))}` : ''].filter(Boolean).join(' · ');
+  const etichettaConto = (t) => {
+    if (!partiDi(t).length && t.prezzo == null) return '<span class="etichetta grigio">Pagamento non segnato</span>';
+    return partiPerVia(t).map(([c, n]) => etichettaPagamento(c, n)).join('')
+      + (restoDi(t) > 0 ? `<span class="etichetta arancio">Restano ${esc(euro(restoDi(t)))}</span>` : '');
+  };
+  // Il prezzo e quanto ha pagato adesso: basta riempire quello che serve, e quello
+  // che manca si segna quando arriva. `fatto({ prezzo, pagamenti }, pulsante)`.
+  function chiediParti(t, { titolo, conGiorno = false, fatto }) {
+    const o = oggi();
+    const gia = partiDi(t);
+    const vie = PAGAMENTI.filter(([v]) => conImporto(v));
+    apriFinestra(`
+      <h3>${esc(titolo)}</h3>
+      <p><strong>${esc(luogoTappa(t).nome)}</strong>${gia.length ? `<br>Già pagati: <strong>${esc(euro(pagatoDi(t)))}</strong>` : ''}</p>
+      <label class="campo"><span>Prezzo totale, in euro <em>(se lo sai)</em></span>
+        <input id="parti-prezzo" type="text" inputmode="decimal" autocomplete="off" placeholder="Es. 1500" value="${t.prezzo != null ? esc(importoNelCampo(t.prezzo)) : ''}"></label>
+      <p class="domanda">${conGiorno ? 'Quanto ha pagato?' : 'Quanto ha pagato oggi?'}</p>
+      <p class="spiega">Riempi solo quelli che servono. Il resto lo segni quando arriva.</p>
+      ${vie.map(([v, testo]) => `<label class="campo"><span>${esc(testo)}</span><input data-come="${esc(v)}" type="text" inputmode="decimal" autocomplete="off" placeholder="Euro"></label>`).join('')}
+      ${conGiorno ? `<label class="campo"><span>Quando</span><input type="date" id="parti-giorno" max="${isoDa(o)}" value="${isoDa(o)}"></label>` : ''}
+      <p class="conto-dopo" id="parti-resto" hidden></p>
+      <p class="errore-campo" id="parti-errore" hidden></p>
+      <button class="btn verde grande" type="button" id="parti-ok"></button>
+      <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
+    const campi = [...$('finestra').querySelectorAll('[data-come]')];
+    // Quello che c'è scritto adesso; `sbagliato` = un numero che non si capisce.
+    const letto = () => {
+      const prezzoScritto = $('parti-prezzo').value.trim();
+      const prezzo = prezzoScritto ? importoLetto(prezzoScritto) : null;
+      const quando = conGiorno && daIso($('parti-giorno').value) ? testoData(daIso($('parti-giorno').value)) : oggiTesto();
+      const nuove = campi.filter((c) => c.value.trim()).map((c) => ({ data: quando, come: c.dataset.come, importo: importoLetto(c.value) }));
+      const sbagliato = (prezzoScritto && prezzo == null) || nuove.some((p) => p.importo == null);
+      return { prezzo, pagamenti: [...gia, ...nuove], nuove, sbagliato };
+    };
+    const aggiorna = () => {
+      const x = letto();
+      const resto = x.sbagliato ? null : restoDi(x);
+      const troppo = x.sbagliato || x.prezzo == null ? 0 : Math.round((pagatoDi(x) - x.prezzo) * 100) / 100;
+      $('parti-resto').hidden = resto == null;
+      $('parti-resto').className = `conto-dopo${resto > 0 ? ' conto-resta' : ''}`;
+      $('parti-resto').textContent = troppo > 0 ? `Hai scritto ${euro(troppo)} più del prezzo.` : resto > 0 ? `Restano ${euro(resto)}: finisce in «Da risentire».` : 'Pagato tutto.';
+      $('parti-ok').innerHTML = `${icona('spunta')} ${x.prezzo == null && !x.pagamenti.length ? 'Salva senza pagamento' : 'Salva'}`;
+    };
+    $('parti-prezzo').oninput = aggiorna;
+    campi.forEach((c) => { c.oninput = aggiorna; });
+    aggiorna();
+    $('no').onclick = chiudiFinestra;
+    $('parti-ok').onclick = (e) => {
+      const x = letto();
+      const errore = x.sbagliato ? 'Scrivi dei numeri, per esempio 300 o 300,50.'
+        : x.prezzo != null && pagatoDi(x) > x.prezzo ? 'I pagamenti sono più del prezzo: controlla i numeri.' : '';
+      $('parti-errore').textContent = errore;
+      $('parti-errore').hidden = !errore;
+      if (!errore) fatto({ prezzo: x.prezzo, pagamenti: x.pagamenti }, e.currentTarget);
+    };
   }
   function chiediImpiantoNuovo(c, ora, fai) {
     const mesi = parseInt(c.frequenza, 10) > 0 ? parseInt(c.frequenza, 10) : 12;
@@ -3755,9 +3868,9 @@
   }
   // Gli altri lavori (3 nov 2026, Matteo: «negli interventi fatti devo vedere
   // tutto, anche le installazioni e i sopralluoghi»): sono le tappe «Fatta» del
-  // giro. Non stanno nello storico, quindi niente pagamento. Una manutenzione o
-  // un guasto che ha il suo intervento c'è già e non si ripete; le cose senza un
-  // cliente (medico, posta, bombole: eImpegno) non sono lavori.
+  // giro. Non stanno nello storico; un'installazione ha il suo conto nella tappa.
+  // Una manutenzione o un guasto che ha il suo intervento c'è già e non si ripete;
+  // le cose senza un cliente (medico, posta, bombole: eImpegno) non sono lavori.
   const nelloStoricoGia = (t) => t.codice && ['Manutenzione', 'Guasto'].includes(t.lavoro)
     && (dati.storico || []).some((x) => x.codice === t.codice && serialeGiorno(x.data) >= serialeGiorno(giornoDi(t)));
   const lavoriFatti = () => (dati.tappe || []).filter((t) => t.stato === 'Fatta' && !eImpegno(t) && !nelloStoricoGia(t));
@@ -3770,7 +3883,7 @@
       ${riga2.filter(Boolean).length ? `<span class="riga2">${esc(riga2.filter(Boolean).join(' · '))}</span>` : ''}
       ${t.note ? `<span class="riga2">${esc(t.note)}</span>` : ''}
       ${usati ? `<span class="riga2">${icona('scatola')} ${esc(usati)}</span>` : ''}
-      <span class="riga3">${etichettaLavoro(t)}</span>
+      <span class="riga3">${etichettaLavoro(t)}${chiedeConto(t) ? etichettaConto(t) : ''}</span>
     </button>`;
   }
   // Interventi e lavori insieme, dal più recente. Con il codice: di quel cliente,
@@ -3779,8 +3892,8 @@
     const suoi = codice ? interventi().filter((x) => x.codice === codice) : interventi();
     const lavori = codice ? lavoriFatti().filter((t) => t.codice === codice || t.diCliente === codice) : lavoriFatti();
     return [
-      ...suoi.map((x) => ({ data: x.data, html: voceIntervento(x, !codice) })),
-      ...lavori.map((t) => ({ data: giornoDi(t), html: voceLavoro(t, !codice) })),
+      ...suoi.map((x) => ({ data: x.data, pagamento: x.pagamento, html: voceIntervento(x, !codice) })),
+      ...lavori.map((t) => ({ data: giornoDi(t), pagamento: chiedeConto(t) && restoDi(t) > 0 ? DA_RISENTIRE : '', html: voceLavoro(t, !codice) })),
     ].sort((a, b) => quandoFatto(b) - quandoFatto(a));
   }
   function collegaInterventi() {
@@ -3799,9 +3912,9 @@
     titolo('Interventi fatti', true);
     const tutti = fattiInsieme();
     // Da risentire: chi aspetta da più tempo in cima.
-    const pagare = interventi().filter((x) => x.pagamento === DA_RISENTIRE).reverse();
+    const pagare = tutti.filter((x) => x.pagamento === DA_RISENTIRE).reverse();
     const filtro = stato.filtro === 'pagare' ? 'pagare' : 'tutti';
-    const lista = filtro === 'pagare' ? pagare.map((x) => ({ data: x.data, html: voceIntervento(x) })) : tutti;
+    const lista = filtro === 'pagare' ? pagare : tutti;
     // A gruppi per mese: «Ottobre 2026 (12)».
     const gruppi = [];
     for (const x of lista) {
@@ -3815,7 +3928,7 @@
         <button class="pillola" data-filtro="tutti" aria-pressed="${filtro === 'tutti'}">Tutti (${tutti.length})</button>
         <button class="pillola${pagare.length ? ' pillola-rossa' : ''}" data-filtro="pagare" aria-pressed="${filtro === 'pagare'}">Da risentire (${pagare.length})</button>
       </div>
-      ${filtro === 'pagare' && pagare.length ? '<p class="spiega">Da risentire per il pagamento: hanno avuto un intervento ma non hanno ancora pagato. Quando pagano, tocca il nome e scegli come.</p>' : ''}
+      ${filtro === 'pagare' && pagare.length ? '<p class="spiega">Da risentire per il pagamento: hanno avuto un intervento ma non hanno ancora pagato tutto. Quando pagano, tocca il nome e segnalo.</p>' : ''}
       ${gruppi.map((g) => `<h2 class="gruppo">${esc(g.nome)} (${g.voci.length})</h2><div class="lista">${g.voci.map((x) => x.html).join('')}</div>`).join('')
         || `<div class="vuoto">${filtro === 'pagare' ? 'Nessuno da risentire per il pagamento 👍' : 'Ancora nessun intervento segnato.<br><br>Ogni volta che tocchi «Manutenzione fatta» o «Riparazione fatta» nella scheda di un cliente, compare qui con come ha pagato. Anche «Fatto» su una tappa del giro compare qui.'}</div>`}`;
     schermo.querySelectorAll('[data-filtro]').forEach((b) => {

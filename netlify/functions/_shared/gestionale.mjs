@@ -59,6 +59,23 @@ const importoScritto = (pag, v) => {
   if (n == null || n <= 0 || n > 100000) throw problema('Controlla quanto ha pagato: il numero non va bene.');
   return n;
 };
+// I pagamenti di un lavoro pagato a parti (l'installazione, nella scheda Giri):
+// dal telefono una lista di { data, come, importo }, nel foglio un testo.
+const testoParti = (parti = []) => parti.map((p) => `${p.data} ${p.come} ${String(p.importo).replace('.', ',')}`).join('; ');
+const sommaParti = (parti = []) => (parti.length ? Math.round(parti.reduce((s, p) => s + p.importo, 0) * 100) / 100 : '');
+const partiLette = (v) => testo(v).split(';').map((s) => s.trim().match(/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(.+?)\s+([\d.,]+)$/)).filter(Boolean)
+  .map(([, data, come, n]) => ({ data, come, importo: importoDa(n) })).filter((p) => p.importo > 0);
+const partiScritte = (v) => {
+  if (v == null || v === '') return [];
+  if (!Array.isArray(v) || v.length > 30) throw problema('Pagamenti non validi.');
+  return v.map((p) => {
+    const d = leggiDataUtente(p && p.data);
+    const come = pagamentoDa(p && p.come);
+    const importo = importoScritto(come, p && p.importo);
+    if (!d || !importo) throw problema('Controlla i pagamenti: un importo o una data non vanno bene.');
+    return { data: testoData(d), come, importo };
+  });
+};
 
 // Stessa mappa di COLONNE_CLIENTI in gestionale-lead-a-cliente.gs, più
 // indirizzo e città che servono all'app.
@@ -1313,7 +1330,8 @@ function cosaRegistro(azione, dati, r) {
   const parti = [];
   for (const [k, val] of Object.entries(dati || {})) {
     if (['codice', 'riga', 'annulla', 'id'].includes(k) || val === '' || val == null) continue;
-    if (Array.isArray(val)) parti.push(`${k}: ${val.length}`);
+    if (k === 'pagamenti' && Array.isArray(val)) parti.push(`${k}: ${testoParti(val)}`);
+    else if (Array.isArray(val)) parti.push(`${k}: ${val.length}`);
     else if (typeof val === 'object') continue;
     else parti.push(`${k}: ${breveValore(val)}`);
   }
@@ -1370,11 +1388,19 @@ export async function assegnaManutenzione(foglio, { codice, codici, a = '' }, { 
 // Nessuna automazione del foglio legge questa scheda. Dal 21 ott 2026 (Matteo:
 // «nel caso che il cliente ci dica una fascia oraria») la colonna Q «Fino
 // alle» chiude la fascia: «Ora» 09:00 e «Fino alle» 11:00 = fra le 9 e le 11.
+// Dal 3 nov 2026 (Matteo: alla fine di un'installazione chiedere come ha pagato
+// e quanto; «a volte le pagano una parte fattura e una parte contanti, la parte
+// contanti a volte ce la facciamo dare in 2 o 3 volte») le colonne R «Prezzo»,
+// S «Pagato» (la somma, per sommarla nel foglio) e T «Pagamenti», uno dopo
+// l'altro: «03/11/2026 Contanti 300; 15/12/2026 Contanti 200,50». Conta T: S si
+// riscrive a ogni salvataggio. Stanno qui e non nello storico perché lo storico
+// vuole un codice cliente, e un'installazione può essere ancora di un contatto.
+// Una tappa non fatta non ha pagamenti.
 // Vuota = un orario solo (o nessuno). La scheda nata prima ne ha 16: la
 // diciassettesima intestazione la scrive salvaTappa la prima volta che serve.
 export const TAB_GIRI = 'Giri';
-const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle'];
-const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // Q
+const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle', 'Prezzo', 'Pagato', 'Pagamenti'];
+const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // T
 export const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
 const G = Object.fromEntries(INTESTAZIONI_GIRI.map((h, i) => [h, i]));
 
@@ -1398,7 +1424,7 @@ async function leggiGiri(foglio) {
       lavoro: testo(r[G.Lavoro]), codice: testo(r[G.Codice]).toUpperCase(), contatto: testo(r[G.Contatto]),
       nome: testo(r[G.Nome]), indirizzo: testo(r[G.Indirizzo]), citta: testo(r[G.Città]), telefono: testo(r[G.Telefono]),
       note: testo(r[G.Note]), lat: r[G.Lat] === '' || !isFinite(lat) ? null : lat, lng: r[G.Lng] === '' || !isFinite(lng) ? null : lng,
-      stato: testo(r[G.Stato]),
+      stato: testo(r[G.Stato]), prezzo: importoDa(r[G.Prezzo]), pagamenti: partiLette(r[G.Pagamenti]),
     });
   }
   return { griglia, tappe };
@@ -1462,7 +1488,7 @@ async function togliDaColonna(foglio, codice) {
 const rigaGiro = (t) => INTESTAZIONI_GIRI.map((h) => {
   const v = { Id: t.id, Giorno: t.giorno, Ora: t.ora, Chi: nomePersona(t.chi), Lavoro: t.lavoro, Codice: t.codice, Contatto: t.contatto, Nome: t.nome,
     Indirizzo: t.indirizzo, 'Città': t.citta, Telefono: t.telefono, Note: t.note, Lat: t.lat ?? '', Lng: t.lng ?? '', Stato: t.stato, 'Aggiunta il': t.aggiunta,
-    'Fino alle': t.oraFine }[h];
+    'Fino alle': t.oraFine, Prezzo: t.prezzo, Pagato: sommaParti(t.pagamenti), Pagamenti: testoParti(t.pagamenti) }[h];
   return v == null ? '' : v;
 });
 
@@ -1499,19 +1525,26 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   const numero = (v) => (v === '' || v == null || !isFinite(Number(v)) ? null : Math.round(Number(v) * 1e6) / 1e6);
   const lat = numero(dati.lat);
   const lng = numero(dati.lng);
+  const fatta = testo(dati.stato) === 'Fatta';
+  const prezzo = fatta ? importoScritto('Contanti', dati.prezzo) : '';
+  const pagamenti = fatta ? partiScritte(dati.pagamenti) : [];
   const tappa = {
     id, giorno: testoData(giorno), ora, oraFine, chi, lavoro, codice,
     contatto: testo(dati.contatto).slice(0, 120), nome, indirizzo: testo(dati.indirizzo).slice(0, 200), citta: testo(dati.citta).slice(0, 80),
     telefono: testo(dati.telefono).slice(0, 80), note: testo(dati.note).slice(0, 300),
     lat: lat != null && lat > 35 && lat < 48 ? lat : null, lng: lng != null && lng > 6 && lng < 19 ? lng : null,
-    stato: testo(dati.stato) === 'Fatta' ? 'Fatta' : '', aggiunta: `${testoData(oggi())} (${chiScrive})`,
+    stato: fatta ? 'Fatta' : '', aggiunta: `${testoData(oggi())} (${chiScrive})`,
+    prezzo: prezzo === '' ? null : prezzo, pagamenti,
   };
   const { griglia, tappe } = await leggiGiri(foglio);
   const prima = tappe.find((t) => t.id === id) || null;
-  // La scheda nata con 16 colonne: l'intestazione «Fino alle», con l'aspetto delle altre.
-  if (griglia && griglia.length && (griglia[0] || []).length < INTESTAZIONI_GIRI.length && !testo((griglia[0] || [])[G['Fino alle']])) {
-    await foglio.copiaCella(TAB_GIRI, 1, G['Fino alle'], 1, G['Fino alle'] + 1).catch(() => {});
-    await foglio.scrivi([{ range: `'${TAB_GIRI}'!${ULTIMA_GIRI}1`, values: [['Fino alle']] }], 'RAW');
+  // La scheda nata con meno colonne: le intestazioni che mancano, con l'aspetto delle altre.
+  if (griglia && griglia.length && (griglia[0] || []).length < INTESTAZIONI_GIRI.length) {
+    for (const [i, h] of INTESTAZIONI_GIRI.entries()) {
+      if (testo((griglia[0] || [])[i])) continue;
+      await foglio.copiaCella(TAB_GIRI, 1, i, 1, i + 1).catch(() => {});
+      await foglio.scrivi([{ range: `'${TAB_GIRI}'!${lettera(i + 1)}1`, values: [[h]] }], 'RAW');
+    }
   }
   if (prima) {
     tappa.aggiunta = testo((griglia[prima.riga - 1] || [])[G['Aggiunta il']]) || tappa.aggiunta;
