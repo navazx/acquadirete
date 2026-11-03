@@ -80,6 +80,8 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .pillole::-webkit-scrollbar { display: none; }
 /* Pochi filtri che devono vedersi tutti (le Manutenzioni): vanno a capo invece di scorrere. */
 .pillole.a-capo { flex-wrap: wrap; overflow-x: visible; }
+/* Col mouse non si scorre di lato, e la barra qui è nascosta: sul PC vanno a capo (3 nov 2026, Matteo). */
+@media (pointer: fine) { .pillole { flex-wrap: wrap; overflow-x: visible; } }
 .pillola {
   flex: none; min-height: 44px; padding: 0 16px;
   background: var(--carta); border: 2px solid var(--linea); border-radius: 999px; font-weight: 600; font-size: 17px;
