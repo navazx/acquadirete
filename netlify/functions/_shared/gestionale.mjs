@@ -539,6 +539,14 @@ export async function leggiTutto(foglio) {
   const { tappe: righeGiri } = await giri;
   await collegaTappeAiClienti(foglio, righeGiri, lead, clienti).catch((err) => console.error('Tappe non collegate ai clienti:', err));
   const tappe = righeGiri.map(({ riga, ...t }) => t);
+  // Un lavoro fatto quand'era ancora un contatto (il sopralluogo) nel foglio resta
+  // del contatto, ma la scheda del cliente lo mostra (3 nov 2026): si dice solo qui.
+  for (const t of tappe) {
+    if (t.codice || !t.contatto || !t.stato) continue;
+    const l = leadDellaTappa(t.contatto, lead);
+    const c = l && normalizza(l.stato) === 'cliente' ? clienteDelContatto(l, clienti) : null;
+    if (c) t.diCliente = c.codice;
+  }
   for (const c of clienti) {
     if (!c.chiVa || tappe.some((t) => t.codice === c.codice && !t.stato)) continue;
     tappe.push({ id: idDaColonna(c.codice), giorno: '', ora: '', oraFine: '', chi: c.chiVa, lavoro: 'Manutenzione', codice: c.codice, contatto: '', nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, telefono: '', note: '', lat: null, lng: null, stato: '', vecchia: true });

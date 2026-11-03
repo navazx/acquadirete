@@ -1690,8 +1690,8 @@
     // (e non già sospesa: lì c'è "Riattiva").
     const daFare = s.giorni != null && s.giorni <= 60 && c.avviso !== 'Sospesa';
     const mo = leggiMotivo(c);
-    // I suoi interventi, dal più recente (anche come ha pagato).
-    const fatti = interventi().filter((x) => x.codice === c.codice);
+    // I suoi interventi e gli altri lavori, dal più recente (anche come ha pagato).
+    const fatti = fattiInsieme(c.codice);
     const riquadroAvviso = !c.avviso ? '' : `
       <div class="avviso-cliente ${c.avviso === 'Urgente' ? 'rosso' : 'grigio'}">
         <div><b>${icona(c.avviso === 'Urgente' ? 'allarme' : 'pausa')} ${c.avviso === 'Urgente' ? 'GUASTO URGENTE' : 'MANUTENZIONE SOSPESA'}</b>
@@ -1721,7 +1721,7 @@
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
       ${riquadroFoto(diCliente(c))}
       ${fatti.length ? `<h3 class="titoletto">Interventi fatti</h3>
-      <div class="lista">${fatti.map((x) => voceIntervento(x, false)).join('')}</div>` : ''}
+      <div class="lista">${fatti.map((x) => x.html).join('')}</div>` : ''}
       ${mag() && lottiDi(c.codice).length ? `<h3 class="titoletto">Materiali usati</h3>
       <div class="lista">${lottiDi(c.codice).map(voceLotto).join('')}</div>` : ''}
       <h3 class="titoletto">Dati del cliente</h3>
@@ -3215,9 +3215,6 @@
     schermo.querySelectorAll('[data-svuota]').forEach((b) => { b.onclick = () => chiediSvuota(b.dataset.svuota, giorno); });
     collegaTappe({});
     collegaInterventi();
-    schermo.querySelectorAll('[data-lavoro-fatto]').forEach((b) => {
-      b.onclick = () => { const t = (dati.tappe || []).find((x) => x.id === b.dataset.lavoroFatto); if (t) chiediLavoroFatto(t); };
-    });
   }
 
   // Un lavoro fatto, toccato nel Giro del giorno (21 ott 2026, Matteo: «il
@@ -3250,7 +3247,8 @@
     const l = luogoTappa(t);
     const x = interventoDellaTappa(t);
     const usati = x ? materialiDi(x.codice, x.data, x.lavoro) : materialiTappa(t);
-    const apri = (t.codice && clienteIn(dati, t.codice)) || (t.contatto && leadDaChiave(t.contatto));
+    const giaQui = history.state && history.state.s === 'cliente' && history.state.codice === t.codice;
+    const apri = !giaQui && ((t.codice && clienteIn(dati, t.codice)) || (t.contatto && leadDaChiave(t.contatto)));
     apriFinestra(`
       <h3>${esc(l.nome)}</h3>
       <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
@@ -3267,7 +3265,7 @@
     const cl = t.codice && clienteIn(dati, t.codice);
     apriFinestra(`
       <h3>Cancellare questo lavoro?</h3>
-      <p><strong>${esc(luogoTappa(t).nome)}</strong> · ${esc(t.lavoro || 'Altro')}${t.chi ? `, ${fattoA(t.lavoro)} ${esc(daChi(t.chi))}` : ''}. Sparisce dai lavori fatti del giro${x ? ' e dagli interventi fatti (nel foglio ne resta una copia)' : ''}.</p>
+      <p><strong>${esc(luogoTappa(t).nome)}</strong> · ${esc(t.lavoro || 'Altro')}${t.chi ? `, ${fattoA(t.lavoro)} ${esc(daChi(t.chi))}` : ''}. Sparisce dal giro e dagli interventi fatti${x ? ' (nel foglio ne resta una copia)' : ''}.</p>
       ${torna != null ? `<p>Quella manutenzione aveva spostato la prossima al <strong>${esc(x.prossima)}</strong>. Se non è stata fatta davvero, rimettila al <strong>${esc(testoGiorno(torna))}</strong>.</p>` : ''}
       ${t.lavoro === 'Installazione' && cl && cl.installazione ? `<p>La data di installazione (${esc(cl.installazione)}) resta sulla scheda: se è sbagliata si cambia da «Modifica i dati».</p>` : ''}
       ${usati ? `<p>I materiali segnati (${esc(usati)}) tornano in magazzino.</p>` : ''}
@@ -3402,7 +3400,9 @@
     // Un guasto: manutenzione, riparazione o niente (21 ott 2026).
     if (!soloTappa && c && t.lavoro === 'Guasto' && !c.perso) { chiediCosaHaiFatto(c, { tappa: t }); return; }
     // Dal medico o a caricare le bombole non si usano materiali: niente domanda.
-    const fai = (installazione = null) => salvaLaTappa({ ...t, giorno: giornoDi(t), stato: 'Fatta' }, `Fatto ✓ ${eImpegno(t) ? '' : `${t.lavoro || 'Lavoro'}: `}${luogoTappa(t).nome}`, {
+    // Il giorno diventa oggi: una tappa rimasta da ieri è fatta oggi, e gli
+    // Interventi fatti (3 nov 2026) mostrano questa data.
+    const fai = (installazione = null) => salvaLaTappa({ ...t, giorno: oggiTesto(), stato: 'Fatta' }, `Fatto ✓ ${eImpegno(t) ? '' : `${t.lavoro || 'Lavoro'}: `}${luogoTappa(t).nome}`, {
       materiali: eImpegno(t) ? null : { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
       installazione,
     });
@@ -3753,6 +3753,36 @@
       <span class="riga3">${etichettaPagamento(x.pagamento, x.importo)}</span>
     </button>`;
   }
+  // Gli altri lavori (3 nov 2026, Matteo: «negli interventi fatti devo vedere
+  // tutto, anche le installazioni e i sopralluoghi»): sono le tappe «Fatta» del
+  // giro. Non stanno nello storico, quindi niente pagamento. Una manutenzione o
+  // un guasto che ha il suo intervento c'è già e non si ripete; le cose senza un
+  // cliente (medico, posta, bombole: eImpegno) non sono lavori.
+  const nelloStoricoGia = (t) => t.codice && ['Manutenzione', 'Guasto'].includes(t.lavoro)
+    && (dati.storico || []).some((x) => x.codice === t.codice && serialeGiorno(x.data) >= serialeGiorno(giornoDi(t)));
+  const lavoriFatti = () => (dati.tappe || []).filter((t) => t.stato === 'Fatta' && !eImpegno(t) && !nelloStoricoGia(t));
+  function voceLavoro(t, conNome = true) {
+    // Che lavoro è lo dice l'etichetta colorata, qui sotto.
+    const riga2 = conNome ? [giornoDi(t), t.chi && daChi(t.chi)] : [t.chi && `${fattoA(t.lavoro)} ${daChi(t.chi)}`];
+    const usati = materialiTappa(t);
+    return `<button class="voce" type="button" data-lavoro-fatto="${esc(t.id)}">
+      <b>${esc(conNome ? luogoTappa(t).nome : giornoDi(t))}</b>
+      ${riga2.filter(Boolean).length ? `<span class="riga2">${esc(riga2.filter(Boolean).join(' · '))}</span>` : ''}
+      ${t.note ? `<span class="riga2">${esc(t.note)}</span>` : ''}
+      ${usati ? `<span class="riga2">${icona('scatola')} ${esc(usati)}</span>` : ''}
+      <span class="riga3">${etichettaLavoro(t)}</span>
+    </button>`;
+  }
+  // Interventi e lavori insieme, dal più recente. Con il codice: di quel cliente,
+  // compreso quello che ha avuto quand'era ancora un contatto (`diCliente`, dal motore).
+  function fattiInsieme(codice = null) {
+    const suoi = codice ? interventi().filter((x) => x.codice === codice) : interventi();
+    const lavori = codice ? lavoriFatti().filter((t) => t.codice === codice || t.diCliente === codice) : lavoriFatti();
+    return [
+      ...suoi.map((x) => ({ data: x.data, html: voceIntervento(x, !codice) })),
+      ...lavori.map((t) => ({ data: giornoDi(t), html: voceLavoro(t, !codice) })),
+    ].sort((a, b) => quandoFatto(b) - quandoFatto(a));
+  }
   function collegaInterventi() {
     schermo.querySelectorAll('[data-intervento]').forEach((b) => {
       b.onclick = () => {
@@ -3760,15 +3790,18 @@
         if (x) chiediPagamento(x);
       };
     });
+    schermo.querySelectorAll('[data-lavoro-fatto]').forEach((b) => {
+      b.onclick = () => { const t = (dati.tappe || []).find((x) => x.id === b.dataset.lavoroFatto); if (t) chiediLavoroFatto(t); };
+    });
   }
 
   function schermoStorico(stato) {
     titolo('Interventi fatti', true);
-    const tutti = interventi();
+    const tutti = fattiInsieme();
     // Da risentire: chi aspetta da più tempo in cima.
-    const pagare = tutti.filter((x) => x.pagamento === DA_RISENTIRE).reverse();
+    const pagare = interventi().filter((x) => x.pagamento === DA_RISENTIRE).reverse();
     const filtro = stato.filtro === 'pagare' ? 'pagare' : 'tutti';
-    const lista = filtro === 'pagare' ? pagare : tutti;
+    const lista = filtro === 'pagare' ? pagare.map((x) => ({ data: x.data, html: voceIntervento(x) })) : tutti;
     // A gruppi per mese: «Ottobre 2026 (12)».
     const gruppi = [];
     for (const x of lista) {
@@ -3783,8 +3816,8 @@
         <button class="pillola${pagare.length ? ' pillola-rossa' : ''}" data-filtro="pagare" aria-pressed="${filtro === 'pagare'}">Da risentire (${pagare.length})</button>
       </div>
       ${filtro === 'pagare' && pagare.length ? '<p class="spiega">Da risentire per il pagamento: hanno avuto un intervento ma non hanno ancora pagato. Quando pagano, tocca il nome e scegli come.</p>' : ''}
-      ${gruppi.map((g) => `<h2 class="gruppo">${esc(g.nome)} (${g.voci.length})</h2><div class="lista">${g.voci.map((x) => voceIntervento(x)).join('')}</div>`).join('')
-        || `<div class="vuoto">${filtro === 'pagare' ? 'Nessuno da risentire per il pagamento 👍' : 'Ancora nessun intervento segnato.<br><br>Ogni volta che tocchi «Manutenzione fatta» o «Riparazione fatta» nella scheda di un cliente, compare qui con come ha pagato.'}</div>`}`;
+      ${gruppi.map((g) => `<h2 class="gruppo">${esc(g.nome)} (${g.voci.length})</h2><div class="lista">${g.voci.map((x) => x.html).join('')}</div>`).join('')
+        || `<div class="vuoto">${filtro === 'pagare' ? 'Nessuno da risentire per il pagamento 👍' : 'Ancora nessun intervento segnato.<br><br>Ogni volta che tocchi «Manutenzione fatta» o «Riparazione fatta» nella scheda di un cliente, compare qui con come ha pagato. Anche «Fatto» su una tappa del giro compare qui.'}</div>`}`;
     schermo.querySelectorAll('[data-filtro]').forEach((b) => {
       b.onclick = () => { history.replaceState({ s: 'storico', filtro: b.dataset.filtro }, '', location.pathname + location.hash); disegna(history.state); };
     });
