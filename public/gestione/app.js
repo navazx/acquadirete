@@ -3478,6 +3478,16 @@
     $('cerca-tappa').focus();
   }
 
+  // I tasti dell'orario di una tappa (3 nov 2026, Matteo: l'orologio a cerchi del
+  // telefono «è odioso»): un tocco sull'ora, uno sui minuti. Un orario già segnato
+  // che qui non c'è (le 5 di mattina, le 9:07) si vede e resta finché non lo si cambia.
+  const ORE_TASTI = Array.from({ length: 18 }, (_, i) => i + 6);
+  const MINUTI_TASTI = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+  const oraPulita = (x) => {
+    const m = String(x || '').match(/^(\d{1,2})[:.](\d{2})/);
+    return m ? `${m[1].padStart(2, '0')}:${m[2]}` : '';
+  };
+
   // Aggiungere o cambiare una tappa: di chi, che lavoro, quando, a che ora.
   // Per un contatto o un indirizzo qualsiasi anche nome e indirizzo (la
   // posizione la cerca il telefono su OpenStreetMap, se c'è campo). «Altro»
@@ -3515,10 +3525,17 @@
       <input class="campo-data" type="date" id="t-data" min="${isoDa(daSeriale(o))}" value="${isoDa(daSeriale(ser))}" ${ser > o + 1 ? '' : 'hidden'}>
       <p class="domanda">Orario <em>(facoltativo)</em></p>
       <div class="orari">
-        <label class="campo"><span>Alle, o dalle</span><input type="time" id="t-ora" value="${v(t0 && t0.ora)}"></label>
-        <label class="campo"><span>Fino alle</span><input type="time" id="t-ora-fine" value="${v(t0 && t0.oraFine)}"></label>
+        <div class="campo"><span>Alle, o dalle</span><button type="button" class="casella-ora" id="t-ora"></button></div>
+        <div class="campo"><span>Fino alle</span><button type="button" class="casella-ora" id="t-ora-fine"></button></div>
       </div>
-      <p class="spiega">${impegno ? 'Con l\'ora va in fila per ora; senza, resta in fondo al giro.' : 'Con l\'ora la tappa va in fila per ora. Se il cliente dà una fascia («fra le 9 e le 11»), scrivi anche fino a che ora; se no lascia vuoto «Fino alle».'}</p>
+      <div class="scegli-ora" id="t-scegli-ora" hidden>
+        <p class="titolo-ora">Ora</p>
+        <div class="griglia-ora" id="t-ore">${ORE_TASTI.map((h) => `<button type="button" data-ora="${h}">${h}</button>`).join('')}</div>
+        <p class="titolo-ora">Minuti</p>
+        <div class="griglia-ora" id="t-minuti">${MINUTI_TASTI.map((m) => `<button type="button" data-minuti="${m}">${m}</button>`).join('')}</div>
+        <button class="btn leggero" type="button" id="t-ora-togli">Togli questo orario</button>
+      </div>
+      <p class="spiega">${impegno ? 'Con l\'ora va in fila per ora; senza, resta in fondo al giro.' : 'Con l\'ora la tappa va in fila per ora. Se il cliente dà una fascia («fra le 9 e le 11»), scegli anche fino a che ora; se no lascia vuoto «Fino alle».'}</p>
       ${impegno ? `
         <p class="domanda">Dove <em>(facoltativo)</em></p>
         <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
@@ -3543,11 +3560,56 @@
       ser = +x; $('t-data').hidden = true;
     });
     $('t-data').onchange = (e) => { const d = daIso(e.target.value); if (d) ser = Math.max(serialeDa(d.a, d.m, d.g), o); };
+    const orari = { 't-ora': oraPulita(t0 && t0.ora), 't-ora-fine': oraPulita(t0 && t0.oraFine) };
+    let oraAperta = null;
+    const disegnaOrari = () => {
+      Object.keys(orari).forEach((id) => {
+        $(id).textContent = orari[id] || 'Scegli';
+        $(id).classList.toggle('vuota', !orari[id]);
+        $(id).setAttribute('aria-expanded', String(oraAperta === id));
+      });
+      $('t-scegli-ora').hidden = !oraAperta;
+      if (!oraAperta) return;
+      const [h, m] = orari[oraAperta].split(':');
+      const inizio = oraAperta === 't-ora-fine' ? orari['t-ora'].split(':')[0] : '';
+      $('t-ore').querySelectorAll('button').forEach((b) => {
+        b.setAttribute('aria-pressed', String(!!h && +b.dataset.ora === +h));
+        b.disabled = !!inizio && +b.dataset.ora < +inizio;
+      });
+      $('t-minuti').querySelectorAll('button').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.minuti === m));
+        b.disabled = !h;
+      });
+      $('t-ora-togli').hidden = !orari[oraAperta];
+    };
+    Object.keys(orari).forEach((id) => {
+      $(id).onclick = () => {
+        oraAperta = oraAperta === id ? null : id;
+        disegnaOrari();
+        if (oraAperta) $('t-scegli-ora').scrollIntoView({ block: 'nearest' });
+      };
+    });
+    $('t-ore').onclick = (e) => {
+      const b = e.target.closest('[data-ora]');
+      if (!b) return;
+      orari[oraAperta] = `${b.dataset.ora.padStart(2, '0')}:${orari[oraAperta].split(':')[1] || '00'}`;
+      disegnaOrari();
+    };
+    // Scelti i minuti l'orario è finito: i tasti si richiudono.
+    $('t-minuti').onclick = (e) => {
+      const b = e.target.closest('[data-minuti]');
+      if (!b) return;
+      orari[oraAperta] = `${orari[oraAperta].split(':')[0]}:${b.dataset.minuti}`;
+      oraAperta = null;
+      disegnaOrari();
+    };
+    $('t-ora-togli').onclick = () => { orari[oraAperta] = ''; oraAperta = null; disegnaOrari(); };
+    disegnaOrari();
     $('no').onclick = chiudiFinestra;
     if ($('t-togli')) $('t-togli').onclick = (e) => conPulsante(e.currentTarget, 'Tolgo…', async () => { chiudiFinestra(); await togliLaTappa(t0); });
     $('t-salva').onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
       const nuovo = {
-        id: t0 ? t0.id : nuovoId(), giorno: testoGiorno(ser), ora: $('t-ora').value, oraFine: $('t-ora-fine').value, chi, lavoro,
+        id: t0 ? t0.id : nuovoId(), giorno: testoGiorno(ser), ora: orari['t-ora'], oraFine: orari['t-ora-fine'], chi, lavoro,
         codice: c ? c.codice : '', contatto: l ? chiaveLead(l) : (t0 && t0.contatto) || '',
         nome: c ? c.nome : $('t-nome').value.replace(/\s+/g, ' ').trim(),
         indirizzo: c ? c.indirizzo : $('t-indirizzo').value.trim(), citta: c ? c.citta : $('t-citta').value.trim(),
@@ -3555,7 +3617,7 @@
         lat: t0 && !c ? t0.lat : null, lng: t0 && !c ? t0.lng : null, stato: '',
       };
       if (!nuovo.nome) { messaggio(impegno ? 'Scrivi cosa devi fare.' : 'Scrivi il nome.', { errore: true }); return; }
-      if (nuovo.oraFine && !nuovo.ora) { messaggio('Scrivi anche da che ora: la fascia comincia da lì.', { errore: true }); return; }
+      if (nuovo.oraFine && !nuovo.ora) { messaggio('Scegli anche da che ora: la fascia comincia da lì.', { errore: true }); return; }
       if (nuovo.oraFine && nuovo.oraFine <= nuovo.ora) { messaggio('«Fino alle» deve venire dopo l\'ora d\'inizio.', { errore: true }); return; }
       if (nuovo.oraFine === nuovo.ora) nuovo.oraFine = '';
       const senzaPosto = libero && !nuovo.indirizzo && !nuovo.citta;

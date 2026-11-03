@@ -116,6 +116,16 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .finestra .orari { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .finestra .orari .campo { margin-top: 8px; }
 .finestra .orari .campo > span { font-size: 16px; }
+.casella-ora { display: block; width: 100%; min-height: 56px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); color: var(--testo); font-weight: 700; font-size: 21px; }
+.casella-ora.vuota { color: var(--grigio); font-weight: 400; font-size: 18px; }
+.casella-ora[aria-expanded="true"] { border-color: var(--blu); box-shadow: 0 0 0 3px rgba(15,108,189,.2); }
+.scegli-ora { margin-top: 12px; }
+.finestra .titolo-ora { margin: 0 0 6px; font-size: 16px; font-weight: 700; color: var(--testo); }
+.griglia-ora { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+.griglia-ora button { min-height: 52px; padding: 0; border: 2px solid var(--linea); border-radius: 12px; background: var(--carta); color: var(--testo); font-weight: 700; font-size: 19px; }
+.griglia-ora button[aria-pressed="true"] { border-color: var(--blu); background: var(--blu); color: #fff; }
+.griglia-ora button:disabled { opacity: .35; }
+.scegli-ora .btn { margin-top: 0; }
 .finestra .domanda em { font-style: normal; font-weight: 400; color: var(--grigio); font-size: 16px; }
 
 /* ---- Scheda ---- */
