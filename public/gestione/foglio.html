@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <!-- Il foglio di lavoro di un cliente, aperto dall'app: vedi foglio.js.
+       La Content-Security-Policy permette gli script scritti nella pagina perché
+       il modello del foglio ne ha uno suo (i campi correggibili a schermo); i dati
+       del cliente ci entrano sempre con i caratteri speciali neutralizzati. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Foglio di lavoro</title>
+  <style>
+    body { margin: 0; padding: 24px 16px; background: #f3f6fa; color: #10202f; font: 19px/1.4 system-ui, sans-serif; }
+    a { display: inline-block; margin-top: 12px; color: #0f6cbd; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <p id="attesa">Preparo il foglio di lavoro…</p>
+  <a href="/gestione/">Torna all'app</a>
+  <script src="/gestione/foglio.js?v=1"></script>
+</body>
+</html>

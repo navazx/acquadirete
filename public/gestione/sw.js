@@ -96,5 +96,7 @@ self.addEventListener('fetch', (e) => {
   const u = new URL(url);
   if (u.origin !== location.origin || !u.pathname.startsWith(PAGINA) || u.pathname.endsWith('/sw.js')) return;
   // La pagina sotto un nome solo: il codice dopo il # (icona sulla Home) qui non arriva.
-  e.respondWith(primaRete(e, CASSETTO, e.request.mode === 'navigate' ? PAGINA : e.request, 6000));
+  // Il foglio di lavoro (foglio.html) è un'altra pagina e tiene il suo: non deve finire al posto dell'app.
+  const app = e.request.mode === 'navigate' && !u.pathname.endsWith('/foglio.html');
+  e.respondWith(primaRete(e, CASSETTO, app ? PAGINA : e.request, 6000));
 });

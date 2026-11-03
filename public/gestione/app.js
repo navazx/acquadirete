@@ -86,6 +86,7 @@
     persone: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/>',
     posta: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     matita: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    stampante: '<path d="M7 9V3h10v6"/><path d="M7 18H4v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7h-3"/><path d="M7 14h10v7H7z"/>',
     orologio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     allarme: '<path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5M12 17.5v.01"/>',
     pausa: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
@@ -1722,6 +1723,7 @@
       ${c.avviso !== 'Urgente' ? `<button class="btn btn-rosso" id="urgente" style="width:100%;margin-top:10px">${icona('allarme')} Guasto urgente</button>` : ''}
       ${mancano.length ? `<div class="scadenza arancio" style="margin:16px 0 0">Mancano: ${esc(mancano.join(', '))}</div>` : ''}
       <button class="btn${mancano.length ? ' pieno' : ''}" id="modifica" style="width:100%;margin-top:${mancano.length ? '10px' : '16px'}">${icona('matita')} ${mancano.length ? 'Completa i dati' : 'Modifica i dati'}</button>
+      <button class="btn" id="foglio-lavoro" style="width:100%;margin-top:10px">${icona('stampante')} Stampa il foglio di lavoro</button>
       <button class="btn" id="sono-qui" style="width:100%;margin-top:10px">${icona('mirino')} Sono qui: segna la posizione</button>
       <p class="nota-posizione">${esc(POSIZIONE_IN_MAPPA[c.prec] || 'Non è ancora sulla mappa.')}${posizioniInAttesa().some((p) => p.codice === c.codice) ? '<br>Non è ancora nel foglio: la mando appena c\'è campo.' : ''}</p>
       ${riquadroFoto(diCliente(c))}
@@ -1748,6 +1750,7 @@
     if ($('togli-avviso')) $('togli-avviso').onclick = (e) => (c.avviso === 'Urgente' ? chiediCosaHaiFatto(c) : conPulsante(e.currentTarget, 'Salvo…', () => salvaAvviso(c, '', '')));
     if ($('riparazione')) $('riparazione').onclick = () => chiediAncheManutenzione(c);
     $('modifica').onclick = () => vai({ s: 'modifica', codice: c.codice });
+    $('foglio-lavoro').onclick = () => stampaFoglio(c);
     $('sono-qui').onclick = (e) => chiediSonoQui(c, e.currentTarget);
     if ($('sulla-mappa')) $('sulla-mappa').onclick = () => vai({ s: 'mappa', cat: CATEGORIE_DI_BASE, centra: c.codice });
     collegaTappe({ cliente: c });
@@ -3851,6 +3854,21 @@
     }).catch((err) => {
       if (ancoraQui()) schermo.innerHTML = `<div class="vuoto">${esc(err.message)}</div>`;
     });
+  }
+
+  // ---------------------------------------------------------------------
+  //  Il foglio di lavoro del cliente (3 nov 2026)
+  // ---------------------------------------------------------------------
+  // Matteo: «dall'app si possa stampare il foglio di lavoro dei clienti». Lo riempie e
+  // lo stampa foglio.html col modello del sito, lo stesso del menu del Gestionale. I dati
+  // passano dalla memoria della scheda, mai dall'indirizzo. Il modello sta sul sito:
+  // senza campo non c'è, quindi non si apre neanche la pagina.
+  function stampaFoglio(c) {
+    if (navigator.onLine === false) { messaggio('Per il foglio di lavoro serve il campo. Riprova quando c\'è linea.', { errore: true }); return; }
+    sessionStorage.setItem('gestione-foglio', JSON.stringify({
+      codice: c.codice, nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, contatto: c.contatto, tipo: c.tipo, installazione: c.installazione, stampa: true,
+    }));
+    location.href = '/gestione/foglio.html';
   }
 
   // ---------------------------------------------------------------------
