@@ -1400,12 +1400,14 @@ export async function assegnaManutenzione(foglio, { codice, codici, a = '' }, { 
 // l'altro: «03/11/2026 Contanti 300; 15/12/2026 Contanti 200,50». Conta T: S si
 // riscrive a ogni salvataggio. Stanno qui e non nello storico perché lo storico
 // vuole un codice cliente, e un'installazione può essere ancora di un contatto.
-// Una tappa non fatta non ha pagamenti.
+// Una tappa non fatta non ha pagamenti. La colonna U «Scadenza rata» (Matteo, stesso
+// giorno: «una scadenza per i pagamenti in contanti a rate») è il giorno della
+// prossima rata: c'è solo finché resta qualcosa da pagare.
 // Vuota = un orario solo (o nessuno). La scheda nata prima ne ha 16: la
 // diciassettesima intestazione la scrive salvaTappa la prima volta che serve.
 export const TAB_GIRI = 'Giri';
-const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle', 'Prezzo', 'Pagato', 'Pagamenti'];
-const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // T
+const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle', 'Prezzo', 'Pagato', 'Pagamenti', 'Scadenza rata'];
+const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // U
 export const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
 const G = Object.fromEntries(INTESTAZIONI_GIRI.map((h, i) => [h, i]));
 
@@ -1429,7 +1431,7 @@ async function leggiGiri(foglio) {
       lavoro: testo(r[G.Lavoro]), codice: testo(r[G.Codice]).toUpperCase(), contatto: testo(r[G.Contatto]),
       nome: testo(r[G.Nome]), indirizzo: testo(r[G.Indirizzo]), citta: testo(r[G.Città]), telefono: testo(r[G.Telefono]),
       note: testo(r[G.Note]), lat: r[G.Lat] === '' || !isFinite(lat) ? null : lat, lng: r[G.Lng] === '' || !isFinite(lng) ? null : lng,
-      stato: testo(r[G.Stato]), prezzo: importoDa(r[G.Prezzo]), pagamenti: partiLette(r[G.Pagamenti]),
+      stato: testo(r[G.Stato]), prezzo: importoDa(r[G.Prezzo]), pagamenti: partiLette(r[G.Pagamenti]), scadenzaRata: testo(r[G['Scadenza rata']]),
     });
   }
   return { griglia, tappe };
@@ -1493,7 +1495,7 @@ async function togliDaColonna(foglio, codice) {
 const rigaGiro = (t) => INTESTAZIONI_GIRI.map((h) => {
   const v = { Id: t.id, Giorno: t.giorno, Ora: t.ora, Chi: nomePersona(t.chi), Lavoro: t.lavoro, Codice: t.codice, Contatto: t.contatto, Nome: t.nome,
     Indirizzo: t.indirizzo, 'Città': t.citta, Telefono: t.telefono, Note: t.note, Lat: t.lat ?? '', Lng: t.lng ?? '', Stato: t.stato, 'Aggiunta il': t.aggiunta,
-    'Fino alle': t.oraFine, Prezzo: t.prezzo, Pagato: sommaParti(t.pagamenti), Pagamenti: testoParti(t.pagamenti) }[h];
+    'Fino alle': t.oraFine, Prezzo: t.prezzo, Pagato: sommaParti(t.pagamenti), Pagamenti: testoParti(t.pagamenti), 'Scadenza rata': t.scadenzaRata }[h];
   return v == null ? '' : v;
 });
 
@@ -1536,13 +1538,16 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   if (pagamenti.filter((p) => p.come === FINANZIAMENTO).length > 1) {
     throw problema('Il finanziamento si segna una volta sola, con la cifra totale.');
   }
+  const restaDaPagare = prezzo !== '' && (sommaParti(pagamenti) || 0) < prezzo;
+  const giornoRata = fatta && restaDaPagare && testo(dati.scadenzaRata) ? leggiDataUtente(dati.scadenzaRata) : null;
+  if (fatta && restaDaPagare && testo(dati.scadenzaRata) && !giornoRata) throw problema('La data della prossima rata non va bene.');
   const tappa = {
     id, giorno: testoData(giorno), ora, oraFine, chi, lavoro, codice,
     contatto: testo(dati.contatto).slice(0, 120), nome, indirizzo: testo(dati.indirizzo).slice(0, 200), citta: testo(dati.citta).slice(0, 80),
     telefono: testo(dati.telefono).slice(0, 80), note: testo(dati.note).slice(0, 300),
     lat: lat != null && lat > 35 && lat < 48 ? lat : null, lng: lng != null && lng > 6 && lng < 19 ? lng : null,
     stato: fatta ? 'Fatta' : '', aggiunta: `${testoData(oggi())} (${chiScrive})`,
-    prezzo: prezzo === '' ? null : prezzo, pagamenti,
+    prezzo: prezzo === '' ? null : prezzo, pagamenti, scadenzaRata: giornoRata ? testoData(giornoRata) : '',
   };
   const { griglia, tappe } = await leggiGiri(foglio);
   const prima = tappe.find((t) => t.id === id) || null;

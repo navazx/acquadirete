@@ -336,6 +336,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .conto-parte { display: flex; align-items: center; gap: 14px; flex: none; }
 .conto-resta { color: var(--arancio); font-weight: 700; }
 .conto-pari { color: var(--verde); font-weight: 700; }
+.conto-scaduta { color: var(--rosso); font-weight: 700; }
 .finestra .conto-dopo { margin: 14px 0 0; font-size: 18px; font-weight: 700; color: var(--verde); }
 .finestra .conto-dopo.conto-resta { color: var(--arancio); }
 .finestra .domanda { margin: 14px 0 0; font-size: 21px; font-weight: 700; color: var(--testo); }
