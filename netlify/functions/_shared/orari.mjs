@@ -16,7 +16,7 @@
 export const AGENTI = [
   { nome: 'Recensioni', workflow: 'recensioni.yml', cron: '50 6 * * *', inputs: { prova: 'false' } },
   { nome: 'Cruscotto settimanale', workflow: 'cruscotto.yml', cron: '40 6 * * 1' },
-  { nome: 'Cruscotto online (numeri del giorno)', workflow: 'cruscotto-oggi.yml', cron: '20 5 * * *', inputs: { prova: 'false' } },
+  { nome: 'Cruscotto dell\'app (numeri del giorno)', workflow: 'cruscotto-oggi.yml', cron: '20 5 * * *', inputs: { prova: 'false' } },
   // Dal 16 ott 2026 (deciso da Matteo): i clienti nati da un annuncio tornano a Google Ads.
   { nome: 'Conversioni Ads (clienti a Google)', workflow: 'conversioni-ads.yml', cron: '55 6 * * 1', inputs: { prova: 'false' } },
   { nome: 'Controllo SEO del lunedì', workflow: 'agente-seo.yml', cron: '5 7 * * 1', nota: 'seo' },
@@ -32,6 +32,9 @@ export const AGENTI = [
   // RESTA (se Netlify e' giu' parte lo stesso). Ma GitHub di cinque giri ne fa due
   // o tre, e allora la sveglia la fa partire anche lei. Rilanciarla non fa danni.
   { nome: 'Sentinella del sito', workflow: 'sentinella.yml', cron: '17 2,6,10,14,18 * * *' },
+  // Dal 3 nov 2026 il postino è un workflow: rifà la copia della bacheca e porta nel
+  // Gestionale le note ferme. Di solito parte prima, dal push di una nota o dall'app.
+  { nome: 'Postino della bacheca', workflow: 'bacheca-postino.yml', cron: '30 4,7,10,13,16,19 * * *' },
   { nome: 'Controllo degli agenti', workflow: 'direttore-controllo.yml', cron: '0 8 * * *', controllore: true },
 ];
 

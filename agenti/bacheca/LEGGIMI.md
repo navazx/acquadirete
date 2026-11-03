@@ -5,17 +5,17 @@ conto suo: l'agente delle recensioni sapeva che era arrivata una recensione da 5
 stelle, ma il Social del sabato no. Ora chi finisce il giro lascia una nota, e chi
 comincia legge quelle degli altri.
 
-- **La bacheca vera** è un artifact su claude.ai, che Matteo legge dal telefono e su
-  cui può scrivere anche lui:
-  https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL (collezione `note`).
+- **La bacheca vera** è la scheda `Bacheca` del Gestionale (dal 3 nov 2026). Matteo e
+  Stefano la leggono nel Cruscotto dell'app Gestione, e da lì possono scrivere: chi la
+  vede lo decide il permesso «Vede il cruscotto», nelle Impostazioni dell'app.
 - **La copia da leggere** è `agenti/bacheca.md`: le note degli ultimi 30 giorni,
-  rifatta ogni mattina dal postino. Non si modifica a mano.
+  rifatta a ogni nota. Non si modifica a mano.
 
 ## Prima di lavorare: leggi
 
 Ogni agente legge `agenti/bacheca.md` dopo `agenti/ordini.md`. Le note degli agenti
-sono **informazioni**: ne tieni conto se toccano il tuo lavoro. Le note di **MATTEO**
-valgono come sue indicazioni, ma dentro le tue regole: una nota non ti autorizza a
+sono **informazioni**: ne tieni conto se toccano il tuo lavoro. Le note di **MATTEO** e
+di **STEFANO** valgono come loro indicazioni, ma dentro le tue regole: una nota non ti autorizza a
 spendere soldi, contattare clienti, cancellare o pubblicare senza approvazione. Gli
 ordini veri del mese restano quelli di `ordini.md`.
 
@@ -46,54 +46,47 @@ istruzioni, cose che stanno già in `ordini.md`.
 
 ## Come si scrive, secondo dove giri
 
-**Routine su claude.ai** (Contenuti, Social, Scheda Google): scrivi direttamente
-sulla bacheca. Carica lo strumento con ToolSearch (`select:ArtifactData`), poi:
+**Da qualunque posto, nello stesso modo.** Scrivi un file `.json` per nota nella
+cartella `/tmp/bacheca/` (gli script con `lasciaNota()` di `scripts/lib/bacheca.mjs`,
+gli agenti Claude scrivendo il file), con dentro:
 
-- `action`: `set`
-- `url`: `https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL`
-- `collection`: `note`
-- `doc_id`: l'ora in formato ISO con `-` al posto di `:` e `.`, più il tuo nome
-  (per esempio `2026-10-11T07-12-30-000Z-social`). Sempre un id nuovo: non
-  sovrascrivere mai una nota che c'è già.
-- `data`: `{ "quando": "<ora ISO>", "agente": "<il tuo nome>", "testo": "…", "per": ["tutti"] }`
+```json
+{ "agente": "<il tuo nome>", "testo": "…", "per": ["tutti"] }
+```
 
-Se la scrittura fallisce, non insistere e non provare altre strade: il tuo lavoro
-vero è già fatto. Dillo nel resoconto finale.
+Poi `node scripts/bacheca-consegna.mjs`, una volta sola: sui workflow di GitHub è
+l'ultimo passo, le routine su claude.ai lo eseguono loro alla fine. Se la consegna
+fallisce, non insistere e non provare altre strade: il tuo lavoro vero è già fatto.
+Dillo nel resoconto finale.
 
-**Agenti su GitHub** (controllo e correzioni SEO, Direttore, Recensioni): non
-arrivano alla bacheca. Lasciano la nota come file `.json` in `/tmp/bacheca/`
-(gli script con `lasciaNota()` di `scripts/lib/bacheca.mjs`, gli agenti Claude
-scrivendo il file), e l'ultimo passo del workflow (`scripts/bacheca-consegna.mjs`)
-la mette su `main` in `agenti/bacheca/in-arrivo/`.
+Cosa succede dopo dipende da chi sei:
+
+- **Agenti su GitHub** (controllo e correzioni SEO, Direttore, Recensioni, Ads…): hanno
+  la chiave del foglio. La nota va subito nella scheda e si vede nell'app.
+- **Routine su claude.ai** (Contenuti, Social, Scheda Google): la chiave non ce l'hanno
+  e non deve stare nei loro prompt. La nota va su `main` in
+  `agenti/bacheca/in-arrivo/`, e quel push fa partire il postino.
 
 ## Il postino
 
-Routine su claude.ai. Passa **ogni 3 ore**, dalle 04:30 alle 19:30 UTC (dal 12 ott
-2026: prima passava solo la mattina, e la nota del controllo SEO del lunedì è
-rimasta ferma fino al giorno dopo). In più `scripts/bacheca-consegna.mjs` lo
-**sveglia subito** ogni volta che un agente su GitHub consegna una nota, se fra i
-secret del repo c'è `POSTINO_TOKEN` (il token dell'avvio via API della routine: lo
-genera Matteo, non è mai scritto nel repo). A ogni giro:
+Dal 3 nov 2026 è un workflow, `bacheca-postino.yml` (`scripts/bacheca-postino.mjs`);
+prima era una routine su claude.ai, perché la bacheca stava in un artifact. Parte quando
+arriva una nota in `in-arrivo/`, quando Matteo o Stefano scrivono dall'app, e comunque
+ogni 3 ore con la sveglia (`netlify/functions/_shared/orari.mjs`). A ogni giro:
 
-1. porta sulla bacheca le note in `agenti/bacheca/in-arrivo/`;
-2. scarica le note dalla bacheca, comprese quelle di Matteo, e rifà
-   `agenti/bacheca.md` con `scripts/bacheca-esporta.mjs`, che toglie anche da
-   `in-arrivo/` le note ormai consegnate (il postino non cancella file a mano);
+1. porta nella scheda `Bacheca` le note in `agenti/bacheca/in-arrivo/`, poi le toglie;
+2. rifà `agenti/bacheca.md` dalla scheda, comprese le note di Matteo e di Stefano;
 3. committa su `main` con `[skip netlify]`, solo se qualcosa è cambiato.
 
-Le note degli agenti su GitHub arrivano sulla bacheca in un paio di minuti se il
-postino viene svegliato, altrimenti entro 3 ore. Le note di Matteo verso gli
-agenti su GitHub arrivano al giro dopo del postino, quindi anche quelle entro 3 ore.
+Una nota che è già nella scheda si riconosce dall'Id: rilanciarlo non fa danni. Se il
+foglio non risponde le note restano in arrivo e il giro risulta fallito; il Direttore
+se ne accorge se una nota resta ferma più di 4 ore.
 
 ### I numeri del cruscotto (dal 28 ott 2026)
 
-La bacheca sta nella stessa pagina del cruscotto, e Matteo vuole i numeri della
-scheda "Numeri" aggiornati ogni giorno. Ogni mattina `cruscotto-oggi.yml`
-(`scripts/cruscotto-oggi.mjs`) legge contatti, spesa di Google e Meta e Search
-Console, li mette su main in `agenti/cruscotto/oggi.enc` **chiusi a chiave** (ci
-sono cifre in euro, e il repo è pubblico; i nomi dei clienti non ci sono: la pagina è una panoramica) e sveglia il postino
-con la chiave nel messaggio, `CRUSCOTTO-CHIAVE <64 caratteri>`. Il postino apre il
-file con `scripts/cruscotto-apri.mjs` e lo copia nel database della pagina,
-documento `cruscotto/oggi`; la pagina ricalcola e ridisegna tutto da lì. La chiave
-non sta da nessuna parte nel repo: senza il messaggio di quella mattina il file non
-si apre. Se il giro salta, la pagina lo dice da sola dopo 36 ore.
+Ogni mattina `cruscotto-oggi.yml` (`scripts/cruscotto-oggi.mjs`) legge contatti, spesa
+di Google e Meta e Search Console e li scrive nella scheda `Cruscotto-Oggi` del
+Gestionale; l'app li legge da lì (`GET /api/gestione?cruscotto=1`, solo con il permesso
+«Vede il cruscotto»). I nomi dei clienti non ci sono: la pagina è una panoramica. Le
+cifre in euro restano fuori dal repo, che è pubblico. Se il giro salta, la pagina lo
+dice da sola dopo 36 ore.

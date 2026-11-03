@@ -21,10 +21,10 @@ arrivano a parte, in un messaggio Telegram che non passa dal repo.
 ## La bacheca: leggila subito dopo gli ordini
 
 `bacheca.md` sono le note che gli agenti si sono lasciati negli ultimi 30 giorni,
-più quelle di Matteo: cosa hanno visto, cosa può servire agli altri. Ogni agente la
-legge prima di lavorare e, finito il giro, lascia da 1 a 3 note. La bacheca vera è
-un artifact su claude.ai che Matteo legge dal telefono; come si scrive, e come ci
-arrivano gli agenti che girano su GitHub, sta in `bacheca/LEGGIMI.md`.
+più quelle di Matteo e Stefano: cosa hanno visto, cosa può servire agli altri. Ogni
+agente la legge prima di lavorare e, finito il giro, lascia da 1 a 3 note. La bacheca
+vera sta nel Gestionale e si legge nel Cruscotto dell'app Gestione; come si scrive sta
+in `bacheca/LEGGIMI.md`.
 
 ## Come funziona il post social
 

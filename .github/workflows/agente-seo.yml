@@ -73,7 +73,7 @@ jobs:
       # Se la consegna non riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
         env:
-          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/bacheca-consegna.mjs
@@ -134,7 +134,7 @@ jobs:
       - name: Consegna le note alla bacheca
         if: ${{ always() }}
         env:
-          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/bacheca-consegna.mjs

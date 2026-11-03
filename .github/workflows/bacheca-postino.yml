@@ -1,0 +1,44 @@
+name: Postino della bacheca
+
+# Porta nel Gestionale le note arrivate in agenti/bacheca/in-arrivo/ (quelle delle
+# routine su claude.ai, che la chiave del foglio non ce l'hanno) e rifà la copia
+# agenti/bacheca.md, che gli agenti leggono prima di lavorare. Dal 3 nov 2026: prima
+# era una routine su claude.ai, perché la bacheca stava in un artifact.
+#
+# Lo fanno partire: il push di una nota, l'app quando Matteo o Stefano scrivono una
+# nota, la sveglia su Netlify ogni 3 ore (netlify/functions/_shared/orari.mjs).
+# Rilanciarlo non fa danni: una nota già portata si riconosce dall'Id.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'agenti/bacheca/in-arrivo/**'
+
+permissions:
+  contents: write
+
+# Uno alla volta: due giri insieme scriverebbero due volte la stessa nota.
+concurrency:
+  group: postino-bacheca
+  cancel-in-progress: false
+
+jobs:
+  postino:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Azioni agganciate allo SHA, non al tag. Vedi agente-seo.yml.
+      - name: Checkout del repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      - name: Porta le note e rifà la copia
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/bacheca-postino.mjs

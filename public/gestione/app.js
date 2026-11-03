@@ -103,6 +103,7 @@
     cestino: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
     scudo: '<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
     fotocamera: '<path d="M3.5 8.5h3.5l2-3h6l2 3h3.5v11h-17z"/><circle cx="12" cy="13.5" r="3.5"/>',
+    grafico: '<path d="M3 21h18M6 21v-7M12 21V5M18 21v-11"/>',
   };
   const icona = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONE[n]}</svg>`;
 
@@ -186,13 +187,14 @@
   // forse: la richiesta potrebbe essere arrivata lo stesso (20 s senza risposta).
   const nientelinea = (forse = false) => Object.assign(new Error('Niente linea. Riprova quando c\'è campo.'), { linea: true, forse });
   // `attesa`: una foto, col campo debole, può metterci più di 20 secondi.
-  async function api(azione, datiAzione, attesa = 20000) {
+  // `domanda`: una GET diversa dalla solita (?cruscotto=1, dal 3 nov 2026).
+  async function api(azione, datiAzione, attesa = 20000, domanda = '') {
     const ferma = new AbortController();
     const timer = setTimeout(() => ferma.abort(), attesa);
     try {
       let res;
       try {
-        res = await fetch(API, azione
+        res = await fetch(API + domanda, azione
           ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Chiave': chiave || '' }, body: JSON.stringify({ azione, dati: datiAzione }), signal: ferma.signal }
           : { headers: { 'X-Chiave': chiave || '' }, cache: 'no-store', signal: ferma.signal });
       } catch {
@@ -305,6 +307,7 @@
 
   function disegna(stato) {
     stato = stato || { s: 'home' };
+    schermo.classList.remove('largo');
     // Si lascia la mappa (o la si ridisegna): si ricorda dove si guardava.
     if (mappaAttiva) {
       // La mappa aperta su un cliente («Sulla mappa») si ricorda a parte:
@@ -327,7 +330,7 @@
       });
       return;
     }
-    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri, magazzino: schermoMagazzino, impostazioni: schermoImpostazioni };
+    const schermi = { home: schermoHome, scadenze: schermoScadenze, mappa: schermoMappa, cliente: schermoCliente, lead: schermoLead, schedaLead: schermoSchedaLead, cerca: schermoCerca, nuovo: schermoModulo, modifica: schermoModulo, nuovoLead: schermoNuovoLead, persi: schermoPersi, storico: schermoStorico, giri: schermoGiri, magazzino: schermoMagazzino, impostazioni: schermoImpostazioni, cruscotto: schermoCruscotto };
     (schermi[stato.s] || schermoHome)(stato);
   }
 
@@ -595,6 +598,11 @@
           <span><b>Interventi fatti</b>
           <small>${pagare ? `<span class="n-rosso">${pagare} da risentire per il pagamento</span>` : 'Storico e pagamenti'}</small></span>
         </button>
+        ${puo('cruscotto') ? `<button class="tessera" data-vai="cruscotto">
+          <span class="ico">${icona('grafico')}</span>
+          <span><b>Cruscotto</b>
+          <small>Numeri, spesa e bacheca degli agenti</small></span>
+        </button>` : ''}
       </div>
       ${dati.soloSuoi ? '<p class="spiega">Vedi i clienti e i contatti dei tuoi giri (dell\'ultimo mese e futuri). Per gli altri chiedi a Matteo.</p>' : ''}
       <p class="aggiornato">${io() ? `Stai usando l'app come <b>${esc(nomeChi(io()))}</b><br>` : ''}${alle ? `Dati aggiornati alle ${alle}` : ''}${VERSIONE ? ` · versione ${esc(VERSIONE)}` : ''}<br><button id="ricarica">Aggiorna adesso</button>
@@ -3576,6 +3584,88 @@
       await salvaLaTappa(nuovo, `Nel giro di ${nomeChi(chi)} ${quandoTappa(nuovo)}: ${nuovo.nome}`);
     });
     if (altro) $('t-nome').focus();
+  }
+
+  // ---------------------------------------------------------------------
+  //  Cruscotto: i numeri dell'azienda e la bacheca degli agenti (3 nov 2026)
+  // ---------------------------------------------------------------------
+  // Matteo: «cancelliamo il cruscotto Acquadirete e spostiamolo completamente
+  // sull'app, l'accesso deve essere solo mio e di Stefano ma comunque modificabile
+  // dalle impostazioni». Il permesso è «cruscotto» e lo controlla il motore; qui
+  // si nasconde solo la tessera. La pagina sta in cruscotto.js e cruscotto.css,
+  // caricati solo quando serve: gli altri non scaricano niente. L'ultima lettura
+  // resta nel telefono (senza campo si vede quella) e sparisce se il permesso viene tolto.
+  const K_CRUSCOTTO = 'gestione-cruscotto';
+  const OGNI_QUANTO_CRUSCOTTO = 60000;
+  let moduloCruscotto = null;
+  let turnoCruscotto = 0;
+  function caricaModuloCruscotto() {
+    if (moduloCruscotto) return moduloCruscotto;
+    const v = VERSIONE ? `?v=${VERSIONE}` : '';
+    const file = (nasce) => new Promise((ok, no) => {
+      const el = nasce();
+      el.onload = ok;
+      el.onerror = () => { el.remove(); no(new Error('Il cruscotto non si è caricato. La prima volta serve il campo.')); };
+      document.head.appendChild(el);
+    });
+    moduloCruscotto = Promise.all([
+      file(() => Object.assign(document.createElement('link'), { rel: 'stylesheet', href: `/gestione/cruscotto.css${v}` })),
+      file(() => Object.assign(document.createElement('script'), { src: `/gestione/cruscotto.js${v}` })),
+    ]).then(() => window.CruscottoApp).catch((err) => { moduloCruscotto = null; throw err; });
+    return moduloCruscotto;
+  }
+  function schermoCruscotto(stato) {
+    titolo('Cruscotto', true);
+    const questo = ++turnoCruscotto;
+    const ancoraQui = () => questo === turnoCruscotto && history.state && history.state.s === 'cruscotto';
+    if (!puo('cruscotto')) {
+      memoria.togli(K_CRUSCOTTO);
+      schermo.innerHTML = '<div class="vuoto">Il cruscotto non è fra i tuoi accessi. Chiedi a Matteo.</div>';
+      return;
+    }
+    schermo.classList.add('largo');
+    const scheda = stato.scheda === 'agenti' ? 'agenti' : 'numeri';
+    schermo.innerHTML = `<div class="pillole">
+        <button class="pillola" type="button" data-scheda="numeri" aria-pressed="${scheda === 'numeri'}">Numeri</button>
+        <button class="pillola" type="button" data-scheda="agenti" aria-pressed="${scheda === 'agenti'}">Agenti e bacheca</button>
+      </div>
+      <div id="dentro-cruscotto"><div class="carica">Carico il cruscotto…</div></div>`;
+    const vaiA = (s) => {
+      history.replaceState({ s: 'cruscotto', scheda: s }, '', location.pathname + location.hash);
+      schermo.querySelectorAll('[data-scheda]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.scheda === s)));
+      if (window.CruscottoApp) window.CruscottoApp.mostra(s);
+      window.scrollTo(0, 0);
+    };
+    schermo.querySelectorAll('[data-scheda]').forEach((b) => { b.onclick = () => vaiA(b.dataset.scheda); });
+    const oraIt = (ms) => new Date(ms).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const scrivi = (testo, per) => api('notaBacheca', { testo, per }).then((r) => r.nota).catch((err) => {
+      throw err.linea ? new Error('Per scrivere agli agenti serve il campo. Riprova quando c\'è linea.') : err;
+    });
+    caricaModuloCruscotto().then((modulo) => {
+      if (!ancoraQui()) return;
+      modulo.apri({ contenitore: $('dentro-cruscotto'), chi: io(), scrivi, vaiA });
+      modulo.mostra(scheda);
+      let salvata = null;
+      try { salvata = JSON.parse(memoria.leggi(K_CRUSCOTTO) || 'null'); } catch { /* copia rovinata: si rilegge */ }
+      if (salvata) modulo.aggiorna({ numeri: salvata.numeri, note: salvata.note, alle: oraIt(salvata.quando), copia: true });
+      const leggi = () => api(null, null, 20000, '?cruscotto=1').then((r) => {
+        memoria.scrivi(K_CRUSCOTTO, JSON.stringify({ numeri: r.numeri, note: r.note, quando: Date.now() }));
+        if (ancoraQui()) modulo.aggiorna({ numeri: r.numeri, note: r.note, alle: oraIt(Date.now()), copia: false });
+      });
+      leggi().catch((err) => {
+        if (err.chiave) return;
+        // Il permesso tolto da Matteo: la copia nel telefono non resta.
+        if (err.stato === 403) { memoria.togli(K_CRUSCOTTO); if (ancoraQui()) schermo.innerHTML = `<div class="vuoto">${esc(err.message)}</div>`; return; }
+        if (!salvata && ancoraQui()) schermo.innerHTML = `<div class="vuoto">${esc(err.message)}</div>`;
+      });
+      // Finché la pagina è aperta si rilegge da sola: le note arrivano anche mentre si guarda.
+      const giro = setInterval(() => {
+        if (!ancoraQui()) { clearInterval(giro); return; }
+        if (!document.hidden) leggi().catch(() => {});
+      }, OGNI_QUANTO_CRUSCOTTO);
+    }).catch((err) => {
+      if (ancoraQui()) schermo.innerHTML = `<div class="vuoto">${esc(err.message)}</div>`;
+    });
   }
 
   // ---------------------------------------------------------------------

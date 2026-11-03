@@ -2,37 +2,32 @@
 // ============================================================================
 //  IL CRUSCOTTO DI OGNI MATTINA (dal 28 ott 2026)
 //
-//  Matteo: "l'artefatto cruscotto si deve aggiornare ogni giorno". La pagina
-//  (https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL, scheda Numeri) prende i
-//  numeri dal suo database, documento cruscotto/oggi. Qui li si prepara:
+//  Matteo vuole il cruscotto aggiornato ogni giorno. Dal 3 nov 2026 sta nell'app
+//  Gestione, che prende i numeri dalla scheda Cruscotto-Oggi del Gestionale. Qui
+//  li si prepara:
 //    - i contatti di Lead-Contatti, senza nomi (data, provenienza, stato): la
 //      pagina è una panoramica dell'andamento e di cosa fare, non un elenco di
 //      clienti (Matteo, 28 ott);
 //    - la spesa di Google Ads e Meta da quando sono partite le campagne;
 //    - Search Console: 28 giorni contro i 28 prima, 90 giorni, settimane,
 //      pagine e ricerche;
-//    - recensioni, clienti nel Gestionale, articoli, prossimi controlli delle prove.
+//    - recensioni, clienti nel Gestionale, articoli, prossimi controlli delle prove;
+//    - il tetto del costo per cliente (secret VALORE_CLIENTE).
 //
-//  Dentro ci sono cifre in euro e numeri dell'azienda, e il repo è pubblico: i dati
-//  vanno su main CHIUSI A CHIAVE (agenti/cruscotto/oggi.enc, AES-256-GCM, una
-//  chiave nuova ogni giorno). La chiave non va nel repo né nei log: la porta il
-//  messaggio con cui si sveglia il postino, l'unico che scrive sulla pagina.
-//  Il postino apre il file (scripts/cruscotto-apri.mjs) e lo copia nel database.
+//  Dentro ci sono cifre in euro e numeri dell'azienda, e il repo è pubblico: non
+//  vanno né nel repo né nei log. Li vede solo chi ha il permesso «cruscotto» nell'app.
 //
 //    node scripts/cruscotto-oggi.mjs --prova   scrive in /tmp/cruscotto/oggi.json e basta
 // ============================================================================
 
-import { randomBytes, createCipheriv } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { getAccessToken, query as gsc } from './lib/gsc.mjs';
-import { leggi, dataItaliana } from './lib/gestionale.mjs';
+import { leggi, dataItaliana, SHEET_ID } from './lib/gestionale.mjs';
 import { query as queryAds, euro } from './lib/ads.mjs';
-import { suMain } from './lib/spingi.mjs';
+import { valoreCliente } from './lib/visite.mjs';
+import { creaFoglioGoogle, scriviNumeri } from '../netlify/functions/_shared/gestionale.mjs';
 
 const prova = process.argv.includes('--prova');
-export const FILE = 'agenti/cruscotto/oggi.enc';
-const POSTINO = 'https://api.anthropic.com/v1/claude_code/routines/trig_01JXe1QeXJgbC5EWsbDkgDtS/fire';
 
 // Da quando contano le spese: la campagna Meta è partita il 28 giugno, Google
 // Ads l'8 luglio 2026 (vedi scripts/cruscotto.mjs).
@@ -226,30 +221,6 @@ export function prossimeProve(testo) {
 
 // ---------------------------------------------------------------------------
 
-export function chiudi(dati) {
-  const chiave = randomBytes(32);
-  const iv = randomBytes(12);
-  const c = createCipheriv('aes-256-gcm', chiave, iv);
-  const corpo = Buffer.concat([c.update(JSON.stringify(dati), 'utf8'), c.final()]);
-  return { chiave: chiave.toString('hex'), file: `${Buffer.concat([iv, c.getAuthTag(), corpo]).toString('base64')}\n` };
-}
-
-async function svegliaPostino(chiave) {
-  const token = process.env.POSTINO_TOKEN;
-  if (!token) throw new Error('manca POSTINO_TOKEN');
-  const res = await fetch(POSTINO, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'anthropic-beta': 'experimental-cc-routine-2026-04-01',
-      'anthropic-version': '2023-06-01',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text: `CRUSCOTTO-CHIAVE ${chiave}` }),
-  });
-  if (!res.ok) throw new Error(`il postino non è partito (HTTP ${res.status})`);
-}
-
 async function main() {
   const adesso = new Date();
   const ieri = giorni(adesso, -1);
@@ -269,24 +240,19 @@ async function main() {
     seo,
     sito: { recensioni: recensioni(), clienti, articoli: articoli() },
     prove: prossimeProve(readFileSync('agenti/prove.md', 'utf8')),
+    tetto: Number(valoreCliente()?.tettoCostoPerCliente) || null,
   };
   console.log(`Contatti ${lead.length} · clienti nel Gestionale ${clienti ?? '?'} · spesa letta: Google ${google == null ? 'no' : 'sì'}, Meta ${meta == null ? 'no' : 'sì'} · Search Console al ${seo.al}`);
 
   if (prova) {
     mkdirSync('/tmp/cruscotto', { recursive: true });
     writeFileSync('/tmp/cruscotto/oggi.json', JSON.stringify(dati, null, 1));
-    console.log('Prova: dati in /tmp/cruscotto/oggi.json, niente su main e niente postino.');
+    console.log('Prova: dati in /tmp/cruscotto/oggi.json, niente nel Gestionale.');
     return;
   }
 
-  const { chiave, file } = chiudi(dati);
-  suMain('Cruscotto: i numeri di oggi, chiusi a chiave [skip netlify]', (dir) => {
-    mkdirSync(join(dir, 'agenti/cruscotto'), { recursive: true });
-    writeFileSync(join(dir, FILE), file);
-    return [FILE];
-  }, { autore: 'agente-cruscotto' });
-  await svegliaPostino(chiave);
-  console.log('Numeri su main, chiusi a chiave; il postino li porta sulla pagina.');
+  await scriviNumeri(creaFoglioGoogle(SHEET_ID), dati);
+  console.log('Numeri scritti nel Gestionale, scheda Cruscotto-Oggi.');
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cruscotto-oggi.mjs')) {

@@ -957,15 +957,18 @@ export const PERMESSI = [
   // del magazzino no. Il filtro lo fa il motore (perPersona), non il telefono.
   { id: 'tuttiClienti', colonna: 'Vede tutti i clienti', nome: 'Vede tutti i clienti', spiega: 'Su «No» vede solo i clienti e i contatti delle sue tappe (dell\'ultimo mese e future), e lavora solo su quelli. I prezzi ai clienti li vede sempre.' },
   { id: 'costi', colonna: 'Vede i costi', nome: 'Vede i costi del magazzino', spiega: 'I prezzi d\'acquisto degli articoli e il valore del magazzino.' },
+  // 3 nov 2026, Matteo: il cruscotto nell'app, «l'accesso deve essere solo mio e
+  // di Stefano ma comunque modificabile dalle impostazioni».
+  { id: 'cruscotto', colonna: 'Vede il cruscotto', nome: 'Vede il cruscotto', spiega: 'I numeri dell\'azienda, la spesa pubblicitaria, il costo per cliente e la bacheca degli agenti (e può scriverci).' },
 ];
 const COLONNE_ACCESSI = ['Persona', 'Nome', ...PERMESSI.map((p) => p.colonna), 'Cambiato il'];
 const ACCESSI_DI_BASE = {
-  matteo: { nome: 'Matteo', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true },
-  babbo: { nome: 'Stefano', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true },
-  segretaria: { nome: 'Segretaria', attivo: true, giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true },
+  matteo: { nome: 'Matteo', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: true },
+  babbo: { nome: 'Stefano', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: true },
+  segretaria: { nome: 'Segretaria', attivo: true, giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: false },
 };
 // Una persona nuova (un dipendente): il suo giro sì, il resto no.
-const ACCESSI_NUOVO = { attivo: true, giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false, tuttiClienti: false, costi: false };
+const ACCESSI_NUOVO = { attivo: true, giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false, tuttiClienti: false, costi: false, cruscotto: false };
 // Le persone che hanno i loro accessi di base anche se la scheda Accessi non
 // si legge (chi controlla un dipendente non tira a indovinare: lui no).
 export const conAccessiDiBase = (p) => Object.prototype.hasOwnProperty.call(ACCESSI_DI_BASE, p);
@@ -1072,6 +1075,116 @@ export async function salvaAccessi(foglio, { persona, nome, permessi = {} }, { c
 }
 
 // ---------------------------------------------------------------------------
+//  Il cruscotto e la bacheca degli agenti (3 nov 2026)
+// ---------------------------------------------------------------------------
+// Matteo: «cancelliamo il cruscotto Acquadirete e spostiamolo completamente
+// sull'app». Prima stavano nel database di un artifact su claude.ai, dove ci
+// arrivava solo una routine (il postino). Ora stanno nel Gestionale:
+//   - "Bacheca": le note degli agenti, una per riga. Le scrivono l'app (qui) e
+//     gli agenti (scripts/lib/bacheca-postino.mjs, con queste stesse funzioni).
+//     Non si cancellano. Due giri insieme possono scrivere due volte la stessa
+//     nota: conta l'Id, alla lettura.
+//   - "Cruscotto-Oggi": i numeri del giorno, riscritti ogni mattina da
+//     scripts/cruscotto-oggi.mjs. Un JSON a pezzi nella colonna A, perché una
+//     cella tiene al massimo 50.000 caratteri.
+// Li legge solo chi ha il permesso «cruscotto» (gestione.mjs, GET ?cruscotto=1).
+// Le note finiscono anche in agenti/bacheca.md, e il repo è pubblico: niente
+// nomi di clienti, telefoni, email o cifre in euro.
+export const TAB_BACHECA = 'Bacheca';
+export const TAB_NUMERI = 'Cruscotto-Oggi';
+const INTESTAZIONI_BACHECA = ['Id', 'Quando', 'Agente', 'Per', 'Testo'];
+const PEZZO_NUMERI = 40000;
+const PEZZI_NUMERI = 10;
+const MAX_TESTO_NOTA = 600;
+export const idNotaBacheca = (quando, agente) => `${quando.replace(/[:.]/g, '-')}-${agente}`;
+
+async function leggiSeCe(foglio, range, render) {
+  try {
+    return await foglio.leggi(range, render);
+  } catch (err) {
+    if (err.status === 400) return []; // scheda non ancora creata
+    throw err;
+  }
+}
+
+// Tutte le note, dalla più nuova.
+export async function leggiBacheca(foglio) {
+  const g = await leggiSeCe(foglio, `'${TAB_BACHECA}'!A2:E20000`, 'FORMATTED_VALUE');
+  const viste = new Set();
+  const note = [];
+  for (const r of g) {
+    const id = testo(r[0]);
+    if (!id || viste.has(id)) continue;
+    viste.add(id);
+    note.push({ id, quando: testo(r[1]), agente: testo(r[2]), per: testo(r[3]).split(',').map((p) => p.trim()).filter(Boolean), testo: testo(r[4]) });
+  }
+  return note.sort((a, b) => b.quando.localeCompare(a.quando));
+}
+
+// Accoda note già controllate ({ id, quando, agente, per: [], testo }).
+export function accodaNote(foglio, note) {
+  return foglio.accodaRighe(TAB_BACHECA, INTESTAZIONI_BACHECA, note.map((n) => [n.id, n.quando, n.agente, n.per.join(','), n.testo]));
+}
+
+export async function leggiNumeri(foglio) {
+  const g = await leggiSeCe(foglio, `'${TAB_NUMERI}'!A2:A${PEZZI_NUMERI + 1}`, 'FORMATTED_VALUE');
+  const json = g.map((r) => testo(r[0])).join('');
+  if (!json) return null;
+  try { return JSON.parse(json); } catch { return null; }
+}
+
+// Riscrive i numeri: sempre tutte le righe, così non resta un pezzo del giorno prima.
+export async function scriviNumeri(foglio, numeri) {
+  const json = JSON.stringify(numeri);
+  if (json.length > PEZZO_NUMERI * PEZZI_NUMERI) throw new Error('Numeri del cruscotto troppo grandi per la scheda.');
+  const righe = [['Numeri del cruscotto: li riscrive ogni mattina l\'agente, non toccare questa scheda.']];
+  for (let i = 0; i < PEZZI_NUMERI; i++) righe.push([json.slice(i * PEZZO_NUMERI, (i + 1) * PEZZO_NUMERI)]);
+  await foglio.creaScheda(TAB_NUMERI);
+  await foglio.scrivi([{ range: `'${TAB_NUMERI}'!A1:A${PEZZI_NUMERI + 1}`, values: righe }], 'RAW');
+}
+
+export async function leggiCruscotto(foglio) {
+  const [numeri, note] = await Promise.all([leggiNumeri(foglio), leggiBacheca(foglio)]);
+  return { numeri, note: note.slice(0, 400) };
+}
+
+// Chi può ricevere una nota dall'app (come il vecchio menu della bacheca).
+const PER_NOTA = ['tutti', 'direttore', 'contenuti', 'seo', 'social', 'recensioni', 'scheda', 'ads', 'meccanico'];
+// Un numero di telefono: 9 cifre o più di fila, anche con spazi o trattini in
+// mezzo. Una data («12/10/2026») ne ha 8 e passa.
+const haTelefono = (t) => (t.match(/\d[\d\s.-]{7,}\d/g) || []).some((x) => x.replace(/\D/g, '').length >= 9);
+// La nota di una persona dall'app. Chi scrive lo dice la chiave, non il telefono.
+export async function notaBacheca(foglio, { testo: scritto, per = 'tutti' }, { chi }) {
+  const corpo = testo(scritto);
+  if (!corpo) throw problema('Scrivi qualcosa prima di lasciare la nota.');
+  if (corpo.length > MAX_TESTO_NOTA) throw problema(`La nota è troppo lunga: al massimo ${MAX_TESTO_NOTA} caratteri.`);
+  if (haTelefono(corpo) || /[\w.+-]+@[\w-]+\.\w+/.test(corpo) || /€|\beuro\b/i.test(corpo)) {
+    throw problema('Niente telefoni, email o cifre in euro: la nota viene copiata anche su GitHub, che è pubblico.');
+  }
+  const a = testo(per).toLowerCase();
+  if (!PER_NOTA.includes(a)) throw problema('Scegli a chi è rivolta la nota.');
+  const quando = new Date().toISOString();
+  const agente = chi === 'babbo' ? 'stefano' : chi;
+  const nota = { id: idNotaBacheca(quando, agente), quando, agente, per: [a], testo: corpo };
+  await accodaNote(foglio, [nota]);
+  return { ok: true, nota };
+}
+
+// Una volta sola, dal PC: le note e i numeri che stavano sull'artifact. Rifatta
+// non raddoppia (conta l'Id). Solo Matteo.
+export async function importaBacheca(foglio, { note = [], numeri = null }, { chi }) {
+  if (chi !== TITOLARE) throw problema('Questo lo può fare solo Matteo.', 403);
+  const ci = new Set((await leggiBacheca(foglio)).map((n) => n.id));
+  const nuove = note
+    .filter((n) => n && testo(n.id) && !ci.has(testo(n.id)) && testo(n.testo))
+    .map((n) => ({ id: testo(n.id), quando: testo(n.quando), agente: testo(n.agente), per: Array.isArray(n.per) ? n.per : ['tutti'], testo: testo(n.testo) }))
+    .sort((a, b) => a.quando.localeCompare(b.quando));
+  if (nuove.length) await accodaNote(foglio, nuove);
+  if (numeri) await scriviNumeri(foglio, numeri);
+  return { ok: true, note: nuove.length, gia: note.length - nuove.length, numeri: !!numeri };
+}
+
+// ---------------------------------------------------------------------------
 //  Cosa vede chi non vede tutti i clienti (22 ott 2026)
 // ---------------------------------------------------------------------------
 // Matteo, dopo il controllo di sicurezza: un dipendente non deve potersi
@@ -1172,7 +1285,7 @@ const INTESTAZIONI_REGISTRO = ['Quando', 'Chi', 'Azione', 'Cliente', 'Cosa'];
 const NOMI_AZIONI = {
   fatta: 'Manutenzione fatta', annulla: 'Annullata data', riparazione: 'Riparazione', annullaRiparazione: 'Annullata riparazione', rimanda: 'Rimandata',
   avviso: 'Urgente / sospesa', sposta: 'Spostato (persi)', nuovo: 'Cliente nuovo', modifica: 'Dati cambiati', nuovoLead: 'Contatto nuovo', stato: 'Stato contatto',
-  nota: 'Nota contatto', pagamento: 'Pagamento', assegna: 'Giro', tappa: 'Tappa', togliTappa: 'Tappa tolta', articolo: 'Articolo magazzino',
+  notaBacheca: 'Nota sulla bacheca', importaBacheca: 'Bacheca importata', nota: 'Nota contatto', pagamento: 'Pagamento', assegna: 'Giro', tappa: 'Tappa', togliTappa: 'Tappa tolta', articolo: 'Articolo magazzino',
   magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
   annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
   foto: 'Foto', togliFoto: 'Foto tolta', rimettiFoto: 'Foto rimessa', posizioneContatto: 'Posizione contatto',
@@ -1187,6 +1300,7 @@ function cosaRegistro(azione, dati, r) {
   if (azione === 'modifica' && r && Array.isArray(r.cambi)) {
     return r.cambi.map((x) => `${x.campo}: «${breveValore(x.prima)}» → «${breveValore(x.dopo)}»`).join('; ');
   }
+  if (azione === 'importaBacheca') return `${r && r.note} note nuove`;
   if (azione === 'accessi') return `${testo(dati.persona)}: ${Object.entries(dati.permessi || {}).map(([k, val]) => `${k} ${val ? 'sì' : 'no'}`).join(', ')}`;
   const parti = [];
   for (const [k, val] of Object.entries(dati || {})) {

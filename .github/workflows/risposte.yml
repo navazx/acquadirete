@@ -116,6 +116,6 @@ jobs:
       # Google Ads e' cambiato qualcosa, e gli altri agenti devono saperlo.
       - name: Consegna le note alla bacheca
         env:
-          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/bacheca-consegna.mjs

@@ -26,6 +26,7 @@ import {
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
   perPersona, riferimentiFuori, registra, conAccessiDiBase,
   salvaFoto, togliFoto, rimettiFoto, leggiImmagine, fotoDaId, salvaPosizioneContatto, rinominaContatti,
+  leggiCruscotto, notaBacheca, importaBacheca,
 } from './_shared/gestionale.mjs';
 
 // L'archivio delle foto dei clienti (26 ott 2026): Netlify Blobs, in Europa
@@ -117,6 +118,8 @@ const AZIONI = {
   rimettiFoto,
   posizioneContatto: salvaPosizioneContatto, // «Sono qui» dalla scheda del contatto, al sopralluogo (27 ott 2026)
   rinominaContatti, // una volta sola: i contatti vecchi col cognome davanti (29 ott 2026, solo Matteo)
+  notaBacheca, // una nota agli agenti, dal cruscotto (3 nov 2026)
+  importaBacheca, // una volta sola: note e numeri dal vecchio artifact (solo Matteo)
 };
 
 // Le azioni che chiedono un permesso degli Accessi. Le altre le può fare
@@ -130,10 +133,24 @@ const PERMESSO_PER = {
   // I materiali usati in un lavoro no: quelli li segna chiunque (22 ott 2026).
   magazzino: (d) => (d.causale === 'lavoro' ? null : 'modificaMagazzino'),
   articolo: () => 'modificaMagazzino',
+  notaBacheca: () => 'cruscotto',
 };
 // Quelle per cui servono gli Accessi: i permessi, chi ha un giro (le tappe),
 // e l'annulla di un movimento (lo decide annullaMagazzino: dipende da cos'era).
 const CON_ACCESSI = new Set([...Object.keys(PERMESSO_PER), 'tappa', 'assegna', 'accessi', 'annullaMagazzino']);
+
+// Una nota scritta dall'app arriva agli agenti con la copia agenti/bacheca.md:
+// la rifà il postino, che si sveglia subito (come la sveglia degli agenti, stesso
+// token). Se non parte, la copia si rifà al suo giro: la nota è già nel foglio.
+async function svegliaPostino() {
+  const token = process.env.GITHUB_DISPATCH_TOKEN;
+  if (!token) return;
+  await fetch('https://api.github.com/repos/navazx/acquadirete/actions/workflows/bacheca-postino.yml/dispatches', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    body: JSON.stringify({ ref: 'main' }),
+  }).catch((err) => console.error('Postino non svegliato:', err));
+}
 
 // creaFoglio e apriArchivio sono parametri solo per il server di prova in
 // locale (scripts/gestione-locale.mjs), che scrive su una copia in memoria.
@@ -159,9 +176,11 @@ export const creaGestore = (creaFoglio, apriArchivio = archivioNetlify) => async
   // GET ?foto=<id>[&mini=1]: l'immagine di una foto, non tutto il foglio.
   const url = new URL(req.url);
   const fotoChiesta = req.method === 'GET' ? url.searchParams.get('foto') : null;
+  // GET ?cruscotto=1: i numeri e la bacheca, solo a chi ha il permesso.
+  const cruscottoChiesto = req.method === 'GET' && url.searchParams.get('cruscotto') === '1';
   // La lettura completa parte subito (in parallelo agli Accessi), ma conta
   // solo se gli Accessi dicono che si può.
-  const tuttoP = req.method === 'GET' && !fotoChiesta ? leggiTutto(foglio) : null;
+  const tuttoP = req.method === 'GET' && !fotoChiesta && !cruscottoChiesto ? leggiTutto(foglio) : null;
   if (tuttoP) tuttoP.catch(() => {});
   try {
     // Gli Accessi a ogni richiesta (22 ott 2026): chi Matteo ha spento non
@@ -198,6 +217,11 @@ export const creaGestore = (creaFoglio, apriArchivio = archivioNetlify) => async
       return new Response(img.dati, {
         headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex', 'X-Content-Type-Options': 'nosniff' },
       });
+    }
+
+    if (cruscottoChiesto) {
+      if (!mio.cruscotto) return risposta({ ok: false, errore: 'Il cruscotto non è fra i tuoi accessi. Chiedi a Matteo.' }, 403);
+      return risposta({ ok: true, ...(await leggiCruscotto(foglio)) });
     }
 
     // io: chi sta usando l'app; persone: chi ha un giro (fra chi si dividono
@@ -245,6 +269,7 @@ export const creaGestore = (creaFoglio, apriArchivio = archivioNetlify) => async
     if (r && r.ok !== false && body.azione !== 'posizioni') {
       await registra(foglio, { chi, nome: mio.nome, azione: body.azione, dati, r }).catch((err) => console.error('Registro non scritto:', err));
     }
+    if (body.azione === 'notaBacheca') await svegliaPostino();
     return risposta(r);
   } catch (err) {
     if (err.perUtente) return risposta({ ok: false, errore: err.message }, err.status || 400);

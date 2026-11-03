@@ -39,13 +39,12 @@ jobs:
           META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
         run: node scripts/cruscotto.mjs
 
-      # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/),
-      # e chi la consegna sveglia il postino. Se non riesce lo dice nel log, ma non
-      # fa fallire il giro.
+      # La nota per la bacheca degli agenti va nel Gestionale (scheda Bacheca). Se non
+      # riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
         if: ${{ always() }}
         env:
-          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/bacheca-consegna.mjs

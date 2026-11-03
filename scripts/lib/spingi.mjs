@@ -56,3 +56,32 @@ export function suMain(messaggio, scrivi, { autore = 'agente' } = {}) {
     throw new Error(senzaToken(e.stderr?.toString() || e.message));
   }
 }
+
+/**
+ * Come suMain, per un file che riscrivono in tanti (agenti/bacheca.md): `scrivi`
+ * può essere async, e se qualcun altro ha spinto nel frattempo non si fa il
+ * rebase, che andrebbe in conflitto: si ricomincia da capo su main nuovo.
+ * Quindi `scrivi` deve poter girare più volte. Torna true se ha spinto.
+ */
+export async function suMainDaCapo(messaggio, scrivi, { autore = 'agente', tentativi = 3 } = {}) {
+  for (let tentativo = 1; ; tentativo += 1) {
+    try {
+      git([...CON_TOKEN, 'fetch', '--quiet', REMOTO, 'main']);
+      const dir = mkdtempSync(join(tmpdir(), 'spingi-'));
+      git(['worktree', 'add', '--detach', dir, 'FETCH_HEAD']);
+      try {
+        const percorsi = await scrivi(dir);
+        git(['add', '-A', '--', ...percorsi], dir);
+        if (!git(['status', '--porcelain'], dir)) return false;
+        git(['-c', `user.name=${autore}`, '-c', 'user.email=noreply@acquadirete.it', 'commit', '--quiet', '-m', messaggio], dir);
+        git([...CON_TOKEN, 'push', '--quiet', REMOTO, 'HEAD:main'], dir);
+        return true;
+      } finally {
+        try { git(['worktree', 'remove', '--force', dir]); } catch { rmSync(dir, { recursive: true, force: true }); }
+      }
+    } catch (e) {
+      if (tentativo >= tentativi) throw new Error(senzaToken(e.stderr?.toString() || e.message));
+      await new Promise((ok) => setTimeout(ok, 2000 * tentativo));
+    }
+  }
+}

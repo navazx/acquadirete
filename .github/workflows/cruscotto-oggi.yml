@@ -1,10 +1,8 @@
 name: Cruscotto di ogni mattina
 
-# Ogni mattina i numeri della scheda "Numeri" del cruscotto online
-# (https://claude.ai/artifact/WTSEAc6prF69SVXs3TcFzL), dal 28 ott 2026: Matteo
-# vuole la pagina aggiornata ogni giorno. scripts/cruscotto-oggi.mjs legge
-# contatti, spesa e Search Console, li mette su main chiusi a chiave e sveglia il
-# postino con la chiave; il postino li porta nel database della pagina.
+# Ogni mattina i numeri del Cruscotto dell'app Gestione: Matteo vuole la pagina
+# aggiornata ogni giorno. scripts/cruscotto-oggi.mjs legge contatti, spesa e Search
+# Console e li scrive nella scheda Cruscotto-Oggi del Gestionale.
 # Lo fa partire la sveglia su Netlify (netlify/functions/_shared/orari.mjs);
 # rilanciarlo non fa danni, scrive solo numeri più freschi.
 on:
@@ -16,7 +14,7 @@ on:
         default: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   cruscotto:
@@ -33,11 +31,11 @@ jobs:
           node-version: '24'
 
       # TZ: le date dei contatti e delle settimane sono quelle di Roma.
-      - name: Prepara i numeri e sveglia il postino
+      - name: Prepara i numeri e li scrive nel Gestionale
         env:
           TZ: Europe/Rome
           GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
-          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
-          GITHUB_TOKEN: ${{ github.token }}
+          # Il tetto del costo per cliente: riservato, arriva coi numeri.
+          VALORE_CLIENTE: ${{ secrets.VALORE_CLIENTE }}
         run: node scripts/cruscotto-oggi.mjs ${{ inputs.prova == true && '--prova' || '' }}

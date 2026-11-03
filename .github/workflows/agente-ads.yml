@@ -113,13 +113,12 @@ jobs:
           node scripts/ads-manda.mjs --prova
           rm -rf /tmp/bacheca
 
-      # La nota per la bacheca degli agenti va su main (agenti/bacheca/in-arrivo/),
-      # e chi la consegna sveglia il postino. Se non riesce lo dice nel log, ma non
-      # fa fallire il giro.
+      # La nota per la bacheca degli agenti va nel Gestionale (scheda Bacheca). Se non
+      # riesce lo dice nel log, ma non fa fallire il giro.
       - name: Consegna le note alla bacheca
         if: ${{ always() && inputs.prova != true }}
         env:
-          POSTINO_TOKEN: ${{ secrets.POSTINO_TOKEN }}
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}
           # Per spingere la nota: dopo l'azione di Claude le credenziali del checkout non valgono piu'.
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/bacheca-consegna.mjs

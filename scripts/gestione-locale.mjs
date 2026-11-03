@@ -32,7 +32,7 @@ process.env.LEADS_SHEET_ID = '1jmR0DXP_25ZTniBgemRj0hEmXxcrCdxj89y4DxciHBk';
 process.env.GESTIONE_CHIAVE = 'babbo:provalocale-0000-0000,matteo:provalocale-matteo-0000,segretaria:provalocale-segre-0000,dipendente:provalocale-dipen-0000';
 
 const { creaGestore } = await import('../netlify/functions/gestione.mjs');
-const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI, TAB_MAGAZZINO, TAB_MOVIMENTI, TAB_FOTO } =
+const { creaFoglioGoogle, piuMesi, dataDaSeriale, serialeDa, TAB_CLIENTI, TAB_LEAD, TAB_COORDINATE, TAB_STORICO, TAB_GIRI, TAB_MAGAZZINO, TAB_MOVIMENTI, TAB_FOTO, TAB_BACHECA, TAB_NUMERI } =
   await import('../netlify/functions/_shared/gestionale.mjs');
 
 // ---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ async function creaFoglioFinto() {
   } catch { /* scheda non ancora creata */ }
   // Il magazzino (dal 20 ott 2026) e le foto (dal 26 ott, solo le righe:
   // le immagini stanno su Netlify), se nel foglio ci sono già.
-  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000'], [TAB_FOTO, 'A1:H5000']]) {
+  for (const [tab, celle] of [[TAB_MAGAZZINO, 'A1:T1000'], [TAB_MOVIMENTI, 'A1:P6000'], [TAB_FOTO, 'A1:H5000'], [TAB_BACHECA, 'A1:E5000'], [TAB_NUMERI, 'A1:A20']]) {
     try {
       const g = await vero.leggi(`'${tab}'!${celle}`, 'FORMULA');
       if (g.length) schede[tab] = g;

@@ -91,7 +91,7 @@ async function giriDal(workflow, dal) {
 
 // --- La bacheca -------------------------------------------------------------
 
-const ETICHETTE = { 'meccanico': 'meccanico', 'seo': 'seo', 'social': 'social', 'direttore': 'direttore', 'contenuti': 'contenuti', 'recensioni': 'recensioni', 'scheda google': 'scheda', 'lead e clienti': 'lead', 'ads': 'ads', 'matteo': 'matteo' };
+const ETICHETTE = { 'meccanico': 'meccanico', 'seo': 'seo', 'social': 'social', 'direttore': 'direttore', 'contenuti': 'contenuti', 'recensioni': 'recensioni', 'scheda google': 'scheda', 'lead e clienti': 'lead', 'ads': 'ads', 'matteo': 'matteo', 'stefano': 'stefano' };
 
 /** Le note recenti: quelle gia' sulla bacheca (la copia nel repo) e quelle ancora in arrivo. */
 export function leggiNote(adesso, { copia = 'agenti/bacheca.md', inArrivo = 'agenti/bacheca/in-arrivo' } = {}) {

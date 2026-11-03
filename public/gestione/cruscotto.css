@@ -1,0 +1,203 @@
+/* Il cruscotto dell'app Gestione (dal 3 nov 2026): si carica solo quando si apre.
+   Tutto dentro .crusc, così non tocca il resto dell'app. Un solo tema chiaro,
+   come l'app; i colori vengono da quelli dell'app. */
+main.largo { max-width: 1080px; }
+.crusc {
+  --bg: #f3f6fa; --card: #ffffff; --ink: #10202f; --ink-2: #5b6b7b; --ink-3: #6f7f8f;
+  --line: #d6dee7; --accent: #0f6cbd; --accent-soft: #eaf4fe;
+  --s-site: #0f6cbd; --s-meta: #8a5cc8; --s-tel: #b0741f; --s-ads: #13806b;
+  --ok: #1b7a3d; --ok-soft: #e3f5e8; --warn: #8a5300; --warn-soft: #fff1d6;
+  --crit: #b3261e; --crit-soft: #fde7e5; --grid: #ecf1f3;
+  --a-direttore: #6b4fb3; --a-contenuti: #1c7c54; --a-seo: #b4561b; --a-social: #c0377a;
+  --a-recensioni: #8f6a00; --a-scheda: #2f7d8c; --a-lead: #0f6f9e; --a-ads: #8a5a2b;
+  --a-meccanico: #b3261e; --a-matteo: #10202f; --a-altro: #5b6b7b;
+  color: var(--ink); font-size: 16px; line-height: 1.5;
+}
+/* La regola delle icone dell'app (svg alto 1em, tratto scuro) qui non vale. */
+.crusc svg { width: 100%; height: auto; fill: currentColor; stroke: none; stroke-width: 1; stroke-linecap: butt; stroke-linejoin: miter; flex: none; }
+.crusc .snapshot { color: var(--ink-2); font-size: 15px; margin: 0 0 14px; }
+.crusc h3 { font-size: inherit; }
+.crusc .snapshot { color: var(--ink-2); font-size: 13.5px; }
+.crusc .snapshot strong { color: var(--ink); font-weight: 600; }
+.crusc .label { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-3); }
+.crusc .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+@media (max-width: 760px) {
+.crusc .kpis { grid-template-columns: repeat(2, 1fr); }
+ }
+.crusc .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 12px; }
+.crusc .kpi .num { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.15; margin-top: 4px; }
+.crusc .kpi .sub { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+.crusc .delta { display: inline-block; font-size: 12px; font-weight: 600; padding: 0 7px; border-radius: 99px; font-variant-numeric: tabular-nums; vertical-align: 5px; }
+.crusc .delta.up { color: var(--ok); background: var(--ok-soft); }
+.crusc .delta.down { color: var(--crit); background: var(--crit-soft); }
+.crusc .delta.flat { color: var(--ink-2); background: var(--grid); }
+.crusc .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 860px) {
+.crusc .grid { grid-template-columns: 1fr; }
+ }
+
+/* i figli non-card (colonne annidate) devono restringersi sotto il min-width delle tabelle */
+.crusc .grid > div { min-width: 0; }
+.crusc section.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 16px; min-width: 0; }
+.crusc section.card.wide { grid-column: 1 / -1; }
+.crusc section.card h2 { font-size: 16px; font-weight: 650; margin: 0 0 2px; letter-spacing: -0.005em; }
+.crusc section.card .sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+.crusc .hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.crusc .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.crusc .pill.ok { color: var(--ok); background: var(--ok-soft); }
+.crusc .pill.warn { color: var(--warn); background: var(--warn-soft); }
+.crusc .pill.crit { color: var(--crit); background: var(--crit-soft); }
+.crusc .pill.mute { color: var(--ink-2); background: var(--grid); }
+.crusc .dot { width: 7px; height: 7px; border-radius: 99px; background: currentColor; flex: none; }
+.crusc .chart-box { position: relative; }
+.crusc .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin: 2px 0 6px; }
+.crusc .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.crusc .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.crusc #tooltip {
+    position: absolute; pointer-events: none; display: none; z-index: 5;
+    background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.4;
+    padding: 6px 9px; border-radius: 7px; white-space: nowrap; transform: translate(-50%, -110%);
+  }
+.crusc svg text { font-family: inherit; }
+.crusc .tbl-scroll { overflow-x: auto; margin: 0 -4px; }
+.crusc table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 430px; }
+.crusc th { text-align: left; font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-3); padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.crusc td { padding: 6.5px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+.crusc tr:last-child td { border-bottom: 0; }
+.crusc td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.crusc th.n { text-align: right; }
+.crusc td .src { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.crusc ul.fact { list-style: none; margin: 0; padding: 0; }
+.crusc ul.fact li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--grid); align-items: baseline; }
+.crusc ul.fact li:last-child { border-bottom: 0; }
+.crusc ul.fact .k { flex: none; width: 118px; font-size: 12px; color: var(--ink-3); font-weight: 600; }
+.crusc ul.fact .v { min-width: 0; }
+.crusc .note { font-size: 12.5px; color: var(--ink-2); border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 7px 10px; border-radius: 0 7px 7px 0; margin-top: 10px; }
+.crusc ul.status { list-style: none; margin: 0; padding: 0; }
+.crusc ul.status li { display: flex; gap: 10px; align-items: baseline; padding: 6.5px 0; border-bottom: 1px solid var(--grid); }
+.crusc ul.status li:last-child { border-bottom: 0; }
+.crusc ul.status .st-dot { flex: none; width: 8px; height: 8px; border-radius: 99px; background: var(--ok); position: relative; top: -1px; }
+.crusc ul.status .st-dot.warn { background: var(--warn); }
+.crusc ul.status .when { margin-left: auto; flex: none; font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.crusc .links { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.crusc .links a { display: block; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); text-decoration: none; font-size: 13.5px; font-weight: 600; background: var(--card); }
+.crusc .links a:hover, .crusc .links a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+.crusc .links a .u { display: block; font-size: 11.5px; font-weight: 400; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crusc .c-piu { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--accent);
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.crusc .c-piu:hover, .crusc .c-piu:focus-visible { border-color: var(--accent); outline: none; }
+.crusc .chart-mini { position: relative; }
+.crusc .chart-mini .titolo { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+.crusc .chart-mini .titolo b { font-size: 13.5px; font-weight: 650; }
+.crusc .chart-mini .titolo span { font-size: 12px; color: var(--ink-3); }
+
+/* ---- ragnatela degli agenti ---- */
+.crusc .web-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+@media (max-width: 900px) {
+.crusc .web-grid { grid-template-columns: 1fr; }
+ }
+.crusc figure.web { margin: 0; min-width: 0; }
+.crusc .web-scroll { overflow-x: auto; }
+.crusc .web-scroll svg { display: block; width: 100%; min-width: 640px; max-width: 740px; height: auto; margin: 0 auto; }
+.crusc figure.web figcaption { font-size: 13px; color: var(--ink-2); margin-top: 6px; max-width: 70ch; }
+.crusc .sw.todo { background: transparent; border: 1.5px dashed var(--ink-3); }
+.crusc .sw.canale { background: var(--card); border: 1px solid var(--ink-3); border-radius: 99px; }
+.crusc .sw.anello { background: transparent; border: 2px solid var(--accent); border-radius: 99px; }
+.crusc .w-guide { fill: none; stroke: var(--grid); stroke-width: 1; }
+.crusc .w-anello { fill: none; stroke: var(--accent); stroke-width: 2; }
+.crusc .w-edge { fill: none; stroke: var(--ink-3); stroke-width: 1.4; }
+.crusc .w-edge.todo { stroke-dasharray: 5 4; }
+.crusc .w-head { fill: var(--ink-3); }
+.crusc .w-lbl { font-size: 11px; fill: var(--ink-2); paint-order: stroke; stroke: var(--card); stroke-width: 4px; stroke-linejoin: round; }
+.crusc .n-box { stroke-width: 1.5; }
+.crusc .n-on .n-box { fill: var(--ok-soft); stroke: var(--ok); }
+.crusc .n-part .n-box { fill: var(--warn-soft); stroke: var(--warn); }
+.crusc .n-todo .n-box { fill: var(--card); stroke: var(--ink-3); stroke-dasharray: 5 4; }
+.crusc .n-canale .n-box { fill: var(--card); stroke: var(--ink-3); stroke-width: 1; }
+.crusc .n-nome { font-size: 13px; font-weight: 650; fill: var(--ink); }
+.crusc .n-dir .n-nome { font-size: 15px; }
+.crusc .n-nota { font-size: 10.5px; fill: var(--ink-3); }
+.crusc .n-on .n-nota { fill: var(--ok); font-weight: 600; }
+.crusc .n-part .n-nota { fill: var(--warn); font-weight: 600; }
+.crusc .n-todo .n-nome { fill: var(--ink-2); }
+.crusc .w-pill { fill: var(--accent); }
+.crusc .w-pill-t { font-size: 12.5px; font-weight: 650; fill: var(--card); }
+.crusc ul.c-giro { list-style: none; margin: 0; padding: 0; }
+.crusc ul.c-giro li { padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 13px; color: var(--ink-2); }
+.crusc ul.c-giro li:first-child { padding-top: 2px; }
+.crusc ul.c-giro li:last-child { border-bottom: 0; }
+.crusc ul.c-giro b { display: block; color: var(--ink); font-size: 13.5px; font-weight: 650; margin-bottom: 1px; }
+.crusc .costi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+@media (max-width: 760px) {
+.crusc .costi { grid-template-columns: 1fr; }
+ }
+.crusc .costi .kpi { background: var(--bg); }
+.crusc .costi .kpi.media { border-color: var(--accent); background: var(--accent-soft); }
+.crusc .badge { font-size: 11.5px; font-weight: 650; padding: 1px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-variant-numeric: tabular-nums; }
+
+/* ---- bacheca ---- */
+.crusc .bach-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 860px) {
+.crusc .bach-grid { grid-template-columns: 1fr; }
+.crusc .bach-side { order: -1; }
+ }
+.crusc .bach-side { display: grid; gap: 14px; min-width: 0; }
+.crusc details.scrivi { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); padding: 10px 12px; }
+.crusc details.scrivi summary { cursor: pointer; font-weight: 650; font-size: 14px; color: var(--accent); }
+.crusc details.scrivi[open] summary { margin-bottom: 10px; }
+.crusc details.scrivi summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.crusc .scrivi form { display: grid; gap: 9px; }
+.crusc .scrivi .hint { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.crusc .scrivi textarea { width: 100%; min-height: 84px; resize: vertical; font: inherit; font-size: 15px; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; }
+.crusc .scrivi select { font: inherit; font-size: 14px; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+.crusc .scrivi textarea:focus-visible, .crusc .scrivi select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crusc .c-btn { font: inherit; font-size: 14px; font-weight: 650; background: var(--accent); color: var(--card); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+.crusc .c-btn[disabled] { opacity: .5; cursor: default; }
+.crusc .c-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.crusc .stato-nota { font-size: 12.5px; color: var(--ink-2); min-height: 1.2em; }
+.crusc .filtri { display: flex; flex-wrap: wrap; gap: 6px; }
+.crusc .chip { font: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.crusc .chip .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--ink-3)); }
+.crusc .chip[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.crusc .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.crusc .side-nota { font-size: 12.5px; color: var(--ink-2); margin: 0; }
+.crusc .feed { display: grid; gap: 16px; min-width: 0; }
+.crusc .giorno { display: grid; gap: 8px; }
+.crusc .giorno h3 { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-3); margin: 0; display: flex; align-items: center; gap: 10px; }
+.crusc .giorno h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.crusc .bn { background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--c, var(--ink-3)); border-radius: 8px; padding: 10px 13px; display: grid; gap: 4px; min-width: 0; }
+.crusc .bn .meta { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.crusc .bn .who { font-weight: 700; font-size: 14px; color: var(--c, var(--ink)); }
+.crusc .bn .time { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.crusc .bn .for { font-size: 12.5px; color: var(--ink-3); }
+.crusc .bn .for.te { color: var(--warn); font-weight: 650; }
+.crusc .bn .testo { margin: 0; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.crusc .ant-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.crusc .ant-lista .bn .testo { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.crusc .c-vuoto { margin: 0; padding: 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--ink-2); font-size: 13.5px; }
+.crusc .c-vuoto strong { color: var(--ink); }
+.crusc .ant-hd { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.crusc .ant-hd .c-piu { margin-top: 0; }
+.crusc ul.status.c-due { columns: 2 320px; column-gap: 32px; }
+.crusc ul.status.c-due li { break-inside: avoid; }
+.crusc .w-bacheca { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 6 5; }
+.crusc .w-bacheca-t { font-size: 12px; font-weight: 650; fill: var(--accent); paint-order: stroke; stroke: var(--card); stroke-width: 5px; stroke-linejoin: round; }
+.crusc .sw.bacheca { background: transparent; border: 1.6px dashed var(--accent); border-radius: 99px; }
+@media (prefers-reduced-motion: no-preference) {
+.crusc .bn.nuova { animation: arriva .3s ease-out both; }
+@keyframes arriva { from { transform: translateY(4px); } to { transform: none; } }
+ }
+.crusc a.plain { color: var(--accent); }
+.crusc footer { margin-top: 26px; font-size: 12.5px; color: var(--ink-3); }
+
+
+/* Sul telefono: etichette sopra il testo, tabelle senza larghezza minima. */
+@media (max-width: 560px) {
+  .crusc ul.fact li { flex-direction: column; gap: 2px; }
+  .crusc ul.fact .k { width: auto; }
+  .crusc table { min-width: 0; font-size: 13.5px; }
+  .crusc th, .crusc td { padding: 6px 6px; }
+  .crusc td .src { white-space: normal; }
+  .crusc section.card { padding: 14px 12px; }
+}

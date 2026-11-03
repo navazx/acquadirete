@@ -24,7 +24,7 @@ Chi lo chiama (con `scripts/lib/meccanico.mjs`):
   partito. Usa un token GitHub che sta fra le variabili di Netlify.
 - L'orologio di GitHub (`schedule:`) è rimasto solo come riserva su alcuni
   workflow, e arriva con ore di ritardo.
-- Le routine su claude.ai (Contenuti, Social, Scheda Google, postino della bacheca)
+- Le routine su claude.ai (Contenuti, Social, Scheda Google)
   da GitHub non si vedono e non si possono far ripartire da qui: si riconoscono
   solo dalle tracce che lasciano nel repo e sulla bacheca.
 - Dopo un passo fatto dall'azione di Claude le credenziali git del checkout non
@@ -50,9 +50,11 @@ possibile: l'ultimo deploy di Netlify è fallito e la funzione non c'è.
 l'IA le credenziali del checkout non valevano più, e la consegna non riusciva a
 spingere. Rimedio: la consegna usa `GITHUB_TOKEN` e, se fallisce, fa fallire il giro.
 
-**Note ferme "in arrivo" per ore** — non è un guasto se manca `POSTINO_TOKEN` fra i
-segreti del repo: senza, il postino passa da solo ogni 3 ore. È un guasto se una
-nota è ferma da più di 4 ore.
+**Note ferme "in arrivo" per ore** — il postino è il workflow `bacheca-postino.yml`:
+parte quando arriva una nota e ogni 3 ore con la sveglia. Una nota ferma da più di 4
+ore è un guasto: guarda il suo ultimo giro (di solito il foglio non rispondeva). Le note
+degli agenti su GitHub non passano da lì: vanno subito nella scheda `Bacheca` del
+Gestionale, a meno che il foglio non risponda.
 
 **Recensioni o revisione Ads avviati e "non è successo niente"** — avviati a mano
 partono in prova: serve `prova: 'false'`, che la sveglia e il Direttore passano
