@@ -2118,11 +2118,36 @@
       else { delete c.perso; delete c.persoIl; }
       a.push(c);
     },
+    // Come modificaContatto: col nome cambia la chiave delle sue tappe e foto.
+    modificaContatto(d, x) {
+      const l = leadIn(d, x);
+      if (!l) return;
+      const k = x.campi || {};
+      const vecchia = chiaveLead(l);
+      const nomePrima = l.nome;
+      const telPrima = l.contatto;
+      ['contatto', 'provenienza', 'interesse'].forEach((n) => { if (n in k) l[n] = String(k[n]).trim(); });
+      if ('nome' in k) l.nome = String(k.nome).replace(/\s+/g, ' ').trim().toUpperCase();
+      const nuova = chiaveLead(l);
+      (d.tappe || []).filter((t) => t.contatto === vecchia).forEach((t) => {
+        t.contatto = nuova;
+        if (normalizza(t.nome) === normalizza(nomePrima)) t.nome = l.nome;
+        if (t.telefono === telPrima) t.telefono = l.contatto;
+      });
+      (d.foto || []).filter((f) => f.contatto === vecchia).forEach((f) => { f.contatto = nuova; });
+    },
     modifica(d, x) {
       const c = clienteIn(d, x.codice);
       if (!c) return;
       const k = x.campi || {};
       const prima = indirizzoCercato(c);
+      if ('nome' in k) {
+        c.nome = String(k.nome).replace(/\s+/g, ' ').trim().toUpperCase();
+        const delCliente = (lista, campo) => (lista || []).filter((y) => y[campo] === c.codice).forEach((y) => { y.nome = c.nome; });
+        delCliente(d.tappe, 'codice');
+        delCliente(d.storico, 'codice');
+        delCliente(d.magazzino && d.magazzino.movimenti, 'cliente');
+      }
       if ('telefono' in k) c.contatto = k.telefono;
       ['indirizzo', 'tipo', 'note'].forEach((n) => { if (n in k) c[n] = k[n]; });
       if ('citta' in k) c.citta = String(k.citta).toUpperCase();
@@ -4982,10 +5007,12 @@
         ${riga('Interessato a', l.interesse)}
         ${riga('Telefono / email', l.contatto)}
         ${riga('Note', note)}
-      </dl>`;
+      </dl>
+      ${puo('modificaContatti') ? `<button class="btn" type="button" id="modifica-contatto" style="width:100%;margin-top:10px">${icona('matita')} Modifica i dati</button>` : ''}`;
 
     collegaTappe({ lead: l });
     collegaFoto(diContatto(l));
+    if ($('modifica-contatto')) $('modifica-contatto').onclick = () => chiediDatiContatto(l);
     $('sono-qui').onclick = (e) => chiediSonoQuiContatto(l, e.currentTarget);
     schermo.querySelectorAll('[data-stato]').forEach((b) => {
       b.onclick = () => {
@@ -5017,6 +5044,67 @@
           if (r) l.note = r.note;
           disegna(history.state);
           messaggio('Nota salvata ✓' + (voce ? fuoriLinea(voce) : ''));
+        } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
+      });
+    };
+  }
+
+  // Nome, telefono o email, provenienza e interesse (3 nov 2026, Matteo), col
+  // permesso «Modifica i dati dei contatti». Si mandano solo i campi cambiati.
+  // Il telefono e l'email stanno in una cella sola, nel foglio, e così qui.
+  function chiediDatiContatto(l) {
+    const interessi = [...new Set(dati.lead.map((x) => x.interesse.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
+    let provenienza = l.provenienza;
+    apriFinestra(`
+      <h3>Modifica i dati</h3>
+      <form id="f-contatto" novalidate>
+        <label class="campo"><span>Cognome e nome</span><input name="nome" value="${esc(l.nome)}" autocomplete="off" autocapitalize="characters" required></label>
+        <p class="errore-campo" id="err-nome" hidden>Scrivi almeno il nome.</p>
+        <label class="campo"><span>Telefono o email</span><input name="contatto" value="${esc(l.contatto)}" autocomplete="off" autocapitalize="none"></label>
+        <p class="errore-campo" id="err-tel" hidden></p>
+        <div class="campo"><span>Come ci ha conosciuto?</span>
+          <div class="scelta">${PROVENIENZE.map(([v, t]) => `<button type="button" data-prov="${esc(v)}" aria-pressed="${v === provenienza}">${t}</button>`).join('')}</div></div>
+        <label class="campo"><span>Cosa gli interessa <em>(facoltativo)</em></span><input name="interesse" value="${esc(l.interesse)}" list="l-interessi-contatto" autocomplete="off"></label>
+        <datalist id="l-interessi-contatto">${interessi.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        <button class="btn verde grande" style="width:100%">${icona('spunta')} Salva le modifiche</button>
+        <button class="btn leggero" type="button" id="no">Lascia stare</button>
+      </form>`);
+    const f = $('f-contatto');
+    $('no').onclick = chiudiFinestra;
+    f.querySelectorAll('[data-prov]').forEach((b) => {
+      b.onclick = () => {
+        provenienza = b.dataset.prov;
+        f.querySelectorAll('[data-prov]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      };
+    });
+    const v = (n) => f.elements[n].value.replace(/\s+/g, ' ').trim();
+    f.onsubmit = (e) => {
+      e.preventDefault();
+      $('err-nome').hidden = !!v('nome');
+      if (!v('nome')) { f.elements.nome.focus(); return; }
+      const campi = {};
+      ['nome', 'contatto', 'interesse'].forEach((n) => { if (v(n) !== String(l[n] || '').trim()) campi[n] = v(n); });
+      if (provenienza !== l.provenienza) campi.provenienza = provenienza;
+      const sbagliato = !v('contatto') ? 'Scrivi il telefono (o l\'email), se no non lo puoi richiamare.'
+        : 'contatto' in campi ? v('contatto').split('·').filter((p) => !p.includes('@')).map(problemaTelefono).find(Boolean) || '' : '';
+      $('err-tel').textContent = 'contatto' in campi ? sbagliato : '';
+      $('err-tel').hidden = !('contatto' in campi && sbagliato);
+      if ('contatto' in campi && sbagliato) { f.elements.contatto.focus(); return; }
+      if (!Object.keys(campi).length) { chiudiFinestra(); return; }
+      conPulsante(f.querySelector('button.verde'), 'Salvo…', async () => {
+        const inviati = { riga: l.riga, data: l.data, nome: l.nome, campi };
+        try {
+          const { r, voce } = await manda('modificaContatto', inviati, `Dati cambiati: ${l.nome}`);
+          if (r) {
+            APPLICA.modificaContatto(dati, inviati);
+            salvaDati();
+            await carica().catch(() => {});
+          }
+          chiudiFinestra();
+          const ora = dati.lead.find((x) => x.data === inviati.data && x.nome === (r ? r.nome : l.nome)) || l;
+          history.replaceState({ s: 'schedaLead', id: idLead(ora) }, '', location.pathname + location.hash);
+          disegna(history.state);
+          messaggio('Dati salvati ✓' + (r ? '' : fuoriLinea(voce)), { durata: r ? 5000 : 8000 });
         } catch (err) { messaggio(err.message, { errore: true, durata: 8000 }); }
       });
     };
@@ -5153,7 +5241,7 @@
     schermo.innerHTML = `
       ${c ? `<div class="testa" style="margin-bottom:16px"><h2>${esc(c.nome)}</h2></div>` : ''}
       <form id="f-modulo" novalidate>
-        ${c ? '' : `<label class="campo"><span>Cognome e nome</span><input name="nome" autocomplete="off" autocapitalize="characters" placeholder="Es. ROSSI MARIO" required></label>
+        ${c && !puo('cambiaNomi') ? '' : `<label class="campo"><span>Cognome e nome</span><input name="nome" ${valore(c && c.nome)} autocomplete="off" autocapitalize="characters" placeholder="Es. ROSSI MARIO" required></label>
         <p class="errore-campo" id="err-nome" hidden>Scrivi almeno il nome.</p>`}
         <label class="campo"><span>Telefono</span><input name="telefono" type="tel" inputmode="tel" autocomplete="off" ${valore(c && c.contatto)}></label>
         <label class="campo"><span>Indirizzo <em>(via e numero)</em></span><input name="indirizzo" autocomplete="off" ${valore(c && c.indirizzo)}></label>
@@ -5198,14 +5286,17 @@
     const v = (n) => f.elements[n].value.trim();
     f.onsubmit = (e) => {
       e.preventDefault();
-      if (!c && !v('nome')) { $('err-nome').hidden = false; f.elements.nome.focus(); return; }
-      if (!c) $('err-nome').hidden = true;
+      if (f.elements.nome) {
+        $('err-nome').hidden = !!v('nome');
+        if (!v('nome')) { f.elements.nome.focus(); return; }
+      }
       conPulsante(f.querySelector('button.verde'), 'Salvo…', () => (c ? salvaModifica() : salvaNuovo()));
     };
 
     async function salvaModifica() {
       // Solo i campi cambiati: il resto della riga nel foglio non si tocca.
       const prima = { telefono: c.contatto, indirizzo: c.indirizzo, citta: titoloCitta(c.citta), tipo: c.tipo, installazione: inst, note: c.note };
+      if (f.elements.nome) prima.nome = c.nome;
       const campi = {};
       Object.keys(prima).forEach((k) => { if (v(k) !== String(prima[k] || '').trim()) campi[k] = v(k); });
       if (mesi !== c.frequenza) campi.frequenza = mesi;

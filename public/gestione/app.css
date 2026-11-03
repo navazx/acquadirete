@@ -229,6 +229,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 @keyframes sale { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
 .finestra h3 { margin: 0 0 6px; font-size: 23px; line-height: 1.25; }
 .finestra p { margin: 0 0 16px; font-size: 19px; color: var(--grigio); }
+.finestra .errore-campo { margin: -6px 0 14px; color: var(--rosso); }
 .finestra p strong { color: var(--testo); }
 .finestra .btn { width: 100%; margin-top: 10px; }
 

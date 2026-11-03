@@ -990,15 +990,19 @@ export const PERMESSI = [
   // 3 nov 2026, Matteo: il cruscotto nell'app, «l'accesso deve essere solo mio e
   // di Stefano ma comunque modificabile dalle impostazioni».
   { id: 'cruscotto', colonna: 'Vede il cruscotto', nome: 'Vede il cruscotto', spiega: 'I numeri dell\'azienda, la spesa pubblicitaria, il costo per cliente e la bacheca degli agenti (e può scriverci).' },
+  // 3 nov 2026, Matteo: correggerli dall'app, per chi non apre più il foglio;
+  // «nelle impostazioni io devo poter modificare queste cose a tutti gli utenti».
+  { id: 'cambiaNomi', colonna: 'Corregge i nomi', nome: 'Corregge il nome dei clienti', spiega: 'Da «Modifica i dati», nella scheda del cliente. Il nome cambia anche negli interventi, nel giro e nel magazzino.' },
+  { id: 'modificaContatti', colonna: 'Modifica contatti', nome: 'Modifica i dati dei contatti', spiega: 'Nome, telefono o email, come ci ha conosciuto e cosa gli interessa. Lo stato e le note li cambia chiunque.' },
 ];
 const COLONNE_ACCESSI = ['Persona', 'Nome', ...PERMESSI.map((p) => p.colonna), 'Cambiato il'];
 const ACCESSI_DI_BASE = {
-  matteo: { nome: 'Matteo', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: true },
-  babbo: { nome: 'Stefano', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: true },
-  segretaria: { nome: 'Segretaria', attivo: true, giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: false },
+  matteo: { nome: 'Matteo', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: true, cambiaNomi: true, modificaContatti: true },
+  babbo: { nome: 'Stefano', attivo: true, giro: true, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: true, cambiaNomi: true, modificaContatti: true },
+  segretaria: { nome: 'Segretaria', attivo: true, giro: false, cancellaInterventi: true, togliClienti: true, modificaMagazzino: true, tuttiClienti: true, costi: true, cruscotto: false, cambiaNomi: true, modificaContatti: true },
 };
 // Una persona nuova (un dipendente): il suo giro sì, il resto no.
-const ACCESSI_NUOVO = { attivo: true, giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false, tuttiClienti: false, costi: false, cruscotto: false };
+const ACCESSI_NUOVO = { attivo: true, giro: true, cancellaInterventi: false, togliClienti: false, modificaMagazzino: false, tuttiClienti: false, costi: false, cruscotto: false, cambiaNomi: false, modificaContatti: false };
 // Le persone che hanno i loro accessi di base anche se la scheda Accessi non
 // si legge (chi controlla un dipendente non tira a indovinare: lui no).
 export const conAccessiDiBase = (p) => Object.prototype.hasOwnProperty.call(ACCESSI_DI_BASE, p);
@@ -1281,7 +1285,7 @@ function riferimenti(azione, dati) {
     }
   };
   visita(dati, 0);
-  if ((azione === 'stato' || azione === 'nota') && dati) contatti.add(chiaveContatto({ data: testo(dati.data), nome: testo(dati.nome) }));
+  if ((azione === 'stato' || azione === 'nota' || azione === 'modificaContatto') && dati) contatti.add(chiaveContatto({ data: testo(dati.data), nome: testo(dati.nome) }));
   return { codici, contatti };
 }
 // I riferimenti che questa persona non può toccare (vuoto = va bene). Legge
@@ -1314,7 +1318,7 @@ export const TAB_REGISTRO = 'Registro';
 const INTESTAZIONI_REGISTRO = ['Quando', 'Chi', 'Azione', 'Cliente', 'Cosa'];
 const NOMI_AZIONI = {
   fatta: 'Manutenzione fatta', annulla: 'Annullata data', riparazione: 'Riparazione', annullaRiparazione: 'Annullata riparazione', rimanda: 'Rimandata',
-  avviso: 'Urgente / sospesa', sposta: 'Spostato (persi)', nuovo: 'Cliente nuovo', modifica: 'Dati cambiati', nuovoLead: 'Contatto nuovo', stato: 'Stato contatto',
+  avviso: 'Urgente / sospesa', sposta: 'Spostato (persi)', nuovo: 'Cliente nuovo', modifica: 'Dati cambiati', nuovoLead: 'Contatto nuovo', stato: 'Stato contatto', modificaContatto: 'Dati del contatto cambiati',
   notaBacheca: 'Nota sulla bacheca', importaBacheca: 'Bacheca importata', nota: 'Nota contatto', pagamento: 'Pagamento', assegna: 'Giro', tappa: 'Tappa', togliTappa: 'Tappa tolta', articolo: 'Articolo magazzino',
   magazzino: 'Movimento magazzino', annullaMagazzino: 'Annullato movimento', materiali: 'Materiali corretti', cancellaIntervento: 'Intervento cancellato',
   annullaCancellazione: 'Intervento rimesso', cancellaLavoro: 'Lavoro cancellato', annullaCancellaLavoro: 'Lavoro rimesso', accessi: 'Accessi cambiati',
@@ -1327,8 +1331,10 @@ const adessoRoma = () => new Date().toLocaleString('it-IT', { timeZone: 'Europe/
 function cosaRegistro(azione, dati, r) {
   // Le immagini (in base64) no: solo se è nuova e la descrizione.
   if (azione === 'foto') return [dati.grande ? 'foto nuova' : 'descrizione cambiata', breveValore(dati.descrizione)].filter(Boolean).join(': ');
-  if (azione === 'modifica' && r && Array.isArray(r.cambi)) {
-    return r.cambi.map((x) => `${x.campo}: «${breveValore(x.prima)}» → «${breveValore(x.dopo)}»`).join('; ');
+  if ((azione === 'modifica' || azione === 'modificaContatto') && r && Array.isArray(r.cambi)) {
+    const cambi = r.cambi.map((x) => `${x.campo}: «${breveValore(x.prima)}» → «${breveValore(x.dopo)}»`).join('; ');
+    // Il contatto non ha un codice: si riconosce dal nome che aveva.
+    return azione === 'modificaContatto' ? `${testo(dati.nome)} — ${cambi}` : cambi;
   }
   if (azione === 'importaBacheca') return `${r && r.note} note nuove`;
   if (azione === 'accessi') return `${testo(dati.persona)}: ${Object.entries(dati.permessi || {}).map(([k, val]) => `${k} ${val ? 'sì' : 'no'}`).join(', ')}`;
@@ -2145,6 +2151,39 @@ const CAMPI_MODIFICABILI = {
   telefono: 'CONTATTO', indirizzo: 'INDIRIZZO', citta: 'CITTA', tipo: 'TIPO',
   installazione: 'INSTALLAZIONE', frequenza: 'FREQUENZA', note: 'NOTE',
 };
+// Una scheda che non c'è ancora non ha righe da correggere. Ogni altro errore
+// sale: con una lettura a metà i legami si romperebbero senza che si veda.
+const seLaSchedaCe = (lettura) => lettura.catch((err) => {
+  if (err.status === 400) return [];
+  throw err;
+});
+// Il nome di un cliente sta anche nelle righe col suo codice: tappe, storico,
+// movimenti del magazzino e foto. Si corregge per codice, tutto in una
+// scrittura sola con la sua scheda.
+async function scrittureNomeCliente(foglio, codice, nome) {
+  const cod = testo(codice).toUpperCase();
+  const [giri, storico, movimenti, foto] = await Promise.all([
+    seLaSchedaCe(foglio.leggi(`'${TAB_GIRI}'!A1:H3000`, 'UNFORMATTED_VALUE')),
+    leggiGrigliaStorico(foglio).then((g) => g || []),
+    seLaSchedaCe(foglio.leggi(`'${TAB_MOVIMENTI}'!A1:P6000`, 'FORMATTED_VALUE')),
+    seLaSchedaCe(foglio.leggi(`'${TAB_FOTO}'!A1:C5000`, 'UNFORMATTED_VALUE')),
+  ]);
+  const scritture = [];
+  const correggi = (griglia, tab, colCodice, colNome) => {
+    if (colCodice < 0 || colNome < 0) return;
+    griglia.forEach((r, i) => {
+      if (i === 0 || testo((r || [])[colCodice]).toUpperCase() !== cod || testo(r[colNome]) === nome) return;
+      scritture.push({ range: `'${tab}'!${lettera(colNome + 1)}${i + 1}`, values: [[nome]] });
+    });
+  };
+  correggi(giri, TAB_GIRI, G.Codice, G.Nome);
+  const ks = colonneStorico(storico);
+  correggi(storico, TAB_STORICO, ks.codice, ks.nome);
+  const km = colonneDa(movimenti, CAMPI_MOVIMENTO);
+  correggi(movimenti, TAB_MOVIMENTI, km.cliente, km.nome);
+  correggi(foto, TAB_FOTO, F.Codice, F.Cliente);
+  return scritture;
+}
 export async function modificaCliente(foglio, { codice, campi = {} }) {
   const { griglia, mappa } = await leggiClienti(foglio);
   const { col } = mappa;
@@ -2158,6 +2197,26 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
   // Per il Registro (22 ott 2026): cosa c'era e cosa c'è adesso.
   const cambi = [];
   const comeTesto = (x) => (typeof x === 'number' ? testoData(dataDaSeriale(x)) : testo(x));
+
+  // Il nome (3 nov 2026): passa solo col permesso «Corregge il nome dei
+  // clienti», che controlla gestione.mjs. Niente doppioni, come per un cliente
+  // nuovo. Arrivato due volte riscrive lo stesso valore e basta.
+  if ('nome' in campi) {
+    const nuovo = testo(campi.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 120);
+    if (!nuovo) throw problema('Scrivi il nome del cliente.');
+    const prima = testo(r[col.NOME - 1]);
+    if (nuovo !== prima) {
+      const doppio = dati.find((x) => chiaveNome(x[col.NOME - 1]) === chiaveNome(nuovo));
+      if (doppio) throw problema(`C'è già un cliente con questo nome: ${testo(doppio[col.NOME - 1])} (${testo(doppio[col.CODICE - 1])}).`, 409);
+      const persi = await leggiPersi(foglio).catch(() => null);
+      const perso = persi && persi.griglia.slice(persi.mappa.riga).find((x) => chiaveNome(x[persi.mappa.col.NOME - 1]) === chiaveNome(nuovo));
+      if (perso) throw problema(`C'è già un cliente con questo nome fra i persi: ${testo(perso[persi.mappa.col.NOME - 1])} (${testo(perso[persi.mappa.col.CODICE - 1])}).`, 409);
+      testi.push(...(await scrittureNomeCliente(foglio, codice, nuovo)));
+      cambi.push({ campo: 'nome', prima, dopo: nuovo });
+    }
+    testi.push({ range: cella(col.NOME), values: [[nuovo]] });
+    scritti.nome = nuovo;
+  }
 
   for (const [nome, campo] of Object.entries(CAMPI_MODIFICABILI)) {
     if (!(nome in campi)) continue;
@@ -2399,23 +2458,66 @@ export async function cambiaStatoLead(foglio, { riga, data, nome, stato }) {
   return { ok: true, stato, cliente, dataStato };
 }
 
+// Col nome di un contatto cambia la chiave "data|nome" che lega le tappe (Giri:
+// Contatto e Nome), le foto (Foto: Contatto e Cliente) e la posizione
+// (Coordinate: Contatto). I materiali usati per lui non hanno la chiave: si
+// riconoscono dal nome, senza codice. Tutto in una scrittura sola col contatto.
+const leggiLegamiContatto = async (foglio) => {
+  const [giri, foto, coord, movimenti] = await Promise.all([
+    seLaSchedaCe(foglio.leggi(`'${TAB_GIRI}'!A1:${ULTIMA_GIRI}3000`, 'UNFORMATTED_VALUE')),
+    seLaSchedaCe(foglio.leggi(`'${TAB_FOTO}'!A1:H5000`, 'UNFORMATTED_VALUE')),
+    seLaSchedaCe(foglio.leggi(`'${TAB_COORDINATE}'!A1:G3000`, 'UNFORMATTED_VALUE')),
+    seLaSchedaCe(foglio.leggi(`'${TAB_MOVIMENTI}'!A1:P6000`, 'FORMATTED_VALUE')),
+  ]);
+  return { giri, foto, coord, movimenti };
+};
+function scrittureNomeContatto({ data, nome, nuovo }, { giri, foto, coord, movimenti }) {
+  const vecchia = chiaveContatto({ data, nome });
+  const nuova = chiaveContatto({ data, nome: nuovo });
+  const stesso = (v) => normalizza(v) === normalizza(nome);
+  const scritture = [];
+  let tappe = 0;
+  giri.forEach((x, i) => {
+    if (i === 0 || testo((x || [])[G.Contatto]) !== vecchia) return;
+    tappe++;
+    scritture.push({ range: `'${TAB_GIRI}'!G${i + 1}`, values: [[nuova]] });
+    if (stesso(x[G.Nome])) scritture.push({ range: `'${TAB_GIRI}'!H${i + 1}`, values: [[nuovo]] });
+  });
+  let nFoto = 0;
+  foto.forEach((x, i) => {
+    if (i === 0 || testo((x || [])[F.Contatto]) !== vecchia) return;
+    nFoto++;
+    scritture.push({ range: `'${TAB_FOTO}'!H${i + 1}`, values: [[nuova]] });
+    if (stesso(x[F.Cliente])) scritture.push({ range: `'${TAB_FOTO}'!C${i + 1}`, values: [[nuovo]] });
+  });
+  let posizioni = 0;
+  coord.forEach((x, i) => {
+    if (i === 0 || testo((x || [])[6]) !== vecchia) return;
+    posizioni++;
+    scritture.push({ range: `'${TAB_COORDINATE}'!G${i + 1}`, values: [[nuova]] });
+  });
+  let materiali = 0;
+  const km = colonneDa(movimenti, CAMPI_MOVIMENTO);
+  if (km.cliente >= 0 && km.nome >= 0) {
+    movimenti.forEach((x, i) => {
+      if (i === 0 || testo((x || [])[km.cliente]) || !stesso(x[km.nome])) return;
+      materiali++;
+      scritture.push({ range: cellaMag(TAB_MOVIMENTI, km.nome, i + 1), values: [[nuovo]] });
+    });
+  }
+  return { scritture, tappe, foto: nFoto, posizioni, materiali };
+}
+
 // Una volta sola (29 ott 2026, Matteo: «sì, girali»): i contatti arrivati
 // prima che il nome arrivasse già col cognome davanti. Solo il titolare.
 // `cambi`: [{ data, nome, nuovo }], l'elenco lo prepara Claude dal PC con
 // cognomeDavanti e lo controlla prima; `prova`: dice cosa farebbe senza
 // scrivere. Il nome nuovo deve avere le stesse parole in un altro ordine.
-// Col nome cambia la chiave "data|nome" che lega le tappe (Giri: Contatto e
-// Nome), le foto (Foto: Contatto e Cliente) e la posizione (Coordinate:
-// Contatto): tutto in una scrittura sola. Rifatta, salta quelli già girati.
+// Rifatta, salta quelli già girati.
 export async function rinominaContatti(foglio, { cambi = [], prova = false }, { chi } = {}) {
   if (chi !== TITOLARE) throw problema('Solo Matteo può farlo.', 403);
   if (!Array.isArray(cambi) || !cambi.length || cambi.length > 200) throw problema('Elenco non valido.');
-  const [{ griglia: gl, mappa: ml }, giri, foto, coord] = await Promise.all([
-    leggiLead(foglio),
-    foglio.leggi(`'${TAB_GIRI}'!A1:${ULTIMA_GIRI}3000`, 'UNFORMATTED_VALUE').catch(() => []),
-    foglio.leggi(`'${TAB_FOTO}'!A1:H5000`, 'UNFORMATTED_VALUE').catch(() => []),
-    foglio.leggi(`'${TAB_COORDINATE}'!A1:G3000`, 'UNFORMATTED_VALUE').catch(() => []),
-  ]);
+  const [{ griglia: gl, mappa: ml }, legami] = await Promise.all([leggiLead(foglio), leggiLegamiContatto(foglio)]);
   const parole = (s) => normalizza(s).split(' ').sort().join(' ');
   const scritture = [];
   const fatti = [];
@@ -2427,30 +2529,10 @@ export async function rinominaContatti(foglio, { cambi = [], prova = false }, { 
     if (!nuovo || nuovo === nome || parole(nuovo) !== parole(nome)) { saltati.push({ nome, perche: 'non sono le stesse parole' }); continue; }
     let r;
     try { r = trovaLead(gl, ml, { data, nome }); } catch { saltati.push({ nome, perche: 'non c\'è più, o è già girato' }); continue; }
-    const vecchia = chiaveContatto({ data, nome });
-    const nuova = chiaveContatto({ data, nome: nuovo });
     scritture.push({ range: `'${TAB_LEAD}'!${lettera(ml.col.NOME)}${r}`, values: [[nuovo]] });
-    let tappe = 0;
-    giri.forEach((x, i) => {
-      if (i === 0 || testo((x || [])[G.Contatto]) !== vecchia) return;
-      tappe++;
-      scritture.push({ range: `'${TAB_GIRI}'!G${i + 1}`, values: [[nuova]] });
-      if (normalizza(x[G.Nome]) === normalizza(nome)) scritture.push({ range: `'${TAB_GIRI}'!H${i + 1}`, values: [[nuovo]] });
-    });
-    let nFoto = 0;
-    foto.forEach((x, i) => {
-      if (i === 0 || testo((x || [])[F.Contatto]) !== vecchia) return;
-      nFoto++;
-      scritture.push({ range: `'${TAB_FOTO}'!H${i + 1}`, values: [[nuova]] });
-      if (normalizza(x[F.Cliente]) === normalizza(nome)) scritture.push({ range: `'${TAB_FOTO}'!C${i + 1}`, values: [[nuovo]] });
-    });
-    let posizioni = 0;
-    coord.forEach((x, i) => {
-      if (i === 0 || testo((x || [])[6]) !== vecchia) return;
-      posizioni++;
-      scritture.push({ range: `'${TAB_COORDINATE}'!G${i + 1}`, values: [[nuova]] });
-    });
-    fatti.push({ nome, nuovo, riga: r, tappe, foto: nFoto, posizioni });
+    const { scritture: legate, ...conti } = scrittureNomeContatto({ data, nome, nuovo }, legami);
+    scritture.push(...legate);
+    fatti.push({ nome, nuovo, riga: r, ...conti });
   }
   if (!prova && scritture.length) await foglio.scrivi(scritture, 'RAW');
   return { ok: true, prova, scritto: !prova && scritture.length > 0, celle: scritture.length, fatti, saltati };
@@ -2466,20 +2548,23 @@ export async function rinominaContatti(foglio, { cambi = [], prova = false }, { 
 // (WhatsApp/telefono)", chi chiama o scrive su WhatsApp dopo un annuncio (il
 // modulo del sito lo sa da solo, le chiamate no: lo dice chi risponde).
 const PROVENIENZE = ['Meta / Facebook', 'Sito web', 'Annuncio Google (WhatsApp/telefono)', 'Passaparola'];
+// Gemello di problemaTelefono in public/gestione/app.js: fra 8 e 11 cifre per
+// numero, esteri esclusi. Un numero incompleto sfugge all'anti-doppioni (8 ott 2026).
+function controllaTelefono(telefono) {
+  for (const pezzo of testo(telefono).split(/[/,;]| - | e /i)) {
+    const p = pezzo.replace(/\s/g, '');
+    if (!/\d/.test(p) || /^(\+|00)(?!39)/.test(p)) continue;
+    const n = p.replace(/^(\+39|0039)/, '').replace(/\D/g, '').length;
+    if (n < 8 || n > 11) throw problema(`Il telefono sembra sbagliato: ha ${n} cifre. Un cellulare ne ha 10, un fisso di solito 9 o 10 col prefisso.`);
+  }
+}
 export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
   let nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200);
   const telefono = testo(dati.telefono).slice(0, 50);
   const email = testo(dati.email).slice(0, 200);
   if (!nome) throw problema('Scrivi almeno il nome.');
   if (!telefono && !email) throw problema('Scrivi il telefono (o l\'email), se no non lo puoi richiamare.');
-  // Gemello di problemaTelefono in public/gestione/app.js: fra 8 e 11 cifre per
-  // numero, esteri esclusi. Un numero incompleto sfugge all'anti-doppioni (8 ott 2026).
-  for (const pezzo of telefono.split(/[/,;]| - | e /i)) {
-    const p = pezzo.replace(/\s/g, '');
-    if (!/\d/.test(p) || /^(\+|00)(?!39)/.test(p)) continue;
-    const n = p.replace(/^(\+39|0039)/, '').replace(/\D/g, '').length;
-    if (n < 8 || n > 11) throw problema(`Il telefono sembra sbagliato: ha ${n} cifre. Un cellulare ne ha 10, un fisso di solito 9 o 10 col prefisso.`);
-  }
+  controllaTelefono(telefono);
   // "COGNOME NOME" anche se scritto al contrario (29 ott 2026). Se i clienti
   // non si leggono, resta come è stato scritto.
   nome = cognomeDavanti(nome, await nomiDeiClienti(foglio).catch(() => []));
@@ -2550,6 +2635,69 @@ export async function notaLead(foglio, { riga, data, nome, nota, giorno }) {
   const nuova = [prima, aggiunta].filter(Boolean).join(' — ');
   await foglio.scrivi([{ range: `'${TAB_LEAD}'!${lettera(mappa.col.NOTE)}${r}`, values: [[nuova.slice(0, 5000)]] }], 'RAW');
   return { ok: true, note: nuova };
+}
+
+// I dati di un contatto corretti dall'app (3 nov 2026, Matteo, col permesso
+// «Modifica i dati dei contatti», che controlla gestione.mjs). Arrivano solo i
+// campi cambiati: nome, contatto (telefono e email, com'è scritto nel foglio),
+// provenienza, interesse. Col nome cambia anche la chiave che lo lega a tappe,
+// foto e posizione; col telefono, quello copiato nelle sue tappe.
+export async function modificaContatto(foglio, { riga, data, nome, campi = {} }) {
+  riga = parseInt(riga, 10);
+  const nuovoNome = 'nome' in campi ? testo(campi.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200) : testo(nome);
+  if (!nuovoNome) throw problema('Scrivi almeno il nome.');
+  const { griglia, mappa } = await leggiLead(foglio);
+  let r;
+  try {
+    r = trovaLead(griglia, mappa, { riga, data, nome });
+  } catch (err) {
+    // La stessa richiesta arrivata due volte: il nome è già quello nuovo.
+    if (nuovoNome === testo(nome)) throw err;
+    r = trovaLead(griglia, mappa, { riga, data, nome: nuovoNome });
+  }
+  const cella = (campo) => `'${TAB_LEAD}'!${lettera(mappa.col[campo])}${r}`;
+  const era = (campo) => testo((griglia[r - 1] || [])[mappa.col[campo] - 1]);
+  const scritture = [];
+  const cambi = [];
+  const scrivi = (campo, etichetta, v) => {
+    if (v === era(campo)) return;
+    scritture.push({ range: cella(campo), values: [[v]] });
+    cambi.push({ campo: etichetta, prima: era(campo), dopo: v });
+  };
+
+  let contatto = era('CONTATTO');
+  if ('contatto' in campi) {
+    contatto = testo(campi.contatto).replace(/\s+/g, ' ').slice(0, 200);
+    if (!contatto) throw problema('Scrivi il telefono (o l\'email), se no non lo puoi richiamare.');
+    if (contatto !== era('CONTATTO')) contatto.split('·').filter((p) => !p.includes('@')).forEach(controllaTelefono);
+    scrivi('CONTATTO', 'telefono o email', contatto);
+  }
+  if ('provenienza' in campi) {
+    const provenienza = testo(campi.provenienza);
+    if (provenienza !== era('PROVENIENZA') && !PROVENIENZE.includes(provenienza)) throw problema('Scegli come ci ha conosciuto fra quelli dell\'elenco.');
+    scrivi('PROVENIENZA', 'provenienza', provenienza);
+  }
+  if ('interesse' in campi) scrivi('INTERESSE', 'interesse', testo(campi.interesse).slice(0, 100));
+
+  const dataLead = era('DATA');
+  const cambiaNome = nuovoNome !== era('NOME');
+  const cambiaTelefono = contatto !== era('CONTATTO');
+  if (cambiaNome || cambiaTelefono) {
+    const legami = await leggiLegamiContatto(foglio);
+    if (cambiaTelefono) {
+      const chiave = chiaveContatto({ data: dataLead, nome: era('NOME') });
+      legami.giri.forEach((x, i) => {
+        if (i === 0 || testo((x || [])[G.Contatto]) !== chiave || testo(x[G.Telefono]) !== era('CONTATTO')) return;
+        scritture.push({ range: `'${TAB_GIRI}'!${lettera(G.Telefono + 1)}${i + 1}`, values: [[contatto]] });
+      });
+    }
+    if (cambiaNome) {
+      scritture.push(...scrittureNomeContatto({ data: dataLead, nome: era('NOME'), nuovo: nuovoNome }, legami).scritture);
+      scrivi('NOME', 'nome', nuovoNome);
+    }
+  }
+  if (scritture.length) await foglio.scrivi(scritture, 'RAW');
+  return { ok: true, nome: nuovoNome, data: dataLead, cambi };
 }
 
 // ---------------------------------------------------------------------------

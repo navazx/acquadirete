@@ -20,7 +20,7 @@ import { getStore } from '@netlify/blobs';
 import {
   leggiTutto, segnaFatta, annullaFatta, segnaInstallazione, annullaInstallazione, rimandaManutenzione, impostaAvviso, spostaCliente, importaPersi,
   nuovoCliente, modificaCliente,
-  nuovoLead, cambiaStatoLead, notaLead, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
+  nuovoLead, cambiaStatoLead, notaLead, modificaContatto, salvaPosizioni, cambiaPagamento, assegnaManutenzione, salvaTappa, togliTappa,
   salvaArticolo, muoviMagazzino, annullaMagazzino, importaMagazzino, vistePerCategoria, creaFoglioGoogle,
   cancellaIntervento, annullaCancellazione, cancellaLavoro, annullaCancellaLavoro, leggiAccessi, accessiDiBase, salvaAccessi, PERMESSI, TITOLARE,
   cambiaMateriali, segnaRiparazione, annullaRiparazione, aggiornaMagazzino,
@@ -96,6 +96,7 @@ const AZIONI = {
   nuovoLead,
   stato: cambiaStatoLead,
   nota: notaLead,
+  modificaContatto, // nome, telefono, provenienza e interesse di un contatto (3 nov 2026)
   posizioni: salvaPosizioni,
   pagamento: cambiaPagamento,
   assegna: assegnaManutenzione, // il giro del 19 ott, per i telefoni con l'app vecchia
@@ -134,6 +135,9 @@ const PERMESSO_PER = {
   magazzino: (d) => (d.causale === 'lavoro' ? null : 'modificaMagazzino'),
   articolo: () => 'modificaMagazzino',
   notaBacheca: () => 'cruscotto',
+  // Il resto dei dati del cliente lo cambia chiunque, il nome no (3 nov 2026).
+  modifica: (d) => (d.campi && 'nome' in d.campi ? 'cambiaNomi' : null),
+  modificaContatto: () => 'modificaContatti',
 };
 // Quelle per cui servono gli Accessi: i permessi, chi ha un giro (le tappe),
 // e l'annulla di un movimento (lo decide annullaMagazzino: dipende da cos'era).
