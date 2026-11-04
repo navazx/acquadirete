@@ -40,6 +40,20 @@ export async function listaSchede(token) {
   return meta.sheets.map((s) => s.properties.title);
 }
 
+/** Le schede coi loro grafici, per cambiare il titolo di un grafico. */
+export async function leggiGrafici(token) {
+  const meta = await call(token, '?fields=sheets(properties.title,charts(chartId,spec))');
+  return meta.sheets;
+}
+
+/** Cambia la definizione di un grafico. Vuole la definizione intera. */
+export async function cambiaGrafico(token, chartId, spec) {
+  await call(token, ':batchUpdate', {
+    method: 'POST',
+    body: JSON.stringify({ requests: [{ updateChartSpec: { chartId, spec } }] }),
+  });
+}
+
 /** Valori di un intervallo, come matrice di righe (righe corte NON riempite). */
 export async function leggi(token, range) {
   const data = await call(token, `/values/${encodeURIComponent(range)}`);

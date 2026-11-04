@@ -148,7 +148,7 @@ async function main() {
     preparato: new Date().toISOString(),
     avvertenze: [
       'Circa 15 contatti al mese sono pochi: una differenza di 3-4 contatti fra due mesi e\' rumore, non un segnale.',
-      'I clienti "Sito web" comprendono anche chi arriva dalla ricerca gratuita: il costo per cliente di Google Ads che ne esce e\' un minimo.',
+      'Il costo per cliente di Google Ads conta solo chi arriva da un annuncio, e si distingue dal 27 settembre 2026: e\' un massimo, perche\' chi clicca e telefona senza dirlo non si vede, e sui 90 giorni contiene anche spesa di prima di quel giorno. I clienti "Sito web" senza il segno dell\'annuncio sono ricerca gratuita.',
       'Le colonne di spesa e di costo per cliente sono riservate: non vanno scritte nel repo, che e\' pubblico.',
     ],
     settimane,

@@ -26,7 +26,7 @@
 import { readFileSync } from 'node:fs';
 import { getAccessToken, query, SITE_URL, ymd } from './lib/gsc.mjs';
 import { query as queryAds, euro } from './lib/ads.mjs';
-import { sheetsToken, leggi, scrivi, creaSchedaSeManca, dataItaliana } from './lib/gestionale.mjs';
+import { sheetsToken, leggi, scrivi, creaSchedaSeManca, dataItaliana, leggiGrafici, cambiaGrafico } from './lib/gestionale.mjs';
 import { lasciaNota } from './lib/bacheca.mjs';
 
 const SCHEDA = 'Cruscotto';
@@ -39,15 +39,57 @@ const INTESTAZIONI = [
   'Clic 28gg', 'Impressioni 28gg', 'Pos. media 28gg', 'GSC al',
   'Articoli blog',
   'Spesa Google (sett.)', 'Spesa Meta (sett.)',
-  'Clienti da Meta (tot.)', "Clienti dal sito dall'8/7 (tot.)",
+  'Clienti da Meta (tot.)', 'Clienti da annuncio dal 27/9 (tot.)',
   'Note',
 ];
 
-// La campagna Google Ads e' partita l'8 luglio 2026: i clienti "Sito web"
-// arrivati prima non li ha portati la pubblicita', e non entrano nel costo.
-// Anche dopo, "Sito web" comprende chi arriva dalla ricerca gratuita: il costo
-// per cliente Google che ne esce e' un MINIMO, non il valore esatto.
-const INIZIO_GOOGLE_ADS = new Date(2026, 6, 8);
+// Il costo per cliente di Google Ads conta solo i clienti arrivati da un annuncio,
+// non quelli gratis dalla ricerca (Matteo, 4 nov 2026). Si distinguono dal 27 set
+// 2026, quando il modulo ha cominciato a scriverlo nelle Note, e dal 21 ott c'e'
+// anche la Provenienza "Annuncio Google". E' un MASSIMO: chi clicca l'annuncio e
+// telefona senza dirlo non si vede. Stesso conto del cruscotto nell'app.
+const TRACCIATO_DAL = new Date(2026, 8, 27);
+const PRIMO_LUNEDI_TRACCIATO = new Date(2026, 8, 28);
+const daAnnuncio = (l) => l.provenienza.startsWith('Annuncio Google') || /annuncio google/i.test(l.note);
+const clientiDaAnnuncio = (clienti, fine) => clienti
+  .filter((l) => daAnnuncio(l) && l.data && l.data >= TRACCIATO_DAL && l.data <= fine).length;
+const fineDelGiorno = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+
+/**
+ * Tiene in pari la scheda col conto qui sopra: colonna Q, costo per cliente
+ * Google (colonna W), riquadro in alto e titolo del grafico. Rifatta non cambia
+ * niente. Non deve mai fermare la riga della settimana.
+ */
+async function allineaCostoGoogle(token, clienti, intestazione) {
+  const titoli = intestazione + 1; // numero di riga, da 1
+  const T = titoli + 1;
+  const settimane = await leggi(token, `${SCHEDA}!A${T}:C${T + 343}`);
+  const primo = settimane.findIndex((r) => (dataItaliana(r[1]) || 0) >= PRIMO_LUNEDI_TRACCIATO);
+  if (primo < 0) return;
+  const R = T + primo;
+  await scrivi(token, `${SCHEDA}!Q${T}:Q${T + settimane.length - 1}`, settimane.map((r, i) => {
+    const fine = dataItaliana(r[2]);
+    return [i < primo || !fine ? '' : clientiDaAnnuncio(clienti, fineDelGiorno(fine))];
+  }));
+  const col = (c) => `${c}${T}:${c}400`;
+  const ultima = (c) => `INDEX(${col(c)};COUNTA(${col('A')}))`;
+  const cumulata = `SUMIF(ROW(${col('N')});"<="&ROW(${col('N')});${col('N')})`;
+  const prima = primo ? `-SUM(N${T}:N${R - 1})` : '';
+  await scrivi(token, `${SCHEDA}!Q${titoli}`, [['Clienti da annuncio dal 27/9 (totale)']]);
+  await scrivi(token, `${SCHEDA}!W${titoli}`, [['Costo per cliente Google (al massimo, dal 27/9)']]);
+  await scrivi(token, `${SCHEDA}!W${T}`, [[`=ARRAYFORMULA(IF(${col('A')}="";"";IF(ROW(${col('A')})<${R};"";IFERROR((${cumulata}${prima})/${col('Q')};""))))`]], 'USER_ENTERED');
+  await scrivi(token, `${SCHEDA}!O4:O6`, [
+    ['Costo per cliente Google Ads'],
+    [`=IFERROR(${ultima('W')};"")`],
+    [`="al massimo, dal 27 settembre · Meta "&IFERROR(FIXED(${ultima('V')};0);"–")&" €"`],
+  ], 'USER_ENTERED');
+  const scheda = (await leggiGrafici(token)).find((s) => s.properties.title === SCHEDA);
+  const grafico = (scheda?.charts || []).find((c) => /un minimo/.test(c.spec?.title || ''));
+  if (grafico) {
+    await cambiaGrafico(token, grafico.chartId, { ...grafico.spec, title: 'Costo per cliente (€) — Google dal 27 settembre, al massimo' });
+  }
+  console.log(`Costo per cliente Google allineato, dalla riga ${R}.`);
+}
 
 const ymdLocale = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -154,7 +196,7 @@ async function main() {
 
   const righeLead = await leggi(token, 'Lead-Contatti!A4:H1000');
   const lead = righeLead.slice(1)
-    .map((r) => ({ data: dataItaliana(r[0]), provenienza: (r[3] || '').trim(), stato: (r[5] || '').trim(), nome: (r[1] || '').trim() }))
+    .map((r) => ({ data: dataItaliana(r[0]), provenienza: (r[3] || '').trim(), stato: (r[5] || '').trim(), nome: (r[1] || '').trim(), note: r[6] || '' }))
     .filter((l) => l.nome);
 
   const dellaSettimana = lead.filter((l) => l.data && l.data >= lunedi && l.data <= domenica);
@@ -186,8 +228,7 @@ async function main() {
     google,
     meta,
     clienti.filter(daMeta).length,
-    // chi non ha data sul foglio si conta: e' successo una volta (Vannucci), ed era un cliente vero
-    clienti.filter((l) => dalSito(l) && (!l.data || l.data >= INIZIO_GOOGLE_ADS)).length,
+    clientiDaAnnuncio(clienti, fineDelGiorno(domenica)),
     '',
   ];
 
@@ -203,6 +244,11 @@ async function main() {
   const colonnaA = (await leggi(token, `${SCHEDA}!A1:A1000`)).map((r) => String(r[0] ?? '').trim());
   const intestazione = colonnaA.indexOf('Settimana');
   if (intestazione === -1) throw new Error(`Nella scheda "${SCHEDA}" non trovo la cella "Settimana" in colonna A.`);
+  try {
+    await allineaCostoGoogle(token, clienti, intestazione);
+  } catch (e) {
+    console.log(`Costo per cliente Google non allineato: ${e.message}`);
+  }
   const settimane = colonnaA.slice(intestazione + 1);
 
   // Una riga per settimana: se il lunedi' il giro parte due volte, non raddoppia.

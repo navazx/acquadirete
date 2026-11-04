@@ -120,8 +120,11 @@ da guadagnare con meno lavoro. Regole:
   grosse (zero contro dieci), non sulle virgole.
 - **Si giudica sul costo per CLIENTE, non per contatto**: un canale che porta
   tanti contatti e nessun cliente costa di più, non di meno.
-- **I clienti "Sito web" comprendono la ricerca gratuita**: il costo per cliente
-  di Google Ads che ne esce è un minimo, dillo quando lo usi.
+- **Il costo per cliente di Google Ads conta solo chi arriva da un annuncio**, dal
+  27 set 2026 (Matteo, 4 nov 2026): i clienti "Sito web" senza quel segno sono ricerca
+  gratuita. È un massimo, chi clicca e telefona senza dirlo non si vede: dillo quando
+  lo usi. Sui 90 giorni dentro c'è anche spesa di prima del 27 settembre, quindi
+  sembra più alto del vero.
 - **Il tetto del costo per cliente** sta in `valoreCliente` (riservato: margine
   minimo di un cliente e tetto deciso da Matteo il 16 ott 2026). Un canale che
   porta clienti sotto il tetto merita più spazio, uno sopra il tetto o senza
