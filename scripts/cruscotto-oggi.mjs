@@ -33,6 +33,10 @@ const prova = process.argv.includes('--prova');
 // Ads l'8 luglio 2026 (vedi scripts/cruscotto.mjs).
 const META_DAL = '2026-06-28';
 const GOOGLE_DAL = '2026-07-08';
+// Dal 27 set 2026 il modulo del sito scrive nelle Note chi arriva da un annuncio: prima
+// i clienti "Sito web" pagati e quelli gratis non si distinguono, quindi il costo per
+// cliente di Google Ads si conta solo da qui (Matteo, 4 nov 2026).
+const GOOGLE_TRACCIATO_DAL = '2026-09-27';
 
 const ymdLocale = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -54,7 +58,7 @@ async function contatti(token) {
   const righe = await leggi(token, 'Lead-Contatti!A4:H1000');
   const [testa, ...dati] = righe;
   const col = (nome) => testa.indexOf(nome);
-  const c = { data: col('Data'), nome: col('Nome'), prov: col('Provenienza'), stato: col('Stato'), dataStato: col('Data stato') };
+  const c = { data: col('Data'), nome: col('Nome'), prov: col('Provenienza'), stato: col('Stato'), note: col('Note'), dataStato: col('Data stato') };
   return dati
     .map((r) => {
       const quando = dataItaliana(r[c.data]);
@@ -65,6 +69,8 @@ async function contatti(token) {
         d: ymdLocale(quando),
         src: fonte(r[c.prov] || ''),
         stato: (r[c.stato] || '').trim() || 'Nuovo',
+        // delle note esce solo questo: se è arrivato da un annuncio Google
+        ...(/annuncio google/i.test(r[c.note] || '') ? { ann: 1 } : {}),
         ...(statoDal ? { dal: ymdLocale(statoDal) } : {}),
       };
     })
@@ -83,8 +89,18 @@ async function clientiNelGestionale(token) {
 
 async function spesaGoogle(fine) {
   try {
-    const righe = await queryAds(`SELECT metrics.cost_micros FROM customer WHERE segments.date BETWEEN '${GOOGLE_DAL}' AND '${ymdLocale(fine)}'`);
-    return euro(righe.reduce((s, r) => s + Number(r.metrics?.costMicros || 0), 0));
+    const somma = async (dal, campi) => {
+      const righe = await queryAds(`SELECT ${campi} FROM customer WHERE segments.date BETWEEN '${dal}' AND '${ymdLocale(fine)}'`);
+      return {
+        spesa: euro(righe.reduce((s, r) => s + Number(r.metrics?.costMicros || 0), 0)),
+        conversioni: righe.reduce((s, r) => s + Number(r.metrics?.conversions || 0), 0),
+      };
+    };
+    const [tutta, tracciata] = await Promise.all([
+      somma(GOOGLE_DAL, 'metrics.cost_micros'),
+      somma(GOOGLE_TRACCIATO_DAL, 'metrics.cost_micros, metrics.conversions'),
+    ]);
+    return { spesa: tutta.spesa, tracciata: tracciata.spesa, conversioni: Math.round(tracciata.conversioni * 10) / 10 };
   } catch (e) {
     console.log(`Spesa Google non letta: ${e.message}`);
     return null;
@@ -236,7 +252,16 @@ async function main() {
   const dati = {
     aggiornato: adesso.toISOString(),
     lead,
-    spesa: { google, meta, googleDal: GOOGLE_DAL, metaDal: META_DAL, al: ymdLocale(ieri) },
+    spesa: {
+      google: google?.spesa ?? null,
+      googleTracciata: google?.tracciata ?? null,
+      conversioni: google?.conversioni ?? null,
+      tracciatoDal: GOOGLE_TRACCIATO_DAL,
+      meta,
+      googleDal: GOOGLE_DAL,
+      metaDal: META_DAL,
+      al: ymdLocale(ieri),
+    },
     seo,
     sito: { recensioni: recensioni(), clienti, articoli: articoli() },
     prove: prossimeProve(readFileSync('agenti/prove.md', 'utf8')),
