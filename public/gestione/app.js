@@ -595,7 +595,7 @@
           <small>${(() => {
             const riordinare = articoliMag().filter(daRiordinare).length;
             const ricontare = articoliMag().filter((a) => a.quantita < 0).length;
-            return [riordinare && `<span class="n-rosso">${riordinare} da riordinare</span>`, ricontare && `<span class="n-rosso">${ricontare} da ricontare</span>`]
+            return [riordinare && `<span class="n-giallo">${riordinare} da riordinare</span>`, ricontare && `<span class="n-rosso">${ricontare} da ricontare</span>`]
               .filter(Boolean).join(' · ') || `${articoliMag().length} articoli`;
           })()}</small></span>
         </button>` : ''}
@@ -4264,7 +4264,8 @@
   const categoriaDi = (a) => (categorieMag().includes(a.categoria) ? a.categoria : 'Altro');
   // Il colore della categoria (lo stesso del foglio): una classe «cat-impianti»…
   const classeCategoria = (cat) => `cat-${normalizza(cat).replace(/ /g, '-')}`;
-  const coloreQuantita = (a) => (a.quantita < 0 || disponibile(a) < 0 ? 'rosso' : a.quantita === 0 ? 'grigio' : daRiordinare(a) ? 'arancio' : '');
+  // 4 nov 2026, Matteo: «"finiti" deve essere rosso, "da riordinare" fallo giallo».
+  const coloreQuantita = (a) => (a.quantita <= 0 || disponibile(a) < 0 ? 'rosso' : daRiordinare(a) ? 'giallo' : '');
   const NOMI_NUMERI = { inConsegna: 'in consegna', daMontare: 'da montare' };
   // I movimenti salvati insieme hanno lo stesso Id col numero in fondo: «t…-1», «t…-2».
   const lotto = (x) => String(x.id).replace(/-\d+$/, '');
@@ -4599,7 +4600,7 @@
       ${numeri ? `<div class="tre-numeri">
         <button type="button" id="a-n-consegna"${cambia ? '' : ' disabled'}><b>${numeroIt(a.inConsegna || 0)}</b><small>in consegna</small></button>
         <button type="button" id="a-n-montare"${cambia ? '' : ' disabled'}><b>${numeroIt(a.daMontare || 0)}</b><small>da montare</small></button>
-        <div class="totale ${tot < 0 ? 'rosso' : daRiordinare(a) ? 'arancio' : ''}"><b>${numeroIt(tot)}</b><small>${tot < 0 ? 'da ordinare!' : daRiordinare(a) ? 'da riordinare' : 'totale'}</small></div>
+        <div class="totale ${tot < 0 ? 'rosso' : daRiordinare(a) ? 'giallo' : ''}"><b>${numeroIt(tot)}</b><small>${tot < 0 ? 'da ordinare!' : daRiordinare(a) ? 'da riordinare' : 'totale'}</small></div>
       </div>
       <p class="spiega">Totale = in magazzino + in consegna − da montare.${cambia ? ' Tocca «in consegna» o «da montare» per correggerli.' : ''}</p>` : ''}
       <p class="spiega">${esc([a.scorta != null ? `Scorta minima: ${numeroIt(a.scorta)}` : 'Scorta minima non segnata', a.costo != null ? `costo € ${numeroIt(a.costo)}` : '', a.note].filter(Boolean).join(' · '))}</p>
@@ -4751,7 +4752,7 @@
     const tot = disponibile(a);
     const etichetta = a.quantita < 0 ? '<span class="etichetta rosso">Sotto zero: ricontali</span>'
       : tot < 0 ? '<span class="etichetta rosso">Da ordinare: venduti più di quelli che hai</span>'
-        : daRiordinare(a) ? '<span class="etichetta arancio">Da riordinare</span>' : '';
+        : daRiordinare(a) ? '<span class="etichetta giallo">Da riordinare</span>' : '';
     const attesa = [a.inConsegna > 0 && `${numeroIt(a.inConsegna)} in consegna`, a.daMontare > 0 && `${numeroIt(a.daMontare)} da montare`].filter(Boolean);
     return `<button class="voce articolo ${classeCategoria(categoriaDi(a))}" type="button" data-articolo="${esc(a.codice)}">
       <span class="articolo-testo"><b>${esc(a.descrizione)}</b>
@@ -4780,11 +4781,11 @@
     const base = gruppi[filtro];
     const pezzi = tutti.reduce((s, a) => s + Math.max(0, a.quantita), 0);
     const valore = tutti.reduce((s, a) => s + Math.max(0, a.quantita) * (a.costo || 0), 0);
-    const pillola = (k, t, rossa = false) => `<button class="pillola${rossa && gruppi[k].length ? ' pillola-rossa' : ''}" data-filtro="${k}" aria-pressed="${filtro === k}">${t} (${gruppi[k].length})</button>`;
+    const pillola = (k, t, tinta = '') => `<button class="pillola${tinta && gruppi[k].length ? ` pillola-${tinta}` : ''}" data-filtro="${k}" aria-pressed="${filtro === k}">${t} (${gruppi[k].length})</button>`;
     schermo.innerHTML = `
       <div class="cerca"><input id="cerca-mag" type="search" autocomplete="off" placeholder="Cerca un articolo" value="${esc(stato.q || '')}"></div>
       <div class="pillole">
-        ${pillola('tutti', 'Tutti')}${pillola('riordinare', 'Da riordinare', true)}${pillola('finiti', 'Finiti')}
+        ${pillola('tutti', 'Tutti')}${pillola('riordinare', 'Da riordinare', 'gialla')}${pillola('finiti', 'Finiti', 'rossa')}
         ${numeri ? pillola('consegna', 'In consegna') + pillola('montare', 'Da montare') : ''}
       </div>
       <div class="pillole pillole-categorie">

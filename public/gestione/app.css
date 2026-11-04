@@ -14,6 +14,9 @@
   --rosso-chiaro: #fde7e5;
   --arancio: #8a5300;
   --arancio-chiaro: #fff1d6;
+  --giallo: #5f4c00;
+  --giallo-chiaro: #fff3b0;
+  --giallo-pieno: #f2c200;
   --verde: #1b7a3d;
   --verde-chiaro: #e3f5e8;
   --ombra: 0 1px 2px rgba(16, 32, 47, .08), 0 2px 8px rgba(16, 32, 47, .06);
@@ -72,6 +75,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .tessera b { display: block; font-size: 21px; }
 .tessera small { display: block; color: var(--grigio); font-size: 16px; margin-top: 2px; }
 .tessera small .n-rosso { color: var(--rosso); font-weight: 700; }
+.tessera small .n-giallo { padding: 0 6px; border-radius: 6px; background: var(--giallo-chiaro); color: var(--giallo); font-weight: 700; }
 .aggiornato { margin: 20px 0 0; text-align: center; color: var(--grigio); font-size: 15px; }
 .aggiornato button { background: none; border: 0; color: var(--blu); font-weight: 600; text-decoration: underline; padding: 8px; }
 
@@ -89,6 +93,8 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .pillola[aria-pressed="true"] { background: var(--blu); border-color: var(--blu); color: #fff; }
 .pillola-rossa { border-color: var(--rosso); color: var(--rosso); }
 .pillola-rossa[aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
+.pillola-gialla { border-color: var(--giallo-pieno); background: var(--giallo-chiaro); color: var(--giallo); }
+.pillola-gialla[aria-pressed="true"] { background: var(--giallo-pieno); border-color: var(--giallo-pieno); color: #2e2500; }
 
 /* ---- Liste ---- */
 .gruppo { margin: 18px 0 8px; font-size: 17px; font-weight: 700; color: var(--grigio); text-transform: uppercase; letter-spacing: .03em; }
@@ -111,6 +117,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .etichetta { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 15px; font-weight: 700; background: var(--blu-chiaro); color: var(--blu-scuro); }
 .etichetta.rosso { background: var(--rosso-chiaro); color: var(--rosso); }
 .etichetta.arancio { background: var(--arancio-chiaro); color: var(--arancio); }
+.etichetta.giallo { background: var(--giallo-chiaro); color: var(--giallo); }
 .etichetta.verde { background: var(--verde-chiaro); color: var(--verde); }
 .etichetta.grigio { background: #edf0f3; color: var(--grigio); }
 .etichetta.blu { background: var(--blu-chiaro); color: var(--blu-scuro); }
@@ -399,8 +406,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .pezzi { flex: none; display: grid; place-items: center; min-width: 66px; padding: 6px 8px; border-radius: 14px; background: var(--blu-chiaro); color: var(--blu-scuro); line-height: 1.1; text-align: center; }
 .voce .pezzi b { font-size: 24px; }
 .pezzi small { font-size: 13px; font-weight: 600; }
-.pezzi.arancio, .quanti-grande.arancio { background: var(--arancio-chiaro); color: var(--arancio); }
-.pezzi.grigio, .quanti-grande.grigio { background: #edf0f3; color: var(--grigio); }
+.pezzi.giallo, .quanti-grande.giallo { background: var(--giallo-chiaro); color: var(--giallo); }
 .pezzi.rosso, .quanti-grande.rosso { background: var(--rosso-chiaro); color: var(--rosso); }
 .azioni-magazzino { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 12px; }
 .azioni-magazzino .btn { min-height: 56px; padding: 8px 10px; font-size: 17px; gap: 6px; }
@@ -466,7 +472,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .tre-numeri b { font-size: 24px; line-height: 1; }
 .tre-numeri small { font-size: 14px; color: var(--grigio); font-weight: 600; }
 .tre-numeri .totale { background: var(--blu-chiaro); color: var(--blu-scuro); }
-.tre-numeri .totale.arancio { background: var(--arancio-chiaro); color: var(--arancio); }
+.tre-numeri .totale.giallo { background: var(--giallo-chiaro); color: var(--giallo); }
 .tre-numeri .totale.rosso { background: var(--rosso-chiaro); color: var(--rosso); }
 
 /* ---- Foto dei clienti (26 ott 2026) ---- */

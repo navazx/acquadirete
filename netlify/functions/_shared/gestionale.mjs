@@ -3519,9 +3519,9 @@ function vistePiu(pos) {
   return v;
 }
 const rgb = (h) => ({ red: parseInt(h.slice(1, 3), 16) / 255, green: parseInt(h.slice(3, 5), 16) / 255, blue: parseInt(h.slice(5, 7), 16) / 255 });
-// I colori: sui numeri (Quantità…Valore) sotto zero rosso (anche un totale
-// sotto zero: si è venduto più di quel che c'è e arriva, va ordinato
-// subito), da riordinare arancio, finito grigio; e su Codice…Codice
+// I colori: sui numeri (Quantità…Valore) finito o sotto zero rosso (anche un
+// totale sotto zero: si è venduto più di quel che c'è e arriva, va ordinato
+// subito), da riordinare giallo (4 nov 2026, Matteo); e su Codice…Codice
 // fornitore il colore della categoria (21 ott 2026: «evidenziare con colori
 // diversi impianti, miscelatori, filtri così da sapere subito dove cercare»).
 function regoleMagazzino(id, pos) {
@@ -3532,9 +3532,8 @@ function regoleMagazzino(id, pos) {
   const q = `$${L(pos.quantita)}2`;
   const t = `$${L(suTotale(pos))}2`;
   const numeri = zona(pos.quantita, pos.ultima + 1);
-  regola(numeri, `=(${a})*((${q}<0)+(${t}<0))`, { backgroundColor: rgb('#fde7e5'), textFormat: { foregroundColor: rgb('#b3261e') } });
-  if (pos.scorta >= 0) regola(numeri, `=(${a})*($${L(pos.scorta)}2<>"")*(${t}<$${L(pos.scorta)}2)`, { backgroundColor: rgb('#fff1d6') });
-  regola(numeri, `=(${a})*(${q}=0)`, { textFormat: { foregroundColor: rgb('#8a97a5') } });
+  regola(numeri, `=(${a})*((${q}<=0)+(${t}<0))`, { backgroundColor: rgb('#fde7e5'), textFormat: { foregroundColor: rgb('#b3261e') } });
+  if (pos.scorta >= 0) regola(numeri, `=(${a})*($${L(pos.scorta)}2<>"")*(${t}<$${L(pos.scorta)}2)`, { backgroundColor: rgb('#fff3b0') });
   if (pos.categoria >= 0) {
     for (const [c, colore] of Object.entries(COLORI_CATEGORIE)) regola(zona(0, pos.quantita), `=$${L(pos.categoria)}2="${c}"`, { backgroundColor: rgb(colore) });
   }
