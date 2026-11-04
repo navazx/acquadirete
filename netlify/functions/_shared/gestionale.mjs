@@ -1557,6 +1557,30 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   };
   const { griglia, tappe } = await leggiGiri(foglio);
   const prima = tappe.find((t) => t.id === id) || null;
+  // Un contatto già legato resta, anche se la tappa è stata cambiata senza
+  // campo prima che arrivasse il suo codice "data|nome".
+  if (prima && !codice && !tappa.contatto && prima.contatto) tappa.contatto = prima.contatto;
+  // Un sopralluogo da «Un altro indirizzo» (4 nov 2026, Matteo: «si fallo») crea
+  // il contatto, così ha una scheda per foto e posizione e può diventare
+  // cliente. Stessi controlli e stesso anti-doppioni di un contatto nuovo. Nasce
+  // «Contattato»: se c'è un sopralluogo fissato, con lui si è già parlato. Prima
+  // il contatto, poi la tappa: arrivata due volte, nuovoLead non lo riscrive.
+  let contattoNuovo = null;
+  if (dati.creaContatto && lavoro === 'Sopralluogo' && !codice && !tappa.contatto) {
+    const email = (testo(dati.telefono).match(/\S+@\S+/) || [''])[0];
+    const telefono = testo(dati.telefono).replace(email, '').replace(/\s+/g, ' ').trim();
+    const note = tappa.indirizzo ? `Indirizzo: ${tappa.indirizzo}` : '';
+    const scritto = await nuovoLead(foglio, { nome, telefono, email, citta: tappa.citta, note }, { chi: chiScrive, stato: 'Contattato' });
+    let quale = { data: scritto.data, nome: scritto.nome };
+    if (scritto.doppione) {
+      const { griglia: gl, mappa: ml } = await leggiLead(foglio);
+      const r = gl[scritto.riga - 1] || [];
+      quale = { data: testo(r[ml.col.DATA - 1]), nome: testo(r[ml.col.NOME - 1]) };
+    }
+    tappa.contatto = chiaveContatto(quale);
+    tappa.nome = quale.nome;
+    contattoNuovo = { ...quale, doppione: scritto.doppione };
+  }
   // La scheda nata con meno colonne: le intestazioni che mancano, con l'aspetto delle altre.
   if (griglia && griglia.length && (griglia[0] || []).length < INTESTAZIONI_GIRI.length) {
     for (const [i, h] of INTESTAZIONI_GIRI.entries()) {
@@ -1573,7 +1597,7 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   }
   // La tappa vecchia di "Chi ci va" ora è una riga: la colonna si svuota.
   if (id.startsWith('col-') && codice) await togliDaColonna(foglio, codice).catch((err) => console.error('Chi ci va non svuotata:', err));
-  return { ok: true, tappa, annulla: prima ? { ...prima, riga: undefined } : { id, togli: true } };
+  return { ok: true, tappa, contattoNuovo, annulla: prima ? { ...prima, riga: undefined } : { id, togli: true } };
 }
 
 // Toglie una tappa dal giro (la riga si svuota). L'annulla la rimette uguale.
@@ -2558,7 +2582,7 @@ function controllaTelefono(telefono) {
     if (n < 8 || n > 11) throw problema(`Il telefono sembra sbagliato: ha ${n} cifre. Un cellulare ne ha 10, un fisso di solito 9 o 10 col prefisso.`);
   }
 }
-export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
+export async function nuovoLead(foglio, dati, { chi = 'app', stato = 'Da richiamare' } = {}) {
   let nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 200);
   const telefono = testo(dati.telefono).slice(0, 50);
   const email = testo(dati.email).slice(0, 200);
@@ -2611,7 +2635,7 @@ export async function nuovoLead(foglio, dati, { chi = 'app' } = {}) {
     // da scegliere poi nel foglio, invece di finire su una voce sbagliata.
     PROVENIENZE.includes(dati.provenienza) ? dati.provenienza : '',
     testo(dati.interesse).slice(0, 100),
-    'Da richiamare',
+    stato,
     note,
   ];
   const esito = await foglio.accodaLead(riga, { telefono, email });

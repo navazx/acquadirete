@@ -1180,17 +1180,22 @@
     try {
       const { r, voce } = await manda('tappa', t, testo);
       if (r) { APPLICA.tappa(dati, r.tappa); salvaDati(); }
+      // Il sopralluogo ha creato il contatto: si rilegge, così la sua scheda si apre subito.
+      const creato = r && r.contattoNuovo;
+      if (creato) await carica().catch(() => {});
       disegna(history.state);
       const inst = installazione ? await mettiInstallazione(installazione) : null;
       if (inst) disegna(history.state);
       const indietro = () => {
-        if (r.annulla && r.annulla.togli) return togliLaTappa(r.tappa, 'Annullato.');
+        if (r.annulla && r.annulla.togli) return togliLaTappa(r.tappa, creato && !creato.doppione ? 'Annullato. Il contatto resta fra i contatti.' : 'Annullato.');
         return salvaLaTappa({ ...(prima || r.annulla) }, 'Annullato.');
       };
       const annullaTappa = voce ? () => annullaInCoda(voce, () => { dati.tappe = fotoTappe; }) : indietro;
       const avvisa = (mov) => {
         if (mov) disegna(history.state);
-        messaggio(testo + (inst ? ` · ${inst.testo}` : '') + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+        // Il nome come l'ha scritto il motore, col cognome davanti.
+        const detto = creato ? `${testo.replace(t.nome, creato.nome)} · ${creato.doppione ? 'era già fra i contatti' : 'contatto creato'}` : testo;
+        messaggio(detto + (inst ? ` · ${inst.testo}` : '') + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
           durata: 10000,
           azione: {
             testo: 'Annulla',
@@ -3690,6 +3695,10 @@
     const cittaLead = l ? ((String(l.note || '').match(/Città:\s*([^—]+)/) || [])[1] || '').trim() : '';
     const v = (x) => esc(x || '');
     const persone = ordineGiri();
+    // Un sopralluogo senza cliente né contatto crea il contatto (4 nov 2026,
+    // Matteo). Un sopralluogo già nel giro senza contatto resta com'è: se no, per
+    // spostarne l'orario, chiederebbe un telefono che magari non c'è.
+    const creaContatto = () => libero && !l && !impegno && lavoro === 'Sopralluogo' && !(t0 && (t0.contatto || t0.lavoro === 'Sopralluogo'));
     apriFinestra(`
       <h3>${t0 ? 'Cambia la tappa' : 'Aggiungi al giro'}</h3>
       ${c ? `<p><strong>${esc(c.nome)}</strong><br>${esc([c.indirizzo, titoloCitta(c.citta)].filter(Boolean).join(', ') || 'Indirizzo non segnato')}</p>` : ''}
@@ -3725,7 +3734,8 @@
         <label class="campo"><span>Cognome e nome <em>(o la ditta)</em></span><input id="t-nome" autocapitalize="words" value="${v((t0 && t0.nome) || (l && l.nome))}"></label>
         <label class="campo"><span>Indirizzo</span><input id="t-indirizzo" value="${v(t0 && t0.indirizzo)}" placeholder="Via e numero"></label>
         <label class="campo"><span>Città</span><input id="t-citta" value="${v((t0 && t0.citta) || cittaLead)}"></label>
-        <label class="campo"><span>Telefono <em>(facoltativo)</em></span><input id="t-tel" inputmode="tel" value="${v((t0 && t0.telefono) || (l && l.contatto))}"></label>` : ''}
+        <label class="campo"><span id="t-tel-testo">Telefono <em>(facoltativo)</em></span><input id="t-tel" inputmode="tel" value="${v((t0 && t0.telefono) || (l && l.contatto))}"></label>
+        <p class="spiega" id="t-tel-spiega" hidden>Per un sopralluogo il contatto si crea da solo.</p>` : ''}
       <label class="campo"><span>Note <em>(facoltative)</em></span><input id="t-note" value="${v(t0 && t0.note)}" placeholder="${impegno ? 'Es. cosa portare' : 'Es. citofono, cosa portare'}"></label>
       <button class="btn pieno grande" type="button" id="t-salva">${icona('cartina')} ${t0 ? 'Salva' : 'Metti nel giro'}</button>
       ${t0 ? '<button class="btn btn-rosso" type="button" id="t-togli">Togli dal giro</button>' : ''}
@@ -3736,7 +3746,14 @@
       });
     };
     if ($('t-chi')) scegli('t-chi', (x) => { chi = x; });
-    if ($('t-lavoro')) scegli('t-lavoro', (x) => { lavoro = x; });
+    if ($('t-lavoro')) {
+      scegli('t-lavoro', (x) => {
+        lavoro = x;
+        if (!$('t-tel')) return;
+        $('t-tel-testo').innerHTML = creaContatto() ? 'Telefono' : 'Telefono <em>(facoltativo)</em>';
+        $('t-tel-spiega').hidden = !creaContatto();
+      });
+    }
     scegli('t-giorno', (x) => {
       if (x === 'altro') { $('t-data').hidden = false; const d = daIso($('t-data').value); if (d) ser = Math.max(serialeDa(d.a, d.m, d.g), o); $('t-data').focus(); return; }
       ser = +x; $('t-data').hidden = true;
@@ -3800,6 +3817,11 @@
       };
       if (!nuovo.nome) { messaggio(impegno ? 'Scrivi cosa devi fare.' : 'Scrivi il nome.', { errore: true }); return; }
       if (!nuovo.lavoro) { messaggio('Scegli che lavoro è.', { errore: true }); return; }
+      if (creaContatto()) {
+        const sbagliato = !nuovo.telefono ? 'Per un sopralluogo scrivi il telefono: il contatto si crea da solo.' : problemaTelefono(nuovo.telefono.replace(/\S+@\S+/, ''));
+        if (sbagliato) { messaggio(sbagliato, { errore: true, durata: 8000 }); return; }
+        nuovo.creaContatto = true;
+      }
       if (nuovo.oraFine && !nuovo.ora) { messaggio('Scegli anche da che ora: la fascia comincia da lì.', { errore: true }); return; }
       if (nuovo.oraFine && nuovo.oraFine <= nuovo.ora) { messaggio('«Fino alle» deve venire dopo l\'ora d\'inizio.', { errore: true }); return; }
       if (nuovo.oraFine === nuovo.ora) nuovo.oraFine = '';
