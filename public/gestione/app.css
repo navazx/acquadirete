@@ -93,7 +93,7 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .pillola[aria-pressed="true"] { background: var(--blu); border-color: var(--blu); color: #fff; }
 .pillola-rossa { border-color: var(--rosso); color: var(--rosso); }
 .pillola-rossa[aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
-.pillola-gialla { border-color: var(--giallo-pieno); background: var(--giallo-chiaro); color: var(--giallo); }
+.pillola-gialla { border-color: var(--giallo-pieno); color: var(--giallo); }
 .pillola-gialla[aria-pressed="true"] { background: var(--giallo-pieno); border-color: var(--giallo-pieno); color: #2e2500; }
 
 /* ---- Liste ---- */

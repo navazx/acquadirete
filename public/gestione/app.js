@@ -3681,7 +3681,9 @@
     const s = c && scadenza(c);
     let lavoro = t0 ? (t0.lavoro || 'Altro')
       : c ? (c.avviso === 'Urgente' ? 'Guasto' : s.giorni != null && s.giorni <= 60 ? 'Manutenzione' : 'Altro')
-        : l ? 'Sopralluogo' : 'Altro';
+        // Da «Un altro indirizzo» il lavoro va scelto (4 nov 2026, Matteo): con «Altro»
+        // già scelto diventava una commissione, fuori dagli interventi fatti.
+        : l ? 'Sopralluogo' : altro ? 'Altro' : '';
     let chi = t0 && giranti().includes(t0.chi) ? t0.chi : giroPrincipale();
     const o = serialeOggi();
     let ser = Math.max(serialeGiorno(t0 ? giornoDi(t0) : giorno || oggiTesto()) ?? o, o);
@@ -3797,6 +3799,7 @@
         lat: t0 && !c ? t0.lat : null, lng: t0 && !c ? t0.lng : null, stato: '',
       };
       if (!nuovo.nome) { messaggio(impegno ? 'Scrivi cosa devi fare.' : 'Scrivi il nome.', { errore: true }); return; }
+      if (!nuovo.lavoro) { messaggio('Scegli che lavoro è.', { errore: true }); return; }
       if (nuovo.oraFine && !nuovo.ora) { messaggio('Scegli anche da che ora: la fascia comincia da lì.', { errore: true }); return; }
       if (nuovo.oraFine && nuovo.oraFine <= nuovo.ora) { messaggio('«Fino alle» deve venire dopo l\'ora d\'inizio.', { errore: true }); return; }
       if (nuovo.oraFine === nuovo.ora) nuovo.oraFine = '';
