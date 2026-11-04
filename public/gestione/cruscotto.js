@@ -109,13 +109,13 @@
           <div class="num" id="c-google">…</div>
           <div class="sub" id="c-google-sub">&nbsp;</div>
         </div>
-        <div class="kpi media">
-          <div class="label">Media dei due</div>
-          <div class="num" id="c-media">…</div>
-          <div class="sub" id="c-media-sub">&nbsp;</div>
+        <div class="kpi">
+          <div class="label"><span class="sw" style="display:inline-block;background:var(--s-site);margin-right:6px;vertical-align:-1px"></span>Google Ads, per conversione</div>
+          <div class="num" id="c-conv">…</div>
+          <div class="sub" id="c-conv-sub">&nbsp;</div>
         </div>
       </div>
-      <p class="sub" style="margin:12px 0 0"><strong>Meta si conta pulito</strong>: i suoi contatti arrivano solo dalle inserzioni. <strong>Google no</strong>: fra i clienti "Sito web" ci sono anche quelli arrivati gratis dalla ricerca normale. Per questo il costo di Google è il <em>caso migliore</em>: vale se tutti i clienti del sito dall'8 luglio sono passati da un annuncio. Contano i clienti "Sito web" e "Annuncio Google" arrivati da quando gli annunci sono partiti. La spesa la legge l'agente ogni mattina da Google Ads e da Meta; il conto della settimana resta anche nella scheda Cruscotto del Gestionale, ogni lunedì.</p>
+      <p class="sub" style="margin:12px 0 0"><strong>Google Ads si conta solo sui clienti arrivati davvero da un annuncio</strong>, non su quelli gratis dalla ricerca normale: quelli che il modulo segna come arrivati da un annuncio e quelli con provenienza "Annuncio Google", dal 27 settembre, da quando si distinguono. È un <em>costo massimo</em>: chi clicca l'annuncio e poi telefona senza dirlo non si vede, e può solo farlo scendere. Le <strong>conversioni</strong> sono quello che conta Google: moduli e tocchi su Chiama o WhatsApp, solo di chi accetta i cookie. Dicono se l'annuncio fa muovere la gente, non se poi compra. La spesa la legge l'agente ogni mattina da Google Ads e da Meta; il conto della settimana resta anche nella scheda Cruscotto del Gestionale, ogni lunedì.</p>
     </section>
 
 
@@ -661,17 +661,17 @@
     // costo per cliente
     const sp = D.spesa;
     const cMeta = clienti.filter((l) => l.src === 'Meta').length;
-    const cGoogle = clienti.filter((l) => (l.src === 'Sito' || l.src === 'Annuncio') && l.d >= sp.googleDal).length;
+    // Solo i clienti arrivati da un annuncio, non quelli gratis dalla ricerca (Matteo, 4 nov 2026).
+    const cGoogle = clienti.filter((l) => (l.src === 'Annuncio' || l.ann) && l.d >= sp.tracciatoDal).length;
     const costo = (spesa, n) => (spesa == null ? null : n ? spesa / n : null);
-    const kMeta = costo(sp.meta, cMeta), kGoogle = costo(sp.google, cGoogle);
-    const kMedia = sp.meta != null && sp.google != null && cMeta + cGoogle ? (sp.meta + sp.google) / (cMeta + cGoogle) : null;
-    $('costi-titolo').textContent = `Quanto costa un cliente · spesa da inizio campagne al ${quando(sp.al)}`;
+    const kMeta = costo(sp.meta, cMeta), kGoogle = costo(sp.googleTracciata, cGoogle), kConv = costo(sp.googleTracciata, sp.conversioni);
+    $('costi-titolo').textContent = `Quanto costa un cliente · spesa fino al ${quando(sp.al)}`;
     $('c-meta').textContent = kMeta == null ? '—' : euro(kMeta);
     $('c-meta-sub').textContent = sp.meta == null ? 'spesa non letta stamattina' : `${euro(sp.meta)} spesi dal ${quando(sp.metaDal)} · ${cMeta} ${cMeta === 1 ? 'cliente' : 'clienti'}`;
     $('c-google').textContent = kGoogle == null ? '—' : euro(kGoogle);
-    $('c-google-sub').innerHTML = sp.google == null ? 'spesa non letta stamattina' : `${euro(sp.google)} spesi dal ${quando(sp.googleDal)} · ${cGoogle} clienti dal sito e dagli annunci · <em>caso migliore</em>`;
-    $('c-media').textContent = kMedia == null ? '—' : euro(kMedia);
-    $('c-media-sub').textContent = kMedia == null ? 'manca una delle due spese' : `${euro(sp.meta + sp.google)} in tutto · ${cMeta + cGoogle} clienti`;
+    $('c-google-sub').innerHTML = sp.googleTracciata == null ? 'spesa non letta stamattina' : `${euro(sp.googleTracciata)} spesi dal ${quando(sp.tracciatoDal)} · ${cGoogle} ${cGoogle === 1 ? 'cliente arrivato' : 'clienti arrivati'} da un annuncio · <em>costo massimo</em>`;
+    $('c-conv').textContent = kConv == null ? '—' : euro(kConv);
+    $('c-conv-sub').textContent = sp.googleTracciata == null ? 'spesa non letta stamattina' : `${num(sp.conversioni ?? 0, (sp.conversioni ?? 0) % 1 ? 1 : 0)} conversioni dal ${quando(sp.tracciatoDal)}: moduli e tocchi su Chiama o WhatsApp, non clienti`;
 
     // il punto di oggi
     const nuoviClienti = clienti.filter((l) => (l.dal || l.d) > meno(oggi, 14));
@@ -687,7 +687,7 @@
         'I nomi sono fra i contatti, qui nell\'app.',
       ].filter(Boolean).join(' ')],
       // Il tetto è riservato: arriva coi numeri, non sta in questo file.
-      ['Costo cliente', kMeta == null && kGoogle == null ? 'Spesa non letta stamattina.' : `Meta <strong>${kMeta == null ? '—' : euro(kMeta)}</strong>, Google almeno <strong>${kGoogle == null ? '—' : euro(kGoogle)}</strong>${kMedia == null ? '' : `, media ${euro(kMedia)}`}.${D.tetto ? ` Il tetto deciso è ${euro(D.tetto)}.` : ''}`],
+      ['Costo cliente', kMeta == null && kGoogle == null ? 'Spesa non letta stamattina.' : `Meta <strong>${kMeta == null ? '—' : euro(kMeta)}</strong>, Google Ads <strong>${kGoogle == null ? '—' : euro(kGoogle)}</strong> al massimo.${D.tetto ? ` Il tetto deciso è ${euro(D.tetto)}.` : ''}`],
       ['Google', `${num(s.d28.clic)} clic gratuiti in 28 giorni (${s.p28.clic ? `${s.d28.clic >= s.p28.clic ? '+' : ''}${Math.round(((s.d28.clic - s.p28.clic) / s.p28.clic) * 100)}% sui 28 prima` : 'primo dato'}), posizione media ${num(s.d28.pos, 1)}.`],
     ];
     $('punto').innerHTML = fatti.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${v}</span></li>`).join('');
