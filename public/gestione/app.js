@@ -173,6 +173,8 @@
   }
   const email = (testo) => (String(testo || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/) || [null])[0];
   const senzaCap = (citta) => String(citta || '').replace(/^\s*\d{5}\s+/, '');
+  // I numeri di telefono di un testo, per confrontarli: le ultime 9 cifre.
+  const noveCifre = (testo) => (String(testo).match(/\d[\d\s./-]{7,}\d/g) || []).map((n) => n.replace(/\D/g, '').slice(-9)).filter((n) => n.length === 9);
   // "50012 BAGNO A RIPOLI" → "Bagno a Ripoli", "COLLE VAL D'ELSA" → "Colle Val d'Elsa".
   const titoloCitta = (citta) => senzaCap(citta).toLowerCase()
     .replace(/(^|[\s'’-])\p{L}/gu, (x) => x.toUpperCase())
@@ -1117,12 +1119,25 @@
   // allungano meno il giro, da casa a casa; quelle senza posizione in fondo.
   // Una fascia oraria («dalle 9 alle 11», dal 21 ott 2026) va in fila per
   // l'ora d'inizio, e a pari inizio prima quella che finisce prima.
+  // Le tappe allo stesso indirizzo una dopo l'altra, anche senza posizione sulla
+  // mappa: due impianti dello stesso cliente (4 nov 2026). Con un'ora diversa
+  // restano al loro posto.
+  function stessoPostoInsieme(seq) {
+    const fuori = [];
+    for (const t of seq) {
+      const k = fermataDi(t);
+      let i = k ? fuori.length - 1 : -1;
+      while (i >= 0 && !(fermataDi(fuori[i]) === k && (!t.ora || fuori[i].ora === t.ora))) i--;
+      fuori.splice(i < 0 ? fuori.length : i + 1, 0, t);
+    }
+    return fuori;
+  }
   function ordinaTappe(lista, casa = SEDE) {
     const conOra = lista.filter((t) => t.ora).sort((a, b) => a.ora.localeCompare(b.ora) || (a.oraFine || '99').localeCompare(b.oraFine || '99'));
     const senza = lista.filter((t) => !t.ora);
     const libere = senza.filter(puntoTappa);
     const inFondo = senza.filter((t) => !puntoTappa(t));
-    if (!conOra.length) return [...ordinaPunti(libere.map((t) => ({ t, ...puntoTappa(t) })), casa).map((x) => x.t), ...inFondo];
+    if (!conOra.length) return stessoPostoInsieme([...ordinaPunti(libere.map((t) => ({ t, ...puntoTappa(t) })), casa).map((x) => x.t), ...inFondo]);
     const seq = conOra.slice();
     const d = (a, b) => (a && b ? distanza(a, b) : 0);
     const punto = (i) => (i < 0 || i >= seq.length ? casa : puntoTappa(seq[i]));
@@ -1141,7 +1156,7 @@
       }
       seq.splice(dove, 0, t);
     }
-    return [...seq, ...inFondo];
+    return stessoPostoInsieme([...seq, ...inFondo]);
   }
   // Il giro di `p` quel giorno (di default oggi), in ordine.
   const giroDi = (p, giorno = oggiTesto()) => (p ? ordinaTappe(tappeDel(giorno, p), partenzaDi(p)) : []);
@@ -1174,7 +1189,7 @@
   // `materiali`: dopo «Fatto» chiede che materiali sono stati usati (dal 20
   // ott 2026), e il messaggio con «Annulla» arriva dopo.
   // `installazione`: il «Fatto» di un'installazione mette anche la data sulla scheda.
-  async function salvaLaTappa(t, testo, { materiali = null, installazione = null } = {}) {
+  async function salvaLaTappa(t, testo, { materiali = null, installazione = null, assieme = [] } = {}) {
     const prima = (dati.tappe || []).find((x) => x.id === t.id);
     const fotoTappe = JSON.parse(JSON.stringify(dati.tappe || []));
     try {
@@ -1183,6 +1198,24 @@
       // Il sopralluogo ha creato il contatto: si rilegge, così la sua scheda si apre subito.
       const creato = r && r.contattoNuovo;
       if (creato) await carica().catch(() => {});
+      // Gli altri impianti dello stesso cliente: se uno non entra, quello chiesto resta.
+      const altri = [];
+      for (const x of assieme) {
+        const m = await manda('tappa', x, `Nel giro: ${x.nome}`).catch(() => null);
+        if (!m) continue;
+        if (m.r) APPLICA.tappa(dati, m.r.tappa);
+        altri.push({ tappa: x, voce: m.voce });
+      }
+      if (altri.length) salvaDati();
+      const toltiAltri = async () => {
+        for (const { tappa: x, voce: v } of altri) {
+          if (v) { annullaInCoda(v, () => { dati.tappe = (dati.tappe || []).filter((y) => y.id !== x.id); }); continue; }
+          const quale = { id: x.id, codice: x.codice };
+          const { r: tolta } = await manda('togliTappa', quale, `Tolta dal giro: ${x.nome}`);
+          if (tolta) APPLICA.togliTappa(dati, quale);
+        }
+        salvaDati();
+      };
       disegna(history.state);
       const inst = installazione ? await mettiInstallazione(installazione) : null;
       if (inst) disegna(history.state);
@@ -1195,13 +1228,16 @@
         if (mov) disegna(history.state);
         // Il nome come l'ha scritto il motore, col cognome davanti.
         const detto = creato ? `${testo.replace(t.nome, creato.nome)} · ${creato.doppione ? 'era già fra i contatti' : 'contatto creato'}` : testo;
-        messaggio(detto + (inst ? ` · ${inst.testo}` : '') + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
+        const conAltri = !assieme.length ? '' : altri.length < assieme.length ? ' · un altro impianto non è entrato: aggiungilo a mano'
+          : altri.length === 1 ? ' · anche l\'altro impianto' : ` · anche gli altri ${altri.length} impianti`;
+        messaggio(detto + conAltri + (inst ? ` · ${inst.testo}` : '') + (mov ? ` · ${mov.testo}` : '') + (voce ? fuoriLinea(voce) : ''), {
           durata: 10000,
           azione: {
             testo: 'Annulla',
             fai: async () => {
               if (mov) await annullaMovimento(mov, { zitto: true });
               if (inst && inst.annulla) await inst.annulla();
+              await toltiAltri();
               annullaTappa();
             },
           },
@@ -1309,8 +1345,21 @@
   }
   // Un «Altro» senza posto (il medico, se non si scrive dove) nel percorso non ci va.
   const haLuogo = (t) => !!doveTappa(t);
+  // Due schede allo stesso indirizzo sono una fermata sola (4 nov 2026, Matteo):
+  // in Google Maps e nel limite delle tappe. Conta l'indirizzo scritto, perché
+  // una delle due può avere la posizione «Sono qui» e l'altra no.
+  const fermataDi = (t) => {
+    const l = luogoTappa(t);
+    return l.indirizzo ? `${normalizza(l.indirizzo)}|${normalizza(senzaCap(l.citta))}` : doveTappa(t);
+  };
   function linkGiro(tappe) {
-    const punti = tappe.map(doveTappa).filter(Boolean);
+    const viste = new Set();
+    const punti = tappe.filter(haLuogo).filter((t) => {
+      const k = fermataDi(t);
+      if (viste.has(k)) return false;
+      viste.add(k);
+      return true;
+    }).map(doveTappa);
     const q = new URLSearchParams({ api: '1', travelmode: 'driving', destination: punti[punti.length - 1] });
     if (punti.length > 1) q.set('waypoints', punti.slice(0, -1).join('|'));
     return `https://www.google.com/maps/dir/?${q}`;
@@ -3456,8 +3505,9 @@
   }
   // Più di 10 tappe in un giorno Google Maps non le apre. Un «Altro» senza
   // posto non ci va, quindi non conta.
-  function troppe(chi, giorno, id) {
-    if (tappeDel(giorno, chi).filter((t) => t.id !== id && haLuogo(t)).length < MAX_TAPPE) return false;
+  function troppe(chi, giorno, id, tappa = null) {
+    const fermate = new Set(tappeDel(giorno, chi).filter((t) => t.id !== id && haLuogo(t)).map(fermataDi));
+    if (fermate.size < MAX_TAPPE || (tappa && fermate.has(fermataDi(tappa)))) return false;
     messaggio(`Il giro di ${nomeChi(chi)} di quel giorno ha già ${MAX_TAPPE} tappe: Google Maps non ne apre di più.`, { errore: true, durata: 8000 });
     return true;
   }
@@ -3624,7 +3674,7 @@
       b.onclick = (e) => conPulsante(e.currentTarget, 'Salvo…', async () => {
         const t = trova(b.dataset.tappaPassa);
         const a = b.dataset.a;
-        if (!t || (haLuogo(t) && troppe(a, giornoDi(t), t.id))) return;
+        if (!t || (haLuogo(t) && troppe(a, giornoDi(t), t.id, t))) return;
         await salvaLaTappa({ ...t, giorno: giornoDi(t), chi: a }, `Passata a ${nomeChi(a)}: ${luogoTappa(t).nome}`);
       });
     });
@@ -3677,6 +3727,43 @@
   // Per un contatto o un indirizzo qualsiasi anche nome e indirizzo (la
   // posizione la cerca il telefono su OpenStreetMap, se c'è campo). «Altro»
   // (`altro`, o una tappa che lo è già): cosa c'è da fare, e il posto se serve.
+  // Gli altri impianti dello stesso cliente allo stesso indirizzo (4 nov 2026,
+  // Matteo: «però nel giro devo aggiungerlo due volte così»): nel foglio c'è una
+  // riga per impianto, e chi ha scadenze diverse ha due schede. Stesso cliente =
+  // stesso telefono, o una parola del nome in comune: allo stesso indirizzo può
+  // esserci anche un altro inquilino, e allora non si chiede. Chi ha già una
+  // tappa aperta non si ripropone.
+  const NON_NOMI = new Set(['srl', 'snc', 'spa', 'sas', 'soc', 'societa', 'ditta', 'studio', 'bar', 'del', 'della', 'dei']);
+  const paroleNome = (s) => normalizza(s).split(' ').filter((w) => w.length > 2 && !NON_NOMI.has(w));
+  function altriImpianti(c) {
+    const dove = (x) => (normalizza(x.indirizzo) ? `${normalizza(x.indirizzo)}|${normalizza(senzaCap(x.citta))}` : '');
+    if (!dove(c)) return [];
+    const tel = noveCifre(c.contatto);
+    const parole = paroleNome(c.nome);
+    return dati.clienti.filter((x) => x.codice !== c.codice && dove(x) === dove(c)
+      && (noveCifre(x.contatto).some((n) => tel.includes(n)) || paroleNome(x.nome).some((w) => parole.includes(w)))
+      && !tappeDi((t) => t.codice === x.codice).length);
+  }
+  // `fai` riceve quali altri impianti mettere nel giro. Chiudere la finestra
+  // vale «solo questo»: è quello che si era appena chiesto.
+  function chiediAltriImpianti(c, altri, fai) {
+    const uno = altri.length === 1;
+    apriFinestra(`
+      <h3>${uno ? 'C\'è anche l\'altro impianto' : `Ci sono altri ${altri.length} impianti`}</h3>
+      <p><strong>${esc(c.nome)}</strong> ${uno ? 'ha un altro impianto' : 'ha altri impianti'} allo stesso indirizzo:</p>
+      ${altri.map((x) => `<p><strong>${esc(x.nome)}</strong><br>${esc([x.tipo, scadenza(x).testo].filter(Boolean).join(' · '))}</p>`).join('')}
+      <button class="btn pieno grande" type="button" id="tutti">${icona('spunta')} Sì, ${uno ? 'tutti e due' : 'tutti'}</button>
+      <button class="btn leggero" type="button" id="solo">No, solo questo</button>`);
+    const scegli = (lista) => {
+      alChiudere = null;
+      chiudiFinestra();
+      fai(lista);
+    };
+    alChiudere = () => fai([]);
+    $('tutti').onclick = () => scegli(altri);
+    $('solo').onclick = () => scegli([]);
+  }
+
   function chiediTappa({ tappa = null, cliente = null, lead = null, giorno = null, altro = false } = {}) {
     const t0 = tappa;
     const c = cliente || (t0 && t0.codice && clienteIn(dati, t0.codice)) || null;
@@ -3827,7 +3914,7 @@
       if (nuovo.oraFine === nuovo.ora) nuovo.oraFine = '';
       const senzaPosto = libero && !nuovo.indirizzo && !nuovo.citta;
       if (senzaPosto && !impegno) { messaggio('Scrivi almeno la città: se no non so dove andare.', { errore: true }); return; }
-      if (!senzaPosto && troppe(chi, nuovo.giorno, nuovo.id)) return;
+      if (!senzaPosto && troppe(chi, nuovo.giorno, nuovo.id, nuovo)) return;
       // Contatto o indirizzo qualsiasi: dove sta lo cerca il telefono (al
       // massimo 8 secondi; senza campo la tappa resta fuori dalla mappa).
       const cambiato = !t0 || t0.indirizzo !== nuovo.indirizzo || t0.citta !== nuovo.citta;
@@ -3848,7 +3935,13 @@
         if (p && p.lat != null) { nuovo.lat = p.lat; nuovo.lng = p.lng; } else if (cambiato) { nuovo.lat = null; nuovo.lng = null; }
       }
       chiudiFinestra();
-      await salvaLaTappa(nuovo, `Nel giro di ${nomeChi(chi)} ${quandoTappa(nuovo)}: ${nuovo.nome}`);
+      const testo = `Nel giro di ${nomeChi(chi)} ${quandoTappa(nuovo)}: ${nuovo.nome}`;
+      // Solo le manutenzioni: un guasto o un'installazione riguardano un impianto solo.
+      const altri = c && !t0 && lavoro === 'Manutenzione' ? altriImpianti(c) : [];
+      if (!altri.length) { await salvaLaTappa(nuovo, testo); return; }
+      chiediAltriImpianti(c, altri, (lista) => salvaLaTappa(nuovo, testo, {
+        assieme: lista.map((x) => ({ ...nuovo, id: nuovoId(), codice: x.codice, nome: x.nome, indirizzo: x.indirizzo, citta: x.citta })),
+      }));
     });
     if (altro) $('t-nome').focus();
   }
@@ -5182,7 +5275,7 @@
       ${persi.length ? `<button class="mostra-altri" id="vai-persi">Clienti persi (${persi.length})</button>` : ''}`;
     if ($('vai-persi')) $('vai-persi').onclick = () => vai({ s: 'persi' });
     const q = $('q');
-    const nove = (testo) => (String(testo).match(/\d[\d\s./-]{7,}\d/g) || []).map((n) => n.replace(/\D/g, '').slice(-9)).filter((n) => n.length === 9);
+    const nove = noveCifre;
     const nomeUguale = (nome) => normalizza(nome).split(' ').filter(Boolean).sort().join(' ');
     // Anche i persi: se uno richiama, lo si ritrova (con l'etichetta "Cliente perso").
     const tuttiClienti = dati.clienti.concat(persi);
