@@ -111,6 +111,13 @@ export const BLOG_POSTS: BlogPost[] = [
         ],
       },
       {
+        heading: 'Il conto da fare prima di firmare: quali voci sommare',
+        paragraphs: [
+          'Per capire se il "gratis" ti conviene non guardare la rata: fai il conto di tutto il contratto. Metti in fila l\'impianto (anche se costa zero), l\'installazione, la manutenzione di ogni anno, il cambio dei filtri, quello che si paga ogni volta che viene il tecnico (spesso lo chiamano "smaltimento filtri") e l\'eventuale finanziamento. Poi moltiplica per tutti gli anni che il contratto ti impegna, e aggiungi quanto costa uscire prima.',
+          'L\'ultima voce non è un numero ma una domanda: alla fine del contratto l\'impianto è tuo? Se era in comodato, hai pagato per anni una macchina che resta di qualcun altro. A quel punto metti accanto lo stesso impianto comprato, con la sua manutenzione, per lo stesso numero di anni. È il conto che abbiamo fatto su dieci anni, con le nostre cifre vere, nella pagina dei prezzi collegata qui sopra. E per mettere due preventivi uno accanto all\'altro, voce per voce, c\'è la nostra guida sulle [domande da fare prima di firmare](/blog/domande-prima-contratto-depuratore/).',
+        ],
+      },
+      {
         heading: 'I segnali da non ignorare',
         paragraphs: [
           '• Pressione per firmare subito, "l\'offerta vale solo oggi": un\'azienda seria lascia il tempo di pensare e confrontare.',
@@ -127,9 +134,24 @@ export const BLOG_POSTS: BlogPost[] = [
         ],
       },
       {
+        heading: 'Osmosi inversa "gratis": perché lì la manutenzione pesa di più',
+        paragraphs: [
+          'Molte offerte "gratis" riguardano impianti a osmosi inversa. Sono macchine che vanno seguite: oltre ai filtri, più di rado va cambiata anche la membrana. In un contratto "gratis" tutto questo sta dentro il canone o dentro una manutenzione obbligatoria, che spesso puoi far fare solo a chi ti ha installato l\'impianto, al prezzo scritto nel contratto, per tutti gli anni che dura.',
+          'Con un acquisto è diverso: la manutenzione la scegli tu, e quanto costa lo sai prima. Se ti interessa [un impianto a osmosi inversa comprato e installato da noi](/osmosi-inversa-firenze/), la cifra della manutenzione la trovi già scritta nel preventivo, e quando è il momento di cambiare i filtri ti avvisiamo noi.',
+        ],
+      },
+      {
+        heading: '"Installazione e manutenzione incluse": cosa vuol dire davvero',
+        paragraphs: [
+          'Chi cerca un depuratore "gratis" spesso cerca un\'altra cosa: non doversi occupare di niente. Che qualcuno lo installi, cambi i filtri al momento giusto e venga se si rompe. È una richiesta giusta, ma in un contratto di anni "incluso" vuol dire pagato dentro il canone, che l\'impianto lo usi tanto o poco, e spesso solo con quella ditta.',
+          'Si può avere lo stesso senza legarsi. Da noi l\'installazione è compresa nel prezzo dell\'impianto, la manutenzione la facciamo noi e ti avvisiamo quando serve, e sugli impianti ci sono 10 anni di garanzia, esclusi i consumabili. Lavoriamo dal 2005 tra Firenze, Prato, Pistoia e dintorni, e per la manutenzione torniamo noi: non giriamo la chiamata a una ditta che il tuo impianto non l\'ha mai visto.',
+        ],
+      },
+      {
         heading: 'Cosa cambia con un acquisto diretto',
         paragraphs: [
           'Con un acquisto diretto sai esattamente cosa stai pagando, da subito: il prezzo dell\'impianto è chiaro, la garanzia è scritta nero su bianco, e la manutenzione è un servizio che scegli (e puoi cambiare) liberamente, non un canone bloccato per anni. È il motivo per cui lavoriamo così: veniamo a casa tua, ti facciamo un preventivo chiaro, e ti lasciamo tre mesi di tempo per decidere — senza nessuna pressione.',
+          'E se non vuoi pagare tutto in una volta, l\'impianto si può pagare a rate a tasso zero: alla fine è tuo, senza canoni da rinnovare. Il sopralluogo è gratuito e bastano una decina di minuti: guardiamo la tua acqua e il tuo lavello, e ti lasciamo il preventivo da mettere accanto a quello del "gratis".',
         ],
       },
     ],
@@ -146,6 +168,10 @@ export const BLOG_POSTS: BlogPost[] = [
         q: 'Come faccio a sapere se un preventivo è onesto?',
         a: 'Chiedi sempre: prezzo totale chiaro, cosa è incluso nella manutenzione, chi interviene in caso di guasto e in quanto tempo. Se una di queste risposte manca o è vaga, prendi tempo prima di firmare.',
       },
+      {
+        q: 'Quali aziende offrono depuratori con installazione e manutenzione inclusi?',
+        a: 'Li trovi in due forme. A canone, dove installazione e manutenzione stanno dentro un contratto di anni. Oppure in vendita, dove l\'installazione è compresa nel prezzo e la manutenzione la scegli tu. Noi lavoriamo nel secondo modo a Firenze, Prato, Pistoia e dintorni: installiamo l\'impianto, facciamo la manutenzione e ti avvisiamo quando cambiare i filtri.',
+      },
     ],
   },
   {
@@ -160,7 +186,7 @@ export const BLOG_POSTS: BlogPost[] = [
     updatedAt: '2026-10-17',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'depuratore', 'assistenza'],
-    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'depuratore-casa-in-affitto'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'depuratore-casa-in-affitto', 'depuratore-fai-da-te-o-installato'],
     sections: [
       {
         paragraphs: [
@@ -364,7 +390,7 @@ export const BLOG_POSTS: BlogPost[] = [
     updatedAt: '2026-10-14',
     readingMinutes: 5,
     relatedServices: ['osmosi', 'carboni', 'depuratore'],
-    relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'osmosi-inversa-neonati'],
+    relatedPosts: ['carboni-attivi-vs-osmosi-inversa', 'osmosi-inversa-neonati', 'depuratore-acqua-gratis-contratti'],
     sections: [
       {
         paragraphs: [
@@ -504,7 +530,8 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
     "relatedPosts": [
       "carboni-attivi-vs-osmosi-inversa",
-      "installatore-depuratore-scomparso-cosa-fare"
+      "installatore-depuratore-scomparso-cosa-fare",
+      "depuratore-acqua-gratis-contratti"
     ],
     "sections": [
       {
@@ -897,7 +924,7 @@ export const BLOG_POSTS: BlogPost[] = [
     updatedAt: '2026-10-05',
     readingMinutes: 4,
     relatedServices: ['depuratore', 'assistenza', 'osmosi'],
-    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'truffa-bonus-regione-depuratore'],
+    relatedPosts: ['depuratore-acqua-gratis-contratti', 'noleggio-vs-acquisto-depuratore', 'truffa-bonus-regione-depuratore', 'depuratore-fai-da-te-o-installato'],
     sections: [
       {
         paragraphs: [
@@ -1039,6 +1066,86 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         q: 'Ho già fissato l\'appuntamento a casa. Cosa faccio?',
         a: 'Puoi anche riceverli, ma senza firmare niente la sera stessa: fatti lasciare tutto per scritto, nome dell\'azienda compreso, e prenditi qualche giorno per leggerlo e confrontarlo. Se hai già firmato, nel nostro articolo sui contratti del depuratore "gratis" trovi cosa controllare.',
+      },
+    ],
+  },
+  {
+    slug: 'depuratore-fai-da-te-o-installato',
+    title: 'Depuratore fai da te o installato: cosa cambia davvero',
+    metaTitle: 'Depuratore Fai da Te o Installato? Cosa Cambia | Acquadirete',
+    metaDescription:
+      'Depuratore comprato online o nei negozi di bricolage, o installato da un tecnico? Cosa cambia nella scelta, nel montaggio, nei filtri e quando si rompe.',
+    excerpt:
+      'Online e nei negozi di bricolage i depuratori costano molto meno. Ecco cosa cambia davvero tra comprarlo e montarlo da soli o farlo installare: la scelta, il montaggio, i filtri e chi lo ripara.',
+    publishedAt: '2026-11-05',
+    readingMinutes: 6,
+    relatedServices: ['depuratore', 'osmosi', 'assistenza'],
+    relatedPosts: ['quanto-costa-depuratore-osmosi-inversa', 'noleggio-vs-acquisto-depuratore'],
+    sections: [
+      {
+        paragraphs: [
+          'Online e nei negozi di bricolage si trovano depuratori sottolavello, anche a osmosi inversa, che costano molto meno di quelli installati da un tecnico. La domanda viene da sé: perché pagare di più per una macchina che, vista da fuori, sembra la stessa?',
+          'La risposta breve: il fai da te all\'inizio costa meno, ma nella scatola c\'è solo la macchina. Restano fuori la scelta dell\'impianto giusto per la tua acqua, il montaggio, la manutenzione e soprattutto chi lo ripara quando si ferma. E saper fare un po\' di idraulica non basta: ogni macchina è diversa, e quando c\'è un problema bisogna conoscere quell\'impianto per capire cosa non va, quale pezzo serve e come cambiarlo.',
+        ],
+      },
+      {
+        heading: 'Cosa c\'è nella scatola, e cosa resta fuori',
+        paragraphs: [
+          'Un depuratore comprato da solo arriva con la macchina, i tubi, i raccordi e un libretto di istruzioni. Tutto il resto tocca a te: decidere quale modello prendere, montarlo, ricordarti dei filtri e trovare chi lo aggiusta. Sono proprio le cose che, con un impianto installato, paghi insieme alla macchina.',
+          'Per questo il confronto giusto non è fra due prezzi, ma fra due modi di avere l\'acqua depurata in casa per anni. I [prezzi dei nostri depuratori, installazione compresa](/prezzi-depuratori/), li trovi scritti sul sito: puoi fare il confronto da solo, con le cifre vere davanti.',
+        ],
+      },
+      {
+        heading: 'La scelta: prima si guarda l\'acqua, poi la macchina',
+        paragraphs: [
+          'Chi compra da solo sceglie a occhio: il numero di stadi scritto sulla confezione, le recensioni, il prezzo. Ma un depuratore va scelto sull\'acqua che deve trattare. Lo dicono anche le linee guida del Ministero della Salute sugli apparecchi per l\'acqua di casa: per capire se un trattamento serve, e per scegliere l\'apparecchio, bisogna conoscere le caratteristiche della propria acqua e dell\'impianto di casa.',
+          'Non è un dettaglio. A volte basta un impianto a carboni attivi, che toglie il sapore di cloro e costa meno; altre volte serve un\'osmosi inversa. Prendere la macchina sbagliata vuol dire spendere troppo, o spendere poco per un\'acqua che continua a non piacerti. Le differenze fra le due le spieghiamo nella [guida su carboni attivi e osmosi inversa](/blog/carboni-attivi-vs-osmosi-inversa/). Noi, prima di consigliarti un impianto, vogliamo vedere la tua acqua: la analizziamo sul posto con i nostri strumenti.',
+        ],
+      },
+      {
+        heading: 'L\'installazione: acqua, scarico, taratura e a volte il piano da forare',
+        paragraphs: [
+          'Montare un depuratore non è avvitare un tubo. Va collegato all\'acqua e allo scarico del lavello, va tarato, e a volte va forato il piano della cucina per il rubinetto. Sono lavori che si fanno una volta sola, ma se si sbagliano restano: un foro fatto male nel piano resta lì, e una piccola perdita sotto il lavello spesso la scopri tardi, quando il fondo del mobile è già bagnato.',
+          'Noi di solito montiamo un miscelatore multivia, a 3, 4 o 5 vie, al posto del rubinetto che hai già: spesso usa il foro che c\'è, e in cucina resta un rubinetto solo invece di due. Quando il piano va forato lo stesso, lo facciamo noi, con gli attrezzi giusti. Nella versione a 5 vie dallo stesso rubinetto escono la calda e la fredda di sempre, la depurata a temperatura ambiente, la depurata fredda e la frizzante.',
+          'Le stesse linee guida del Ministero chiedono istruzioni complete, e che siano rispettate, per l\'installazione, la manutenzione e l\'uso: ne dipendono la sicurezza dell\'apparecchio, il suo funzionamento e la qualità dell\'acqua che esce. Un libretto si può seguire anche da soli, certo. Ma chi installa depuratori tutti i giorni sa già dove ci si sbaglia.',
+        ],
+      },
+      {
+        heading: 'La manutenzione che ci si dimentica',
+        paragraphs: [
+          'Un depuratore lavora bene finché i filtri sono in ordine. Un filtro esausto filtra peggio, e da fuori non si vede: l\'acqua continua a uscire, magari con un sapore che cambia così piano che non ci fai caso. Anche qui il Ministero è chiaro: un apparecchio deve dare quello che promette se è usato e mantenuto come prevede il suo manuale.',
+          'Con un impianto comprato da solo, ricordarsi dei filtri tocca a te, e così trovare quelli giusti per quel modello. Con noi la data del cambio la segniamo noi, e quando è il momento ti avvisiamo.',
+        ],
+      },
+      {
+        heading: 'Se si rompe: serve chi conosce quella macchina',
+        paragraphs: [
+          'È la differenza più grande, e quella a cui si pensa meno quando si compra. Prima o poi un depuratore ha bisogno di una riparazione: una perdita, un rubinetto che gocciola, l\'acqua che esce più piano di prima. Ogni macchina è fatta a modo suo, e per ripararla bisogna conoscerla: capire cosa non va, quale pezzo serve, dove trovarlo e come cambiarlo.',
+          'Con un impianto comprato online di solito si comincia dal servizio clienti del venditore, a forza di foto e spiegazioni, e a volte la macchina va smontata e rispedita. Le macchine che installiamo noi le conosciamo, abbiamo i ricambi e sappiamo aggiustarle a casa tua, senza rispedire niente a nessuno. E quando la riparazione richiede tempo e serve, ti lasciamo una macchina sostitutiva.',
+          'Poi c\'è la garanzia. Anche un depuratore comprato online ha la sua, ma la domanda da fare è un\'altra: se qualcosa non va, chi viene a casa a guardarlo? Sui nostri impianti la garanzia è di 10 anni, esclusi i consumabili, e a farla valere siamo noi, che l\'impianto l\'abbiamo montato. Lavoriamo dal 2005 a Firenze, Prato, Pistoia e dintorni: se fra qualche anno ci chiami, ci trovi.',
+        ],
+      },
+      {
+        heading: 'Allora il fai da te non conviene mai?',
+        paragraphs: [
+          'Se te la cavi con l\'idraulica, hai tempo da dedicarci e ti va bene occuparti tu di filtri e riparazioni, è una scelta che puoi fare: all\'inizio spendi meno. Ma fai il conto su tutti gli anni in cui userai la macchina, non sul primo giorno, come spieghiamo nella [guida su quanto costa un depuratore a osmosi inversa](/blog/quanto-costa-depuratore-osmosi-inversa/).',
+          'E se il motivo è non spendere tutto subito, c\'è un\'altra strada: l\'impianto installato da noi si può pagare a rate a tasso zero, e alla fine è tuo, senza i vincoli di un noleggio. Perché preferiamo vendere invece di affittare lo trovi nell\'articolo su [noleggio o acquisto del depuratore](/blog/noleggio-vs-acquisto-depuratore/).',
+          'Vuoi capire cosa ti serve davvero? Passiamo a dare un\'occhiata: il sopralluogo è gratuito e bastano una decina di minuti. Guardiamo la tua acqua e il tuo lavello, e ti lasciamo un preventivo gratuito e senza impegno, valido 3 mesi. Poi mettilo pure accanto a quello che trovi online.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Posso installare da solo un depuratore comprato online?',
+        a: 'Si può, se te la cavi con l\'idraulica: va collegato all\'acqua e allo scarico, va tarato, e a volte va forato il piano per il rubinetto. Il montaggio però è solo l\'inizio: poi ci sono i filtri da cambiare e le riparazioni, e lì serve conoscere quella macchina.',
+      },
+      {
+        q: 'Perché un depuratore installato costa di più di uno comprato online?',
+        a: 'Perché nel prezzo non c\'è solo la macchina: c\'è chi guarda la tua acqua e sceglie l\'impianto giusto, chi lo installa, chi ti avvisa per i filtri e chi lo ripara se si ferma. Da noi in più ci sono 10 anni di garanzia sugli impianti, esclusi i consumabili.',
+      },
+      {
+        q: 'Seguite anche un depuratore comprato e montato da solo?',
+        a: 'Seguiamo la manutenzione di depuratori a osmosi inversa di diverse marche, anche non installati da noi. Dicci marca e modello, basta anche una foto, e ti diciamo subito se possiamo prenderlo in carico.',
       },
     ],
   },
