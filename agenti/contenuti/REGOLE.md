@@ -110,25 +110,6 @@ _nessuna per ora_
 
 ## Coda
 
-- **`depuratore-fai-da-te-o-installato`** — "Depuratore fai da te o installato: cosa
-  cambia davvero". **Deciso da Matteo il 21 set 2026: viene subito dopo l'articolo sul
-  bonus della Regione**, scritto il 5 ott 2026: è quindi il prossimo della coda,
-  prima degli argomenti sotto. Risponde a chi
-  vede impianti molto più economici nei negozi di bricolage o online e si chiede perché
-  pagarne di più. Nessuna cifra per quegli impianti ("costano molto meno"). Tono onesto
-  ma chiaro: il fai da te all'inizio costa meno, ma saper fare un po' di idraulica non
-  basta. **Punto centrale:** ogni macchina è diversa, e quando c'è un problema bisogna
-  conoscere quell'impianto per capire cosa non va, quale pezzo serve e come cambiarlo.
-  Le differenze da spiegare: (1) la scelta dell'impianto giusto dopo aver visto l'acqua,
-  chi compra da solo sceglie a occhio; (2) l'installazione: allaccio all'acqua e allo
-  scarico, taratura, a volte va forato il piano e servono gli attrezzi giusti, chi lo fa
-  da solo rischia di rovinare il piano o di avere perdite sotto il lavello; (3) la
-  manutenzione dimenticata: un filtro esausto filtra peggio; (4) se si rompe: Acquadirete
-  conosce le macchine che installa, ha i ricambi e sa aggiustarle, senza rispedire niente;
-  (5) la garanzia. Divieti: niente marchi di negozi (si dice "negozi di bricolage",
-  "online"), niente prezzi, niente attrezzi specifici, niente allarmismi sulla salute.
-  Collegare la pagina `/prezzi-depuratori/` (nel testo) e gli articoli
-  `quanto-costa-depuratore-osmosi-inversa` e `noleggio-vs-acquisto-depuratore`.
 - `quanto-si-risparmia-senza-bottiglie` — quanto si risparmia davvero smettendo di comprare bottiglie
 
 Attenzione: sono tutti temi di costi e risparmi, cioè quelli più a rischio di numeri
@@ -137,6 +118,7 @@ conto, "te lo diciamo col sopralluogo gratuito". Nessuna cifra.
 
 ## Slug bruciati: non riproporli
 
+- `depuratore-fai-da-te-o-installato` — scritto il 5 novembre 2026
 - `acqua-sa-di-cloro` — lo copre già `acqua-rubinetto-firenze-si-puo-bere`
 - `acqua-frizzante-bar-ristoranti` — scritto il 28 luglio 2026
 
