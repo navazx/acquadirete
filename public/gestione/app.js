@@ -2005,7 +2005,11 @@
     const data = testoData(daIso(x.data));
     const lavoro = x.lavoro === 'Guasto' ? 'Guasto' : '';
     d.storico = d.storico || [];
-    if (d.storico.some((s) => s.codice === x.codice && s.data === data && (s.lavoro || '') === lavoro)) return;
+    if (d.storico.some((s) => s.codice === x.codice && s.data === data && (s.lavoro || '') === lavoro)) {
+      // Segnata di nuovo: vale l'ultimo pagamento, come nel motore (pagamentoRifatto).
+      if (x.pagamento) APPLICA.pagamento(d, { codice: x.codice, data, lavoro, pagamento: x.pagamento, importo: x.importo ?? undefined });
+      return;
+    }
     d.storico.push({ riga: null, data, codice: x.codice, nome: c.nome, prossima: lavoro ? '' : c.prossima, chi: d.io || '', pagamento: x.pagamento || '', importo: conImporto(x.pagamento) ? x.importo ?? null : null, prima, lavoro });
   };
   // Come cambiano i dati per ogni azione, finché il foglio non risponde.
@@ -3021,6 +3025,27 @@
     f.querySelector('#importo-indietro').onclick = () => { passo2.hidden = true; passo1.hidden = false; };
   }
 
+  // La stessa manutenzione o riparazione segnata di nuovo (5 nov 2026: a Stefano
+  // «Contanti 80» non restava, e l'app diceva «Segnata ✓»). L'intervento resta
+  // uno, col pagamento dell'ultima risposta (pagamentoRifatto nel motore). I
+  // materiali non si richiedono, se no si contano due volte: si cambiano dall'intervento.
+  function avvisaGiaSegnata(r, c, lavoro) {
+    const metti = (p, i) => { APPLICA.pagamento(dati, { codice: c.codice, data: r.fatta, lavoro, pagamento: p, importo: i ?? '' }); salvaDati(); };
+    if (r.pagamentoCambiato) metti(r.pagamento, r.importo);
+    disegna(history.state);
+    const prima = r.annullaPagamento;
+    messaggio(`Era già segnata${r.pagamentoCambiato ? ': pagamento aggiornato' : ''} ✓${r.pagamento ? ` ${pagatoCon(r.pagamento, r.importo)}` : ''}`, {
+      durata: 15000,
+      azione: prima ? {
+        testo: 'Annulla',
+        fai: () => manda('pagamento', { ...prima, lavoro }, `Pagamento rimesso com'era: ${c.nome}`)
+          .then(({ r: r2 }) => { if (r2) metti(prima.pagamento, prima.importo); disegna(history.state); messaggio('Annullato.'); })
+          .catch((err) => messaggio(err.message, { errore: true, durata: 8000 })),
+      } : null,
+    });
+    aggiornaInSottofondo();
+  }
+
   // «Come ha pagato?» (19 ott 2026, Matteo) sta nella stessa finestra: la
   // risposta toccata è anche il «sì, fatta». Dal 1 nov 2026 dopo Contanti o
   // POS chiede anche quanto (scegliPagamento).
@@ -3086,8 +3111,8 @@
           chiudiTappe(dati, c.codice, fattaIl);
           salvaDati();
         }
+        if (r && r.giaSegnata) { avvisaGiaSegnata(r, c, ''); return; }
         disegna(history.state);
-        // Senza «Annulla» solo se il foglio l'aveva già segnata (richiesta doppia).
         const puoiAnnullare = voce || (r && r.annulla);
         const annullaFatta = voce ? () => annullaInCoda(voce, ripristina) : () => annulla(r.annulla, c, ripristina);
         // Poi i materiali usati (dal 20 ott 2026); il messaggio con «Annulla»
@@ -3198,7 +3223,8 @@
         const d = { codice: c.codice, data: isoDa(fattaIl), pagamento, importo: importo ?? undefined };
         const { r, voce } = await manda('riparazione', d, `Riparazione fatta il ${testoData(fattaIl)}: ${c.nome}`);
         chiudiFinestra();
-        if (r && !r.giaSegnata) { APPLICA.riparazione(dati, d); salvaDati(); }
+        if (r && r.giaSegnata) { avvisaGiaSegnata(r, c, 'Guasto'); return; }
+        if (r) { APPLICA.riparazione(dati, d); salvaDati(); }
         disegna(history.state);
         const puoiAnnullare = voce || (r && r.annulla);
         const annullaRiparazione = voce ? () => annullaInCoda(voce, ripristina)

@@ -694,6 +694,35 @@ export async function cambiaPagamento(foglio, { riga, codice, data, pagamento, i
   };
 }
 
+// La stessa manutenzione o riparazione segnata di nuovo (5 nov 2026: a Stefano
+// «Contanti 80», rifatto due volte, non restava, e l'app diceva «Segnata ✓»).
+// L'intervento resta uno, ma vale il pagamento dell'ultima risposta, come se si
+// cambiasse da «Interventi fatti». Senza un importo nuovo resta quello che c'era.
+// Se è uguale, o è la stessa richiesta arrivata due volte, non si scrive niente.
+// `lavoro`: '' = manutenzione, 'Guasto' = riparazione (come lavoroStorico).
+// null = quell'intervento nello storico non c'è.
+async function pagamentoRifatto(foglio, { codice, giorno, lavoro, pag, imp }) {
+  const g = await leggiGrigliaStorico(foglio);
+  if (!g || !g.length) return null;
+  const k = colonneStorico(g);
+  const cella = (r, i) => (i < 0 ? '' : testo(r[i]));
+  let n = 0;
+  for (let i = g.length; i > 1 && !n; i--) {
+    const r = g[i - 1] || [];
+    if (cella(r, k.codice).toUpperCase() === codice && cella(r, k.data) === giorno && lavoroStorico(cella(r, k.lavoro)) === lavoro) n = i;
+  }
+  if (!n) return null;
+  const r = g[n - 1];
+  const prima = cella(r, k.pagamento);
+  const importoPrima = k.importo >= 0 && importoDa(r[k.importo]) > 0 ? importoDa(r[k.importo]) : '';
+  const importo = imp !== '' ? imp : pagaConImporto(pag) ? importoPrima : '';
+  if (!pag || (pag === prima && importo === importoPrima)) {
+    return { pagamentoCambiato: false, pagamento: prima, importo: importoPrima === '' ? null : importoPrima };
+  }
+  const fatto = await cambiaPagamento(foglio, { riga: n, codice, data: giorno, pagamento: pag, importo });
+  return { pagamentoCambiato: true, pagamento: fatto.pagamento, importo: fatto.importo, annullaPagamento: fatto.annulla };
+}
+
 // Cancellare un intervento fatto (21 ott 2026, Matteo: a lui, a babbo e alla
 // segretaria sì, a un dipendente no: il permesso sta negli Accessi). Prima la
 // riga si copia nella scheda "Interventi-Cancellati", con quando e chi, poi
@@ -1346,6 +1375,7 @@ function cosaRegistro(azione, dati, r) {
     else if (typeof val === 'object') continue;
     else parti.push(`${k}: ${breveValore(val)}`);
   }
+  if (r && r.giaSegnata) parti.push(r.pagamentoCambiato ? 'era già segnata: pagamento aggiornato' : 'era già segnata');
   return parti.join(', ');
 }
 export async function registra(foglio, { chi, nome = '', azione, dati, r }) {
@@ -1664,11 +1694,14 @@ export async function segnaFatta(foglio, { codice, data, frequenza, pagamento, i
   const prossima = piuMesi(quando, mesi);
   const serProssima = serialeDa(prossima.a, prossima.m, prossima.g);
   const nome = testo(r[col.NOME - 1]);
-  // La stessa richiesta arrivata due volte: il telefono senza campo riprova,
-  // ma la prima era già passata (15 ott 2026). La data è già quella giusta:
-  // non si riscrive niente e lo storico non si ripete.
+  // Segnata di nuovo lo stesso giorno: il telefono senza campo riprova, ma la
+  // prima era già passata (15 ott 2026), o la si è rifatta a mano. La data è
+  // già quella giusta: lo storico non si ripete, ma il pagamento nuovo vale
+  // (5 nov 2026, pagamentoRifatto). Se nello storico non c'è (cancellato, o non
+  // si era scritto) si va avanti e si segna da capo: non è mai una conferma a vuoto.
   if (serialeDaCella(r[col.MANUTENZIONE - 1]) === serProssima) {
-    return { ok: true, nome, fatta: testoData(quando), prossima: testoData(prossima), annulla: null, giaSegnata: true };
+    const rifatto = await pagamentoRifatto(foglio, { codice: testo(codice).toUpperCase(), giorno: testoData(quando), lavoro: '', pag, imp });
+    if (rifatto) return { ok: true, nome, fatta: testoData(quando), prossima: testoData(prossima), annulla: null, giaSegnata: true, ...rifatto };
   }
 
   // Cosa c'era prima (formula compresa), per poterlo rimettere.
@@ -1774,7 +1807,7 @@ export async function rimandaManutenzione(foglio, { codice, mesi, data }) {
 // manutenzione questa riga non la tiene ferma. Toglie il segno «Urgente»
 // (non «Sospesa») e chiude solo le sue tappe «Guasto» fino a quel giorno.
 // La stessa richiesta arrivata due volte (stesso cliente, giorno e lavoro)
-// non scrive un'altra riga. Se c'è stata anche la manutenzione, l'app usa
+// non scrive un'altra riga, ma il pagamento nuovo sì (pagamentoRifatto). Se c'è stata anche la manutenzione, l'app usa
 // segnaFatta, che fa già tutto questo.
 export async function segnaRiparazione(foglio, { codice, data, pagamento, importo }, { chi = 'app' } = {}) {
   const quando = data ? leggiDataUtente(data) : oggi();
@@ -1792,9 +1825,8 @@ export async function segnaRiparazione(foglio, { codice, data, pagamento, import
   const cod = testo(codice).toUpperCase();
   const nome = testo(r[mappa.col.NOME - 1]);
   const giorno = testoData(quando);
-  if ((await leggiStorico(foglio)).some((s) => s.codice === cod && s.data === giorno && s.lavoro === 'Guasto')) {
-    return { ok: true, nome, fatta: giorno, pagamento: pag, annulla: null, giaSegnata: true };
-  }
+  const rifatto = await pagamentoRifatto(foglio, { codice: cod, giorno, lavoro: 'Guasto', pag, imp });
+  if (rifatto) return { ok: true, nome, fatta: giorno, annulla: null, giaSegnata: true, ...rifatto };
 
   // Qui lo storico è l'intervento stesso: se non si scrive, è un errore.
   const cP = (await colonnaPagamento(foglio)) || INTESTAZIONI_STORICO.indexOf('Pagamento') + 1;
