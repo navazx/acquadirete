@@ -89,3 +89,10 @@ il repository è pubblico.
 - Come si misura: il 1° dicembre, nel Gestionale e nel cruscotto (contatti, clienti e costo per cliente per canale; preventivi ancora fermi a "Preventivo inviato"), e nel contatore del sito (contatti ogni 100 visite dagli annunci, oggi fra 2 e 2,5). Il giudizio sul budget si fa sui tre mesi, a fine gennaio.
 - Si controlla dal: 2026-11-29
 - Esito: da vedere
+
+## 2026-11-05 · ARTICOLO · «Depuratore fai da te o installato: cosa cambia davvero (e arricchito «Depuratore acqua "gratis"? Come funzionano davvero»
+- Cosa è cambiato: approvata da Matteo su Telegram (proposta/articolo-depuratore-fai-da-te-o-installato)
+- Cosa ci si aspetta: «depuratore acqua gratis» passa dall'8,8° a un posto fra i primi 7, e le ricerche del "gratis" arrivano ad almeno 10 clic al mese (oggi 0); l'articolo fai da te entra nell'indice e comincia a uscire per ricerche su depuratori fai da te, online o da installare; più lettori dei due articoli passano a prezzi e osmosi.
+- Come si misura: in Search Console quattro settimane dopo l'approvazione: posizione e clic dell'articolo "gratis" sulle sue ricerche (oggi 546 viste, 0 clic, 8,8° su «depuratore acqua gratis»), e le ricerche per cui esce l'articolo nuovo; col contatore del sito, le visite a prezzi e osmosi arrivate dai due articoli. Contatti: numeri piccoli, si guardano a tre mesi.
+- Si controlla dal: 2026-12-03
+- Esito: da vedere
