@@ -1110,11 +1110,14 @@
     return { nome: t.nome, indirizzo: t.indirizzo, citta: t.citta, provincia: '', ...qui, telefono: t.telefono, cliente: null };
   }
   const puntoTappa = (t) => { const l = luogoTappa(t); return l.lat != null ? { lat: l.lat, lng: l.lng } : null; };
-  // «Altro» (2 nov 2026, Matteo: «cose che non c'entrano nulla con clienti,
+  // «Cosa da fare» (2 nov 2026, Matteo: «cose che non c'entrano nulla con clienti,
   // tipo andare dal medico, caricare le bombole, rimettere il magazzino, con
   // l'orario»): una tappa senza cliente né contatto, col lavoro «Altro». Nome =
-  // cosa c'è da fare; il posto è facoltativo.
+  // cosa c'è da fare; il posto è facoltativo. Nel foglio resta «Altro», ma
+  // nell'app ha il suo nome (5 nov 2026, Matteo: «così confonde»): l'«Altro» di
+  // un cliente è un lavoro che si fa pagare, questo no (chiedeConto).
   const eImpegno = (t) => !t.codice && !t.contatto && (t.lavoro || 'Altro') === 'Altro';
+  const nomeLavoro = (t) => (eImpegno(t) ? 'Cosa da fare' : t.lavoro || 'Altro');
   // Le tappe con l'ora vanno in fila per ora; quelle senza si infilano dove
   // allungano meno il giro, da casa a casa; quelle senza posizione in fondo.
   // Una fascia oraria («dalle 9 alle 11», dal 21 ott 2026) va in fila per
@@ -1177,7 +1180,7 @@
   }
   // «10:00», o la fascia «09:00–11:00».
   const orarioTappa = (t) => (t.ora && t.oraFine ? `${t.ora}–${t.oraFine}` : t.ora || '');
-  const etichettaLavoro = (t) => `<span class="etichetta lavoro-${normalizza(t.lavoro || 'Altro')}">${esc(t.lavoro || 'Altro')}</span>`;
+  const etichettaLavoro = (t) => `<span class="etichetta lavoro-${normalizza(t.lavoro || 'Altro')}">${esc(nomeLavoro(t))}</span>`;
   // «Giro di Stefano oggi alle 10:00» sulle voci dei clienti.
   function etichettaGiro(c) {
     const t = tappeDi((x) => x.codice === c.codice)[0];
@@ -3355,7 +3358,7 @@
     return suoi.filter((m) => serialeGiorno(m.data) === primo).map((m) => `${numeroIt(-m.quantita)} × ${m.descrizione}`).join(', ');
   }
   // «Installazione fatta», «Sopralluogo fatto».
-  const fattoA = (lavoro) => (['Manutenzione', 'Installazione'].includes(lavoro) ? 'fatta' : 'fatto');
+  const fattoA = (lavoro) => (['Manutenzione', 'Installazione', 'Cosa da fare'].includes(lavoro) ? 'fatta' : 'fatto');
   function chiediLavoroFatto(t) {
     const l = luogoTappa(t);
     const x = interventoDellaTappa(t);
@@ -3369,7 +3372,7 @@
     const tel = resto > 0 && !rataFutura(t) ? telefoni(l.telefono)[0] : null;
     apriFinestra(`
       <h3>${esc(l.nome)}</h3>
-      <p>${esc(t.lavoro || 'Altro')} ${fattoA(t.lavoro)}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
+      <p>${esc(nomeLavoro(t))} ${fattoA(nomeLavoro(t))}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
       ${conto ? `<div class="conto">
         ${vuoto ? '<div class="conto-riga"><span>Pagamento non segnato</span></div>' : ''}
         ${t.prezzo != null ? `<div class="conto-riga"><span>Prezzo totale</span><b>${esc(euro(t.prezzo))}</b></div>` : ''}
@@ -3410,7 +3413,7 @@
     const cl = t.codice && clienteIn(dati, t.codice);
     apriFinestra(`
       <h3>Cancellare questo lavoro?</h3>
-      <p><strong>${esc(luogoTappa(t).nome)}</strong> · ${esc(t.lavoro || 'Altro')}${t.chi ? `, ${fattoA(t.lavoro)} ${esc(daChi(t.chi))}` : ''}. Sparisce dal giro e dagli interventi fatti${x ? ' (nel foglio ne resta una copia)' : ''}.</p>
+      <p><strong>${esc(luogoTappa(t).nome)}</strong> · ${esc(nomeLavoro(t))}${t.chi ? `, ${fattoA(nomeLavoro(t))} ${esc(daChi(t.chi))}` : ''}. Sparisce dal giro e dagli interventi fatti${x ? ' (nel foglio ne resta una copia)' : ''}.</p>
       ${torna != null ? `<p>Quella manutenzione aveva spostato la prossima al <strong>${esc(x.prossima)}</strong>. Se non è stata fatta davvero, rimettila al <strong>${esc(testoGiorno(torna))}</strong>.</p>` : ''}
       ${t.lavoro === 'Installazione' && cl && cl.installazione ? `<p>La data di installazione (${esc(cl.installazione)}) resta sulla scheda: se è sbagliata si cambia da «Modifica i dati».</p>` : ''}
       ${usati ? `<p>I materiali segnati (${esc(usati)}) tornano in magazzino.</p>` : ''}
@@ -3501,7 +3504,7 @@
     const l = luogoTappa(t);
     return `<button class="voce" type="button" data-lavoro-fatto="${esc(t.id)}">
       <b>${esc(l.nome)}</b>
-      <span class="riga2">${esc(t.lavoro || 'Altro')} · fatta ${esc(daChi(t.chi))}</span>
+      <span class="riga2">${esc(nomeLavoro(t))} · fatta ${esc(daChi(t.chi))}</span>
       <span class="riga3"><span class="etichetta verde">Fatto ✓</span></span>
     </button>`;
   }
@@ -3558,7 +3561,7 @@
     // Poi il prezzo e quanto ha pagato (3 nov 2026), anche se è ancora un contatto.
     // Dopo si aprono i materiali, se c'è il magazzino; se no la finestra si chiude qui.
     const avanti = chiedeConto(t) ? (installazione = null) => chiediParti(t, {
-      titolo: `${t.lavoro} ${fattoA(t.lavoro)} oggi?`,
+      titolo: t.lavoro === 'Installazione' ? `${t.lavoro} ${fattoA(t.lavoro)} oggi?` : 'Lavoro fatto oggi?',
       fatto: (pagato, btn) => conPulsante(btn, 'Salvo…', async () => {
         if (await fai(installazione, pagato) && !mag()) chiudiFinestra();
       }),
@@ -3575,8 +3578,10 @@
   // volte ce la facciamo dare in 2 o 3 volte»): il prezzo e i pagamenti, nella riga
   // della tappa. Manutenzioni e riparazioni hanno il loro, nello storico. La parte
   // con la fattura conta come pagata: il bonifico non si segue, come per le manutenzioni.
-  // Il finanziamento c'è solo qui: vedi chiediParti.
-  const chiedeConto = (t) => t.lavoro === 'Installazione';
+  // Il finanziamento c'è solo qui: vedi chiediParti. Dal 5 nov 2026 anche un lavoro
+  // «Altro» di un cliente o di un contatto (Matteo: una bombola cambiata si fa
+  // pagare), non una «Cosa da fare» (eImpegno): il medico non si paga.
+  const chiedeConto = (t) => t.lavoro === 'Installazione' || ((t.lavoro || 'Altro') === 'Altro' && !eImpegno(t));
   const partiDi = (x) => x.pagamenti || [];
   const pagatoDi = (x) => Math.round(partiDi(x).reduce((s, p) => s + p.importo, 0) * 100) / 100;
   // Quanto resta: null se il prezzo non è segnato.
@@ -3609,7 +3614,8 @@
   function chiediParti(t, { titolo, conGiorno = false, fatto }) {
     const fin = partiDi(t).find((p) => p.come === FINANZIAMENTO);
     const gia = partiDi(t).filter((p) => p !== fin);
-    const vie = [...PAGAMENTI.filter(([v]) => conImporto(v)), [FINANZIAMENTO, 'Finanziamento, la cifra totale']];
+    // Il finanziamento solo per le installazioni: una bombola non si finanzia.
+    const vie = [...PAGAMENTI.filter(([v]) => conImporto(v)), ...(t.lavoro === 'Installazione' || fin ? [[FINANZIAMENTO, 'Finanziamento, la cifra totale']] : [])];
     apriFinestra(`
       <h3>${esc(titolo)}</h3>
       <p><strong>${esc(luogoTappa(t).nome)}</strong>${gia.length ? `<br>Già pagati: <strong>${esc(euro(pagatoDi({ pagamenti: gia })))}</strong>` : ''}</p>
@@ -3708,7 +3714,7 @@
   }
 
   // «Aggiungi una tappa» dalla pagina dei giri: si cerca il cliente o il
-  // contatto, oppure si scrive un indirizzo qualsiasi, oppure «Altro».
+  // contatto, oppure si scrive un indirizzo qualsiasi, oppure «Cosa da fare».
   function chiediCosaAlGiro(giorno) {
     apriFinestra(`
       <h3>Chi vai a trovare?</h3>
@@ -3716,7 +3722,7 @@
         <input id="cerca-tappa" autocomplete="off" placeholder="Nome, città o telefono"></label>
       <div class="lista" id="trovati-tappa"></div>
       <button class="btn" type="button" id="indirizzo-libero">${icona('mappa')} Un altro indirizzo</button>
-      <button class="btn scelta-lavoro" type="button" id="altro-impegno">${icona('registro')}<span>Altro<small>Medico, bombole, magazzino… senza un cliente</small></span></button>
+      <button class="btn scelta-lavoro" type="button" id="altro-impegno">${icona('registro')}<span>Cosa da fare<small>Medico, caricare le bombole, magazzino: niente pagamento</small></span></button>
       <button class="btn leggero" type="button" id="no">Lascia stare</button>`);
     const mostra = () => {
       const q = normalizza($('cerca-tappa').value);
@@ -3751,7 +3757,7 @@
 
   // Aggiungere o cambiare una tappa: di chi, che lavoro, quando, a che ora.
   // Per un contatto o un indirizzo qualsiasi anche nome e indirizzo (la
-  // posizione la cerca il telefono su OpenStreetMap, se c'è campo). «Altro»
+  // posizione la cerca il telefono su OpenStreetMap, se c'è campo). «Cosa da fare»
   // (`altro`, o una tappa che lo è già): cosa c'è da fare, e il posto se serve.
   // Gli altri impianti dello stesso cliente allo stesso indirizzo (4 nov 2026,
   // Matteo: «però nel giro devo aggiungerlo due volte così»): nel foglio c'è una
