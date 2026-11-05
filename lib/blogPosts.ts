@@ -1092,7 +1092,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Cosa c\'è nella scatola, e cosa resta fuori',
         paragraphs: [
           'Un depuratore comprato da solo arriva con la macchina, i tubi, i raccordi e un libretto di istruzioni. Tutto il resto tocca a te: decidere quale modello prendere, montarlo, ricordarti dei filtri e trovare chi lo aggiusta. Sono proprio le cose che, con un impianto installato, paghi insieme alla macchina.',
-          'Per questo il confronto giusto non è fra due prezzi, ma fra due modi di avere l\'acqua depurata in casa per anni. I [prezzi dei nostri depuratori, installazione compresa](/prezzi-depuratori/), li trovi scritti sul sito: puoi fare il confronto da solo, con le cifre vere davanti.',
+          'Per questo il confronto giusto non è fra due prezzi, ma fra due modi di avere l\'acqua depurata in casa per anni. Per farti un\'idea, sul sito trovi i [prezzi dei nostri depuratori, installazione compresa](/prezzi-depuratori/): da quanto si parte e fin dove si arriva, secondo il tipo di impianto. Il prezzo esatto per casa tua te lo diamo col sopralluogo gratuito.',
         ],
       },
       {

@@ -1,5 +1,10 @@
 # Articolo da approvare: un nuovo e uno rinforzato
 
+## Corretto il 5 novembre 2026 con le tue note
+
+- **I prezzi sul sito sono una forbice, non cifre precise.** Nell'articolo nuovo la frase diceva che sul sito trovi i nostri prezzi e puoi fare il confronto da solo «con le cifre vere davanti». Ora dice che, per farti un'idea, sul sito trovi da quanto si parte e fin dove si arriva secondo il tipo di impianto, e che il prezzo esatto per casa tua te lo diamo col sopralluogo gratuito. Il collegamento alla pagina dei prezzi resta, con le stesse parole, e nell'articolo continua a non esserci nessuna cifra. È segnata con **(cambiato)** più sotto.
+- **Controllato anche l'articolo "gratis":** lì una frase dice che nella pagina dei prezzi c'è il conto su dieci anni «con le nostre cifre vere». L'ho lasciata: quell'esempio, con le cifre di un'osmosi base, nella pagina c'è davvero. Se vuoi che la cambi, dimmelo.
+
 ## In breve
 
 - **Nuovo:** «Depuratore fai da te o installato: cosa cambia davvero». È l'argomento che avevi messo tu in coda il 21 settembre: spiega a chi vede depuratori molto più economici online e nei negozi di bricolage cosa resta fuori dalla scatola (scelta, montaggio, filtri, riparazioni, garanzia). Nessuna cifra, porta alla pagina dei prezzi.
@@ -61,7 +66,7 @@ Depuratore comprato online o nei negozi di bricolage, o installato da un tecnico
 Riassunto nella lista del blog:
 Online e nei negozi di bricolage i depuratori costano molto meno. Ecco cosa cambia davvero tra comprarlo e montarlo da soli o farlo installare: la scelta, il montaggio, i filtri e chi lo ripara.
 
-Tempo di lettura: 6 minuti (circa 1.200 parole).
+Tempo di lettura: 6 minuti (1.224 parole, domande frequenti comprese).
 
 (introduzione, senza titolo)
 
@@ -73,7 +78,7 @@ La risposta breve: il fai da te all'inizio costa meno, ma nella scatola c'è sol
 
 Un depuratore comprato da solo arriva con la macchina, i tubi, i raccordi e un libretto di istruzioni. Tutto il resto tocca a te: decidere quale modello prendere, montarlo, ricordarti dei filtri e trovare chi lo aggiusta. Sono proprio le cose che, con un impianto installato, paghi insieme alla macchina.
 
-Per questo il confronto giusto non è fra due prezzi, ma fra due modi di avere l'acqua depurata in casa per anni. I prezzi dei nostri depuratori, installazione compresa (collegamento a /prezzi-depuratori/), li trovi scritti sul sito: puoi fare il confronto da solo, con le cifre vere davanti.
+**(cambiato)** Per questo il confronto giusto non è fra due prezzi, ma fra due modi di avere l'acqua depurata in casa per anni. Per farti un'idea, sul sito trovi i prezzi dei nostri depuratori, installazione compresa (collegamento a /prezzi-depuratori/): da quanto si parte e fin dove si arriva, secondo il tipo di impianto. Il prezzo esatto per casa tua te lo diamo col sopralluogo gratuito.
 
 ### La scelta: prima si guarda l'acqua, poi la macchina
 
