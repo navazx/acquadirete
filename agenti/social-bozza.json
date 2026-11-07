@@ -1,46 +1,53 @@
 {
-  "tema": "contesto diverso",
-  "foto": "assets/social/tg-2026-10-27-314.jpg",
+  "tema": "curiosità: il depuratore «gratis»",
+  "foto": "assets/social/curiosita-2026-11-07-2.jpg",
+  "grafica": {
+    "titolo": "Lo sapevi che il depuratore *“gratis”* alla fine lo paghi?",
+    "punti": [
+      {
+        "icona": "calendario",
+        "titolo": "Lo paghi negli anni",
+        "testo": "L’impianto costa zero, ma di solito firmi anni di manutenzione, spesso con un finanziamento."
+      },
+      {
+        "icona": "euro",
+        "titolo": "Fai il conto intero",
+        "testo": "Manutenzione, filtri e quello che paghi a ogni visita del tecnico, per tutti gli anni. E quanto costa uscire prima."
+      },
+      {
+        "icona": "casa",
+        "titolo": "Alla fine, di chi è?",
+        "testo": "In comodato resta loro. Comprato, anche a rate, a fine pagamento è tuo."
+      }
+    ]
+  },
   "varianti": [
     {
-      "testo": "Dove va il depuratore, se sotto il lavello c'è un cassetto? In questa cucina si vedono le guide sui fianchi del mobile: lì l'impianto non ci stava. Abbiamo montato un impianto a osmosi inversa fatto per stare sotto lo zoccolo, basso e piatto: così il mobile sotto il lavello resta per il cassetto.",
+      "testo": "Un depuratore «gratis» di solito non si paga all’inizio: si paga negli anni, con la manutenzione che firmi insieme. Per capire se ti conviene non guardare la rata: somma manutenzione, filtri e quello che paghi a ogni visita del tecnico, per tutti gli anni del contratto. Sul nostro sito, nella pagina dei prezzi, quel conto l’abbiamo fatto su dieci anni, con le nostre cifre vere.",
       "hashtag": [
         "#depuratoreacqua",
-        "#osmosiinversa",
-        "#sottozoccolo",
-        "#firenze"
-      ]
-    },
-    {
-      "testo": "Lo zoccolo qui è ancora aperto: la foto l'abbiamo fatta durante il lavoro. Una volta richiuso, del depuratore a osmosi inversa in cucina si vede solo il rubinetto: un miscelatore a 3 vie, uno solo per l'acqua di casa, calda e fredda, e per quella depurata.",
-      "hashtag": [
-        "#depuratoreacqua",
-        "#osmosiinversa",
-        "#prato",
-        "#pistoia"
-      ]
-    },
-    {
-      "testo": "Sotto il lavello o sotto lo zoccolo? Dipende dalla cucina. Dove sotto il lavello c'è posto, il depuratore va lì; dove c'è un cassetto, o il mobile ti serve per altro, c'è il modello che sta sotto lo zoccolo. Lo scegliamo guardando la tua cucina, col sopralluogo gratuito. Montiamo depuratori dal 2005, fra Firenze, Prato e Pistoia.",
-      "hashtag": [
-        "#depuratoreacqua",
+        "#depuratoregratis",
         "#firenze",
+        "#prato"
+      ]
+    },
+    {
+      "testo": "Prima di firmare per un depuratore «gratis», fai una domanda sola: alla fine del contratto, l’impianto di chi è? Se è in comodato, hai pagato per anni una macchina che resta di qualcun altro. Da noi l’impianto lo compri, anche a rate, e a fine pagamento è tuo. Con 10 anni di garanzia, esclusi i consumabili.",
+      "hashtag": [
+        "#depuratoreacqua",
+        "#depuratoregratis",
+        "#firenze",
+        "#pistoia"
+      ]
+    },
+    {
+      "testo": "Ti hanno chiamato per un depuratore «gratis»? Non è per forza un’offerta da buttare: a qualcuno un canone fa comodo. Basta sapere cosa si firma: per quanti anni, cosa paghi ogni anno e quanto costa uscire prima. Chiedi un preventivo anche a noi, gratuito e senza impegno, e mettili uno accanto all’altro. Montiamo depuratori dal 2005, fra Firenze, Prato e Pistoia.",
+      "hashtag": [
+        "#depuratoreacqua",
+        "#depuratoregratis",
         "#prato",
         "#pistoia"
       ]
     }
-  ],
-  "inviato": "2026-10-31T07:04:09.846Z",
-  "pubblicato": "2026-10-31T07:45:47.055Z",
-  "variantePubblicata": 2,
-  "esiti": {
-    "facebook": {
-      "id": "1164447766749757_122125730121366858",
-      "url": "https://www.facebook.com/1164447766749757_122125730121366858"
-    },
-    "instagram": {
-      "id": "18108290191968802",
-      "url": "https://www.instagram.com/p/18108290191968802/"
-    }
-  }
+  ]
 }
