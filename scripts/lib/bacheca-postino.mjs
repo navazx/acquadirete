@@ -23,6 +23,22 @@ import { suMainDaCapo } from './spingi.mjs';
 import { creaFoglioGoogle, leggiBacheca, accodaNote } from '../../netlify/functions/_shared/gestionale.mjs';
 
 const IN_ARRIVO = 'agenti/bacheca/in-arrivo';
+
+/**
+ * Un "fetch failed" è la rete di GitHub che per un attimo non arriva a Google:
+ * il 7 nov 2026 aveva lasciato ferme 3 note fino al giro dopo. Si riprova due
+ * volte, solo per quello: un errore vero di Google si dice subito.
+ */
+async function conRiprova(fai) {
+  for (let tentativo = 1; ; tentativo++) {
+    try {
+      return await fai();
+    } catch (e) {
+      if (tentativo >= 3 || !/fetch failed|ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up/i.test(e.message)) throw e;
+      await new Promise((ok) => setTimeout(ok, tentativo * 10000));
+    }
+  }
+}
 const COPIA = 'agenti/bacheca.md';
 
 /**
@@ -47,13 +63,13 @@ export async function passaggio({ nuove = [] } = {}) {
     }
     try {
       const foglio = creaFoglioGoogle(SHEET_ID);
-      const sulFoglio = await leggiBacheca(foglio);
+      const sulFoglio = await conRiprova(() => leggiBacheca(foglio));
       const ci = new Set(sulFoglio.map((n) => n.id));
       const mancanti = [];
       for (const { file, ...n } of [...inArrivo, ...nuove]) {
         if (!ci.has(n.id)) { ci.add(n.id); mancanti.push(n); }
       }
-      if (mancanti.length) await accodaNote(foglio, mancanti);
+      if (mancanti.length) await conRiprova(() => accodaNote(foglio, mancanti));
       for (const n of inArrivo) rmSync(n.file);
       writeFileSync(join(dir, COPIA), testoCopia([...mancanti, ...sulFoglio]));
       esito = { portate: mancanti.length, ferme: 0, perche: '' };

@@ -55,4 +55,11 @@ jobs:
           # pagina del sito. (Il workflow non ripartirebbe comunque: i commit fatti col
           # token di GitHub non ne avviano altri.)
           git commit -m "Social: bozza mandata su Telegram [skip ci]"
-          git push
+          # Se nello stesso minuto un altro agente ha scritto su main, il push viene
+          # rifiutato: si riprende main e si riprova (7 nov 2026).
+          for tentativo in 1 2 3; do
+            git push && exit 0
+            sleep $((tentativo * 5))
+            git pull --rebase origin main || exit 1
+          done
+          exit 1

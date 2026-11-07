@@ -51,4 +51,11 @@ jobs:
           # Niente [skip ci]: Netlify lo legge come "non pubblicare", e le foto
           # sistemate devono andare online, perché Instagram le scarica dal sito.
           git commit -m "Foto social messe in riga per Instagram"
-          git push
+          # Se nello stesso minuto un altro agente ha scritto su main, il push viene
+          # rifiutato: si riprende main e si riprova (7 nov 2026).
+          for tentativo in 1 2 3; do
+            git push && exit 0
+            sleep $((tentativo * 5))
+            git pull --rebase origin main || exit 1
+          done
+          exit 1
