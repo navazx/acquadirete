@@ -49,5 +49,18 @@
         "#pistoia"
       ]
     }
-  ]
+  ],
+  "pubblicato": "2026-11-07T08:15:49.924Z",
+  "variantePubblicata": 1,
+  "esiti": {
+    "facebook": {
+      "id": "1164447766749757_122126684649366858",
+      "url": "https://www.facebook.com/1164447766749757_122126684649366858"
+    },
+    "instagram": {
+      "id": "18102679337060758",
+      "url": "https://www.instagram.com/p/18102679337060758/"
+    }
+  },
+  "graficaTolta": true
 }
