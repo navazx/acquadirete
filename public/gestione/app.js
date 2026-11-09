@@ -159,22 +159,45 @@
     const re = /(\+?\d[\d\s./-]{4,}\d)/g;
     let m;
     while ((m = re.exec(String(testo || '')))) {
-      const cifre = m[1].replace(/[^\d+]/g, '');
-      if (cifre.replace(/\D/g, '').length < 6) continue;
-      const nazionale = cifre.replace(/^(\+39|0039)/, '');
-      trovati.push({
-        mostra: m[1].trim(),
-        tel: cifre,
-        cellulare: /^3\d{8,9}$/.test(nazionale),
-        wa: '39' + nazionale,
-      });
+      for (const pezzo of pezziNumero(m[1])) {
+        const cifre = pezzo.replace(/[^\d+]/g, '');
+        if (cifre.replace(/\D/g, '').length < 6) continue;
+        if (trovati.some((x) => x.tel === cifre)) continue; // lo stesso numero scritto due volte
+        const nazionale = cifre.replace(/^(\+39|0039)/, '');
+        trovati.push({
+          mostra: pezzo.trim(),
+          tel: cifre,
+          cellulare: /^3\d{8,9}$/.test(nazionale),
+          wa: '39' + nazionale,
+        });
+      }
     }
     return trovati;
+  }
+  // Due numeri attaccati da un trattino o da uno spazio, come «333 123 4567-347
+  // 765 4321» (9 nov 2026, Matteo: «ha due numeri di cell, quando clicco chiama
+  // me li unisce insieme»). Un numero italiano ha al massimo 11 cifre oltre il
+  // +39: sotto, è uno solo («055-123456» resta intero); sopra, si divide dove un
+  // pezzo da almeno 6 cifre più il successivo passerebbe le 11.
+  const MAX_CIFRE = 11;
+  const cifreNazionali = (s) => String(s).replace(/[^\d+]/g, '').replace(/^(\+39|0039)/, '').replace(/\D/g, '');
+  function pezziNumero(s) {
+    if (cifreNazionali(s).length <= MAX_CIFRE) return [s];
+    const parti = s.split(/([\s./-]+)/);
+    const pezzi = [];
+    let cur = '';
+    for (let i = 0; i < parti.length; i += 2) {
+      const p = parti[i];
+      if (cur && cifreNazionali(cur).length >= 6 && cifreNazionali(cur + p).length > MAX_CIFRE) { pezzi.push(cur); cur = p; }
+      else cur = cur ? cur + parti[i - 1] + p : p;
+    }
+    if (cur) pezzi.push(cur);
+    return pezzi.map((x) => x.trim()).filter(Boolean);
   }
   const email = (testo) => (String(testo || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/) || [null])[0];
   const senzaCap = (citta) => String(citta || '').replace(/^\s*\d{5}\s+/, '');
   // I numeri di telefono di un testo, per confrontarli: le ultime 9 cifre.
-  const noveCifre = (testo) => (String(testo).match(/\d[\d\s./-]{7,}\d/g) || []).map((n) => n.replace(/\D/g, '').slice(-9)).filter((n) => n.length === 9);
+  const noveCifre = (testo) => telefoni(testo).map((n) => n.tel.replace(/\D/g, '').slice(-9)).filter((n) => n.length === 9);
   // "50012 BAGNO A RIPOLI" → "Bagno a Ripoli", "COLLE VAL D'ELSA" → "Colle Val d'Elsa".
   const titoloCitta = (citta) => senzaCap(citta).toLowerCase()
     .replace(/(^|[\s'’-])\p{L}/gu, (x) => x.toUpperCase())
@@ -1083,7 +1106,10 @@
   // (facoltativa), di chi è, che lavoro è, e chi si va a trovare (un cliente,
   // un contatto o un indirizzo qualsiasi). Le tappe della colonna "Chi ci va"
   // del 19 ott arrivano senza giorno: valgono per oggi.
-  const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
+  const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Bombola', 'Altro'];
+  // «Bombola» (9 nov 2026, Matteo): chiede da quanti kg. I tasti sono i pesi
+  // scritti più spesso nel foglio (2 kg 20 volte, 4 kg 11, 1 kg 7); un altro si scrive.
+  const KG_BOMBOLE = [1, 2, 4];
   const oggiTesto = () => testoData(oggi());
   const giornoDi = (t) => t.giorno || oggiTesto();
   const serialeGiorno = (s) => { const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? serialeDa(+m[3], +m[2], +m[1]) : null; };
@@ -1117,7 +1143,8 @@
   // nell'app ha il suo nome (5 nov 2026, Matteo: «così confonde»): l'«Altro» di
   // un cliente è un lavoro che si fa pagare, questo no (chiedeConto).
   const eImpegno = (t) => !t.codice && !t.contatto && (t.lavoro || 'Altro') === 'Altro';
-  const nomeLavoro = (t) => (eImpegno(t) ? 'Cosa da fare' : t.lavoro || 'Altro');
+  const nomeLavoro = (t) => (eImpegno(t) ? 'Cosa da fare'
+    : t.lavoro === 'Bombola' && t.kg ? `Bombola ${String(t.kg).replace('.', ',')} kg` : t.lavoro || 'Altro');
   // Le tappe con l'ora vanno in fila per ora; quelle senza si infilano dove
   // allungano meno il giro, da casa a casa; quelle senza posizione in fondo.
   // Una fascia oraria («dalle 9 alle 11», dal 21 ott 2026) va in fila per
@@ -1723,8 +1750,9 @@
     const nums = telefoni(testo);
     const mail = email(testo);
     let html = nums.map((n) => `<a class="btn pieno largo" href="tel:${esc(n.tel)}">${icona('telefono')} Chiama ${esc(n.mostra)}</a>`).join('');
-    const cell = nums.find((n) => n.cellulare);
-    if (cell) html += `<a class="btn" href="https://wa.me/${esc(cell.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp</a>`;
+    // Con due cellulari, un WhatsApp per numero (9 nov 2026).
+    const cell = nums.filter((n) => n.cellulare);
+    html += cell.map((n) => `<a class="btn" href="https://wa.me/${esc(n.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp${cell.length > 1 ? ` ${esc(n.mostra)}` : ''}</a>`).join('');
     const dove = sulPosto(cliente) || indirizzo;
     if (dove) html += `<a class="btn" ${linkPortami(dove)}>${icona('mappa')} Portami lì</a>`;
     // La mappa dell'app, centrata su di lui (17 ott 2026): per vedere chi gli
@@ -3358,7 +3386,7 @@
     return suoi.filter((m) => serialeGiorno(m.data) === primo).map((m) => `${numeroIt(-m.quantita)} × ${m.descrizione}`).join(', ');
   }
   // «Installazione fatta», «Sopralluogo fatto».
-  const fattoA = (lavoro) => (['Manutenzione', 'Installazione', 'Cosa da fare'].includes(lavoro) ? 'fatta' : 'fatto');
+  const fattoA = (lavoro) => (/^Bombola/.test(lavoro || '') ? 'cambiata' : ['Manutenzione', 'Installazione', 'Cosa da fare'].includes(lavoro) ? 'fatta' : 'fatto');
   function chiediLavoroFatto(t) {
     const l = luogoTappa(t);
     const x = interventoDellaTappa(t);
@@ -3369,7 +3397,7 @@
     const parti = partiDi(t);
     const resto = restoDi(t);
     const vuoto = !parti.length && t.prezzo == null;
-    const tel = resto > 0 && !rataFutura(t) ? telefoni(l.telefono)[0] : null;
+    const tels = resto > 0 && !rataFutura(t) ? telefoni(l.telefono) : [];
     apriFinestra(`
       <h3>${esc(l.nome)}</h3>
       <p>${esc(nomeLavoro(t))} ${fattoA(nomeLavoro(t))}${t.chi ? ` ${esc(daChi(t.chi))}` : ''}, nel giro del ${esc(giornoDi(t))}.${x ? `<br>Negli interventi fatti: ${esc(tipoIntervento(x).toLowerCase())} del <strong>${esc(x.data)}</strong>, ${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'pagamento non segnato')}.` : ''}</p>
@@ -3381,7 +3409,7 @@
         <div class="conto-riga${rataScaduta(t) ? ' conto-scaduta' : ''}"><span>${t.scadenzaRata ? `${rataScaduta(t) ? 'Rata scaduta il' : 'Prossima rata entro il'}<br><b>${esc(t.scadenzaRata)}</b>` : 'Prossima rata: data non segnata'}</span><button class="link" type="button" id="cambia-rata">${t.scadenzaRata ? 'Cambia' : 'Segna'}</button></div>` : ''}
         ${resto === 0 ? '<div class="conto-riga conto-pari"><span>Pagato tutto</span></div>' : ''}
       </div>` : ''}
-      ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
+      ${tels.map((n) => `<a class="btn pieno" href="tel:${esc(n.tel)}">${icona('telefono')} Chiama ${esc(n.mostra)}</a>`).join('')}
       ${conto ? `<button class="btn${resto > 0 || vuoto ? ' verde' : ''}" type="button" id="parte-nuova">${icona('euro')} ${resto > 0 ? 'Ha pagato un\'altra parte' : vuoto ? 'Segna il pagamento' : 'Cambia il prezzo o aggiungi un pagamento'}</button>` : ''}
       ${usati ? `<p style="margin-top:14px">Materiali: ${esc(usati)}</p>` : ''}
       ${apri ? '<button class="btn" type="button" id="apri-lavoro">Apri la scheda</button>' : ''}
@@ -3513,7 +3541,7 @@
   function riquadroTappe(lista) {
     return `<div class="tappe-scheda">
       ${lista.map((t) => `<div class="tappa-riga">
-        <span>${icona('cartina')} Nel giro di ${esc(nomeChi(t.chi))} ${esc(quandoTappa(t))} · ${esc(t.lavoro || 'Altro')}</span>
+        <span>${icona('cartina')} Nel giro di ${esc(nomeChi(t.chi))} ${esc(quandoTappa(t))} · ${esc(nomeLavoro(t))}</span>
         <button class="link" type="button" data-tappa-cambia="${esc(t.id)}">Cambia</button>
       </div>`).join('')}
       <button class="btn" type="button" id="al-giro" style="width:100%">${icona('cartina')} ${lista.length ? 'Aggiungi un\'altra tappa' : 'Aggiungi al giro'}</button>
@@ -3551,7 +3579,7 @@
     // Dal medico o a caricare le bombole non si usano materiali: niente domanda.
     // Il giorno diventa oggi: una tappa rimasta da ieri è fatta oggi, e gli
     // Interventi fatti (3 nov 2026) mostrano questa data.
-    const fai = (installazione = null, pagato = null) => salvaLaTappa({ ...t, giorno: oggiTesto(), stato: 'Fatta', ...pagato }, `Fatto ✓ ${eImpegno(t) ? '' : `${t.lavoro || 'Lavoro'}: `}${luogoTappa(t).nome}${pagato && testoConto(pagato) ? ` · ${testoConto(pagato)}` : ''}`, {
+    const fai = (installazione = null, pagato = null) => salvaLaTappa({ ...t, giorno: oggiTesto(), stato: 'Fatta', ...pagato }, `Fatto ✓ ${eImpegno(t) ? '' : `${nomeLavoro(t)}: `}${luogoTappa(t).nome}${pagato && testoConto(pagato) ? ` · ${testoConto(pagato)}` : ''}`, {
       materiali: eImpegno(t) ? null : { codice: c ? c.codice : '', nome: luogoTappa(t).nome, lavoro: t.lavoro || 'Altro', data: oggi() },
       installazione,
     });
@@ -3561,7 +3589,7 @@
     // Poi il prezzo e quanto ha pagato (3 nov 2026), anche se è ancora un contatto.
     // Dopo si aprono i materiali, se c'è il magazzino; se no la finestra si chiude qui.
     const avanti = chiedeConto(t) ? (installazione = null) => chiediParti(t, {
-      titolo: t.lavoro === 'Installazione' ? `${t.lavoro} ${fattoA(t.lavoro)} oggi?` : 'Lavoro fatto oggi?',
+      titolo: t.lavoro === 'Installazione' ? 'Installazione fatta oggi?' : t.lavoro === 'Bombola' ? `${nomeLavoro(t)} cambiata oggi?` : 'Lavoro fatto oggi?',
       fatto: (pagato, btn) => conPulsante(btn, 'Salvo…', async () => {
         if (await fai(installazione, pagato) && !mag()) chiudiFinestra();
       }),
@@ -3581,7 +3609,8 @@
   // Il finanziamento c'è solo qui: vedi chiediParti. Dal 5 nov 2026 anche un lavoro
   // «Altro» di un cliente o di un contatto (Matteo: una bombola cambiata si fa
   // pagare), non una «Cosa da fare» (eImpegno): il medico non si paga.
-  const chiedeConto = (t) => t.lavoro === 'Installazione' || ((t.lavoro || 'Altro') === 'Altro' && !eImpegno(t));
+  // Anche la bombola (9 nov 2026), da chiunque sia, anche da «Un altro indirizzo».
+  const chiedeConto = (t) => ['Installazione', 'Bombola'].includes(t.lavoro) || ((t.lavoro || 'Altro') === 'Altro' && !eImpegno(t));
   const partiDi = (x) => x.pagamenti || [];
   const pagatoDi = (x) => Math.round(partiDi(x).reduce((s, p) => s + p.importo, 0) * 100) / 100;
   // Quanto resta: null se il prezzo non è segnato.
@@ -3809,6 +3838,7 @@
         // già scelto diventava una commissione, fuori dagli interventi fatti.
         : l ? 'Sopralluogo' : altro ? 'Altro' : '';
     let chi = t0 && giranti().includes(t0.chi) ? t0.chi : giroPrincipale();
+    let kg = t0 && t0.kg != null ? t0.kg : null;
     const o = serialeOggi();
     let ser = Math.max(serialeGiorno(t0 ? giornoDi(t0) : giorno || oggiTesto()) ?? o, o);
     const cittaLead = l ? ((String(l.note || '').match(/Città:\s*([^—]+)/) || [])[1] || '').trim() : '';
@@ -3825,7 +3855,12 @@
       ${persone.length > 1 ? `<p class="domanda">Nel giro di</p>
         <div class="scelta scelta-chi" id="t-chi">${persone.map((p) => `<button type="button" data-v="${esc(p)}" aria-pressed="${chi === p}">${esc(nomeChi(p))}</button>`).join('')}</div>` : ''}
       ${impegno ? '' : `<p class="domanda">Che lavoro</p>
-      <div class="pillole pillole-lavoro" id="t-lavoro">${LAVORI.map((x) => `<button type="button" class="pillola" data-v="${x}" aria-pressed="${lavoro === x}">${x}</button>`).join('')}</div>`}
+      <div class="pillole pillole-lavoro" id="t-lavoro">${LAVORI.map((x) => `<button type="button" class="pillola" data-v="${x}" aria-pressed="${lavoro === x}">${x}</button>`).join('')}</div>
+      <div id="t-bombola"${lavoro === 'Bombola' ? '' : ' hidden'}>
+        <p class="domanda">Da quanti kg?</p>
+        <div class="pillole pillole-lavoro" id="t-kg">${KG_BOMBOLE.map((k) => `<button type="button" class="pillola" data-v="${k}" aria-pressed="${kg === k}">${k} kg</button>`).join('')}</div>
+        <label class="campo"><span>Un altro peso, in kg</span><input id="t-kg-altro" type="text" inputmode="decimal" autocomplete="off" placeholder="Es. 10" value="${kg != null && !KG_BOMBOLE.includes(kg) ? esc(String(kg).replace('.', ',')) : ''}"></label>
+      </div>`}
       <p class="domanda">Quando</p>
       <div class="scelta scelta-giorno" id="t-giorno">
         <button type="button" data-v="${o}" aria-pressed="${ser === o}">Oggi</button>
@@ -3868,10 +3903,15 @@
     if ($('t-lavoro')) {
       scegli('t-lavoro', (x) => {
         lavoro = x;
+        $('t-bombola').hidden = x !== 'Bombola';
         if (!$('t-tel')) return;
         $('t-tel-testo').innerHTML = creaContatto() ? 'Telefono' : 'Telefono <em>(facoltativo)</em>';
         $('t-tel-spiega').hidden = !creaContatto();
       });
+    }
+    if ($('t-kg')) {
+      scegli('t-kg', (x) => { kg = +x; $('t-kg-altro').value = ''; });
+      $('t-kg-altro').oninput = () => { $('t-kg').querySelectorAll('[data-v]').forEach((b) => b.setAttribute('aria-pressed', 'false')); kg = null; };
     }
     scegli('t-giorno', (x) => {
       if (x === 'altro') { $('t-data').hidden = false; const d = daIso($('t-data').value); if (d) ser = Math.max(serialeDa(d.a, d.m, d.g), o); $('t-data').focus(); return; }
@@ -3936,6 +3976,11 @@
       };
       if (!nuovo.nome) { messaggio(impegno ? 'Scrivi cosa devi fare.' : 'Scrivi il nome.', { errore: true }); return; }
       if (!nuovo.lavoro) { messaggio('Scegli che lavoro è.', { errore: true }); return; }
+      if (lavoro === 'Bombola') {
+        const scritto = $('t-kg-altro').value.trim();
+        nuovo.kg = scritto ? importoLetto(scritto) : kg;
+        if (!(nuovo.kg > 0 && nuovo.kg <= 50)) { messaggio(scritto ? 'Scrivi i kg con un numero, per esempio 10 o 0,6.' : 'Scegli da quanti kg è la bombola.', { errore: true }); return; }
+      } else nuovo.kg = null;
       if (creaContatto()) {
         const sbagliato = !nuovo.telefono ? 'Per un sopralluogo scrivi il telefono: il contatto si crea da solo.' : problemaTelefono(nuovo.telefono.replace(/\S+@\S+/, ''));
         if (sbagliato) { messaggio(sbagliato, { errore: true, durata: 8000 }); return; }
@@ -4180,12 +4225,12 @@
   // ha pagato (dal 1 nov 2026: col pagamento uguale si cambia solo quello).
   function chiediPagamento(x) {
     const c = clienteIn(dati, x.codice);
-    const tel = c && x.pagamento === DA_RISENTIRE ? telefoni(c.contatto)[0] : null;
+    const tels = c && x.pagamento === DA_RISENTIRE ? telefoni(c.contatto) : [];
     const f = apriFinestra(`
       <h3>${esc(x.nome || x.codice)}</h3>
       <p>${tipoIntervento(x)} del <strong>${esc(x.data)}</strong>${x.chi ? `, fatta ${esc(daChi(x.chi))}` : ''}.<br>Pagamento: <strong>${esc(x.pagamento ? pagatoCon(x.pagamento, x.importo) : 'non segnato')}</strong></p>
       <div id="passo-pagamento">
-        ${tel ? `<a class="btn pieno" href="tel:${esc(tel.tel)}">${icona('telefono')} Chiama ${esc(tel.mostra)}</a>` : ''}
+        ${tels.map((n) => `<a class="btn pieno" href="tel:${esc(n.tel)}">${icona('telefono')} Chiama ${esc(n.mostra)}</a>`).join('')}
         <p class="domanda">Come ha pagato?</p>
         ${PAGAMENTI.map(([v, t]) => `<button class="btn${v === x.pagamento ? ' scelto' : ''}" type="button" data-pag="${esc(v)}">${v === x.pagamento ? `${icona('spunta')} ` : ''}${esc(t)}</button>`).join('')}
         ${mag() ? `<p class="domanda">Materiali usati</p>
@@ -4596,12 +4641,19 @@
     const ordine = [...primi, ...categorieMag().filter((x) => !primi.includes(x))];
     // Le altre restano chiuse in un tasto (sono tante: 80 fra impianti e miscelatori).
     const aperte = new Set(carico ? ['Filtri e ricambi'] : primi);
+    // Il filtro per categoria, come nel magazzino (9 nov 2026, Matteo): con una
+    // categoria scelta si vedono solo i suoi articoli, tutti aperti.
+    let cat = '';
     apriFinestra(`
       <h3>${carico ? 'Cos\'è arrivato?' : cambia ? 'Materiali usati' : 'Che materiali hai usato?'}</h3>
       <p>${carico ? 'Tocca + sugli articoli arrivati: si aggiungono al magazzino.'
         : cambia ? `<strong>${esc(nome)}</strong> · ${esc(String(lavoro || 'Manutenzione').toLowerCase())} del ${esc(testoData(data))}<br>Metti i numeri giusti con − e +: il magazzino si corregge da solo, i pezzi non si sommano.`
         : `${nome ? `<strong>${esc(nome)}</strong>${lavoro ? ` · ${esc(lavoro)}` : ''}<br>` : ''}Tocca + su quello che hai usato: si toglie dal magazzino.`}</p>
       <input class="cerca-finestra" id="cerca-mat" type="search" autocomplete="off" placeholder="Cerca un articolo">
+      <div class="pillole pillole-categorie" id="cat-mat">
+        <button class="pillola" type="button" data-cat-mat="" aria-pressed="true">Tutte</button>
+        ${categorieMag().map((x) => [x, articoliMag().filter((a) => categoriaDi(a) === x).length]).filter(([, n]) => n).map(([x, n]) => `<button class="pillola ${classeCategoria(x)}" type="button" data-cat-mat="${esc(x)}" aria-pressed="false">${esc(x)} (${n})</button>`).join('')}
+      </div>
       <div id="lista-mat"></div>
       ${puo('modificaMagazzino') ? '<button class="link" type="button" id="mat-nuovo">Non c\'è? Aggiungi un articolo</button>' : ''}
       <div class="piede-finestra">
@@ -4633,7 +4685,12 @@
       const q = normalizza($('cerca-mat').value);
       const tutti = articoliMag();
       let html;
-      if (q) {
+      if (cat) {
+        const lista = tutti.filter((a) => categoriaDi(a) === cat && (!q || normalizza([a.descrizione, a.fornitore, a.codice].join(' ')).includes(q)));
+        if (!carico) lista.sort((a, b) => (b.quantita > 0) - (a.quantita > 0));
+        html = lista.length ? gruppo(`${cat} (${lista.length})`, lista, classeCategoria(cat))
+          : `<div class="vuoto">${q ? 'Nessun articolo con questo nome' : 'Nessun articolo'} fra ${esc(cat)}.</div>`;
+      } else if (q) {
         const trovati = tutti.filter((a) => normalizza([a.descrizione, a.fornitore, a.codice, a.categoria].join(' ')).includes(q)).slice(0, 40);
         html = trovati.length ? gruppo(`Trovati (${trovati.length})`, trovati) : '<div class="vuoto">Nessun articolo con questo nome.</div>';
       } else {
@@ -4665,6 +4722,13 @@
       });
     };
     $('cerca-mat').oninput = disegnaLista;
+    $('cat-mat').querySelectorAll('[data-cat-mat]').forEach((b) => {
+      b.onclick = () => {
+        cat = b.dataset.catMat;
+        $('cat-mat').querySelectorAll('[data-cat-mat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        disegnaLista();
+      };
+    });
     disegnaLista();
     aggiornaSalva();
     alChiudere = () => fine(null);

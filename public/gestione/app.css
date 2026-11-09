@@ -394,6 +394,10 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 .etichetta.lavoro-installazione { background: var(--verde-chiaro); color: var(--verde); }
 .etichetta.lavoro-sopralluogo { background: var(--arancio-chiaro); color: var(--arancio); }
 .etichetta.lavoro-altro { background: #edf0f3; color: var(--grigio); }
+.etichetta.lavoro-bombola { background: #e3f4f2; color: #0b6e66; }
+/* Le categorie nella finestra dei materiali vanno a capo: scorrendo di lato non si vedrebbero. */
+.finestra .pillole-categorie { flex-wrap: wrap; overflow: visible; margin: 0 0 12px; padding: 0; }
+.finestra .pillole-categorie .pillola { min-height: 38px; padding: 0 12px; font-size: 15px; }
 .pin.tappa { background: var(--blu); }
 .finestra .pillole-lavoro { flex-wrap: wrap; overflow: visible; margin: 8px 0 0; padding: 0; }
 .finestra .campo-data { width: 100%; margin: 10px 0 0; min-height: 52px; padding: 0 14px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-size: 18px; }

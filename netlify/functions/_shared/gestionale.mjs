@@ -1442,9 +1442,12 @@ export async function assegnaManutenzione(foglio, { codice, codici, a = '' }, { 
 // Vuota = un orario solo (o nessuno). La scheda nata prima ne ha 16: la
 // diciassettesima intestazione la scrive salvaTappa la prima volta che serve.
 export const TAB_GIRI = 'Giri';
-const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle', 'Prezzo', 'Pagato', 'Pagamenti', 'Scadenza rata'];
-const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // U
-export const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Altro'];
+// La colonna V «Kg» (9 nov 2026, Matteo: «aggiungi la voce bombola e se viene
+// selezionata ti deve chiedere da quanti kg»): il peso della bombola da portare,
+// solo per il lavoro «Bombola». L'intestazione la scrive salvaTappa la prima volta.
+const INTESTAZIONI_GIRI = ['Id', 'Giorno', 'Ora', 'Chi', 'Lavoro', 'Codice', 'Contatto', 'Nome', 'Indirizzo', 'Città', 'Telefono', 'Note', 'Lat', 'Lng', 'Stato', 'Aggiunta il', 'Fino alle', 'Prezzo', 'Pagato', 'Pagamenti', 'Scadenza rata', 'Kg'];
+const ULTIMA_GIRI = lettera(INTESTAZIONI_GIRI.length); // V
+export const LAVORI = ['Manutenzione', 'Guasto', 'Installazione', 'Sopralluogo', 'Bombola', 'Altro'];
 const G = Object.fromEntries(INTESTAZIONI_GIRI.map((h, i) => [h, i]));
 
 async function leggiGiri(foglio) {
@@ -1468,6 +1471,7 @@ async function leggiGiri(foglio) {
       nome: testo(r[G.Nome]), indirizzo: testo(r[G.Indirizzo]), citta: testo(r[G.Città]), telefono: testo(r[G.Telefono]),
       note: testo(r[G.Note]), lat: r[G.Lat] === '' || !isFinite(lat) ? null : lat, lng: r[G.Lng] === '' || !isFinite(lng) ? null : lng,
       stato: testo(r[G.Stato]), prezzo: importoDa(r[G.Prezzo]), pagamenti: partiLette(r[G.Pagamenti]), scadenzaRata: testo(r[G['Scadenza rata']]),
+      kg: importoDa(r[G.Kg]),
     });
   }
   return { griglia, tappe };
@@ -1531,7 +1535,7 @@ async function togliDaColonna(foglio, codice) {
 const rigaGiro = (t) => INTESTAZIONI_GIRI.map((h) => {
   const v = { Id: t.id, Giorno: t.giorno, Ora: t.ora, Chi: nomePersona(t.chi), Lavoro: t.lavoro, Codice: t.codice, Contatto: t.contatto, Nome: t.nome,
     Indirizzo: t.indirizzo, 'Città': t.citta, Telefono: t.telefono, Note: t.note, Lat: t.lat ?? '', Lng: t.lng ?? '', Stato: t.stato, 'Aggiunta il': t.aggiunta,
-    'Fino alle': t.oraFine, Prezzo: t.prezzo, Pagato: sommaParti(t.pagamenti), Pagamenti: testoParti(t.pagamenti), 'Scadenza rata': t.scadenzaRata }[h];
+    'Fino alle': t.oraFine, Prezzo: t.prezzo, Pagato: sommaParti(t.pagamenti), Pagamenti: testoParti(t.pagamenti), 'Scadenza rata': t.scadenzaRata, Kg: t.kg }[h];
   return v == null ? '' : v;
 });
 
@@ -1577,6 +1581,11 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
   const restaDaPagare = prezzo !== '' && (sommaParti(pagamenti) || 0) < prezzo;
   const giornoRata = fatta && restaDaPagare && testo(dati.scadenzaRata) ? leggiDataUtente(dati.scadenzaRata) : null;
   if (fatta && restaDaPagare && testo(dati.scadenzaRata) && !giornoRata) throw problema('La data della prossima rata non va bene.');
+  // Il peso della bombola: solo per una bombola. Si accetta anche mancante (una
+  // riga scritta a mano nel foglio), ma se c'è dev'essere un numero vero.
+  const kgScritti = lavoro === 'Bombola' ? testo(dati.kg) : '';
+  const kg = kgScritti ? importoDa(kgScritti) : null;
+  if (kgScritti && !(kg > 0 && kg <= 50)) throw problema('Il peso della bombola non va bene: scrivi i kg, per esempio 2.');
   const tappa = {
     id, giorno: testoData(giorno), ora, oraFine, chi, lavoro, codice,
     contatto: testo(dati.contatto).slice(0, 120), nome, indirizzo: testo(dati.indirizzo).slice(0, 200), citta: testo(dati.citta).slice(0, 80),
@@ -1584,6 +1593,7 @@ export async function salvaTappa(foglio, dati, { persone = [], chi: chiScrive = 
     lat: lat != null && lat > 35 && lat < 48 ? lat : null, lng: lng != null && lng > 6 && lng < 19 ? lng : null,
     stato: fatta ? 'Fatta' : '', aggiunta: `${testoData(oggi())} (${chiScrive})`,
     prezzo: prezzo === '' ? null : prezzo, pagamenti, scadenzaRata: giornoRata ? testoData(giornoRata) : '',
+    kg,
   };
   const { griglia, tappe } = await leggiGiri(foglio);
   const prima = tappe.find((t) => t.id === id) || null;
