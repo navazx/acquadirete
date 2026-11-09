@@ -1749,10 +1749,17 @@
   function pulsantiContatto(testo, indirizzo, cliente = null) {
     const nums = telefoni(testo);
     const mail = email(testo);
-    let html = nums.map((n) => `<a class="btn pieno largo" href="tel:${esc(n.tel)}">${icona('telefono')} Chiama ${esc(n.mostra)}</a>`).join('');
-    // Con due cellulari, un WhatsApp per numero (9 nov 2026).
+    // Il numero sta in un pezzo che non si spezza: se sul telefono la scritta
+    // non entra, va a capo fra «Chiama» e il numero invece di uscire dallo
+    // schermo (9 nov 2026, Matteo: «i tasti escono dallo schermo»).
+    const conNumero = (parola, n) => `<span>${parola} <span class="num">${esc(n.mostra)}</span></span>`;
+    let html = nums.map((n) => `<a class="btn pieno largo" href="tel:${esc(n.tel)}">${icona('telefono')} ${conNumero('Chiama', n)}</a>`).join('');
+    // Con due cellulari, un WhatsApp per numero (9 nov 2026), a tutta
+    // larghezza come i «Chiama»: col numero dentro non entra in mezza riga.
     const cell = nums.filter((n) => n.cellulare);
-    html += cell.map((n) => `<a class="btn" href="https://wa.me/${esc(n.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp${cell.length > 1 ? ` ${esc(n.mostra)}` : ''}</a>`).join('');
+    html += cell.map((n) => (cell.length > 1
+      ? `<a class="btn largo" href="https://wa.me/${esc(n.wa)}" target="_blank" rel="noopener">${icona('messaggio')} ${conNumero('WhatsApp', n)}</a>`
+      : `<a class="btn" href="https://wa.me/${esc(n.wa)}" target="_blank" rel="noopener">${icona('messaggio')} WhatsApp</a>`)).join('');
     const dove = sulPosto(cliente) || indirizzo;
     if (dove) html += `<a class="btn" ${linkPortami(dove)}>${icona('mappa')} Portami lì</a>`;
     // La mappa dell'app, centrata su di lui (17 ott 2026): per vedere chi gli

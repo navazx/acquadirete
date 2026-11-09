@@ -140,9 +140,14 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
 /* ---- Scheda ---- */
 .testa h2 { margin: 0; font-size: 26px; line-height: 1.2; }
 .testa p { margin: 6px 0 0; color: var(--grigio); font-size: 18px; }
-.azioni { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
-.azioni .largo { grid-column: 1 / -1; }
-.azioni .btn { white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+/* I tasti di contatto: due per riga se le scritte ci stanno intere, se no uno
+   per riga; mai fuori dallo schermo (9 nov 2026, Matteo: «escono dallo
+   schermo»). I «largo» (Chiama, e WhatsApp col numero) hanno la riga tutta
+   per loro e, se la scritta non entra, vanno a capo prima del numero. */
+.azioni { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.azioni .btn { flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+.azioni .btn.largo { flex-basis: 100%; min-width: 0; white-space: normal; }
+.azioni .num { white-space: nowrap; }
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 60px; padding: 10px 16px;
