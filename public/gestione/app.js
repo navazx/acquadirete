@@ -429,7 +429,7 @@
         elenco.hidden = false;
         freccia.setAttribute('aria-expanded', 'true');
         elenco.querySelectorAll('[data-voce]').forEach((b) => {
-          b.onclick = () => { input.value = b.dataset.voce; chiudiScelte(campo); };
+          b.onclick = () => { input.value = b.dataset.voce; chiudiScelte(campo); input.dispatchEvent(new Event('change', { bubbles: true })); };
         });
       };
       freccia.onclick = () => {
@@ -1177,6 +1177,45 @@
   // «Bombola» (9 nov 2026, Matteo): chiede da quanti kg. I tasti sono i pesi
   // scritti più spesso nel foglio (2 kg 20 volte, 4 kg 11, 1 kg 7); un altro si scrive.
   const KG_BOMBOLE = [1, 2, 4];
+  const kgTesto = (kg) => `${String(kg).replace('.', ',')} kg`;
+  // Gli impianti del magazzino (10 nov 2026, Matteo: «nella descrizione del
+  // cliente l'impianto deve essere una voce presente nel magazzino»): le
+  // categorie «Impianti» e «Impianti usati». Il nome è la descrizione senza la
+  // nota del prezzo della bombola («(inserito + euro 250 x bombola e rid.
+  // Pressione)»), che nella scheda e sul foglio di lavoro del cliente non va.
+  const nomeImpianto = (descrizione) => {
+    let s = String(descrizione || '').replace(/\(\s*inserito[^)]*\)?/gi, ' ').replace(/\s+/g, ' ').replace(/\s+([.,)])/g, '$1').trim();
+    if ((s.match(/\(/g) || []).length > (s.match(/\)/g) || []).length) s += ')';
+    return s;
+  };
+  // Chi ha il gasatore ha la bombola della CO2 (10 nov 2026, Matteo: «ci deve
+  // essere solo per alcuni impianti»). Per un impianto del magazzino conta la
+  // descrizione intera con le note dell'articolo (la nota «x bombola» sta
+  // proprio su quelli col gasatore); per uno scritto a mano, le parole che
+  // fanno barrare «gasatore» sul foglio di lavoro, più «bollicina» e «A/F/G»
+  // (G = gassata). Per aggiungerne uno basta scrivere «gassata» nelle note
+  // del suo articolo.
+  const PAROLE_GAS = /gasat|gassat|frizzant|soda|co2|bombol|bollicin|a\/f\/g/i;
+  function impiantiDelMagazzino() {
+    const m = mag();
+    const visti = new Set();
+    return ((m && m.articoli) || [])
+      .filter((a) => /^impiant/i.test(a.categoria || ''))
+      .map((a) => ({ nome: nomeImpianto(a.descrizione), gas: PAROLE_GAS.test(`${a.descrizione || ''} ${a.note || ''}`) }))
+      .filter((x) => x.nome && !visti.has(perCercare(x.nome)) && visti.add(perCercare(x.nome)));
+  }
+  const haGas = (tipo, impianti) => {
+    const x = impianti.find((y) => perCercare(y.nome) === perCercare(tipo));
+    if (x) return x.gas;
+    if (PAROLE_GAS.test(String(tipo || ''))) return true;
+    // Scritto a mano col solo nome del modello («Mars», «Saturne 2 vie»): vale
+    // il magazzino, se tutti i suoi impianti con quel nome hanno il gasatore
+    // (POLARES e GWS ci sono con e senza). «1 via» è solo acqua.
+    const primo = (s) => perCercare(s).split(/[^a-z0-9]+/)[0];
+    const p = primo(tipo);
+    const stessi = p && p.length > 2 ? impianti.filter((y) => primo(y.nome) === p) : [];
+    return stessi.length > 0 && stessi.every((y) => y.gas) && !/\b1 via\b/i.test(String(tipo));
+  };
   const oggiTesto = () => testoData(oggi());
   const giornoDi = (t) => t.giorno || oggiTesto();
   const serialeGiorno = (s) => { const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? serialeDa(+m[3], +m[2], +m[1]) : null; };
@@ -1893,6 +1932,7 @@
       <h3 class="titoletto">Dati del cliente</h3>
       <dl class="dati">
         ${riga('Impianto', c.tipo)}
+        ${riga('Bombola CO2', c.bombola != null ? kgTesto(c.bombola) : '')}
         ${riga('Installato il', c.installazione)}
         ${riga('Manutenzione', c.frequenza ? `Ogni ${c.frequenza} mesi` : '')}
         ${riga('Note / prezzo', c.note)}
@@ -2313,6 +2353,7 @@
       }
       if ('telefono' in k) c.contatto = k.telefono;
       ['indirizzo', 'tipo', 'note'].forEach((n) => { if (n in k) c[n] = k[n]; });
+      if ('bombola' in k) c.bombola = k.bombola === '' || k.bombola == null ? null : +k.bombola;
       if ('citta' in k) c.citta = String(k.citta).toUpperCase();
       if ('installazione' in k) { const g = daIso(k.installazione); c.installazione = g ? testoData(g) : ''; }
       if ('frequenza' in k) c.frequenza = k.frequenza;
@@ -3912,7 +3953,8 @@
         // già scelto diventava una commissione, fuori dagli interventi fatti.
         : l ? 'Sopralluogo' : altro ? 'Altro' : '';
     let chi = t0 && giranti().includes(t0.chi) ? t0.chi : giroPrincipale();
-    let kg = t0 && t0.kg != null ? t0.kg : null;
+    // Per un cliente, il peso della sua bombola è già scelto (10 nov 2026).
+    let kg = t0 && t0.kg != null ? t0.kg : c && c.bombola != null ? c.bombola : null;
     const o = serialeOggi();
     let ser = Math.max(serialeGiorno(t0 ? giornoDi(t0) : giorno || oggiTesto()) ?? o, o);
     const cittaLead = l ? ((String(l.note || '').match(/Città:\s*([^—]+)/) || [])[1] || '').trim() : '';
@@ -4189,7 +4231,10 @@
   function stampaFoglio(c) {
     if (navigator.onLine === false) { messaggio('Per il foglio di lavoro serve il campo. Riprova quando c\'è linea.', { errore: true }); return; }
     sessionStorage.setItem('gestione-foglio', JSON.stringify({
-      codice: c.codice, nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, contatto: c.contatto, tipo: c.tipo, installazione: c.installazione, stampa: true,
+      // Con la bombola scritta nel tipo il foglio barra anche «gasatore» (10 nov 2026).
+      codice: c.codice, nome: c.nome, indirizzo: c.indirizzo, citta: c.citta, contatto: c.contatto,
+      tipo: [c.tipo, c.bombola != null ? `bombola CO2 ${kgTesto(c.bombola)}` : ''].filter(Boolean).join(' + '),
+      installazione: c.installazione, stampa: true,
     }));
     location.href = '/gestione/foglio.html';
   }
@@ -5519,7 +5564,11 @@
       return Object.keys(conta).sort((a, b) => conta[b] - conta[a]).slice(0, n);
     };
     const citta = piuUsati(dati.clienti.map((x) => titoloCitta(x.citta)), 200).sort();
-    const tipi = piuUsati(dati.clienti.map((x) => x.tipo.trim()), 40);
+    // L'impianto si sceglie fra quelli del magazzino (10 nov 2026); senza il
+    // magazzino (copia vecchia) restano i tipi più scritti, liberi.
+    const impianti = impiantiDelMagazzino();
+    const tipi = impianti.length ? impianti.map((x) => x.nome) : piuUsati(dati.clienti.map((x) => x.tipo.trim()), 40);
+    const bombola = c && c.bombola != null ? c.bombola : null;
     const inst = c ? (c.installazione ? c.installazione.split('/').reverse().join('-') : '') : isoDa(oggi());
     // Se non è segnata (clienti appena arrivati da un contatto) parte da 12,
     // come per un cliente nuovo: senza, la scadenza resterebbe vuota.
@@ -5535,6 +5584,13 @@
         <label class="campo"><span>Indirizzo <em>(via e numero)</em></span><input name="indirizzo" autocomplete="off" ${valore(c && c.indirizzo)}></label>
         ${campoScelte('Città', 'citta', c && titoloCitta(c.citta), citta)}
         ${campoScelte('Impianto', 'tipo', c && c.tipo, tipi)}
+        <p class="errore-campo" id="err-tipo" hidden>Scegli l'impianto dall'elenco: deve essere uno del magazzino. Se non c'è, aggiungilo prima nel magazzino.</p>
+        <div id="campo-bombola" hidden>
+          <div class="campo"><span>Bombola CO2 <em>(facoltativo)</em></span>
+            <div class="pillole pillole-lavoro" id="m-kg">${KG_BOMBOLE.map((k) => `<button type="button" class="pillola" data-kg="${k}" aria-pressed="${bombola === k}">${k} kg</button>`).join('')}</div></div>
+          <label class="campo"><span>Un altro peso, in kg</span><input name="bombolaAltro" type="text" inputmode="decimal" autocomplete="off" placeholder="Es. 0,6" value="${bombola != null && !KG_BOMBOLE.includes(bombola) ? esc(String(bombola).replace('.', ',')) : ''}"></label>
+          <p class="errore-campo" id="err-bombola" hidden>Il peso della bombola non va bene: scrivi i kg, per esempio 2.</p>
+        </div>
         <label class="campo"><span>Installato il</span><input name="installazione" type="date" ${valore(inst)} max="${isoDa(oggi())}"></label>
         <div class="campo"><span>Manutenzione</span>
           <div class="scelta">${scelteMesi.map((m) => `<button type="button" data-mesi="${m}" aria-pressed="${m === mesi}">Ogni ${m} mesi</button>`).join('')}</div></div>
@@ -5571,12 +5627,53 @@
       };
     });
     const v = (n) => f.elements[n].value.trim();
+    // La bombola della CO2 si chiede solo per gli impianti col gasatore, o se
+    // il cliente ne ha già una segnata e l'impianto non è cambiato: se no un
+    // salvataggio qualsiasi la cancellerebbe (10 nov 2026).
+    const tipoPrima = String((c && c.tipo) || '').trim();
+    const aggiornaBombola = () => {
+      $('campo-bombola').hidden = !(haGas(v('tipo'), impianti) || (bombola != null && v('tipo') === tipoPrima));
+    };
+    f.elements.tipo.addEventListener('input', aggiornaBombola);
+    f.elements.tipo.addEventListener('change', () => { $('err-tipo').hidden = true; aggiornaBombola(); });
+    aggiornaBombola();
+    f.querySelectorAll('[data-kg]').forEach((b) => {
+      b.onclick = () => {
+        const si = b.getAttribute('aria-pressed') !== 'true';
+        f.querySelectorAll('[data-kg]').forEach((x) => x.setAttribute('aria-pressed', String(si && x === b)));
+        if (si) f.elements.bombolaAltro.value = '';
+      };
+    });
+    f.elements.bombolaAltro.addEventListener('input', () => {
+      f.querySelectorAll('[data-kg]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+    });
+    // I kg scelti: null = nessuno, NaN = scritti male.
+    const kgScelti = () => {
+      if ($('campo-bombola').hidden) return null;
+      const b = f.querySelector('[data-kg][aria-pressed="true"]');
+      if (b) return +b.dataset.kg;
+      const s = v('bombolaAltro').replace(',', '.');
+      if (!s) return null;
+      const n = Number(s);
+      return n > 0 && n <= 50 ? Math.round(n * 100) / 100 : NaN;
+    };
     f.onsubmit = (e) => {
       e.preventDefault();
       if (f.elements.nome) {
         $('err-nome').hidden = !!v('nome');
         if (!v('nome')) { f.elements.nome.focus(); return; }
       }
+      // Un impianto nuovo deve essere uno del magazzino; quello che il cliente
+      // aveva già resta, anche se scritto a mano, finché non lo si cambia.
+      $('err-tipo').hidden = true;
+      if (impianti.length && v('tipo') && v('tipo') !== tipoPrima) {
+        const giusto = impianti.find((x) => perCercare(x.nome) === perCercare(v('tipo')));
+        if (!giusto) { $('err-tipo').hidden = false; f.elements.tipo.focus(); return; }
+        f.elements.tipo.value = giusto.nome;
+      }
+      const sbagliati = Number.isNaN(kgScelti());
+      $('err-bombola').hidden = !sbagliati;
+      if (sbagliati) { f.elements.bombolaAltro.focus(); return; }
       conPulsante(f.querySelector('button.verde'), 'Salvo…', () => (c ? salvaModifica() : salvaNuovo()));
     };
 
@@ -5587,6 +5684,8 @@
       const campi = {};
       Object.keys(prima).forEach((k) => { if (v(k) !== String(prima[k] || '').trim()) campi[k] = v(k); });
       if (mesi !== c.frequenza) campi.frequenza = mesi;
+      const kg = kgScelti();
+      if (kg !== bombola) campi.bombola = kg == null ? '' : kg;
       if (!Object.keys(campi).length) { history.back(); return; }
       try {
         const { r, voce } = await manda('modifica', { codice: c.codice, campi }, `Dati cambiati: ${c.nome}`);
@@ -5608,7 +5707,7 @@
       try {
         const { r, voce } = await manda('nuovo', {
           nome: v('nome'), telefono: v('telefono'), indirizzo: v('indirizzo'), citta: v('citta'),
-          tipo: v('tipo'), installazione: v('installazione'), frequenza: mesi, note: v('note'),
+          tipo: v('tipo'), installazione: v('installazione'), frequenza: mesi, note: v('note'), bombola: kgScelti() ?? '',
         }, `Cliente nuovo: ${nome}`, { id: idVoce });
         if (voce) {
           // Il codice C0xx lo dà il foglio: la scheda nasce quando arriva.

@@ -338,6 +338,19 @@ const avvisoDa = (v) => (/urgent/i.test(String(v ?? '')) ? 'Urgente' : /sospes/i
 // dal giro. Anche questo nome evita le parole delle automazioni.
 const INTESTAZIONE_CHI = 'Chi ci va';
 const nomePersona = (k) => (k ? k.charAt(0).toUpperCase() + k.slice(1) : '');
+// Colonna "Bombola CO2" (dal 10 nov 2026, Matteo: «aggiungi anche la voce
+// bombola co2, che ci deve essere solo per alcuni impianti»): i kg della
+// bombola del gasatore, come numero (2, 0,6). Vuota = l'impianto non ha il
+// gasatore, o non si sa. In fondo, la crea l'app la prima volta che serve;
+// il nome non ha le parole delle automazioni.
+const INTESTAZIONE_BOMBOLA = 'Bombola CO2';
+// I kg arrivati dal telefono: '' per toglierla, se no un numero fino a 50.
+function kgBombola(v) {
+  if (v === '' || v == null) return '';
+  const kg = importoDa(v);
+  if (!(kg > 0 && kg <= 50)) throw problema('Il peso della bombola non va bene: scrivi i kg, per esempio 2.');
+  return kg;
+}
 
 async function leggiClienti(foglio) {
   const griglia = await foglio.leggi(`'${TAB_CLIENTI}'!A1:Z1500`, 'UNFORMATTED_VALUE');
@@ -347,14 +360,16 @@ async function leggiClienti(foglio) {
   const iA = intestazioni.indexOf(normalizza(INTESTAZIONE_AVVISO));
   const iM = intestazioni.indexOf(normalizza(INTESTAZIONE_MOTIVO));
   const iC = intestazioni.indexOf(normalizza(INTESTAZIONE_CHI));
+  const iB = intestazioni.indexOf(normalizza(INTESTAZIONE_BOMBOLA));
   if (iA !== -1) mappa.col.AVVISO = iA + 1;
   if (iM !== -1) mappa.col.MOTIVO = iM + 1;
   if (iC !== -1) mappa.col.CHI = iC + 1;
+  if (iB !== -1) mappa.col.BOMBOLA = iB + 1;
   return { griglia, mappa };
 }
 
 // Prima colonna libera dopo l'ultima intestazione (comprese quelle aggiunte dall'app).
-const colonnaLibera = (mappa) => Math.max(mappa.larghezza, mappa.col.AVVISO || 0, mappa.col.MOTIVO || 0, mappa.col.CHI || 0) + 1;
+const colonnaLibera = (mappa) => Math.max(mappa.larghezza, mappa.col.AVVISO || 0, mappa.col.MOTIVO || 0, mappa.col.CHI || 0, mappa.col.BOMBOLA || 0) + 1;
 
 // Crea le due intestazioni se mancano (subito dopo l'ultima colonna, con lo
 // stesso aspetto delle altre) e restituisce le loro colonne.
@@ -387,6 +402,16 @@ async function colonnaChi(foglio, mappa) {
   await foglio.copiaCella(TAB_CLIENTI, mappa.riga, mappa.larghezza, mappa.riga, c).catch(() => {});
   await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(c)}${mappa.riga}`, values: [[INTESTAZIONE_CHI]] }], 'RAW');
   mappa.col.CHI = c;
+  return c;
+}
+
+// La colonna "Bombola CO2", creata in fondo se manca.
+async function colonnaBombola(foglio, mappa) {
+  if (mappa.col.BOMBOLA) return mappa.col.BOMBOLA;
+  const c = colonnaLibera(mappa);
+  await foglio.copiaCella(TAB_CLIENTI, mappa.riga, mappa.larghezza, mappa.riga, c).catch(() => {});
+  await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(c)}${mappa.riga}`, values: [[INTESTAZIONE_BOMBOLA]] }], 'RAW');
+  mappa.col.BOMBOLA = c;
   return c;
 }
 
@@ -462,6 +487,8 @@ function clienteDaRiga(r, col, numeroRiga) {
     motivo: col.MOTIVO ? testo(v('MOTIVO')) : '',
     // In quale giro del giorno sta, come nome di chiave ("matteo"); '' = in nessuno.
     chiVa: col.CHI ? testo(v('CHI')).toLowerCase() : '',
+    // I kg della bombola della CO2 (10 nov 2026); null = non segnata.
+    bombola: col.BOMBOLA && importoDa(v('BOMBOLA')) > 0 ? importoDa(v('BOMBOLA')) : null,
   };
 }
 
@@ -2026,6 +2053,19 @@ export async function spostaCliente(foglio, { codice, verso }) {
   const riga = trovaCliente(da.griglia, da.mappa, cod);
   const intestDa = (da.griglia[da.mappa.riga - 1] || []).map(testo);
   const intestA = (a.griglia[a.mappa.riga - 1] || []).map(testo);
+  // Una colonna nata in Clienti-Impianti dopo la scheda dei persi (la bombola
+  // della CO2, 10 nov 2026) si aggiunge anche di là, se questo cliente ci ha
+  // scritto qualcosa: se no il valore si perderebbe nello spostamento.
+  if (verso === 'persi') {
+    const rigaDa = da.griglia[riga - 1] || [];
+    const mancano = intestDa.filter((h, i) => h && testo(rigaDa[i]) && !intestA.some((x) => normalizza(x) === normalizza(h)));
+    for (const h of mancano) {
+      const c = intestA.length + 1;
+      await foglio.copiaCella(TAB_PERSI, a.mappa.riga, intestA.length, a.mappa.riga, c).catch(() => {});
+      await foglio.scrivi([{ range: `'${TAB_PERSI}'!${lettera(c)}${a.mappa.riga}`, values: [[h]] }], 'RAW');
+      intestA.push(h);
+    }
+  }
   const valori = perIntestazioni(da.griglia[riga - 1] || [], intestDa, intestA);
   if (verso === 'persi' && a.mappa.col.PERSO_IL) valori[a.mappa.col.PERSO_IL - 1] = testoData(oggi());
   const nome = testo((da.griglia[riga - 1] || [])[da.mappa.col.NOME - 1]);
@@ -2172,6 +2212,7 @@ async function aggiungiRigaCliente(foglio, campi) {
 export async function nuovoCliente(foglio, dati) {
   const nome = testo(dati.nome).replace(/\s+/g, ' ').toUpperCase().slice(0, 120);
   if (!nome) throw problema('Scrivi almeno il nome.');
+  const kg = kgBombola(dati.bombola);
   const inst = dati.installazione ? leggiDataUtente(dati.installazione) : oggi();
   if (!inst) throw problema('Data di installazione non valida.');
   const frequenza = parseInt(dati.frequenza, 10);
@@ -2185,6 +2226,11 @@ export async function nuovoCliente(foglio, dati) {
     installazione: serialeDa(inst.a, inst.m, inst.g),
     frequenza: frequenza > 0 && frequenza <= 36 ? frequenza : 12,
   });
+  if (kg !== '' && !esito.giaPresente) {
+    const { mappa } = await leggiClienti(foglio);
+    const c = await colonnaBombola(foglio, mappa);
+    await foglio.scrivi([{ range: `'${TAB_CLIENTI}'!${lettera(c)}${esito.riga}`, values: [[kg]] }], 'RAW');
+  }
   return { ok: true, nome, ...esito };
 }
 
@@ -2309,6 +2355,16 @@ export async function modificaCliente(foglio, { codice, campi = {} }) {
     testi.push({ range: cella(col[campo]), values: [[v.slice(0, 300)]] });
     scritti[nome] = v.slice(0, 300);
     cambi.push({ campo: nome, prima: comeTesto(prima), dopo: v.slice(0, 300) });
+  }
+
+  // La bombola della CO2 (10 nov 2026): '' la toglie.
+  if ('bombola' in campi) {
+    const kg = kgBombola(campi.bombola);
+    const c = await colonnaBombola(foglio, mappa);
+    const prima = importoDa(r[c - 1]);
+    numeri.push({ range: cella(c), values: [[kg]] });
+    const inKg = (x) => (x === '' || x == null ? '' : `${String(x).replace('.', ',')} kg`);
+    cambi.push({ campo: 'bombola CO2', prima: inKg(prima), dopo: inKg(kg) });
   }
 
   if ('citta' in campi && testo(campi.citta)) {
