@@ -220,6 +220,28 @@ main { padding: 16px; max-width: 640px; margin: 0 auto; outline: none; }
   background: var(--carta); border: 2px solid var(--linea); border-radius: 14px; font-size: 20px;
 }
 .campo textarea { min-height: 96px; resize: vertical; }
+/* Campo con l'elenco delle scelte (10 nov 2026, al posto del <datalist>):
+   la freccia dentro il campo, l'elenco sotto, nella pagina. */
+.con-scelte { position: relative; }
+.campo .con-scelte input { padding-right: 62px; }
+.apri-scelte {
+  position: absolute; top: 2px; right: 2px; bottom: 2px; width: 56px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-left: 2px solid var(--linea); border-radius: 0 12px 12px 0;
+  background: var(--blu-chiaro); color: var(--blu); font-size: 26px;
+}
+.apri-scelte[aria-expanded="true"] svg { transform: rotate(180deg); }
+.elenco-scelte {
+  position: relative; margin-top: 6px; max-height: 280px; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--carta); border: 2px solid var(--blu); border-radius: 14px; box-shadow: var(--ombra);
+}
+.elenco-scelte button {
+  display: block; width: 100%; min-height: 52px; padding: 10px 16px;
+  border: 0; border-bottom: 1px solid var(--linea); background: none; text-align: left; font-size: 19px;
+}
+.elenco-scelte button:last-child { border-bottom: 0; }
+.elenco-scelte button:active { background: var(--blu-chiaro); }
+.elenco-scelte button[aria-current="true"] { background: var(--blu-chiaro); color: var(--blu-scuro); font-weight: 700; }
 .campo input:focus, .campo textarea:focus, .cerca input:focus { outline: none; border-color: var(--blu); box-shadow: 0 0 0 3px rgba(15,108,189,.2); }
 .scelta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .scelta button { min-height: 58px; border: 2px solid var(--linea); border-radius: 14px; background: var(--carta); font-weight: 700; font-size: 19px; }

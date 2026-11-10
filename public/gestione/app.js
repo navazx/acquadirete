@@ -96,6 +96,7 @@
     registro: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>',
     euro: '<path d="M17.5 6.5a6.5 6.5 0 1 0 0 11M4 10h9M4 14h9"/>',
     frecciaGiu: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+    giu: '<path d="M6 9l6 6 6-6"/>',
     frecciaSu: '<path d="M12 19V5M6 11l6-6 6 6"/>',
     frecciaSx: '<path d="M15 5l-7 7 7 7"/>',
     frecciaDx: '<path d="M9 5l7 7-7 7"/>',
@@ -388,6 +389,72 @@
     if (poi) poi();
   }
   $('velo').addEventListener('click', chiudiFinestra);
+
+  // ---------------------------------------------------------------------
+  //  Campo con l'elenco delle scelte
+  // ---------------------------------------------------------------------
+  // Città, impianto e interesse (10 nov 2026, Matteo: «c'è una freccetta
+  // come se potessi selezionare ma non funziona»). Erano campi con un
+  // <datalist>: sul telefono la sua freccetta mostra solo le voci che
+  // cominciano con quello che c'è già scritto, quindi nella modifica di un
+  // cliente non mostrava niente. Ora la freccia apre tutto l'elenco, con la
+  // voce di adesso in evidenza; scrivendo, l'elenco mostra le voci che
+  // contengono quello che si scrive (prima quelle che cominciano così). Il
+  // campo resta libero: si può scrivere una voce che non c'è. L'elenco sta
+  // sotto il campo e non in una finestra, perché a volte il modulo è già
+  // dentro una finestra.
+  const perCercare = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+  function campoScelte(etichetta, nome, valore, scelte) {
+    return `<div class="campo" data-scelte="${esc(JSON.stringify(scelte))}"><span>${etichetta}</span>
+      <div class="con-scelte"><input name="${nome}" autocomplete="off" value="${esc(valore || '')}" aria-label="${esc(etichetta.replace(/<[^>]+>/g, ''))}">
+      <button type="button" class="apri-scelte" aria-label="Scegli dall'elenco" aria-expanded="false">${icona('giu')}</button></div>
+      <div class="elenco-scelte" hidden></div></div>`;
+  }
+  function chiudiScelte(campo) {
+    const elenco = campo.querySelector('.elenco-scelte');
+    elenco.hidden = true;
+    elenco.innerHTML = '';
+    campo.querySelector('.apri-scelte').setAttribute('aria-expanded', 'false');
+  }
+  function collegaScelte(radice) {
+    radice.querySelectorAll('[data-scelte]').forEach((campo) => {
+      const scelte = JSON.parse(campo.dataset.scelte);
+      const input = campo.querySelector('input');
+      const freccia = campo.querySelector('.apri-scelte');
+      const elenco = campo.querySelector('.elenco-scelte');
+      const mostra = (voci) => {
+        if (!voci.length) { chiudiScelte(campo); return; }
+        const ora = perCercare(input.value);
+        elenco.innerHTML = voci.map((v) => `<button type="button" data-voce="${esc(v)}"${perCercare(v) === ora ? ' aria-current="true"' : ''}>${esc(v)}</button>`).join('');
+        elenco.hidden = false;
+        freccia.setAttribute('aria-expanded', 'true');
+        elenco.querySelectorAll('[data-voce]').forEach((b) => {
+          b.onclick = () => { input.value = b.dataset.voce; chiudiScelte(campo); };
+        });
+      };
+      freccia.onclick = () => {
+        if (!elenco.hidden) { chiudiScelte(campo); return; }
+        mostra(scelte);
+        const questa = elenco.querySelector('[aria-current]');
+        if (questa) elenco.scrollTop = questa.offsetTop - (elenco.clientHeight - questa.offsetHeight) / 2;
+      };
+      input.addEventListener('input', () => {
+        const q = perCercare(input.value);
+        const voci = q ? scelte.filter((v) => perCercare(v).includes(q)) : [];
+        if (voci.length === 1 && perCercare(voci[0]) === q) { chiudiScelte(campo); return; }
+        mostra(voci.filter((v) => perCercare(v).startsWith(q)).concat(voci.filter((v) => !perCercare(v).startsWith(q))));
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !elenco.hidden) { e.preventDefault(); e.stopPropagation(); chiudiScelte(campo); }
+      });
+    });
+  }
+  // L'elenco si chiude toccando fuori dal campo, o passando a un altro campo.
+  ['click', 'focusin'].forEach((evento) => document.addEventListener(evento, (e) => {
+    document.querySelectorAll('[data-scelte]').forEach((campo) => {
+      if (!campo.querySelector('.elenco-scelte').hidden && !campo.contains(e.target)) chiudiScelte(campo);
+    });
+  }));
 
   let timerMessaggio = null;
   function messaggio(testo, { errore = false, azione = null, durata = 5000 } = {}) {
@@ -5133,16 +5200,15 @@
         <label class="campo"><span>Email <em>(facoltativo)</em></span><input name="email" type="email" inputmode="email" autocomplete="off" autocapitalize="none"></label>
         <p class="errore-campo" id="err-tel" hidden>Scrivi il telefono (o l'email), se no non lo puoi richiamare.</p>
         <p class="errore-campo" id="err-tel-cifre" hidden></p>
-        <label class="campo"><span>Città</span><input name="citta" list="l-citta-lead" autocomplete="off"></label>
-        <datalist id="l-citta-lead">${citta.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        ${campoScelte('Città', 'citta', '', citta)}
         <div class="campo"><span>Come ci ha conosciuto?</span>
           <div class="scelta">${PROVENIENZE.map(([v, t]) => `<button type="button" data-prov="${esc(v)}" aria-pressed="${v === provenienza}">${t}</button>`).join('')}</div></div>
-        <label class="campo"><span>Cosa gli interessa <em>(facoltativo)</em></span><input name="interesse" list="l-interessi" autocomplete="off"></label>
-        <datalist id="l-interessi">${interessi.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        ${campoScelte('Cosa gli interessa <em>(facoltativo)</em>', 'interesse', '', interessi)}
         <label class="campo"><span>Note <em>(facoltativo)</em></span><textarea name="note" placeholder="Es. ha chiamato per un preventivo, richiamare dopo le 17"></textarea></label>
         <button class="btn verde grande" style="width:100%">${icona('spunta')} Salva il contatto</button>
       </form>`;
     const f = $('f-lead');
+    collegaScelte(f);
     f.querySelectorAll('[data-prov]').forEach((b) => {
       b.onclick = () => {
         provenienza = b.dataset.prov;
@@ -5286,12 +5352,12 @@
         <p class="errore-campo" id="err-tel" hidden></p>
         <div class="campo"><span>Come ci ha conosciuto?</span>
           <div class="scelta">${PROVENIENZE.map(([v, t]) => `<button type="button" data-prov="${esc(v)}" aria-pressed="${v === provenienza}">${t}</button>`).join('')}</div></div>
-        <label class="campo"><span>Cosa gli interessa <em>(facoltativo)</em></span><input name="interesse" value="${esc(l.interesse)}" list="l-interessi-contatto" autocomplete="off"></label>
-        <datalist id="l-interessi-contatto">${interessi.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        ${campoScelte('Cosa gli interessa <em>(facoltativo)</em>', 'interesse', l.interesse, interessi)}
         <button class="btn verde grande" style="width:100%">${icona('spunta')} Salva le modifiche</button>
         <button class="btn leggero" type="button" id="no">Lascia stare</button>
       </form>`);
     const f = $('f-contatto');
+    collegaScelte(f);
     $('no').onclick = chiudiFinestra;
     f.querySelectorAll('[data-prov]').forEach((b) => {
       b.onclick = () => {
@@ -5467,10 +5533,8 @@
         <p class="errore-campo" id="err-nome" hidden>Scrivi almeno il nome.</p>`}
         <label class="campo"><span>Telefono</span><input name="telefono" type="tel" inputmode="tel" autocomplete="off" ${valore(c && c.contatto)}></label>
         <label class="campo"><span>Indirizzo <em>(via e numero)</em></span><input name="indirizzo" autocomplete="off" ${valore(c && c.indirizzo)}></label>
-        <label class="campo"><span>Città</span><input name="citta" list="l-citta" autocomplete="off" ${valore(c && titoloCitta(c.citta))}></label>
-        <datalist id="l-citta">${citta.map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
-        <label class="campo"><span>Impianto</span><input name="tipo" list="l-tipi" autocomplete="off" ${valore(c && c.tipo)}></label>
-        <datalist id="l-tipi">${tipi.map((t) => `<option value="${esc(t)}">`).join('')}</datalist>
+        ${campoScelte('Città', 'citta', c && titoloCitta(c.citta), citta)}
+        ${campoScelte('Impianto', 'tipo', c && c.tipo, tipi)}
         <label class="campo"><span>Installato il</span><input name="installazione" type="date" ${valore(inst)} max="${isoDa(oggi())}"></label>
         <div class="campo"><span>Manutenzione</span>
           <div class="scelta">${scelteMesi.map((m) => `<button type="button" data-mesi="${m}" aria-pressed="${m === mesi}">Ogni ${m} mesi</button>`).join('')}</div></div>
@@ -5480,6 +5544,7 @@
         <button class="btn verde grande" style="width:100%">${icona('spunta')} ${c ? 'Salva le modifiche' : 'Salva il cliente'}</button>
       </form>`;
     const f = $('f-modulo');
+    collegaScelte(f);
     // Le foto del cliente nuovo (26 ott 2026): restano nel modulo finché non si salva.
     let fotoNuove = [];
     function disegnaFotoNuove() {
