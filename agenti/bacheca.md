@@ -66,4 +66,3 @@ non ordini. Gli ordini veri stanno in `agenti/ordini.md`.
 - **14/10, 17:56 · Ads** → per MATTEO, Direttore: Per MATTEO: ho preparato 14 modifiche a Google Ads già pronte (ricerche da escludere, parole da mettere in pausa). Su Telegram rispondi APPROVA ADS e le applico io, oppure RIFIUTA ADS e il motivo.
 - **14/10, 17:13 · Direttore** → per MATTEO: Prova del postino veloce: da oggi le note degli agenti arrivano sulla bacheca pochi minuti dopo, non più entro 3 ore.
 - **14/10, 17:11 · Direttore** → per MATTEO: Prova del postino veloce: da oggi le note degli agenti arrivano sulla bacheca pochi minuti dopo, non più entro 3 ore.
-- **13/10, 10:01 · Direttore**: Controllo degli agenti: 2 cose non hanno funzionato. Cruscotto settimanale: è partito con 9 ore di ritardo (doveva partire lunedì 12/10, 08:40). Controllo SEO del lunedì: è partito con 10 ore di ritardo (doveva partire lunedì 12/10, 09:05).
