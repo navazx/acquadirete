@@ -8,9 +8,9 @@ import type { PageId } from './types';
 // proposta approvata va su main (o dal PC: node scripts/lib/date-aggiornamento.mjs).
 // Una pagina nuova va aggiunta qui col giorno in cui esce.
 export const PAGINE_AGGIORNATE: Record<PageId, string> = {
-  home: '2026-10-14',
-  depuratore: '2026-10-14',
-  prato: '2026-10-14',
+  home: '2026-11-12',
+  depuratore: '2026-11-12',
+  prato: '2026-11-12',
   pistoia: '2026-10-14',
   osmosi: '2026-10-14',
   business: '2026-10-14',

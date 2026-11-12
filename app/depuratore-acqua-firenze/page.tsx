@@ -6,7 +6,7 @@ import { REVIEW_RATING_TESTO } from '../../lib/reviews';
 export const metadata: Metadata = {
   title: `Depuratore Acqua Firenze | 130+ Recensioni, Media ${REVIEW_RATING_TESTO}`,
   description:
-    `Depuratori a osmosi inversa a Firenze dal 2005. Oltre 130 recensioni Google (media ${REVIEW_RATING_TESTO}), 10 anni di garanzia esclusi i consumabili, sopralluogo gratuito.`,
+    `Depuratori a osmosi inversa a Firenze dal 2005. Oltre 130 recensioni Google (media ${REVIEW_RATING_TESTO}), 10 anni di garanzia esclusi i consumabili, analisi dell'acqua gratuita.`,
   alternates: { canonical: '/depuratore-acqua-firenze' },
   openGraph: { ...OG_DEFAULTS, url: '/depuratore-acqua-firenze' },
 };

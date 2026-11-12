@@ -129,7 +129,7 @@ export default function HomeView() {
                 Acquadirete è un&apos;officina e due persone: <strong className="text-slate-900 font-semibold">Stefano</strong>, che ha iniziato nel 2005, e <strong className="text-slate-900 font-semibold">Matteo</strong>, suo figlio. Non abbiamo agenti, non abbiamo un call center: a casa tua veniamo noi due, e quando chiami rispondiamo noi due.
               </p>
               <p>
-                Veniamo a vedere la tua acqua e a farti il preventivo <strong className="text-slate-900 font-semibold">gratis</strong>, sugli impianti diamo <strong className="text-slate-900 font-semibold">10 anni di garanzia</strong>, e su Google trovi{' '}
+                Analizziamo la tua acqua e ti facciamo il preventivo <strong className="text-slate-900 font-semibold">gratis</strong>, sugli impianti diamo <strong className="text-slate-900 font-semibold">10 anni di garanzia</strong>, e su Google trovi{' '}
                 <a href={GOOGLE_PROFILE_URL} target="_blank" rel="noreferrer" title="Leggi le recensioni su Google" className="text-blue-600 font-semibold hover:underline cursor-pointer">
                   oltre 130 recensioni
                 </a>{' '}
@@ -174,7 +174,7 @@ export default function HomeView() {
               Comprare un depuratore oggi è un campo minato.
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              Telefonate insistenti, &laquo;depuratori gratis&raquo; che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi siamo in due, <strong className="text-slate-900 font-semibold">Stefano e Matteo</strong>, e lavoriamo all&apos;opposto: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Poi ti lasciamo il tempo di pensare: il preventivo vale 3 mesi. E i <Link href={ROUTES.prezzi} className="text-blue-600 font-semibold hover:underline">prezzi</Link> li scriviamo in chiaro: impianti installati da 400 €.
+              Telefonate insistenti, &laquo;depuratori gratis&raquo; che gratis non sono, contratti firmati in salotto con la pressione del venditore. Noi siamo in due, <strong className="text-slate-900 font-semibold">Stefano e Matteo</strong>, e lavoriamo all&apos;opposto: veniamo a casa tua, analizziamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose — anche se la risposta è che non ti serve niente. Poi ti lasciamo il tempo di pensare: il preventivo vale 3 mesi. E i <Link href={ROUTES.prezzi} className="text-blue-600 font-semibold hover:underline">prezzi</Link> li scriviamo in chiaro: impianti installati da 400 €.
             </p>
           </div>
 
@@ -190,7 +190,7 @@ export default function HomeView() {
               <ThumbsUp className="text-blue-500 mb-1" size={22} />
               <h3 className="text-base font-bold text-slate-900">Consulenza onesta</h3>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Niente agenti, niente canoni che non finiscono mai. Ti proponiamo solo quello che ti serve, con due prezzi scritti: quanto costa l&apos;impianto e quanto costa mantenerlo negli anni. Dopo aver provato l&apos;acqua a casa tua, non prima.
+                Niente agenti, niente canoni che non finiscono mai. Ti proponiamo solo quello che ti serve, con due prezzi scritti: quanto costa l&apos;impianto e quanto costa mantenerlo negli anni. Dopo aver analizzato l&apos;acqua a casa tua, non prima.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-2">
@@ -266,7 +266,7 @@ export default function HomeView() {
                 Cosa installiamo e cosa seguiamo
               </h2>
               <p className="text-sm text-slate-500 leading-relaxed">
-                Ti diciamo quale ti serve dopo aver provato la tua acqua, anche quando basta il più semplice.
+                Ti diciamo quale ti serve dopo aver analizzato la tua acqua, anche quando basta il più semplice.
               </p>
             </>
           }

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   // /depuratore-acqua-firenze/ (14 set 2026). Ogni città ha la sua pagina.
   title: 'Depuratori Acqua a Firenze, Prato e Pistoia | Acquadirete',
   description:
-    `Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 130 recensioni Google (media ${REVIEW_RATING_TESTO}). Sopralluogo gratuito.`,
+    `Depuratori a osmosi inversa a Firenze, Prato e Pistoia. Installazione e assistenza dal 2005, oltre 130 recensioni Google (media ${REVIEW_RATING_TESTO}). Analisi dell'acqua e sopralluogo gratuiti.`,
   alternates: { canonical: '/' },
   openGraph: { ...OG_DEFAULTS, url: '/' },
 };

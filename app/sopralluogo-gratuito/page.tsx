@@ -19,14 +19,14 @@ import { REVIEW_RATING_TESTO, REVIEW_TOTAL } from '../../lib/reviews';
 export const metadata: Metadata = {
   title: "Depuratore d'acqua installato da 400 € | Acquadirete",
   description:
-    'Depuratori a Firenze, Prato e Pistoia installati da 400 €. Sopralluogo gratuito, 10 anni di garanzia (esclusi i consumabili), anche a rate a tasso zero.',
+    "Depuratori a Firenze, Prato e Pistoia installati da 400 €. Analisi dell'acqua gratuita, 10 anni di garanzia (esclusi i consumabili), anche a rate a tasso zero.",
   alternates: { canonical: '/sopralluogo-gratuito' },
   openGraph: { ...OG_DEFAULTS, url: '/sopralluogo-gratuito' },
   robots: { index: false, follow: false },
 };
 
 const PUNTI = [
-  'Sopralluogo gratuito in 10 minuti',
+  "Analisi dell'acqua e sopralluogo gratis, in 10 minuti",
   'Installazione compresa, fatta da noi',
   '10 anni di garanzia (esclusi i consumabili)',
   'Anche a rate a tasso zero',
@@ -40,7 +40,7 @@ const PREZZI = [
 
 const PASSI = [
   { titolo: 'Ci lasci il numero', testo: 'Ti richiamiamo noi e fissiamo un giorno che va bene a te.' },
-  { titolo: "Veniamo a provare l'acqua", testo: 'In una decina di minuti guardiamo la tua acqua e lo spazio in cucina, e ti diciamo cosa ti serve davvero. Anche quando basta il più semplice.' },
+  { titolo: "Analizziamo la tua acqua", testo: 'In una decina di minuti analizziamo la tua acqua sul posto, guardiamo e lo spazio in cucina, e ti diciamo cosa ti serve davvero. Anche quando basta il più semplice.' },
   { titolo: 'Ti lasciamo il preventivo', testo: 'Con le voci principali scritte, valido 3 mesi. Decidi con calma.' },
 ];
 
@@ -130,7 +130,7 @@ export default function SopralluogoGratuitoPage() {
             Il depuratore d&apos;acqua installato a casa tua, da 400 €
           </h1>
           <p className="hidden md:block mt-4 text-lg text-slate-700 leading-relaxed">
-            Veniamo noi a provare l&apos;acqua del tuo rubinetto e ti diciamo quale impianto ti serve e quanto costa.
+            Veniamo noi ad analizzare l&apos;acqua del tuo rubinetto e ti diciamo quale impianto ti serve e quanto costa.
           </p>
           <ul className="mt-4 md:mt-5 space-y-2">
             {PUNTI.map((p) => (
@@ -244,7 +244,7 @@ export default function SopralluogoGratuitoPage() {
       <section className="px-4 sm:px-6 py-12 md:py-16 bg-blue-950 text-white">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Il prezzo esatto per casa tua</h2>
-          <p className="mt-3 text-blue-100">Veniamo noi, proviamo l&apos;acqua del tuo rubinetto e ti lasciamo un preventivo valido 3 mesi. Gratis e senza impegno.</p>
+          <p className="mt-3 text-blue-100">Veniamo noi, analizziamo l&apos;acqua del tuo rubinetto e ti lasciamo un preventivo valido 3 mesi. Gratis e senza impegno.</p>
           <PulsanteModulo className="mt-6 inline-flex items-center justify-center rounded-xl bg-mint-400 hover:bg-mint-500 text-slate-900 font-bold px-6 py-4">
             Richiedi il sopralluogo gratuito
           </PulsanteModulo>

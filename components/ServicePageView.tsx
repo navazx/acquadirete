@@ -167,7 +167,7 @@ export default function ServicePageView({ serviceId }: { serviceId: ServicePageI
           <div className="space-y-3">
             <h3 className="font-bold text-white uppercase tracking-widest text-xs">Pronto per iniziare?</h3>
             <p className="text-sm text-blue-50 leading-relaxed">
-              Niente telefonate insistenti, niente &laquo;depuratori gratis&raquo; che gratis non sono, niente contratti firmati in salotto. Il sopralluogo è gratuito: veniamo a casa tua, proviamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose. Poi decidi tu, con calma: il preventivo vale 3 mesi.
+              Niente telefonate insistenti, niente &laquo;depuratori gratis&raquo; che gratis non sono, niente contratti firmati in salotto. Sopralluogo e analisi dell&apos;acqua sono gratuiti: veniamo a casa tua, analizziamo l&apos;acqua del tuo rubinetto e ti diciamo come stanno le cose. Poi decidi tu, con calma: il preventivo vale 3 mesi.
             </p>
             <a
               href={telHref()}

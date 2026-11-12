@@ -179,7 +179,7 @@ export default function ContactForm({ initialService = 'depuratore', isCompact =
           </div>
           <div className="flex items-center gap-2">
             <Sparkles size={14} className="text-blue-600 shrink-0" />
-            <span>Veniamo da te per un <strong>sopralluogo gratuito e senza impegno</strong>: valutiamo la tua acqua e ti diciamo come stanno le cose.</span>
+            <span>Veniamo da te per un <strong>sopralluogo gratuito e senza impegno</strong>: analizziamo la tua acqua sul posto e ti diciamo come stanno le cose.</span>
           </div>
         </div>
 
