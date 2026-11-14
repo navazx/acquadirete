@@ -1,66 +1,33 @@
 {
-  "tema": "curiosità: il depuratore «gratis»",
-  "foto": "assets/social/curiosita-2026-11-07-2.jpg",
-  "grafica": {
-    "titolo": "Lo sapevi che il depuratore *“gratis”* alla fine lo paghi?",
-    "punti": [
-      {
-        "icona": "calendario",
-        "titolo": "Lo paghi negli anni",
-        "testo": "L’impianto costa zero, ma di solito firmi anni di manutenzione, spesso con un finanziamento."
-      },
-      {
-        "icona": "euro",
-        "titolo": "Fai il conto intero",
-        "testo": "Manutenzione, filtri e quello che paghi a ogni visita del tecnico, per tutti gli anni. E quanto costa uscire prima."
-      },
-      {
-        "icona": "casa",
-        "titolo": "Alla fine, di chi è?",
-        "testo": "In comodato resta loro. Comprato, anche a rate, a fine pagamento è tuo."
-      }
-    ]
-  },
+  "tema": "installazione",
+  "foto": "assets/social/tg-2026-11-10-366.jpg",
   "varianti": [
     {
-      "testo": "Un depuratore «gratis» di solito non si paga all’inizio: si paga negli anni, con la manutenzione che firmi insieme. Per capire se ti conviene non guardare la rata: somma manutenzione, filtri e quello che paghi a ogni visita del tecnico, per tutti gli anni del contratto. Sul nostro sito, nella pagina dei prezzi, quel conto l’abbiamo fatto su dieci anni, con le nostre cifre vere.",
+      "testo": "Qui il depuratore non si nasconde sotto il lavello: sta sul piano della cucina. È un soprabanco a osmosi inversa, montato di recente accanto al lavello. Il rubinetto del lavello resta un rubinetto normale: l’acqua da bere si prende dall’impianto, appoggiando il bicchiere sulla griglia.",
       "hashtag": [
         "#depuratoreacqua",
-        "#depuratoregratis",
+        "#osmosiinversa",
         "#firenze",
         "#prato"
       ]
     },
     {
-      "testo": "Prima di firmare per un depuratore «gratis», fai una domanda sola: alla fine del contratto, l’impianto di chi è? Se è in comodato, hai pagato per anni una macchina che resta di qualcun altro. Da noi l’impianto lo compri, anche a rate, e a fine pagamento è tuo. Con 10 anni di garanzia, esclusi i consumabili.",
+      "testo": "Tre tasti, tre acque: a temperatura ambiente, fredda e frizzante. È il depuratore soprabanco a osmosi inversa che abbiamo montato di recente in questa cucina. Per chi beve frizzante vuol dire niente più casse da portare su per le scale. E la bombola dell’anidride carbonica, quando serve, la cambiamo noi.",
       "hashtag": [
+        "#acquafrizzante",
         "#depuratoreacqua",
-        "#depuratoregratis",
         "#firenze",
         "#pistoia"
       ]
     },
     {
-      "testo": "Ti hanno chiamato per un depuratore «gratis»? Non è per forza un’offerta da buttare: a qualcuno un canone fa comodo. Basta sapere cosa si firma: per quanti anni, cosa paghi ogni anno e quanto costa uscire prima. Chiedi un preventivo anche a noi, gratuito e senza impegno, e mettili uno accanto all’altro. Montiamo depuratori dal 2005, fra Firenze, Prato e Pistoia.",
+      "testo": "Un depuratore va seguito anche dopo che è montato. Su questo soprabanco a osmosi inversa, che dà acqua a temperatura ambiente, fredda e frizzante, ci pensiamo noi: cambio dei filtri, sanificazione e bombola dell’anidride carbonica. Lo facciamo dal 2005 fra Firenze, Prato e Pistoia. Vuoi sapere se fa per la tua cucina? Il sopralluogo è gratuito.",
       "hashtag": [
         "#depuratoreacqua",
-        "#depuratoregratis",
+        "#assistenzadepuratori",
         "#prato",
         "#pistoia"
       ]
     }
-  ],
-  "pubblicato": "2026-11-07T08:15:49.924Z",
-  "variantePubblicata": 1,
-  "esiti": {
-    "facebook": {
-      "id": "1164447766749757_122126684649366858",
-      "url": "https://www.facebook.com/1164447766749757_122126684649366858"
-    },
-    "instagram": {
-      "id": "18102679337060758",
-      "url": "https://www.instagram.com/p/18102679337060758/"
-    }
-  },
-  "graficaTolta": true
+  ]
 }
