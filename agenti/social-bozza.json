@@ -33,5 +33,17 @@
       ]
     }
   ],
-  "inviato": "2026-11-14T08:04:12.701Z"
+  "inviato": "2026-11-14T08:04:12.701Z",
+  "pubblicato": "2026-11-14T12:15:56.495Z",
+  "variantePubblicata": 2,
+  "esiti": {
+    "facebook": {
+      "id": "1164447766749757_122127624441366858",
+      "url": "https://www.facebook.com/1164447766749757_122127624441366858"
+    },
+    "instagram": {
+      "id": "17891142864478921",
+      "url": "https://www.instagram.com/p/17891142864478921/"
+    }
+  }
 }
