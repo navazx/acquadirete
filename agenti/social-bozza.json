@@ -1,6 +1,9 @@
 {
   "tema": "installazione",
-  "foto": "assets/social/tg-2026-11-10-366.jpg",
+  "foto": [
+    "assets/social/tg-2026-11-10-366.jpg",
+    "assets/social/tg-2026-11-10-365.jpg"
+  ],
   "varianti": [
     {
       "testo": "Qui il depuratore non si nasconde sotto il lavello: sta sul piano della cucina. È un soprabanco a osmosi inversa, montato di recente accanto al lavello. Il rubinetto del lavello resta un rubinetto normale: l’acqua da bere si prende dall’impianto, appoggiando il bicchiere sulla griglia.",

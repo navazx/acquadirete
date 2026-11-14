@@ -12,10 +12,10 @@
 // ============================================================================
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { messaggio, foto, fotoDaFile } from './lib/telegram.mjs';
+import { messaggio, foto, fotoDaFile, albumDaFile } from './lib/telegram.mjs';
+import { fotoDellaBozza, urlFoto as urlDellaFoto } from './lib/social-foto.mjs';
 
 const BOZZA = 'agenti/social-bozza.json';
-const SITO = 'https://www.acquadirete.it';
 const prova = process.argv.includes('--prova');
 
 const numeri = ['1️⃣', '2️⃣', '3️⃣'];
@@ -46,7 +46,9 @@ async function main() {
 
   // Senza foto si va avanti lo stesso: Facebook accetta un post di solo testo,
   // Instagram no. Meglio mezzo post che nessun post.
-  const urlFoto = b.foto ? `${SITO}/${b.foto.replace(/^\/+/, '')}` : null;
+  // Piu' foto = lo stesso impianto, escono insieme nello stesso post.
+  const tutte = fotoDellaBozza(b);
+  const urlFoto = tutte.length ? urlDellaFoto(tutte[0]) : null;
 
   const corretta = Array.isArray(b.correzioni) && b.correzioni.length > 0;
   // Cosa ha fatto l'agente con l'ultimo CORREGGI POST, comprese le risposte alle
@@ -60,7 +62,9 @@ async function main() {
     rimandi
       ? `Post social — tema: ${b.tema} (rimandato ${rimandi === 1 ? 'una volta' : `${rimandi} volte`})`
       : `Post social — tema: ${b.tema}`,
-    urlFoto ? '' : 'SENZA FOTO: va solo su Facebook, Instagram le pretende.\nMandami una foto qui e dalla prossima ci va anche Instagram.',
+    urlFoto
+      ? (tutte.length > 1 ? `${tutte.length} foto dello stesso impianto: escono insieme nello stesso post.` : '')
+      : 'SENZA FOTO: va solo su Facebook, Instagram le pretende.\nMandami una foto qui e dalla prossima ci va anche Instagram.',
     '',
     ...b.varianti.flatMap((v, i) => [
       `${numeri[i]} ${v.testo}`,
@@ -79,22 +83,24 @@ async function main() {
   ].filter((r) => r !== undefined).join('\n');
 
   if (prova) {
-    console.log(`foto: ${urlFoto || '(nessuna)'}\n`);
+    console.log(`foto: ${tutte.length ? tutte.map(urlDellaFoto).join(', ') : '(nessuna)'}\n`);
     console.log(testo);
     return;
   }
 
   // Se la foto e' nel repo si carica da qui: un'immagine appena creata (le
   // curiosita') al sito puo' non esserci ancora, il deploy e' in corso.
-  const locale = b.foto ? `public/${b.foto.replace(/^\/+/, '')}` : null;
-  if (locale && existsSync(locale)) await fotoDaFile(locale, `Post social — tema: ${b.tema}`);
-  else if (urlFoto) await foto(urlFoto, `Post social — tema: ${b.tema}`);
+  const titolo = `Post social — tema: ${b.tema}`;
+  const locali = tutte.map((p) => `public/${p}`);
+  if (locali.length > 1 && locali.every((p) => existsSync(p))) await albumDaFile(locali, titolo);
+  else if (locali.length && existsSync(locali[0])) await fotoDaFile(locali[0], titolo);
+  else if (urlFoto) await foto(urlFoto, titolo);
   await messaggio(testo);
 
   // Segnare l'invio evita che il giro schedulato del sabato la rimandi una
   // seconda volta quando e' gia' partita col push.
   writeFileSync(BOZZA, `${JSON.stringify({ ...b, inviato: new Date().toISOString() }, null, 2)}\n`);
-  console.log(`Bozza mandata: ${b.varianti.length} varianti, foto ${b.foto || '(nessuna)'}${rimandi ? `, rimandata ${rimandi} volte` : ''}`);
+  console.log(`Bozza mandata: ${b.varianti.length} varianti, foto ${tutte.join(', ') || '(nessuna)'}${rimandi ? `, rimandata ${rimandi} volte` : ''}`);
 }
 
 main().catch((e) => {

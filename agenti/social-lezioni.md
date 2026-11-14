@@ -13,3 +13,4 @@ dopo.** Se una riga contraddice una più vecchia, vale la più recente.
 - 2026-10-17 — post «curiosità sull'acqua» da correggere: 1 vabbene ma cambia la frase "un'acqua che sa diversa" , i post 2 e 3 é vero che sono cose consigliate dall istituto superiore di sanità?
 
 - 2026-10-19 — post «curiosità sull'acqua» da correggere: 1 va bene ma cambia la frase “un’acqua che sa diversa”, i post 2 e 3 è vero che sono cose consigliate dall’Istituto Superiore di Sanità?
+- 2026-11-14 — l'agente ha proposto una sola delle due foto che Matteo aveva mandato insieme: le foto mandate insieme sono lo stesso impianto e si pubblicano tutte nello stesso post (stesso "album" in social-foto-note.json, campo foto come lista).

@@ -89,6 +89,25 @@ export async function fotoDaFile(percorso, caption) {
   return dati.result;
 }
 
+/**
+ * Piu' foto del repo in un messaggio solo (album), come usciranno nel post.
+ * Telegram ne vuole da 2 a 10; la didascalia va sulla prima.
+ */
+export async function albumDaFile(percorsi, caption) {
+  const form = new FormData();
+  form.append('chat_id', CHAT());
+  const media = percorsi.slice(0, 10).map((p, i) => {
+    const nome = `foto${i}`;
+    form.append(nome, new Blob([readFileSync(p)], { type: 'image/jpeg' }), p.split('/').pop());
+    return { type: 'photo', media: `attach://${nome}`, ...(i === 0 && caption && { caption: String(caption).slice(0, 1024) }) };
+  });
+  form.append('media', JSON.stringify(media));
+  const res = await fetch(`https://api.telegram.org/bot${TOKEN()}/sendMediaGroup`, { method: 'POST', body: form });
+  const dati = await res.json();
+  if (!dati.ok) throw new Error(`Telegram ha rifiutato sendMediaGroup: ${dati.description}`);
+  return dati.result;
+}
+
 /** Un file del repo, da aprire sul telefono (le anteprime degli articoli). */
 export async function documento(percorso, caption) {
   const form = new FormData();
@@ -112,9 +131,16 @@ export async function risposte(offset = 0) {
   // manda piu' misure: l'ultima e' la piu' grande) o come file, che resta intero
   // e puo' essere anche un HEIC dell'iPhone.
   // Il testo scritto insieme alla foto (la didascalia) viaggia con lei.
+  // Piu' foto mandate insieme (un album) hanno lo stesso media_group_id: per
+  // Matteo sono lo stesso impianto e vanno nello stesso post (14 nov 2026).
   const foto = [];
   for (const { message: m } of miei) {
-    const base = { messaggio: m.message_id, data: m.date, nota: m.caption?.trim() || undefined };
+    const base = {
+      messaggio: m.message_id,
+      data: m.date,
+      nota: m.caption?.trim() || undefined,
+      album: m.media_group_id || undefined,
+    };
     if (m.photo?.length) foto.push({ ...base, fileId: m.photo[m.photo.length - 1].file_id });
     else if (/^image\//.test(m.document?.mime_type || '')) {
       foto.push({ ...base, fileId: m.document.file_id, nome: m.document.file_name });

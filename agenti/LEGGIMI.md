@@ -354,7 +354,10 @@ Telegram* si avvia a mano con l'ordine nel campo `ordine` (per esempio
 `social-bozza.esempio.json` è lì come modello. In breve:
 
 - `tema` — installazione, curiosità, contesto diverso, recensione (ruotano)
-- `foto` — percorso dentro `public/assets/social/`, oppure `null`
+- `foto` — percorso dentro `public/assets/social/`, oppure `null`; oppure una
+  lista di percorsi quando sono più foto dello stesso impianto, mandate insieme
+  da Matteo (stesso `album` in `social-foto-note.json`): escono nello stesso
+  post, album su Facebook e carosello su Instagram (dal 14 nov 2026)
 - `varianti` — due o tre didascalie fra cui scegliere, ognuna coi suoi hashtag
 - `grafica` — per le curiosità e per le recensioni: i testi dell'immagine (vedi sotto)
 

@@ -39,7 +39,10 @@ riscrivere le varianti che Matteo non ha nominato.
   `agenti/social-foto-note.json`, non riusare una foto già uscita
   (`git log -p -- agenti/social-bozza.json`), e scarta quelle in disordine. Se non
   ce n'è una adatta metti `"foto": null` e dillo nel commit: il post uscirà solo
-  su Facebook, e Matteo lo saprà.
+  su Facebook, e Matteo lo saprà. **Le foto mandate insieme sono lo stesso
+  impianto e vanno insieme**: se la scelta ha un `album` in
+  `agenti/social-foto-note.json`, `foto` diventa la lista di tutte le foto con lo
+  stesso `album` (la più bella per prima), come spiega la skill `agente-social`.
 - **La grafica** (curiosità e recensioni) — cambia il campo `grafica`, cancella
   l'immagine di prima (`git rm` del file scritto nel campo `foto`) e rifalla:
   `npm ci`, poi `node scripts/grafica-curiosita.mjs agenti/social-bozza.json`

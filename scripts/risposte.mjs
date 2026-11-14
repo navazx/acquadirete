@@ -46,6 +46,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { messaggio, risposte, conferma, scaricaFile, firma, CHI_PROPONE } from './lib/telegram.mjs';
 import { pubblicaFacebook, pubblicaInstagram } from './lib/meta.mjs';
+import { fotoDellaBozza, urlFoto as urlDellaFoto } from './lib/social-foto.mjs';
 import { chiamaMeccanico } from './lib/meccanico.mjs';
 import { leggi as proposteAds, inAttesa, applica as applicaAds, rifiuta as rifiutaAds, annulla as annullaAds } from './lib/ads-proposte.mjs';
 import { lasciaNota } from './lib/bacheca.mjs';
@@ -55,7 +56,6 @@ import { segnaDate, DATE } from './lib/date-aggiornamento.mjs';
 const BOZZA = 'agenti/social-bozza.json';
 const STATO = 'agenti/telegram-stato.json';
 const PROPOSTE = 'agenti/proposte.json';
-const SITO = 'https://www.acquadirete.it';
 const CARTELLA_FOTO = 'public/assets/social';
 const NOTE_FOTO = 'agenti/social-foto-note.json';
 
@@ -136,10 +136,13 @@ export function ordine(testo) {
 const GRAFICA = /^assets\/social\/(curiosita|recensione)-[\w-]+\.jpg$/;
 
 function togliGrafica(bozza) {
-  const foto = String(bozza.foto || '').replace(/^\/+/, '');
-  if (!GRAFICA.test(foto) || !existsSync(`public/${foto}`)) return false;
-  rmSync(`public/${foto}`);
-  return true;
+  let tolta = false;
+  for (const foto of fotoDellaBozza(bozza)) {
+    if (!GRAFICA.test(foto) || !existsSync(`public/${foto}`)) continue;
+    rmSync(`public/${foto}`);
+    tolta = true;
+  }
+  return tolta;
 }
 
 async function eseguiSocial(o) {
@@ -188,7 +191,9 @@ async function eseguiSocial(o) {
   }
 
   const didascalia = [variante.testo, '', (variante.hashtag || []).join(' ')].join('\n').trim();
-  const urlFoto = bozza.foto ? `${SITO}/${bozza.foto.replace(/^\/+/, '')}` : null;
+  // Piu' foto dello stesso impianto escono insieme: album su Facebook, carosello su Instagram.
+  const fotoPost = fotoDellaBozza(bozza).map(urlDellaFoto);
+  const urlFoto = fotoPost.length ? fotoPost : null;
   const esiti = {};
   const errori = [];
 
@@ -529,6 +534,27 @@ export function attaccaNote(foto, messaggi, eOrdine = ordine) {
   return messaggi.filter((m) => !usati.has(m)).map((m) => m.testo);
 }
 
+/**
+ * Foto mandate insieme (un album di Telegram) sono lo stesso impianto e vanno
+ * nello stesso post (Matteo, 14 nov 2026: l'agente ne aveva proposta una sola su
+ * due). L'album resta col numero che gli da' Telegram (lo stesso anche se le
+ * foto arrivano in due giri del lettore), e la didascalia, che Telegram attacca
+ * solo alla prima, vale per tutte.
+ */
+export function unisciAlbum(foto) {
+  const gruppi = new Map();
+  for (const f of foto) {
+    if (!f.album) continue;
+    if (!gruppi.has(f.album)) gruppi.set(f.album, []);
+    gruppi.get(f.album).push(f);
+  }
+  for (const membri of gruppi.values()) {
+    const nota = membri.find((f) => f.nota)?.nota;
+    if (nota) for (const f of membri) if (!f.nota) f.nota = nota;
+  }
+  return foto;
+}
+
 async function salvaFoto(elenco) {
   firma(CHI_PROPONE.POST);
   // Le note stanno qui e non accanto alla foto: la cartella delle foto va online
@@ -541,7 +567,9 @@ async function salvaFoto(elenco) {
     try {
       const { dati, percorso } = await scaricaFile(f.fileId);
       writeFileSync(`${CARTELLA_FOTO}/${nomeFoto(f, percorso)}`, dati);
-      if (f.nota) note[f.chiave] = { nota: f.nota, arrivata: oggi() };
+      if (f.nota || f.album) {
+        note[f.chiave] = { ...(f.nota && { nota: f.nota }), ...(f.album && { album: f.album }), arrivata: oggi() };
+      }
       salvate += 1;
     } catch (e) {
       errori.push(e.message);
@@ -556,6 +584,14 @@ async function salvaFoto(elenco) {
       `${salvate === 1 ? 'Foto ricevuta' : `${salvate} foto ricevute`}: ${la} metto fra quelle per i post (ora sono ${inCartella}).`,
       `L'agente social ${la} guarda da sé quando prepara la bozza del sabato.`,
     );
+    const album = new Set(elenco.filter((f) => f.album).map((f) => f.album)).size;
+    if (album) {
+      righe.push(
+        album === 1
+          ? 'Quelle mandate insieme sono lo stesso impianto: usciranno insieme nello stesso post.'
+          : `Ho ${album} gruppi di foto mandate insieme: ogni gruppo uscirà insieme nello stesso post.`,
+      );
+    }
     const scritte = [...new Set(elenco.map((f) => f.nota).filter(Boolean))];
     righe.push(
       '',
@@ -582,12 +618,17 @@ async function main() {
   const { messaggi, foto, ultimo } = await risposte(ultimoUpdate);
   if (ultimo === ultimoUpdate && !aMano) return;
   for (const f of foto) f.chiave = chiaveFoto(f);
+  unisciAlbum(foto);
 
   // La foto puo' essere gia' stata salvata al giro prima, e la descrizione
   // arrivare adesso: il lettore gira ogni quarto d'ora, non aspetta.
   const precedente = ultimaFoto && !ultimaFoto.nota ? [{ ...ultimaFoto }] : [];
   const testi = attaccaNote([...precedente, ...foto], messaggi);
   const ultimaOra = foto.length ? foto[foto.length - 1] : precedente[0] || ultimaFoto;
+  // Di un album si ricordano tutte le foto: la descrizione scritta dopo vale per tutte.
+  const chiaviAlbum = foto.length
+    ? (ultimaOra.album ? foto.filter((f) => f.album === ultimaOra.album).map((f) => f.chiave) : undefined)
+    : ultimaOra?.chiaviAlbum;
 
   // Si consuma SEMPRE quello che si e' letto, e PRIMA di agire: se qualcosa si
   // rompe a meta', l'ordine e' comunque sparito dalla coda di Telegram. Meglio un
@@ -596,7 +637,9 @@ async function main() {
     await conferma(ultimo);
     salva(STATO, {
       ultimoUpdate: ultimo,
-      ...(ultimaOra && { ultimaFoto: { chiave: ultimaOra.chiave, data: ultimaOra.data, nota: ultimaOra.nota } }),
+      ...(ultimaOra && {
+        ultimaFoto: { chiave: ultimaOra.chiave, data: ultimaOra.data, nota: ultimaOra.nota, chiaviAlbum },
+      }),
     });
   }
   if (aMano) testi.push(aMano);
@@ -605,9 +648,12 @@ async function main() {
   firma(null);
   if (precedente[0]?.nota) {
     const note = leggiJson(NOTE_FOTO, {});
-    note[precedente[0].chiave] = { nota: precedente[0].nota, arrivata: oggi() };
+    const chiavi = precedente[0].chiaviAlbum?.length ? precedente[0].chiaviAlbum : [precedente[0].chiave];
+    for (const k of chiavi) note[k] = { ...note[k], nota: precedente[0].nota, arrivata: oggi() };
     salva(NOTE_FOTO, note);
-    await messaggio(`Ho attaccato la descrizione alla foto di prima: «${precedente[0].nota}»`);
+    await messaggio(
+      `Ho attaccato la descrizione ${chiavi.length > 1 ? `alle ${chiavi.length} foto` : 'alla foto'} di prima: «${precedente[0].nota}»`,
+    );
   }
 
   const bozzaOra = leggiJson(BOZZA, null);
